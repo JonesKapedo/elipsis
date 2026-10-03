@@ -1,4 +1,18 @@
-aiogram==3.31.0
-aiohttp==3.14.3
-python-dotenv==1.2.4
+# Elipsis web platform — the FastAPI app that Vercel deploys.
+#
+# Vercel's Python runtime installs THIS file automatically for the serverless
+# function, so it must describe the web platform and not the Telegram bot.
+# (The bot's dependencies live in requirements-bot.txt.)
+fastapi==0.142.2
+uvicorn==0.54.0
+sqlalchemy==2.1.2
+jinja2==3.1.6
+python-multipart==0.0.32
 pydantic==2.13.5
+
+# PostgreSQL driver. Needed as soon as ELIPSIS_DATABASE_URL points at
+# Postgres, which is the only way to get durable storage on Vercel: the
+# deployment bundle is mounted read-only, so SQLite falls back to ephemeral
+# /tmp storage. Without this driver a Postgres URL silently degrades to
+# ephemeral SQLite — see elipsis_api/config.py.
+psycopg[binary]==3.2.9

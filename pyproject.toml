@@ -16,7 +16,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Telegram bot — install with: pip install -e '.[bot]'
+# Telegram bot — install with: pip install -r requirements-bot.txt
 bot = [
     "aiogram==3.31.0",
     "aiohttp==3.14.3",
@@ -37,3 +37,10 @@ addopts = "-q"
 [tool.setuptools]
 packages = ["elipsis_api", "elipsis_api.routers"]
 py-modules = ["constants", "readiness", "elipsis_questions", "scoring"]
+
+# --- Vercel --------------------------------------------------------------
+# The repository root also holds main.py, which is the Telegram bot rather
+# than the web platform. Point Vercel at the FastAPI instance explicitly so
+# it does not auto-detect the bot and fail the build.
+[tool.vercel]
+entrypoint = "elipsis_api.main:app"

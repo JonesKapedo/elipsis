@@ -1,6 +1,7 @@
 """Configuration for the Elipsis API."""
 
 import os
+import tempfile
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -9,8 +10,35 @@ TEMPLATES_DIR = PACKAGE_DIR / "templates"
 STATIC_DIR = PACKAGE_DIR / "static"
 
 
-def _sqlite_url():
-    return f"sqlite:///{BASE_DIR / 'turbinez.db'}"
+def _writable_dir(path: Path) -> bool:
+    """True when `path` exists (or can be created) and accepts writes."""
+    try:
+        path.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        return False
+    return os.access(path, os.W_OK)
+
+
+def _sqlite_url() -> str:
+    """SQLite beside the project, or under /tmp when that is read-only.
+
+    Vercel mounts the deployment bundle read-only, so a database file cannot
+    live beside the source there. Falling back to /tmp keeps the function
+    bootable, but that storage is ephemeral and is discarded when the
+    instance is recycled -- configure a real PostgreSQL URL for durability.
+    """
+    if _writable_dir(BASE_DIR):
+        return f"sqlite:///{BASE_DIR / 'turbinez.db'}"
+    tmp_dir = Path(tempfile.gettempdir()) / "elipsis"
+    try:
+        tmp_dir.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
+    print("[elipsis] project directory is read-only (serverless deployment) "
+          f"-> using ephemeral SQLite at {tmp_dir / 'turbinez.db'}. Data will "
+          "NOT survive a cold start. Set ELIPSIS_DATABASE_URL to a PostgreSQL "
+          "URL for durable storage.", flush=True)
+    return f"sqlite:///{tmp_dir / 'turbinez.db'}"
 
 
 def resolve_database_url():

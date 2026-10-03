@@ -1,13 +1,17 @@
 """Elipsis API application factory.
 
 Run with:
-    .venv-1/bin/uvicorn elipsis_api.main:app --reload --port 8001
+    uvicorn elipsis_api.main:app --reload --port 8001
 or:
     python3 run_api.py
+
+On Vercel the app is deployed as a serverless function; the entrypoint is
+declared in pyproject.toml under [tool.vercel].
 """
 
 import os
 import sys
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -20,11 +24,14 @@ from elipsis_api.config import BASE_DIR, DATABASE_URL  # noqa: E402
 from elipsis_api.database import Base, SessionLocal, engine  # noqa: E402
 from elipsis_api.routers import api, pages  # noqa: E402
 
-app = FastAPI(title=f"{BRAND_NAME} API", description=FRAMEWORK_NAME, version="0.1.0")
 
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Create the schema and seed the question bank once per cold start.
 
-@app.on_event("startup")
-def on_startup():
+    Uses the lifespan handler rather than the deprecated `on_event` hook,
+    which is the form Vercel supports for FastAPI.
+    """
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
@@ -32,7 +39,11 @@ def on_startup():
     finally:
         db.close()
     print(f"[elipsis] database: {DATABASE_URL}", flush=True)
+    yield
 
+
+app = FastAPI(title=f"{BRAND_NAME} API", description=FRAMEWORK_NAME,
+              version="0.1.0", lifespan=lifespan)
 
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 app.include_router(api.router)

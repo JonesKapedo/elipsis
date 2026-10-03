@@ -93,8 +93,8 @@ Recommendations are grouped into three phases:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements-api.txt      # FastAPI platform
-pip install -r requirements.txt          # Telegram bot (aiogram)
+pip install -r requirements.txt          # FastAPI platform (what Vercel deploys)
+pip install -r requirements-bot.txt      # Telegram bot (aiogram)
 cp .env.example .env
 ```
 
@@ -113,13 +113,49 @@ Interactive API docs: **<http://127.0.0.1:8001/docs>**
 Change the port with `ELIPSIS_PORT=8080 python run_api.py`.
 
 > The FastAPI stack lives in **`.venv`**. The Telegram bot needs `aiogram`, which is
-> only in `requirements.txt`.
+> only in `requirements-bot.txt`.
 
 ### Run the Telegram bot
 
 ```bash
 python main.py
 ```
+
+### Deploy to Vercel
+
+The repository root contains **two** Python entrypoints: `main.py` (the Telegram
+bot) and `elipsis_api/main.py` (the web platform). Vercel auto-detects `main.py`
+and would try to deploy the bot, so the web app is declared explicitly:
+
+```toml
+# pyproject.toml
+[tool.vercel]
+entrypoint = "elipsis_api.main:app"
+```
+
+Vercel installs the root **`requirements.txt`**, which is why that file holds the
+FastAPI stack rather than the bot's `aiogram` (those live in
+`requirements-bot.txt`).
+
+**Storage — read this before going live.** Vercel mounts the deployment bundle
+read-only, so the local `turbinez.db` SQLite file cannot be used there. Without a
+database URL the app falls back to SQLite under `/tmp`, which is **ephemeral**:
+every assessment is lost when the instance recycles, and each cold start reseeds
+an empty database. For a real deployment set a managed PostgreSQL URL in the
+Vercel project's environment variables:
+
+| Variable | Example |
+| --- | --- |
+| `ELIPSIS_DATABASE_URL` | `postgresql://user:pass@host:5432/db?sslmode=require` |
+| `ELIPSIS_TELEGRAM_TOKEN` | *(only needed for the bot)* |
+| `ELIPSIS_SECRET_KEY` | *(only needed for the bot)* |
+
+`psycopg[binary]` is already listed in `requirements.txt`, so a `postgres://` URL
+is honoured as-is. `ELIPSIS_SECRET_KEY` is only read by the Telegram bot; the web
+platform's sessions use a random token in a cookie.
+
+Sign in at **`/login`** with **<admin@elipsis.local> / elipsis** (seeded on first
+request), or create your own user row in the `users` table.
 
 ---
 
