@@ -10,9 +10,15 @@ jinja2==3.1.6
 python-multipart==0.0.32
 pydantic==2.13.5
 
+# Reads .env when the process has not exported the variables itself.
+python-dotenv==1.2.4
+
 # PostgreSQL driver. Needed as soon as ELIPSIS_DATABASE_URL points at
 # Postgres, which is the only way to get durable storage on Vercel: the
 # deployment bundle is mounted read-only, so SQLite falls back to ephemeral
 # /tmp storage. Without this driver a Postgres URL silently degrades to
-# ephemeral SQLite — see elipsis_api/config.py.
-psycopg[binary]==3.2.9
+# ephemeral SQLite -- see elipsis_api/config.py, which probes the connection
+# and falls back to SQLite when the server is unreachable.
+# NOTE: 3.2.9 has no psycopg-binary wheel (the binary builds start at 3.2.10),
+# so pinning [binary] to 3.2.9 makes `pip install -r requirements.txt` fail.
+psycopg[binary]==3.2.13

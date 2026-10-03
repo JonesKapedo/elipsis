@@ -24,7 +24,9 @@ bot = [
 ]
 
 [project.optional-dependencies.postgres]
-postgres = ["psycopg[binary]==3.2.9"]
+# 3.2.9 ships no psycopg-binary wheel (binary builds start at 3.2.10), so the
+# [binary] extra cannot be pinned there.
+postgres = ["psycopg[binary]==3.2.13"]
 
 [project.optional-dependencies.dev]
 dev = ["pytest==9.1.1", "httpx>=0.27"]

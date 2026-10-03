@@ -9,6 +9,17 @@ PACKAGE_DIR = Path(__file__).resolve().parent
 TEMPLATES_DIR = PACKAGE_DIR / "templates"
 STATIC_DIR = PACKAGE_DIR / "static"
 
+# The web platform used to ignore .env entirely -- only the Telegram bot loaded
+# it -- so the documented `cp .env.example .env` step silently did nothing here.
+# load_dotenv never overrides variables already exported in the real
+# environment, which is what Vercel and `env VAR=... run_api.py` rely on.
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(BASE_DIR / ".env")
+except ImportError:  # pragma: no cover - python-dotenv is an optional extra
+    pass
+
 
 def _writable_dir(path: Path) -> bool:
     """True when `path` exists (or can be created) and accepts writes."""
@@ -41,8 +52,36 @@ def _sqlite_url() -> str:
     return f"sqlite:///{tmp_dir / 'turbinez.db'}"
 
 
-def resolve_database_url():
-    """Prefer PostgreSQL when configured and its driver is present; else SQLite.
+def _postgres_usable(url: str) -> bool:
+    """True when psycopg is installed *and* the database actually answers.
+
+    Checking only the import was not enough. With the driver present but no
+    server listening, the first query would raise and take the whole app down
+    at startup. Probing here turns a stale URL in .env into a warning and a
+    SQLite fallback instead of an outage.
+    """
+    try:
+        import psycopg  # noqa: F401  # type: ignore[import-not-found]
+    except ImportError:
+        print("[elipsis] PostgreSQL configured but psycopg is not installed "
+              "-> falling back to SQLite", flush=True)
+        return False
+    try:
+        from sqlalchemy import create_engine
+
+        probe = create_engine(url, pool_pre_ping=True,
+                              connect_args={"connect_timeout": 5})
+        with probe.connect():
+            return True
+    except Exception as exc:  # noqa: BLE001 - any failure means "unusable"
+        detail = str(exc).strip().splitlines()[0] if str(exc).strip() else exc.__class__.__name__
+        print(f"[elipsis] PostgreSQL configured but unreachable ({detail}) "
+              "-> falling back to SQLite", flush=True)
+        return False
+
+
+def resolve_database_url() -> str:
+    """Prefer PostgreSQL when configured and reachable; else SQLite.
 
     The SQLite path points at the same file used by the offline stdlib server,
     so both transports read and write the same data.
@@ -52,13 +91,8 @@ def resolve_database_url():
     """
     url = os.getenv("ELIPSIS_DATABASE_URL") or os.getenv("TURBINEZ_DATABASE_URL")
     url = url or _sqlite_url()
-    if url.startswith("postgres"):
-        try:
-            import psycopg  # noqa: F401  # type: ignore[import-not-found]
-        except ImportError:
-            print("[elipsis] PostgreSQL configured but psycopg is not installed "
-                  "-> falling back to SQLite", flush=True)
-            return _sqlite_url()
+    if url.startswith("postgres") and not _postgres_usable(url):
+        return _sqlite_url()
     return url
 
 
