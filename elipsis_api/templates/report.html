@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Elipsis Report{% endblock %}
+{% block content %}
+<section class="report">
+  <p class="eyebrow">{{ REPORT_HEADER }}</p>
+  <h1>{{ ASSESSMENT_NAME }}</h1>
+  <table class="meta">
+    <tr><th>Organisation</th><td>{{ organization.name }}</td></tr>
+    <tr><th>Department</th><td>{{ department.name if department else 'Organisation-wide' }}</td></tr>
+    <tr><th>Instrument</th><td>{{ QUESTIONNAIRE_CODE }} &middot; {{ INDEX_NAME }}</td></tr>
+    <tr><th>Completed</th><td>{{ assessment.completed_at or '' }}</td></tr>
+    <tr><th>Respondent</th><td>{{ assessment.respondent or '—' }}</td></tr>
+  </table>
+
+  <h2>1. Executive summary</h2>
+  <p class="band-lg">{{ INDEX_SHORT }}: <b>{{ '%.1f'|format(result.readiness_index) }}/100</b>
+  &mdash; {{ result.maturity_band }}</p>
+  <p>{{ CONFIDENCE_NAME }}: <b>{{ '%.1f'|format(result.confidence_index) }}</b>
+  ({{ result.confidence_band }}) &nbsp;&middot;&nbsp;
+  Organisation score: <b>{{ '%.1f'|format(result.organisation_score) }}</b> &nbsp;&middot;&nbsp;
+  Completion: <b>{{ result.answered }}/{{ result.total }}</b></p>
+
+  <h2>2. The seven intelligence pillars</h2>
+  <table class="table">
+    <thead><tr><th>Pillar</th><th class="num">Score</th><th class="num">Weight</th></tr></thead>
+    <tbody>
+      {% for code, score in result.pillars.items() %}
+      <tr><td>{{ PILLAR_LABELS.get(code, code) }}</td>
+      <td class="num">{{ '%.1f'|format(score) }}</td>
+      <td class="num">{{ '%.2f'|format(PILLAR_WEIGHTS.get(code, 0)) }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>3. Executive metrics</h2>
+  <p class="muted">Risk metrics are inverted: a higher value indicates greater exposure.</p>
+  <table class="table">
+    <thead><tr><th>Pillar</th><th>Metric</th><th>Type</th><th class="num">Value</th></tr></thead>
+    <tbody>
+      {% for pcode, rows in result.metrics_by_pillar.items() %}
+      {% for m in rows %}
+      <tr><td class="muted">{{ PILLAR_LABELS.get(pcode, pcode) }}</td>
+      <td>{{ m.label }}</td>
+      <td class="muted">{{ 'Risk' if m.kind == 'risk' else 'Score' }}</td>
+      <td class="num">{{ '%.1f'|format(m.value) }}</td></tr>
+      {% endfor %}
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>4. Subdomains</h2>
+  <table class="table">
+    <thead><tr><th>Subdomain</th><th class="num">Score</th></tr></thead>
+    <tbody>
+      {% for code, score in result.subdomains.items() %}
+      <tr><td>{{ SUBDOMAIN_LABELS.get(code, code) }}</td>
+      <td class="num">{{ '%.1f'|format(score) }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>5. Pain points</h2>
+  <table class="table">
+    <thead><tr><th>Severity</th><th>Finding</th><th class="num">Impact</th></tr></thead>
+    <tbody>
+      {% for p in result.pain_points %}
+      <tr><td>{{ p.severity }}</td><td>{{ p.title }}</td>
+      <td class="num">{{ '%.0f'|format(p.impact) }}%</td></tr>
+      {% else %}
+      <tr><td colspan="3" class="muted">None triggered.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>6. Implementation priority</h2>
+  {% for phase in result.roadmap %}
+  <h3>{{ phase.label }} <span class="muted">({{ phase.horizon }})</span></h3>
+  <p class="muted">{{ phase.note }}</p>
+  <table class="table">
+    <thead><tr><th class="num">Priority</th><th>Recommendation</th><th>Technology</th>
+    <th class="num">ROI</th></tr></thead>
+    <tbody>
+      {% for r in phase['items'] %}
+      <tr><td class="num">{{ '%.0f'|format(r.priority) }}</td><td>{{ r.title }}</td>
+      <td>{{ r.technology }}</td><td class="num">{{ '%.0f'|format(r.roi) }}%</td></tr>
+      {% else %}
+      <tr><td colspan="4" class="muted">No actions in this phase.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endfor %}
+
+  <h2>7. Financial impact</h2>
+  <table class="meta">
+    <tr><th>Current annual cost</th><td>{{ result.financial.current_cost|money }}</td></tr>
+    <tr><th>Projected annual cost</th><td>{{ result.financial.future_cost|money }}</td></tr>
+    <tr><th>Annual savings potential</th><td><b>{{ result.financial.annual_savings|money }}</b></td></tr>
+    <tr><th>Indicative investment</th><td>{{ result.financial.investment|money }}</td></tr>
+    <tr><th>Return on investment</th><td>{{ '%.0f'|format(result.financial.roi) }}%</td></tr>
+    <tr><th>Payback period</th><td>{{ '%.1f'|format(result.financial.payback_months) }} months</td></tr>
+  </table>
+  <p class="muted">Figures are management estimates derived from the assessment, not
+  audited results. This report is provisional until evidence thresholds are met.</p>
+</section>
+<p class="noprint"><button class="btn" onclick="window.print()">Print / Save as PDF</button></p>
+{% endblock %}

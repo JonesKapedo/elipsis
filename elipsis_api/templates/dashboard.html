@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+<section class="dash-hero">
+  <div>
+    <p class="eyebrow">{{ BRAND_MARK }} {{ BRAND_SHORT }} COMMAND CENTRE</p>
+    <h1>Good to see you, {{ user.name or user.email }}.</h1>
+    <p class="lede">Here is how your organisation's readiness looks right now.</p>
+  </div>
+  <a class="btn big" href="/start">＋ Start a new assessment</a>
+</section>
+
+<section class="kpis">
+  <div class="kpi">
+    <span class="kpi-ic">📋</span>
+    <span class="kpi-lb">Assessments</span>
+    <b>{{ summary.total }}</b>
+  </div>
+  <div class="kpi">
+    <span class="kpi-ic">✅</span>
+    <span class="kpi-lb">Completed</span>
+    <b>{{ summary.completed }}</b>
+  </div>
+  <div class="kpi">
+    <span class="kpi-ic">✍️</span>
+    <span class="kpi-lb">In progress</span>
+    <b>{{ summary.in_progress }}</b>
+  </div>
+  <div class="kpi accent">
+    <span class="kpi-ic">🎯</span>
+    <span class="kpi-lb">Average index</span>
+    <b>{{ '%.1f'|format(summary.average) if summary.average is not none else '—' }}</b>
+  </div>
+</section>
+
+{% if recent_live %}
+<section class="block">
+  <div class="block-head">
+    <h3>🏆 Latest result — {{ recent.organization }}</h3>
+    <a class="btn ghost sm" href="/assessment/{{ recent.id }}/results">Open full report →</a>
+  </div>
+
+  <div class="score-strip">
+    <div class="score-main">
+      <div class="gauge-num">{{ '%.1f'|format(recent_live.readiness_index) }}<span>/100</span></div>
+      <div class="gauge-label">{{ INDEX_SHORT }}</div>
+      <div class="band">{{ recent_live.maturity_band }}</div>
+    </div>
+    <div class="score-pillars">
+      {% for code, score in recent_live.pillars.items() %}
+      <div class="sp-row">
+        <span class="sp-name">{{ PILLAR_ICONS.get(code, '') }} {{ PILLAR_LABELS.get(code, code) }}</span>
+        <span class="sp-bar"><i style="width:{{ score }}%"></i></span>
+        <b>{{ '%.1f'|format(score) }}</b>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="top-opps">
+    {% for o in recent_live.top_opportunities %}
+    <div class="opp-chip">{{ loop.index }}. {{ o }}</div>
+    {% else %}
+    <p class="muted">No opportunities flagged yet.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="block">
+  <h3>🧭 The seven intelligence pillars</h3>
+  <p class="muted">Portfolio average across every completed assessment. Weight shows
+  how much each pillar counts towards the {{ INDEX_SHORT }}.</p>
+  <div class="pillar-grid">
+    {% for code, label, weight, objective in PILLARS %}
+    {% set score = portfolio_pillars.get(code) %}
+    <div class="pcard">
+      <div class="pcard-top">
+        <span class="pcard-ic">{{ PILLAR_ICONS.get(code, '') }}</span>
+        <div>
+          <h4>{{ label }}</h4>
+          <span class="pcard-w">Weight {{ '%.0f'|format(weight * 100) }}%</span>
+        </div>
+        <b class="pcard-score">{{ '%.1f'|format(score) if score is not none else '—' }}</b>
+      </div>
+      <span class="sp-bar"><i style="width:{{ score if score is not none else 0 }}%"></i></span>
+      <p class="muted small">{{ PILLAR_PLAIN.get(code, objective) }}</p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{% if summary.bands %}
+<section class="block">
+  <h3>🪜 Maturity spread</h3>
+  <div class="band-bars">
+    {% for band, count in summary.bands.items() %}
+    <div class="band-row">
+      <span class="band-name">{{ band }}</span>
+      <span class="sp-bar"><i style="width:{{ (100 * count / summary.completed)|round|int }}%"></i></span>
+      <b>{{ count }}</b>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="block">
+  <div class="block-head">
+    <h3>🗂️ Assessments</h3>
+    <a class="btn ghost sm" href="/assessments">See all →</a>
+  </div>
+  <table class="table">
+    <thead><tr><th>Organisation</th><th>Scope</th><th>Status</th>
+    <th class="num">Index</th><th>Maturity</th><th></th></tr></thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td><strong>{{ r.organization }}</strong></td>
+        <td class="muted">{{ r.department or 'Organisation-wide' }}</td>
+        <td>{% if r.status == 'completed' %}<span class="tag ok">Completed</span>
+            {% else %}<span class="tag warn">In progress</span>{% endif %}</td>
+        <td class="num">{{ '%.1f'|format(r.readiness_index) if r.readiness_index is not none else '—' }}</td>
+        <td>{{ r.maturity_band or '—' }}</td>
+        <td><a href="/assessment/{{ r.id }}{{ '/results' if r.status == 'completed' else '' }}">Open →</a></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="muted">Nothing here yet. Start your first assessment.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

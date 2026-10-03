@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Secrets — never commit
+.env
+*.env
+!.env.example
+
+# Local database
+*.db
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Stale duplicate of .venv (FastAPI moved into .venv)
+.venv-1/
+
+# Test artifacts
+/screenshots/

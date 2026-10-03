@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Assessments{% endblock %}
+{% block content %}
+<section class="head">
+  <h1>Assessments</h1>
+  <p class="muted">Every {{ BRAND_NAME }} assessment held on this instance.</p>
+</section>
+<section class="block">
+<table class="table">
+  <thead><tr><th>Organisation</th><th>Department</th><th>Status</th>
+  <th class="num">{{ INDEX_SHORT }}</th><th>Maturity</th><th></th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td>{{ r.organization }}</td>
+      <td>{{ r.department or '—' }}</td>
+      <td>{{ r.status }}</td>
+      <td class="num">{{ '%.1f'|format(r.readiness_index) if r.readiness_index is not none else '—' }}</td>
+      <td>{{ r.maturity_band or '—' }}</td>
+      <td><a href="/assessment/{{ r.id }}{{ '/results' if r.status == 'completed' else '' }}">Open</a></td>
+    </tr>
+  {% else %}
+    <tr><td colspan="6" class="muted">No assessments yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</section>
+<p><a class="btn" href="/start">New assessment</a></p>
+{% endblock %}

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Home{% endblock %} &middot; {{ BRAND_NAME }}</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/"><span class="mark">{{ BRAND_MARK }}</span> {{ BRAND_NAME }}</a>
+  <nav>
+    <a href="/dashboard">📊 Dashboard</a>
+    <a href="/start">＋ New assessment</a>
+    <a href="/assessments">🗂️ Assessments</a>
+    <a href="/docs">🔌 API</a>
+  </nav>
+  <div class="session">
+    {% if user %}<span class="who">{{ user.name or user.email }}</span>
+    <a href="/logout">Sign out</a>{% endif %}
+  </div>
+</header>
+<main>{% block content %}{% endblock %}</main>
+<footer>
+  <p>{{ BRAND_NAME }} &mdash; {{ BRAND_TAGLINE }}</p>
+  <p class="muted">{{ FRAMEWORK_NAME }} &middot; {{ INDEX_NAME }}</p>
+</footer>
+</body>
+</html>

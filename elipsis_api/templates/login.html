@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Welcome{% endblock %}
+{% block content %}
+<div class="auth">
+  <section class="auth-pitch">
+    <p class="eyebrow">{{ BRAND_MARK }} {{ BRAND_SHORT }}</p>
+    <h1>Find out what your business<br>is losing to friction.</h1>
+    <p class="lede">{{ BRAND_TAGLINE }} Answer {{ QUESTIONNAIRE_CODE }}'s
+    {{ total_questions }} short questions — in plain English, about 25 minutes —
+    and see exactly where your money and time are going.</p>
+
+    <ul class="auth-points">
+      <li><span>⚙️</span><div><strong>Seven intelligence pillars</strong>
+        <p class="muted">How work flows, what can be automated, your data, your
+        technology and whether you can grow.</p></div></li>
+      <li><span>📊</span><div><strong>36 executive metrics</strong>
+        <p class="muted">Plain measures your board will understand — workflow
+        friction, spreadsheet dependency, key-person risk and more.</p></div></li>
+      <li><span>💰</span><div><strong>The cost, in {{ CURRENCY }}</strong>
+        <p class="muted">What the friction costs you each year, what fixing it
+        saves, and how long it takes to pay back.</p></div></li>
+      <li><span>🚀</span><div><strong>A three-phase roadmap</strong>
+        <p class="muted">Quick wins first, then process automation, then AI —
+        in the order that actually pays back.</p></div></li>
+    </ul>
+  </section>
+
+  <section class="auth-card">
+    <h2>Sign in to continue</h2>
+    <p class="muted">Use your Elipsis account.</p>
+
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+    <form method="post" action="/login" class="stack">
+      <label>Email address
+        <input type="email" name="email" value="admin@elipsis.local" required autocomplete="username">
+      </label>
+      <label>Password
+        <input type="password" name="password" required autocomplete="current-password">
+      </label>
+      <button class="btn big full" type="submit">Sign in →</button>
+    </form>
+
+    <div class="demo-note">
+      <strong>🔑 Demo account</strong>
+      <p class="muted">Email <code>admin@elipsis.local</code><br>Password <code>elipsis</code></p>
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}Results{% endblock %}
+
+{% macro bar(pct) %}
+<div class="bar"><span style="width:{{ '%.1f'|format(pct if pct is not none else 0) }}%"></span></div>
+{% endmacro %}
+
+{% block content %}
+<section class="head">
+  <p class="eyebrow">{{ INDEX_NAME }}</p>
+  <h1>{{ organization.name }}{% if department %} &mdash; {{ department.name }}{% endif %}</h1>
+  <p class="muted">Completed {{ assessment.completed_at or '' }} &nbsp;&middot;&nbsp;
+  {{ result.answered }} of {{ result.total }} questions answered</p>
+</section>
+
+<section class="headline">
+  <div class="gauge">
+    <div class="gauge-num">{{ '%.1f'|format(result.readiness_index) }}<span>/100</span></div>
+    <div class="gauge-label">{{ INDEX_SHORT }}</div>
+  </div>
+  <div class="headline-meta">
+    <p class="band">{{ result.maturity_band }}</p>
+    <p class="muted">Organisation score {{ '%.1f'|format(result.organisation_score) }}
+    &nbsp;&middot;&nbsp; {{ CONFIDENCE_NAME }} {{ '%.1f'|format(result.confidence_index) }}
+    ({{ result.confidence_band }})</p>
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/report">Open printable report</a>
+  </div>
+</section>
+
+<section class="block">
+  <h3>The seven intelligence pillars</h3>
+  <div class="metrics">
+    {% for code, score in result.pillars.items() %}
+    <div class="metric">
+      <div class="metric-top"><span>{{ PILLAR_LABELS.get(code, code) }}</span><b>{{ '%.1f'|format(score) }}</b></div>
+      {{ bar(score) }}
+      <p class="weight">Weight {{ '%.0f'|format(PILLAR_WEIGHTS.get(code, 0) * 100) }}%</p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="block">
+  <h3>Executive metrics</h3>
+  <p class="muted">Thirty-six derived indicators grouped by pillar. <b>Risk</b> metrics are
+  inverted: a high value means more exposure.</p>
+  {% for pcode, rows in result.metrics_by_pillar.items() %}
+  {% if rows %}
+  <h4>{{ PILLAR_LABELS.get(pcode, pcode) }}</h4>
+  <div class="metrics">
+    {% for m in rows %}
+    <div class="metric {{ 'is-risk' if m.kind == 'risk' }}">
+      <div class="metric-top"><span>{{ m.label }}</span><b>{{ '%.1f'|format(m.value) }}</b></div>
+      {{ bar(m.value) }}
+      <p class="reading muted">{{ m.reading }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endfor %}
+</section>
+
+<section class="block">
+  <h3>Implementation roadmap</h3>
+  {% for phase in result.roadmap %}
+  <div class="phase">
+    <div class="phase-head">
+      <h4>{{ phase.label }}</h4>
+      <span class="muted">{{ phase.horizon }} &nbsp;&middot;&nbsp; {{ phase.count }} action{{ '' if phase.count == 1 else 's' }}</span>
+    </div>
+    <p class="muted">{{ phase.note }}</p>
+    {% if phase.items %}
+    <table class="table">
+      <thead><tr><th class="num">Priority</th><th>Recommendation</th><th>Technology</th>
+      <th>Complexity</th><th class="num">ROI</th><th>Pillar</th></tr></thead>
+      <tbody>
+        {% for r in phase['items'] %}
+        <tr>
+          <td class="num">{{ '%.0f'|format(r.priority) }}</td>
+          <td>{{ r.title }}</td>
+          <td>{{ r.technology }}</td>
+          <td>{{ r.complexity }}</td>
+          <td class="num">{{ '%.0f'|format(r.roi) }}%</td>
+          <td class="muted">{{ PILLAR_LABELS.get(r.pillar, r.pillar) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted">No actions in this phase.</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+</section>
+
+<section class="block">
+  <h3>Highest impact opportunities</h3>
+  <ol class="opp">
+    {% for o in result.top_opportunities %}<li>{{ o }}</li>{% else %}<li class="muted">None.</li>{% endfor %}
+  </ol>
+</section>
+
+<section class="block">
+  <h3>Subdomain scores</h3>
+  <table class="table">
+    <thead><tr><th>Subdomain</th><th>Pillar</th><th class="num">Score</th><th></th></tr></thead>
+    <tbody>
+      {% for code, score in result.subdomains.items() %}
+      <tr>
+        <td><span class="qcode">{{ code }}</span>{{ SUBDOMAIN_LABELS.get(code, code) }}</td>
+        <td class="muted">{{ PILLAR_LABELS.get(SUBDOMAIN_PILLAR.get(code), '') }}</td>
+        <td class="num">{{ '%.1f'|format(score) }}</td>
+        <td class="barcol">{{ bar(score) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="block">
+  <h3>Pain points</h3>
+  <table class="table">
+    <thead><tr><th>Severity</th><th>Finding</th><th class="num">Impact</th><th>Trigger</th></tr></thead>
+    <tbody>
+      {% for p in result.pain_points %}
+      <tr>
+        <td><span class="tag sev-{{ p.severity|lower }}">{{ p.severity }}</span></td>
+        <td>{{ p.title }}</td>
+        <td class="num">{{ '%.0f'|format(p.impact) }}%</td>
+        <td class="muted">{{ p.detail }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4" class="muted">No pain points triggered.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="block">
+  <h3>Financial impact</h3>
+  <div class="kpis">
+    <div class="kpi"><span>Current annual cost</span><b>{{ result.financial.current_cost|money }}</b></div>
+    <div class="kpi"><span>Projected annual cost</span><b>{{ result.financial.future_cost|money }}</b></div>
+    <div class="kpi accent"><span>Annual savings potential</span><b>{{ result.financial.annual_savings|money }}</b></div>
+    <div class="kpi"><span>Indicative investment</span><b>{{ result.financial.investment|money }}</b></div>
+    <div class="kpi"><span>Return on investment</span><b>{{ '%.0f'|format(result.financial.roi) }}%</b></div>
+    <div class="kpi"><span>Payback period</span><b>{{ '%.1f'|format(result.financial.payback_months) }} months</b></div>
+  </div>
+  <p class="muted">Financial figures are management estimates derived from the
+  assessment, not audited results.</p>
+</section>
+{% endblock %}

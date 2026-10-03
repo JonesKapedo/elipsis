@@ -1,0 +1,1 @@
+"""Elipsis API — FastAPI + SQLAlchemy transport (primary interface)."""

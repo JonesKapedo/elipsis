@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}New assessment{% endblock %}
+{% block content %}
+<section class="narrow">
+  <h1>New {{ INDEX_SHORT }} assessment</h1>
+  <p class="lede">{{ QUESTIONNAIRE_NAME }} &mdash; {{ QUESTIONNAIRE_CODE }}.
+  {{ total_questions }} questions across the seven intelligence pillars, taking about
+  50 minutes. Every question contributes to at least one pillar and to the
+  thirty-six executive metrics.</p>
+  <form method="post" action="/start" class="stack">
+    <h3>Organisation</h3>
+    <label>Existing organisation
+      <select name="organization_id">
+        <option value="">&mdash; create new &mdash;</option>
+        {% for o in organizations %}<option value="{{ o.id }}">{{ o.name }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>New organisation name <input name="org_name" placeholder="e.g. Blue Ridge Logistics Ltd"></label>
+    <label>Industry <input name="industry" placeholder="e.g. Logistics"></label>
+    <label>Employees <input name="employee_count" type="number" min="0" placeholder="120"></label>
+    <label>Country <input name="country" value="Kenya"></label>
+    <label>City <input name="city" placeholder="Nairobi"></label>
+    <h3>Scope</h3>
+    <label>Department <input name="department" value="Operations"></label>
+    <label>Respondent <input name="respondent" placeholder="e.g. Operations Manager"></label>
+    <button class="btn" type="submit">Begin assessment</button>
+  </form>
+</section>
+{% endblock %}
