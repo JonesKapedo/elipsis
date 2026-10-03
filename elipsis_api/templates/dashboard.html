@@ -109,7 +109,15 @@
 <section class="block">
   <div class="block-head">
     <h3>🗂️ Assessments</h3>
-    <a class="btn ghost sm" href="/assessments">See all →</a>
+    <div class="head-actions">
+      <a class="btn ghost sm" href="/assessments">See all →</a>
+      {% if summary.total %}
+      <form method="post" action="/dashboard/reset"
+            onsubmit="return confirm('Delete all {{ summary.total }} assessment(s)? This cannot be undone.')">
+        <button class="btn danger sm" type="submit">🧹 Clear demo data</button>
+      </form>
+      {% endif %}
+    </div>
   </div>
   <table class="table">
     <thead><tr><th>Organisation</th><th>Scope</th><th>Status</th>

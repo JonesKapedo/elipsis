@@ -47,7 +47,7 @@
         {% if q.why %}<p class="why"><strong>Why we ask:</strong> {{ q.why }}</p>{% endif %}
 
         <div class="choices">
-          {% for score, emoji, label, help_text in ANSWER_SCALE %}
+          {% for score, emoji, label, help_text in SCALES.get(q.scale, ()) %}
           <label class="choice">
             <input type="radio" name="q{{ q.id }}" value="{{ score }}"
                    data-evidence-input="e{{ q.id }}"

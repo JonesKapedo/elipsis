@@ -91,6 +91,21 @@
   {% endfor %}
 
   <h2>7. Financial impact</h2>
+  {% set fx = result.financial.assumptions %}
+  {% if fx %}
+  <table class="meta">
+    <tr><th>Organisation size</th><td>{{ fx.staff }} people</td></tr>
+    <tr><th>Blended hourly rate</th><td>{{ fx.hourly_rate|money }} per hour</td></tr>
+    <tr><th>Assumed labour line</th><td>{{ fx.labour_line|money }} a year
+      ({{ fx.staff }} &times; {{ fx.working_hours_per_month }} hours &times; 12)</td></tr>
+    <tr><th>Ceiling applied</th><td>{{ '%.0f'|format(fx.max_savings_share * 100) }}% of the labour line</td></tr>
+    <tr><th>Hours freed</th><td>{{ fx.hours_freed }} hours a year</td></tr>
+    {% if fx.capped %}
+    <tr><th>Cap applied</th><td>Yes &mdash; the raw figure of {{ fx.raw_savings|money }}
+      was scaled down to the ceiling so the promise stays credible</td></tr>
+    {% endif %}
+  </table>
+  {% endif %}
   <table class="meta">
     <tr><th>Current annual cost</th><td>{{ result.financial.current_cost|money }}</td></tr>
     <tr><th>Projected annual cost</th><td>{{ result.financial.future_cost|money }}</td></tr>

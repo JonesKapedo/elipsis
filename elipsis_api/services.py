@@ -41,7 +41,7 @@ def seed(db: Session):
             db.flush()
         for pos, item in enumerate(QUESTIONS, start=1):
             db.add(models.Question(
-                questionnaire_id=bank.id, code=item["code"],
+                questionnaire_id=bank.id, code=item["code"], scale=item["scale"],
                 subdomain=item["subdomain"], pillar=SUBDOMAIN_PILLAR[item["subdomain"]],
                 text=item["text"], why=item["why"], weight=item["weight"],
                 evidence_required=1 if item["evidence_required"] else 0, position=pos))
@@ -120,7 +120,10 @@ def compute(db: Session, assessment_id: int):
     q_dicts = [dict(id=q.id, code=q.code, subdomain=q.subdomain, pillar=q.pillar,
                     weight=q.weight, evidence_required=bool(q.evidence_required))
                for q in questions]
-    return assessment, _compute(q_dicts, answers_map(db, assessment_id))
+    # Financial impact is sized by the organisation being assessed.
+    org = db.get(models.Organization, assessment.organization_id)
+    staff = getattr(org, "employee_count", None) if org else None
+    return assessment, _compute(q_dicts, answers_map(db, assessment_id), staff=staff)
 
 
 def save(db: Session, assessment_id: int, result):
@@ -364,3 +367,23 @@ def _band_counts(completed):
         band = row.get("maturity_band") or "Unknown"
         counts[band] = counts.get(band, 0) + 1
     return counts
+
+
+def reset_demo_data(db: Session):
+    """Delete every assessment and its rows, keeping the instrument and users.
+
+    Demos repeat far better when the dashboard is not full of test runs.
+    The question bank, seeded organisation and demo account are untouched.
+    """
+    assessment_ids = list(db.scalars(select(models.Assessment.id)))
+    removed = 0
+    if assessment_ids:
+        # Child rows first, because SQLite has no cascading deletes here.
+        for model in (models.Answer, models.MetricScore, models.PillarScore,
+                      models.SubdomainScore, models.PainPoint,
+                      models.Recommendation, models.FinancialModel, models.Report):
+            db.execute(delete(model).where(model.assessment_id.in_(assessment_ids)))
+        db.execute(delete(models.Assessment).where(models.Assessment.id.in_(assessment_ids)))
+        removed = len(assessment_ids)
+    db.commit()
+    return removed

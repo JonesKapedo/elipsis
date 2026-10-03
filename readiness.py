@@ -197,112 +197,163 @@ def validate_metrics(question_codes) -> None:
 PAIN_CATALOG = {
     # --- Pillar 1: Operational Efficiency --------------------------------
     "Q01": dict(title="Tribal Knowledge Risk", severity="High", phase=1,
-                base_hours=28, investment=90000,
+                base_hours=28, share=0.1, investment=90000,
                 solution="Document the core processes and stand up a searchable SOP library",
                 technology="SOP / knowledge-base platform", complexity="Low"),
     "Q03": dict(title="Unowned Process Risk", severity="Medium", phase=1,
-                base_hours=14, investment=60000,
+                base_hours=14, share=0.06, investment=60000,
                 solution="Assign a named process owner and a review cadence for each core process",
                 technology="Process register + governance rhythm", complexity="Low"),
     "Q05": dict(title="Approval Bottleneck", severity="Medium", phase=2,
-                base_hours=16, investment=140000,
+                base_hours=16, share=0.08, investment=140000,
                 solution="Collapse approval layers and route low-value requests automatically",
                 technology="Workflow engine with approval rules", complexity="Medium"),
     "Q06": dict(title="Cycle-Time Drag", severity="High", phase=2,
-                base_hours=24, investment=180000,
+                base_hours=24, share=0.12, investment=180000,
                 solution="Re-engineer the flow to remove queue time between steps",
                 technology="Process redesign + workflow automation", complexity="Medium"),
     "Q08": dict(title="Overtime Dependency", severity="Medium", phase=2,
-                base_hours=20, investment=130000,
+                base_hours=20, share=0.1, investment=130000,
                 solution="Rebalance capacity against measured demand to remove overtime",
                 technology="Capacity planning + scheduling tool", complexity="Medium"),
     # --- Pillar 2: Automation Readiness ----------------------------------
     "Q10": dict(title="High-Frequency Repetitive Work", severity="High", phase=1,
-                base_hours=45, investment=210000,
+                base_hours=45, share=0.15, investment=210000,
                 solution="Automate the highest-frequency recurring tasks first",
                 technology="RPA / workflow automation", complexity="Low"),
     "Q13": dict(title="Rule-Based Decision Backlog", severity="High", phase=1,
-                base_hours=32, investment=190000,
+                base_hours=32, share=0.12, investment=190000,
                 solution="Encode fixed decision rules into an automated decision service",
                 technology="Rules engine / decision service", complexity="Medium"),
     "Q16": dict(title="Manual Data Entry Burden", severity="High", phase=1,
-                base_hours=38, investment=175000,
+                base_hours=38, share=0.14, investment=175000,
                 solution="Replace manual entry with capture at source and API transfer",
                 technology="Form capture / OCR / API integration", complexity="Low"),
     "Q17": dict(title="Copy-Paste Dependency", severity="Critical", phase=1,
-                base_hours=40, investment=195000,
+                base_hours=40, share=0.13, investment=195000,
                 solution="Remove re-keying by connecting the systems directly",
                 technology="API / iPaaS", complexity="Medium"),
     "Q18": dict(title="Manual Reporting & Chasing", severity="High", phase=1,
-                base_hours=42, investment=160000,
+                base_hours=42, share=0.15, investment=160000,
                 solution="Automate recurring reporting and exception chasing",
                 technology="Reporting suite (BI / Metabase)", complexity="Low"),
     # --- Pillar 3: Digital Maturity -------------------------------------
     "Q22": dict(title="Paper Reliance", severity="Medium", phase=2,
-                base_hours=18, investment=150000,
+                base_hours=18, share=0.1, investment=150000,
                 solution="Digitise intake and capture at the point of work",
                 technology="Digital forms / document capture", complexity="Medium"),
     "Q24": dict(title="Spreadsheet Dependency", severity="High", phase=1,
-                base_hours=35, investment=200000,
+                base_hours=35, share=0.12, investment=200000,
                 solution="Migrate spreadsheet system-of-record into a governed platform",
                 technology="BI platform / operational database", complexity="Medium"),
     "Q27": dict(title="Integration Constraint", severity="High", phase=3,
-                base_hours=26, investment=340000,
+                base_hours=26, share=0.08, investment=340000,
                 solution="Expose documented APIs and build an integration layer",
                 technology="iPaaS / API middleware", complexity="High"),
     # --- Pillar 4: Data Intelligence -------------------------------------
     "Q29": dict(title="Unowned Critical Data", severity="Medium", phase=1,
-                base_hours=14, investment=85000,
+                base_hours=14, share=0.05, investment=85000,
                 solution="Publish data ownership and quality standards per dataset",
                 technology="Data ownership register", complexity="Low"),
     "Q33": dict(title="Late Data Errors", severity="High", phase=2,
-                base_hours=28, investment=185000,
+                base_hours=28, share=0.1, investment=185000,
                 solution="Add automated validation at the point of capture",
                 technology="Validation rules / data-quality tooling", complexity="Medium"),
     "Q35": dict(title="Absent Decision Dashboard", severity="Medium", phase=3,
-                base_hours=22, investment=165000,
+                base_hours=22, share=0.08, investment=165000,
                 solution="Publish a live KPI dashboard fed from systems of record",
                 technology="BI dashboard layer", complexity="Medium"),
     # --- Pillar 5: AI Readiness -----------------------------------------
     "Q38": dict(title="Support Knowledge Deficit", severity="Medium", phase=3,
-                base_hours=20, investment=140000,
+                base_hours=20, share=0.08, investment=140000,
                 solution="Build a maintained FAQ and self-service knowledge base",
                 technology="Knowledge base + assisted search", complexity="Low"),
     "Q40": dict(title="No Central Knowledge Repository", severity="High", phase=1,
-                base_hours=24, investment=150000,
+                base_hours=24, share=0.1, investment=150000,
                 solution="Consolidate scattered knowledge into one governed repository",
                 technology="Knowledge-base platform", complexity="Low"),
     "Q44": dict(title="Forecast Blind Spot", severity="High", phase=3,
-                base_hours=30, investment=260000,
+                base_hours=30, share=0.1, investment=260000,
                 solution="Introduce demand forecasting on a defined horizon",
                 technology="Forecasting model / planning tool", complexity="High"),
     # --- Pillar 6: Technology & Integration ------------------------------
     "Q46": dict(title="No Core System of Record", severity="Critical", phase=3,
-                base_hours=36, investment=650000,
+                base_hours=36, share=0.2, investment=650000,
                 solution="Implement a core ERP as the authoritative record",
                 technology="ERP platform + implementation", complexity="High"),
     "Q52": dict(title="Weak Access Governance", severity="High", phase=2,
-                base_hours=20, investment=170000,
+                base_hours=20, share=0.07, investment=170000,
                 solution="Introduce role-based access control with regular recertification",
                 technology="IAM / RBAC tooling", complexity="Medium"),
     "Q53": dict(title="Recovery Exposure", severity="Critical", phase=2,
-                base_hours=26, investment=150000,
+                base_hours=26, share=0.06, investment=150000,
                 solution="Automate backups and prove recovery with scheduled restore tests",
                 technology="Backup + recovery automation", complexity="Low"),
     # --- Pillar 7: Strategic Scalability --------------------------------
     "Q58": dict(title="Key Person Dependency", severity="Critical", phase=1,
-                base_hours=18, investment=95000,
+                base_hours=18, share=0.09, investment=95000,
                 solution="Cross-train and document critical knowledge, remove single-owner steps",
                 technology="SOP system + cross-training", complexity="Low"),
     "Q59": dict(title="Decision Concentration", severity="High", phase=2,
-                base_hours=16, investment=130000,
+                base_hours=16, share=0.08, investment=130000,
                 solution="Delegate decisions below a defined threshold with guardrails",
                 technology="Delegation matrix + workflow", complexity="Low"),
     "Q61": dict(title="Operational Growth Ceiling", severity="High", phase=2,
-                base_hours=30, investment=230000,
+                base_hours=30, share=0.14, investment=230000,
                 solution="Remove the operational blockers constraining the next growth step",
                 technology="Capacity + process intervention", complexity="Medium"),
 }
+
+
+# --- Financial model ------------------------------------------------------
+# The previous model multiplied a fixed `base_hours` by severity and a flat
+# hourly rate, so a 5-person firm and a 500-person firm with identical answers
+# reported identical savings. Savings are now derived from the size of the
+# organisation actually being assessed:
+#
+#   affected staff   = staff x share_of_workforce_affected
+#   annual hours     = affected staff x hours_per_person_per_year x severity
+#   current cost     = annual hours x blended hourly rate
+#   recoverable      = current cost x efficiency(complexity)
+#
+# The total is then capped so the result can never exceed MAX_SAVINGS_SHARE of
+# the organisation's labour line. Every figure is returned in `assumptions` so
+# the report can show the working and the number can be defended.
+WORKING_HOURS_PER_MONTH = 160      # ~40 hours a week, 12 months
+WORKING_DAYS_PER_YEAR = 220
+
+# Blended fully-loaded hourly rate (KES) by organisation size. Smaller
+# employers pay less, so the same automation is worth less money to them.
+WAGE_TIERS = (
+    (0, 50, 250.0),
+    (51, 200, 450.0),
+    (201, 500, 650.0),
+    (501, None, 900.0),
+)
+
+# Hard ceiling: never promise more than this share of the labour line.
+MAX_SAVINGS_SHARE = 0.12
+
+DEFAULT_STAFF = 50
+
+
+def blended_hourly_rate(staff, default=DEFAULT_HOURLY_RATE):
+    """Blended fully-loaded hourly rate for an organisation of this size."""
+    try:
+        staff = int(staff)
+    except (TypeError, ValueError):
+        return default
+    for low, high, rate in WAGE_TIERS:
+        if staff >= low and (high is None or staff <= high):
+            return rate
+    return default
+
+
+def labour_line(staff, rate):
+    """Annual payroll for the organisation being assessed."""
+    staff = max(0, int(staff or 0))
+    return staff * WORKING_HOURS_PER_MONTH * 12 * rate
+
 
 EFFICIENCY = {"Low": 0.70, "Medium": 0.60, "High": 0.50}
 EASE = {"Low": 1.00, "Medium": 0.60, "High": 0.30}
@@ -344,12 +395,16 @@ def _horizon(complexity, priority):
     return "Horizon 3 - Enterprise Automation (12-24 months)"
 
 
-def compute(questions, answers, respondent_coverage=1 / 3.0, consistency=1.0):
+def compute(questions, answers, respondent_coverage=1 / 3.0, consistency=1.0,
+            staff=None):
     """Compute the full Elipsis result.
 
     questions : iterable of mappings with keys
                 id, code, subdomain, pillar, weight, evidence_required
     answers   : mapping of question_id -> {"score": int|None, "evidence": str}
+
+    staff : the number of people in the organisation being assessed. Drives
+            the size of the financial impact; defaults to DEFAULT_STAFF.
 
     Returns a plain dict; writes nothing. The caller persists it.
     """
@@ -417,6 +472,11 @@ def compute(questions, answers, respondent_coverage=1 / 3.0, consistency=1.0):
     ]
 
     # --- Pain points, recommendations, financial model --------------------
+    staff_count = max(1, int(staff or DEFAULT_STAFF))
+    hourly_rate = blended_hourly_rate(staff_count)
+    payroll = labour_line(staff_count, hourly_rate)
+    savings_cap = payroll * MAX_SAVINGS_SHARE
+
     pain_points, recommendations = [], []
     current_total = future_total = investment_total = 0.0
     for q in questions:
@@ -427,7 +487,11 @@ def compute(questions, answers, respondent_coverage=1 / 3.0, consistency=1.0):
             continue
         spec = PAIN_CATALOG[q["code"]]
         sev = (5 - raw) / 5.0
-        current = spec["base_hours"] * sev * DEFAULT_HOURLY_RATE * 12
+        # Scale the cost by how much of the workforce this pain touches.
+        share = spec.get("share", 0.05)
+        affected = staff_count * share
+        annual_hours = affected * spec["base_hours"] * sev
+        current = annual_hours * hourly_rate
         future = current * (1 - EFFICIENCY[spec["complexity"]])
         savings = current - future
         investment = float(spec["investment"])
@@ -447,8 +511,31 @@ def compute(questions, answers, respondent_coverage=1 / 3.0, consistency=1.0):
         investment_total += investment
 
     total_savings = current_total - future_total
+    # Never promise more than the cap; if the raw figure exceeds it, scale
+    # every line down so the arithmetic the client sees still adds up.
+    scaling = 1.0
+    if total_savings > savings_cap > 0:
+        scaling = savings_cap / total_savings
+        total_savings = savings_cap
+        current_total *= scaling
+        future_total *= scaling
     roi_total = (total_savings / investment_total * 100) if investment_total else 0.0
     payback_total = (investment_total / (total_savings / 12)) if total_savings > 0 else 0.0
+
+    assumptions = dict(
+        staff=staff_count,
+        hourly_rate=hourly_rate,
+        working_hours_per_month=WORKING_HOURS_PER_MONTH,
+        labour_line=round(payroll),
+        savings_cap=round(savings_cap),
+        max_savings_share=MAX_SAVINGS_SHARE,
+        capped=scaling < 1.0,
+        cap_applied=round(savings_cap),
+        raw_savings=round(total_savings / scaling),
+        scale_factor=round(scaling, 4),
+        friction_cost=round(current_total),
+        hours_freed=round(total_savings / hourly_rate) if hourly_rate else 0,
+    )
 
     # --- Three-phase roadmap ---------------------------------------------
     ordered = sorted(recommendations, key=lambda x: -x["priority"])
@@ -484,7 +571,8 @@ def compute(questions, answers, respondent_coverage=1 / 3.0, consistency=1.0):
         top_opportunities=[r["title"] for r in ordered[:3]],
         financial=dict(current_cost=round(current_total), future_cost=round(future_total),
                        annual_savings=round(total_savings), investment=round(investment_total),
-                       roi=round(roi_total, 1), payback_months=round(payback_total, 1)),
+                       roi=round(roi_total, 1), payback_months=round(payback_total, 1),
+                       assumptions=assumptions),
     )
 
 

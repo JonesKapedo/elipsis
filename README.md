@@ -206,18 +206,25 @@ Answers save automatically as you go, so a half-finished assessment survives a r
 A metric only shows a number once every input its formula needs has a real answer;
 until then it shows a dash rather than a misleading figure.
 
-### The answer scale
+### Answer scales — tailored per question
 
-One scale is used for every question in the instrument, in plain language:
+There is no single universal ladder. Each question names a scale in
+`constants.SCALES` built for what it actually asks, so a question about
+approval layers offers counts of people, a question about retrieval speed
+offers times, and a question about volume offers counts per week.
 
-| | Answer | Meaning |
+| Question | Scale | Options run from |
 | --- | --- | --- |
-| ⛔ | Never | We never do this. |
-| 🔴 | Hardly ever | Very rarely, and only by hand. |
-| 🟠 | Sometimes | Some of the time, but not always. |
-| 🟡 | Often | Most of the time. |
-| 🟢 | Almost always | Nearly every time. |
-| ⭐ | Always, and it runs itself | Every time, and automatically. |
+| How many separate steps to finish a job? | `stepcount` | More than 10 steps → One step |
+| How many people must approve something? | `approvals` | Five or more people → Never needs approval |
+| How quickly can a new hire find an answer? | `speed_more` | They must ask someone → Straight away |
+| How many customer questions per week? | `volume_count` | None → More than 100 a week |
+| How often is information copied and pasted? | `copying_less` | All day, every day → Never |
+
+**Invariant:** the highest-scoring option of *every* scale means "most ready".
+"Ladders for questions where less is better are written in reverse at authoring
+time, so the scoring engine and all 36 metric formulas need no knowledge of
+polarity. `tests/test_questions.py` enforces this.
 
 ### Writing rules for questions
 
@@ -238,5 +245,41 @@ a "why" that says what is being checked and why it matters.
 7. ✅ Three-phase implementation roadmap (Quick Wins → Process Automation → AI)
 8. ✅ Segmented form (21 steps) with live per-section scoring and autosave
 9. ✅ Command-centre dashboard, plain-English instrument, icon-led design system
-10. Next: PostgreSQL migration, evidence uploads, multi-respondent alignment index,
-    further verticals, Level 3–6 report tiers
+10. ✅ Per-question answer scales (48 named scales) replacing the universal ladder
+11. ✅ Test suite (63 tests) covering the engine, instrument, financial model and API
+12. ✅ Financial impact sized by the organisation, with a ceiling and a shown working
+13. ✅ Dashboard "clear demo data" control
+14. Next: evidence uploads, multi-respondent alignment index, assessment
+    comparison view, further verticals, Level 3–6 report tiers
+
+## Tests
+
+```bash
+pip install -e '.[dev]'
+python -m pytest
+```
+
+| File | Covers |
+| --- | --- |
+| `tests/test_questions.py` | 63 unique codes, 9 per pillar, 21 segments, plain-English wording, scale integrity and direction |
+| `tests/test_readiness.py` | Metric bounds, evaluator safety (rejects `__import__`, attribute access, lambdas), readiness gating, maturity band edges, partial/empty forms, roadmap coverage |
+| `tests/test_financial.py` | Savings scale with company size, wage tiers, the 12% ceiling, and arithmetic that reconciles |
+| `tests/test_api.py` | Full round trip: create → answer 21 segments live → submit → results/report/dashboard |
+
+## The financial model
+
+Annual savings are sized by the organisation being assessed:
+
+```text
+affected staff = staff x share of workforce the pain touches
+annual hours   = affected staff x hours per person per year x severity
+current cost   = annual hours x blended hourly rate
+recoverable    = current cost x efficiency(complexity)
+
+total savings  = capped at 12% of the labour line
+```
+
+The blended hourly rate rises with organisation size (KES 250 → 900), and the
+report prints the whole working — staff count, rate, labour line, ceiling and
+hours freed — so a client can check the arithmetic instead of taking it on
+trust.

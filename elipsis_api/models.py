@@ -57,6 +57,8 @@ class Question(Base):
     id = Column(Integer, primary_key=True)
     questionnaire_id = Column(Integer, ForeignKey("questionnaires.id"), nullable=False)
     code = Column(String, nullable=False)
+    # Which answer scale this question uses (constants.SCALES key).
+    scale = Column(String)
     subdomain = Column(String, nullable=False)
     pillar = Column(String, nullable=False)
     text = Column(Text, nullable=False)

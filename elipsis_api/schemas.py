@@ -55,9 +55,19 @@ class AssessmentOut(BaseModel):
     confidence_index: Optional[float]
 
 
+class OptionOut(BaseModel):
+    """One selectable answer for a question."""
+    score: int
+    emoji: str
+    label: str
+    help: str
+
+
 class QuestionOut(BaseModel):
     id: int
     code: str
+    scale: Optional[str] = None
+    options: List[OptionOut] = Field(default_factory=list)
     subdomain: str
     pillar: str
     text: str
@@ -87,7 +97,24 @@ class RecommendationOut(BaseModel):
     pillar: Optional[str] = None
 
 
+class AssumptionsOut(BaseModel):
+    """The working behind the financial impact, so a client can check it."""
+    staff: int
+    hourly_rate: float
+    working_hours_per_month: int
+    labour_line: float
+    savings_cap: float
+    max_savings_share: float
+    capped: bool
+    cap_applied: float
+    raw_savings: float
+    scale_factor: float
+    friction_cost: float
+    hours_freed: int
+
+
 class FinancialOut(BaseModel):
+    assumptions: Optional[AssumptionsOut] = None
     current_cost: float
     future_cost: float
     annual_savings: float

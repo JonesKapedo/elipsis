@@ -306,35 +306,453 @@ EVIDENCE_LABELS = {
     "multi": "Multi-source verification",
 }
 
-# --- The answer scale (identical for every question) ----------------------
-# One scale, used everywhere, in plain language. A respondent should be able
-# to fill the whole form without reading instructions.
+# --- Answer scales, one per question type --------------------------------
+# A single "Never -> Always" ladder is wrong for questions that ask about
+# counts, speed or volume, and it inverts the meaning of risk questions
+# ("Always copying and pasting" is bad). So each question carries a `scale`
+# key naming a scale built for what it asks.
 #
-# (score, emoji, short label, plain explanation)
-ANSWER_SCALE = (
-    (0, "⛔", "Never",
-     "We never do this."),
-    (1, "🔴", "Hardly ever",
-     "We do this very rarely, and only by hand."),
-    (2, "🟠", "Sometimes",
-     "We do this some of the time, but not always."),
-    (3, "🟡", "Often",
-     "We do this most of the time."),
-    (4, "🟢", "Almost always",
-     "We do this nearly every time."),
-    (5, "⭐", "Always, and it runs itself",
-     "We do this every time, and it happens automatically."),
-)
+# INVARIANT, relied on by the scoring engine: **the highest-scoring option of
+# every scale always means "most ready"**. Authoring reverses the ladder for
+# "less is better" questions, so no formula or metric needs to know the
+# polarity. `tests/test_questions.py::test_scales_ascend_toward_ready` enforces
+# this.
+#
+# Each option is (score, emoji, label, plain explanation).
+def _s(*options):
+    """Build a scale, auto-numbering the scores 0..n-1 in listed order."""
+    return tuple((i, emoji, label, help_text)
+                 for i, (emoji, label, help_text) in enumerate(options))
 
-ANSWER_EMOJI = {score: emoji for score, emoji, _, _ in ANSWER_SCALE}
-ANSWER_LABELS = {score: label for score, _, label, _ in ANSWER_SCALE}
-ANSWER_HELP = {score: help_text for score, _, _, help_text in ANSWER_SCALE}
+
+SCALES = {
+    # --- documentation & ownership -----------------------------------------
+    "coverage_more": _s(
+        ("❌", "None of it", "Nothing is written down."),
+        ("🔸", "Only a little", "A small part is written down."),
+        ("🟠", "About half", "About half is written down."),
+        ("🟡", "Most of it", "Most of it is written down."),
+        ("🟢", "Nearly all", "Nearly all of it is written down."),
+        ("⭐", "All of it, kept current", "All of it is written down and kept up to date."),
+    ),
+    "consistency_more": _s(
+        ("🔴", "Different everywhere", "Every team does it their own way."),
+        ("🟠", "Mostly different", "Most teams differ from each other."),
+        ("🟡", "Mixed", "Some teams match, some do not."),
+        ("🟢", "Mostly the same", "Nearly every team works the same way."),
+        ("🔵", "Almost the same", "The same everywhere, with rare exceptions."),
+        ("⭐", "Exactly the same", "Exactly the same way, every time."),
+    ),
+    "ownership_more": _s(
+        ("❌", "Nobody", "Nobody knows who is responsible."),
+        ("🔸", "It is vague", "It is not clear who is responsible."),
+        ("🟠", "Some jobs", "Some jobs have an owner."),
+        ("🟡", "Most jobs", "Most jobs have an owner."),
+        ("🟢", "Every main job", "Every main job has a named owner."),
+        ("⭐", "Owner who checks", "Every job has an owner who checks it regularly."),
+    ),
+
+    # --- workflow shape ----------------------------------------------------
+    "stepcount": _s(
+        ("🔴", "More than 10 steps", "It takes more than ten separate steps."),
+        ("🟠", "6 to 10 steps", "It takes six to ten steps."),
+        ("🟡", "4 or 5 steps", "It takes four or five steps."),
+        ("🟢", "About 3 steps", "It takes about three steps."),
+        ("🔵", "About 2 steps", "It takes about two steps."),
+        ("⭐", "One step", "One step, start to finish."),
+    ),
+    "approvals": _s(
+        ("🔴", "Five or more people", "Five or more people must approve it."),
+        ("🟠", "Three or four people", "Three or four people must approve it."),
+        ("🟡", "Two people", "Two people must approve it."),
+        ("🟢", "One manager", "Only one manager approves it."),
+        ("🔵", "Often not at all", "Often no approval is needed."),
+        ("⭐", "Never needs approval", "It never needs approval, it just runs."),
+    ),
+    "waiting_less": _s(
+        ("🔴", "Almost all waiting", "Nearly all the time is spent waiting."),
+        ("🟠", "Most of it waiting", "Most of the time is spent waiting."),
+        ("🟡", "Half waiting", "Waiting and working are about equal."),
+        ("🟢", "A small wait", "Waiting is a small part of the time."),
+        ("🔵", "Rarely any wait", "Waiting is rare."),
+        ("⭐", "No waiting", "There is virtually no waiting."),
+    ),
+
+    # --- people & capacity -------------------------------------------------
+    "idletime_less": _s(
+        ("🔴", "All the time", "People sit idle with nothing to do almost all the time."),
+        ("🟠", "Most days", "People are idle on most working days."),
+        ("🟡", "Most weeks", "People are idle on most weeks."),
+        ("🟢", "Occasionally", "People are idle from time to time."),
+        ("🔵", "Rarely", "People are rarely idle."),
+        ("⭐", "Practically never", "There is practically no idle time."),
+    ),
+    "overtime_less": _s(
+        ("🔴", "Every week", "Extra hours are needed every week."),
+        ("🟠", "Most weeks", "Extra hours are needed most weeks."),
+        ("🟡", "Most months", "Extra hours are needed most months."),
+        ("🟢", "A few times a year", "Extra hours are needed a few times a year."),
+        ("🔵", "Very rarely", "Extra hours are very rarely needed."),
+        ("⭐", "Never", "Normal hours are always enough."),
+    ),
+    "balance_more": _s(
+        ("🔴", "Always overloaded", "One team is always overloaded while another has nothing."),
+        ("🟠", "Most months", "This imbalance happens most months."),
+        ("🟡", "A few times a year", "This imbalance happens a few times a year."),
+        ("🟢", "Occasionally", "It happens occasionally."),
+        ("🔵", "Mostly fair", "Work is mostly shared fairly."),
+        ("⭐", "Always fair", "Work is always shared fairly."),
+    ),
+
+    # --- automation opportunity -------------------------------------------
+    "repetition": _s(
+        ("❌", "Never repeats", "Every job is different, nothing repeats."),
+        ("🔸", "Rarely repeats", "Work very rarely repeats."),
+        ("🟠", "A few times a month", "Work repeats a few times a month."),
+        ("🟡", "Most days", "Work repeats on most days."),
+        ("🟢", "Many times a day", "Work repeats many times a day."),
+        ("⭐", "All day, every day", "The same work repeats all day, every day."),
+    ),
+    "schedule_more": _s(
+        ("🔴", "Comes whenever", "It comes whenever it comes."),
+        ("🟠", "Rarely the same", "It is rarely the same time."),
+        ("🟡", "Sometimes regular", "It is regular from time to time."),
+        ("🟢", "Mostly scheduled", "It mostly happens on a schedule."),
+        ("🔵", "Nearly always", "It nearly always happens on a schedule."),
+        ("⭐", "Fixed schedule", "Exactly on a set schedule, every time."),
+    ),
+    "cover_less": _s(
+        ("🔴", "Work stops", "The work stops completely if that person is away."),
+        ("🟠", "Stops mostly", "Most of the work stops if that person is away."),
+        ("🟡", "Someone finishes part", "Someone else can finish part of it."),
+        ("🟢", "Someone finishes most", "Someone else can finish most of it."),
+        ("🔵", "Someone finishes all", "Someone else can finish all of it."),
+        ("⭐", "Anyone can do it", "Anyone who is trained can do it."),
+    ),
+    "rules_more": _s(
+        ("❌", "Decided by feel", "Nothing is written down; people decide by feel."),
+        ("🔸", "Very few written", "Very few rules are written down."),
+        ("🟠", "Some written", "Some rules are written down."),
+        ("🟡", "Most written", "Most decisions follow written rules."),
+        ("🟢", "Nearly all written", "Nearly all decisions follow written rules."),
+        ("⭐", "Every rule written", "Every decision follows a written rule."),
+    ),
+    "conditions_more": _s(
+        ("❌", "Chosen by feel", "People choose by feel; the conditions are not written."),
+        ("🔸", "Hardly ever", "The conditions are hardly ever written."),
+        ("🟠", "Sometimes", "The conditions are sometimes written."),
+        ("🟡", "Mostly", "The conditions are mostly written down."),
+        ("🟢", "Nearly always", "The conditions are nearly always written."),
+        ("⭐", "Always and clear", "The conditions are always written and clear."),
+    ),
+    "exception_less": _s(
+        ("🔴", "Almost every time", "Something unexpected happens almost every time."),
+        ("🟠", "Most of the time", "Something unexpected happens most of the time."),
+        ("🟡", "Often", "Something unexpected happens often."),
+        ("🟢", "Sometimes", "It happens from time to time."),
+        ("🔵", "Rarely", "It happens rarely."),
+        ("⭐", "Almost never", "It almost never happens."),
+    ),
+
+    # --- manual effort -----------------------------------------------------
+    "effort_less": _s(
+        ("🔴", "Nearly all day", "It takes up nearly the whole working day."),
+        ("🟠", "Most of the day", "It takes up most of the working day."),
+        ("🟡", "About half the day", "It takes up about half the day."),
+        ("🟢", "A small part", "It takes up a small part of the day."),
+        ("🔵", "Very little", "It takes up very little time."),
+        ("⭐", "Almost none", "It happens on its own, automatically."),
+    ),
+    "copying_less": _s(
+        ("🔴", "All day, every day", "Information is copied all day, every day."),
+        ("🟠", "Most days", "Information is copied on most days."),
+        ("🟡", "Most weeks", "Information is copied most weeks."),
+        ("🟢", "Sometimes", "Information is copied from time to time."),
+        ("🔵", "Rarely", "Information is rarely copied."),
+        ("⭐", "Never", "Information moves between systems on its own."),
+    ),
+
+    # --- technology ----------------------------------------------------
+    "software_count": _s(
+        ("❌", "None at all", "Everything is done in Word and Excel."),
+        ("🔸", "One area", "One part of the business has its own software."),
+        ("🟠", "Two areas", "Two parts have their own software."),
+        ("🟡", "About half", "About half the business has its own software."),
+        ("🟢", "Most areas", "Most parts have their own software."),
+        ("⭐", "Every area", "Every area that needs it has software built for it."),
+    ),
+    "share_more": _s(
+        ("❌", "None", "None of it."),
+        ("🔸", "A small part", "A small part of it."),
+        ("🟠", "About a quarter", "About a quarter of it."),
+        ("🟡", "About half", "About half of it."),
+        ("🟢", "Most of it", "Most of it."),
+        ("⭐", "All of it", "All of it."),
+    ),
+    "outage_less": _s(
+        ("🔴", "Business stops", "The business stops completely."),
+        ("🟠", "Most work stops", "Most of the work stops."),
+        ("🟡", "Big parts stop", "Big parts of the business stop."),
+        ("🟢", "A few areas held up", "A few areas are held up."),
+        ("🔵", "Small delays only", "Only small delays."),
+        ("⭐", "Nothing important stops", "Nothing important stops."),
+    ),
+    "paper_less": _s(
+        ("🔴", "Almost all of it", "Almost all of it is still on paper."),
+        ("🟠", "Most of it", "Most of it is still on paper."),
+        ("🟡", "About half", "About half of it is still on paper."),
+        ("🟢", "A small part", "A small part is still on paper."),
+        ("🔵", "Very little", "Very little is still on paper."),
+        ("⭐", "None", "Everything is on a computer."),
+    ),
+    "email_less": _s(
+        ("🔴", "Almost everything", "Almost every decision goes through email."),
+        ("🟠", "Most decisions", "Most decisions go through email."),
+        ("🟡", "About half", "About half go through email."),
+        ("🟢", "A small part", "A small part goes through email."),
+        ("🔵", "Very little", "Very little goes through email."),
+        ("⭐", "Almost none", "It happens inside the work systems instead."),
+    ),
+    "spreadsheet_less": _s(
+        ("🔴", "For most jobs", "A spreadsheet is the official record for most jobs."),
+        ("🟠", "For many jobs", "A spreadsheet is the official record for many jobs."),
+        ("🟡", "For a few jobs", "A spreadsheet is the official record for a few jobs."),
+        ("🟢", "One or two jobs", "A spreadsheet is the official record for one or two jobs."),
+        ("🔵", "One small area", "Only one small area still uses a spreadsheet."),
+        ("⭐", "Never", "Systems always hold the official record."),
+    ),
+    "integration_more": _s(
+        ("❌", "Nothing talks", "No system passes anything to another."),
+        ("🔸", "One pair", "One pair of systems is connected."),
+        ("🟠", "A few pairs", "A few pairs of systems are connected."),
+        ("🟡", "About half", "About half of the systems are connected."),
+        ("🟢", "Most systems", "Most systems are connected."),
+        ("⭐", "All that need to be", "Every pair that needs to is connected."),
+    ),
+    "blockers_less": _s(
+        ("🔴", "Many", "Many known problems, and nothing connects."),
+        ("🟠", "Several", "Several known problems."),
+        ("🟡", "A few", "A few known problems."),
+        ("🟢", "Some", "Some known problems."),
+        ("🔵", "One or two", "Only one or two known problems."),
+        ("⭐", "None known", "There are no known blockers we know of."),
+    ),
+    "ease_more": _s(
+        ("❌", "Impossible today", "It is impossible today."),
+        ("🔴", "Very hard", "It is very hard."),
+        ("🟠", "Hard", "It is hard."),
+        ("🟡", "Doable with help", "It is doable, with help."),
+        ("🟢", "Fairly easy", "It is fairly easy."),
+        ("⭐", "Easy and documented", "It is easy and written down."),
+    ),
+    "security_more": _s(
+        ("🔴", "Anyone, never checked", "Anyone can get in and nobody checks."),
+        ("🟠", "Nearly anyone", "Nearly anyone can get in."),
+        ("🟡", "Many, rarely reviewed", "Many people can get in and it is rarely reviewed."),
+        ("🟢", "Some control", "There is some control, reviewed now and then."),
+        ("🔵", "Good control", "Good control, reviewed regularly."),
+        ("⭐", "Strict and cleaned", "Strict control, reviewed and cleaned on a schedule."),
+    ),
+    "core_system_more": _s(
+        ("❌", "Records are scattered", "The official records are scattered everywhere."),
+        ("🔸", "Almost none in one place", "Almost nothing is in one place."),
+        ("🟠", "Some records in one place", "Some records are in one place."),
+        ("🟡", "Most records in one place", "Most records are in one place."),
+        ("🟢", "Nearly all in one place", "Nearly all records are in one place."),
+        ("⭐", "All in one system", "All official records are in one system."),
+    ),
+
+    # --- data ---
+    "dataquality_less": _s(
+        ("🔴", "Almost every record", "It happens on almost every record."),
+        ("🟠", "Most records", "It happens on most records."),
+        ("🟡", "Often", "It happens often."),
+        ("🟢", "Sometimes", "It happens from time to time."),
+        ("🔵", "Rarely", "It rarely happens."),
+        ("⭐", "Almost never", "It almost never happens."),
+    ),
+    "tracking_more": _s(
+        ("❌", "Not tracked", "Nothing is tracked."),
+        ("🔸", "Loosely", "A little is tracked, loosely."),
+        ("🟠", "A few", "A few things are tracked."),
+        ("🟡", "Some properly", "Some things are tracked properly."),
+        ("🟢", "Most properly", "Most things are tracked properly."),
+        ("⭐", "The same way every time", "A small agreed set, tracked the same way every time."),
+    ),
+
+    # --- customer service & knowledge ---
+    "volume_count": _s(
+        ("❌", "None", "We get none."),
+        ("🔸", "A few a week", "A few a week."),
+        ("🟠", "About 10 a week", "About ten a week."),
+        ("🟡", "About 30 a week", "About thirty a week."),
+        ("🟢", "About 100 a week", "About a hundred a week."),
+        ("⭐", "More than 100 a week", "More than a hundred a week."),
+    ),
+    "repeats_count": _s(
+        ("❌", "None", "None of them are the same."),
+        ("🔸", "1 or 2 out of 10", "One or two out of every ten."),
+        ("🟠", "About 3 out of 10", "About three out of every ten."),
+        ("🟡", "About 5 out of 10", "About five out of every ten."),
+        ("🟢", "About 8 out of 10", "About eight out of every ten."),
+        ("⭐", "All 10 out of 10", "All ten out of every ten are the same."),
+    ),
+    "knowledge_more": _s(
+        ("❌", "In people's heads", "It is in people's heads; nothing is stored."),
+        ("🔸", "Scattered everywhere", "It is scattered across many people's computers."),
+        ("🟠", "Shared folders, untidy", "It sits in shared folders, untidy."),
+        ("🟡", "One place, partly sorted", "One place, partly organised."),
+        ("🟢", "One tidy place", "One organised place."),
+        ("⭐", "One system everyone uses", "One system that everyone actually uses."),
+    ),
+    "speed_more": _s(
+        ("❌", "They must ask someone", "They have to ask a person."),
+        ("🔴", "Hours or days", "It takes hours or days."),
+        ("🟠", "Most of a day", "It takes most of a day."),
+        ("🟡", "A few minutes", "It takes a few minutes."),
+        ("🟢", "Under a minute", "It takes under a minute."),
+        ("⭐", "Straight away", "It is the first place they look; they find it straight away."),
+    ),
+
+    # --- planning ---
+    "planning_more": _s(
+        ("❌", "Does not plan", "The business does not plan ahead."),
+        ("🔸", "A few weeks", "It plans a few weeks ahead."),
+        ("🟠", "A few months", "It plans a few months ahead."),
+        ("🟡", "Six months", "It plans about six months ahead."),
+        ("🟢", "A year", "It plans about a year ahead."),
+        ("⭐", "More than a year", "It plans more than a year ahead."),
+    ),
+    "growth_more": _s(
+        ("🔴", "Always needs more staff", "Every increase needs more people."),
+        ("🟠", "Nearly always", "Nearly every increase needs more people."),
+        ("🟡", "About half", "About half of the growth needs new people."),
+        ("🟢", "Most is absorbed", "Most of the growth is absorbed."),
+        ("🔵", "Nearly all is absorbed", "Nearly all of the growth is absorbed."),
+        ("⭐", "Absorbed fully", "Growth is absorbed without more people."),
+    ),
+
+    # --- people risk & growth blockers ---
+    "keyperson_less": _s(
+        ("🔴", "Business would stop", "The business would stop."),
+        ("🟠", "Barely function", "It would barely function."),
+        ("🟡", "It would limp on", "It would limp on."),
+        ("🟢", "Cope with delays", "We would cope, with delays."),
+        ("🔵", "Cope well", "We would cope well."),
+        ("⭐", "Nothing affected", "Nothing important would be affected."),
+    ),
+    "concentration_less": _s(
+        ("🔴", "Everything waits", "Everything waits for them."),
+        ("🟠", "Almost everything", "Almost everything waits for them."),
+        ("🟡", "Many decisions", "Many decisions wait for them."),
+        ("🟢", "Some decisions", "Some decisions wait for them."),
+        ("🔵", "Only a few", "Only a few decisions wait for them."),
+        ("⭐", "Spread across the team", "Decisions are spread across the team."),
+    ),
+    "succession_more": _s(
+        ("❌", "Nobody is trained", "Nobody is trained to cover."),
+        ("🔸", "Almost nobody", "Almost nobody is trained to cover."),
+        ("🟠", "A few jobs", "A few jobs have trained cover."),
+        ("🟡", "Several jobs", "Several jobs have trained cover."),
+        ("🟢", "Most important jobs", "Most important jobs have trained cover."),
+        ("⭐", "All important jobs", "All important jobs have trained cover."),
+    ),
+    "blocker_less": _s(
+        ("🔴", "Stops us completely", "It stops the business growing completely."),
+        ("🟠", "Stops us a lot", "It stops the business growing a lot."),
+        ("🟡", "Clearly holds us back", "It clearly holds us back."),
+        ("🟢", "Slows us a little", "It slows us down a little."),
+        ("🔵", "Hardly matters", "It hardly matters at all."),
+        ("⭐", "Does not hold us back", "It does not hold us back at all."),
+    ),
+}
+
+# --- Scales added so individual questions fit their own wording -----------
+SCALES.update({
+    "captured_more": _s(
+        ("🔴", "Written down later", "It is written down later, from memory."),
+        ("🟠", "Almost always later", "It is almost always written down later."),
+        ("🟡", "Usually later", "It is usually written down later."),
+        ("🟢", "Sometimes while working", "It is sometimes recorded while the work is done."),
+        ("🔵", "Almost always while working", "It is almost always recorded while the work is done."),
+        ("⭐", "Always, as part of the job", "It is always recorded as part of the job."),
+    ),
+    "kpi_more": _s(
+        ("❌", "Not tracked at all", "No measures are tracked."),
+        ("🔸", "Change all the time", "A few are tracked, but they change all the time."),
+        ("🟠", "A few, loosely", "A few are tracked loosely."),
+        ("🟡", "Some tracked properly", "Some measures are tracked properly."),
+        ("🟢", "Most tracked properly", "Most measures are tracked properly."),
+        ("⭐", "A small agreed set", "A small agreed set, tracked the same way every time."),
+    ),
+    "dashboard_more": _s(
+        ("❌", "Everything must be requested", "Nothing is visible; everything must be asked for."),
+        ("🔸", "One thing, rarely", "One thing is visible, and rarely."),
+        ("🟠", "A few things, if asked", "A few things are visible, if you ask."),
+        ("🟡", "Some things visible", "Some things are visible."),
+        ("🟢", "Most things visible", "Most things are visible."),
+        ("⭐", "Everything needed is live", "Everything needed is live on a screen."),
+    ),
+    "reliability_more": _s(
+        ("🔴", "Rarely on time", "Reports rarely arrive when they should."),
+        ("🟠", "Often late", "Reports are often late."),
+        ("🟡", "Sometimes late", "Reports are sometimes late."),
+        ("🟢", "Usually on time", "Reports usually arrive on time."),
+        ("🔵", "Almost always on time", "Reports almost always arrive on time."),
+        ("⭐", "Always on the agreed day", "Reports always arrive on the same agreed day."),
+    ),
+    "databased_more": _s(
+        ("❌", "All opinion", "It is all opinion; no data is used."),
+        ("🔴", "Almost all opinion", "It is almost all opinion."),
+        ("🟠", "Mostly opinion", "It is mostly opinion."),
+        ("🟡", "About half data", "About half of it comes from data."),
+        ("🟢", "Mostly data", "Most of it comes from data."),
+        ("⭐", "All data, checked", "It all comes from data, and is checked against reality."),
+    ),
+    "fit_more": _s(
+        ("❌", "They get worked around", "People work around them because they do not fit."),
+        ("🔴", "Almost none do", "Almost none of them actually do their job."),
+        ("🟠", "A few do", "A few of them do their job."),
+        ("🟡", "About half do", "About half of them do their job."),
+        ("🟢", "Most do", "Most of them do their job."),
+        ("⭐", "All of them", "All of them do the job they are meant to do."),
+    ),
+    "restore_more": _s(
+        ("🔴", "No backups at all", "There are no backups at all."),
+        ("🟠", "Never tested", "Backups exist but have never been tested."),
+        ("🟡", "Tested long ago", "Backups exist; they were tested a long time ago."),
+        ("🟢", "Tested once", "Backups exist and have been tested once."),
+        ("🔵", "Tested regularly", "Backups are tested regularly."),
+        ("⭐", "Tested, and fast", "Backups are tested and getting working again is fast."),
+    ),
+    "headroom_more": _s(
+        ("🔴", "None, we are full", "We are already full."),
+        ("🟠", "Almost none", "There is almost no room."),
+        ("🟡", "A little", "We could take on a little more."),
+        ("🟢", "About a quarter more", "We could take on about a quarter more work."),
+        ("🔵", "About half again", "We could take on about half again as much work."),
+        ("⭐", "Roughly double", "We could take on roughly double the work."),
+    ),
+})
+
 MAX_SCORE = 5
+SCALE_KEYS = tuple(SCALES)
 
-# Retained under the old names so existing templates and the bot keep working.
-MATURITY_ANSWER_LABELS = ANSWER_LABELS
-MATURITY_ANSWER_HINTS = ANSWER_HELP
 
+def scale_options(key: str):
+    """Return the option list for a scale key, or None if the key is unknown."""
+    return SCALES.get(key)
+
+
+def scale_ascends(key: str) -> bool:
+    """True when a scale's options are ordered lowest-score first.
+
+    Every scale satisfies this; the check exists so a future scale that
+    accidentally reverses the ordering fails a test rather than silently
+    inverting a metric.
+    """
+    options = SCALES.get(key) or ()
+    return [o[0] for o in options] == sorted(o[0] for o in options)
 
 # --- Presentation helpers ------------------------------------------------
 # One icon per pillar, used across the dashboard, the form and the report so a

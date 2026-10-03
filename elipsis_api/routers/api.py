@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from constants import BRAND_NAME, INDEX_NAME
+from constants import BRAND_NAME, INDEX_NAME, scale_options
 from elipsis_api import schemas, services
 from elipsis_api.config import DATABASE_URL
 from elipsis_api.database import get_db
@@ -30,9 +30,13 @@ def questionnaire(db: Session = Depends(get_db)):
     bank = services.get_bank(db)
     if bank is None:
         raise HTTPException(status_code=404, detail="questionnaire not seeded")
-    return [schemas.QuestionOut(id=q.id, code=q.code, subdomain=q.subdomain, pillar=q.pillar,
-                                text=q.text, why=q.why, weight=q.weight,
-                                evidence_required=bool(q.evidence_required))
+    return [schemas.QuestionOut(
+                id=q.id, code=q.code, scale=q.scale,
+                options=[schemas.OptionOut(score=s, emoji=e, label=label, help=h)
+                         for s, e, label, h in (scale_options(q.scale) or ())],
+                subdomain=q.subdomain, pillar=q.pillar,
+                text=q.text, why=q.why, weight=q.weight,
+                evidence_required=bool(q.evidence_required))
             for q in services.get_questions(db, bank.id)]
 
 

@@ -183,6 +183,16 @@ async def assessment_live(assessment_id: int, request: Request,
     return JSONResponse(live)
 
 
+@router.post("/dashboard/reset")
+def dashboard_reset(request: Request, user=Depends(get_current_user),
+                    db: Session = Depends(get_db)):
+    """Clear every assessment so the demo can be run again from scratch."""
+    if user is None:
+        return login_redirect()
+    services.reset_demo_data(db)
+    return RedirectResponse("/dashboard", status_code=303)
+
+
 @router.get("/dashboard")
 def dashboard(request: Request, user=Depends(get_current_user),
               db: Session = Depends(get_db)):

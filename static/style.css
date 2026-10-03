@@ -340,3 +340,10 @@ input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 
   .report .table .num{text-align:right}
   .report a{color:#0369a1}
 }
+
+/* --- Dashboard head actions + danger button ------------------------------ */
+.head-actions{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.head-actions form{margin:0}
+.btn.danger{background:transparent;color:var(--bad);border:1px solid rgba(248,113,113,.45);box-shadow:none}
+.btn.danger:hover{background:rgba(248,113,113,.12);border-color:var(--bad);color:#fca5a5}
+.btn.danger.sm{font-size:.8rem;padding:.4rem .75rem}
