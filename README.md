@@ -118,14 +118,13 @@ Change the port with `ELIPSIS_PORT=8080 python run_api.py`.
 ### Run the Telegram bot
 
 ```bash
-python main.py
+python bot.py
 ```
 
 ### Deploy to Vercel
 
-The repository root contains **two** Python entrypoints: `main.py` (the Telegram
-bot) and `elipsis_api/main.py` (the web platform). Vercel auto-detects `main.py`
-and would try to deploy the bot, so the web app is declared explicitly:
+The web platform is declared explicitly, because the repository root also
+contains the Telegram bot and Vercel would otherwise try to deploy that:
 
 ```toml
 # pyproject.toml
@@ -133,8 +132,14 @@ and would try to deploy the bot, so the web app is declared explicitly:
 entrypoint = "elipsis_api.main:app"
 ```
 
-Vercel installs the root **`requirements.txt`**, which is why that file holds the
-FastAPI stack rather than the bot's `aiogram` (those live in
+The bot is `bot.py`, **not** `main.py`. Vercel scans the root for
+`app.py / index.py / server.py / main.py / wsgi.py / asgi.py`, and a root
+`main.py` without an `app` fails the build with *"Found main.py but it does
+not define a top-level `app` FastAPI instance"*. Keep the bot's filename
+as it is.
+
+Vercel installs the root **`requirements.txt`**, which is why that file holds
+the FastAPI stack rather than the bot's `aiogram` (those live in
 `requirements-bot.txt`).
 
 **Storage — read this before going live.** Vercel mounts the deployment bundle
@@ -190,7 +195,7 @@ static/style.css       # dark design system + white print stylesheet
 
 scoring.py             # bot: preliminary scoring + savings estimate (KES)
 handlers.py            # bot: conversation flow
-main.py                # bot entry point (aiogram)
+bot.py                 # bot entry point (aiogram)
 ```
 
 > The Python package was renamed `turbinez_api` -> `elipsis_api` with the rebrand. The

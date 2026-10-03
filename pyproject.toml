@@ -41,8 +41,9 @@ packages = ["elipsis_api", "elipsis_api.routers"]
 py-modules = ["constants", "readiness", "elipsis_questions", "scoring"]
 
 # --- Vercel --------------------------------------------------------------
-# The repository root also holds main.py, which is the Telegram bot rather
-# than the web platform. Point Vercel at the FastAPI instance explicitly so
-# it does not auto-detect the bot and fail the build.
+# The repository root also holds the Telegram bot. Vercel scans the root for
+# app.py/index.py/server.py/main.py/wsgi.py/asgi.py, so the bot is named
+# bot.py rather than main.py -- otherwise the build fails with "Found main.py
+# but it does not define a top-level app FastAPI instance".
 [tool.vercel]
 entrypoint = "elipsis_api.main:app"
