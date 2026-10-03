@@ -223,14 +223,16 @@ async def assessment_submit(assessment_id: int, request: Request,
     answers = []
     for question in services.get_questions(db, assessment.questionnaire_id):
         raw = form.get(f"q{question.id}")
-        if raw in (None, ""):
+        if not isinstance(raw, str) or raw == "":
             continue
         try:
             score = max(0, min(5, int(raw)))
         except ValueError:
             continue
-        answers.append(schemas.AnswerIn(question_id=question.id, score=score,
-                                        evidence=form.get(f"e{question.id}") or "none"))
+        evidence = form.get(f"e{question.id}")
+        answers.append(schemas.AnswerIn(
+            question_id=question.id, score=score,
+            evidence=evidence if isinstance(evidence, str) else "none"))
     services.submit(db, assessment_id, answers)
     return RedirectResponse(f"/assessment/{assessment_id}/results", status_code=303)
 
@@ -241,7 +243,7 @@ def assessment_results(assessment_id: int, request: Request,
     if user is None:
         return login_redirect()
     assessment, result = services.compute(db, assessment_id)
-    if result is None:
+    if assessment is None or result is None:
         return _not_found(request, user)
     return templates.TemplateResponse(request, "results.html", {
         "user": user, "result": result, "assessment": assessment,
@@ -257,7 +259,7 @@ def assessment_report(assessment_id: int, request: Request,
     if user is None:
         return login_redirect()
     assessment, result = services.compute(db, assessment_id)
-    if result is None:
+    if assessment is None or result is None:
         return _not_found(request, user)
     return templates.TemplateResponse(request, "report.html", {
         "user": user, "result": result, "assessment": assessment,

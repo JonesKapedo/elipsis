@@ -1,6 +1,7 @@
 """Service layer: seeding and the assessment lifecycle (SQLAlchemy + shared engine)."""
 
 from datetime import datetime, timezone
+from typing import Any
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
@@ -68,12 +69,12 @@ def seed(db: Session):
     return bank.id
 
 
-def get_bank(db: Session):
+def get_bank(db: Session) -> models.Questionnaire | None:
     return db.scalar(select(models.Questionnaire).where(
         models.Questionnaire.code == QUESTIONNAIRE["code"]))
 
 
-def get_questions(db: Session, questionnaire_id: int):
+def get_questions(db: Session, questionnaire_id: int) -> list[models.Question]:
     return list(db.scalars(select(models.Question).where(
         models.Question.questionnaire_id == questionnaire_id
     ).order_by(models.Question.position)))
@@ -97,6 +98,8 @@ def create_assessment(db: Session, payload) -> models.Assessment:
         db.flush()
 
     bank = get_bank(db)
+    if bank is None:
+        raise ValueError("questionnaire not seeded")
     assessment = models.Assessment(organization_id=org.id, department_id=dept.id,
                                    questionnaire_id=bank.id, respondent=payload.respondent,
                                    status="in_progress", started_at=_now())
@@ -112,7 +115,7 @@ def answers_map(db: Session, assessment_id: int):
     return {r.question_id: {"score": r.score, "evidence": r.evidence or "none"} for r in rows}
 
 
-def compute(db: Session, assessment_id: int):
+def compute(db: Session, assessment_id: int) -> tuple[models.Assessment | None, dict[str, Any] | None]:
     assessment = db.get(models.Assessment, assessment_id)
     if assessment is None:
         return None, None
@@ -168,12 +171,13 @@ def save(db: Session, assessment_id: int, result):
         investment=fin["investment"], roi=fin["roi"], payback_months=fin["payback_months"]))
 
     assessment = db.get(models.Assessment, assessment_id)
-    assessment.status = "completed"
-    assessment.completed_at = _now()
-    assessment.readiness_index = result["readiness_index"]
-    assessment.department_score = result["organisation_score"]
-    assessment.confidence_index = result["confidence_index"]
-    assessment.maturity_band = result["maturity_band"]
+    if assessment is not None:
+        assessment.status = "completed"
+        assessment.completed_at = _now()
+        assessment.readiness_index = result["readiness_index"]
+        assessment.department_score = result["organisation_score"]
+        assessment.confidence_index = result["confidence_index"]
+        assessment.maturity_band = result["maturity_band"]
     db.add(models.Report(assessment_id=assessment_id,
                          report_type="Elipsis Transformation Assessment"))
     db.commit()
@@ -198,7 +202,7 @@ def submit(db: Session, assessment_id: int, answers):
     return assessment, save(db, assessment_id, result)
 
 
-def list_assessments(db: Session):
+def list_assessments(db: Session) -> list[dict[str, Any]]:
     rows = db.execute(
         select(models.Assessment, models.Organization.name, models.Department.name)
         .join(models.Organization, models.Organization.id == models.Assessment.organization_id)
@@ -224,7 +228,7 @@ def create_session(db: Session, user_id: int) -> str:
     return token
 
 
-def user_for_token(db: Session, token: str):
+def user_for_token(db: Session, token: str | None):
     if not token:
         return None
     session = db.get(models.AuthSession, token)
@@ -233,14 +237,14 @@ def user_for_token(db: Session, token: str):
     return db.get(models.User, session.user_id)
 
 
-def delete_session(db: Session, token: str):
+def delete_session(db: Session, token: str | None):
     session = db.get(models.AuthSession, token) if token else None
     if session is not None:
         db.delete(session)
         db.commit()
 
 # --- Segmented assessment + live scoring ---------------------------------
-def question_dicts(db: Session, assessment_id: int):
+def question_dicts(db: Session, assessment_id: int) -> list[dict[str, Any]]:
     """Question rows for an assessment as plain dicts the engine understands."""
     assessment = db.get(models.Assessment, assessment_id)
     if assessment is None:
@@ -251,7 +255,7 @@ def question_dicts(db: Session, assessment_id: int):
             for q in questions]
 
 
-def build_segments(db: Session, assessment_id: int):
+def build_segments(db: Session, assessment_id: int) -> list[dict[str, Any]]:
     """Group the instrument into short steps, one subdomain at a time.
 
     Each step carries its position in the form and whether it is finished, so
@@ -323,7 +327,7 @@ def save_answers(db: Session, assessment_id: int, items):
     return written
 
 
-def dashboard_data(db: Session, limit: int = 8):
+def dashboard_data(db: Session, limit: int = 8) -> dict[str, Any]:
     """Everything the dashboard needs in one pass.
 
     Aggregates every completed assessment into a portfolio view so a leader
@@ -361,7 +365,7 @@ def dashboard_data(db: Session, limit: int = 8):
                 portfolio_pillars=portfolio_pillars, all_completed=completed)
 
 
-def _band_counts(completed):
+def _band_counts(completed: list[dict[str, Any]]) -> dict[str, int]:
     counts = {}
     for row in completed:
         band = row.get("maturity_band") or "Unknown"

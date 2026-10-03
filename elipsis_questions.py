@@ -33,6 +33,8 @@ The form is presented one subdomain at a time (three questions per segment),
 which keeps a 63-question form from feeling like one long chore.
 """
 
+from typing import Any
+
 from constants import (
     QUESTIONNAIRE_CODE,
     QUESTIONNAIRE_NAME,
@@ -40,7 +42,7 @@ from constants import (
     SUBDOMAIN_PILLAR,
 )
 
-QUESTIONNAIRE = dict(
+QUESTIONNAIRE: dict[str, Any] = dict(
     code=QUESTIONNAIRE_CODE,
     name=QUESTIONNAIRE_NAME,
     version=QUESTIONNAIRE_VERSION,
@@ -48,7 +50,7 @@ QUESTIONNAIRE = dict(
     estimated_minutes=25,
 )
 
-QUESTIONS = [
+QUESTIONS: list[dict[str, Any]] = [
     # --- Pillar 1: Operational Efficiency Intelligence ----------------------
     # Process Standardisation
     dict(code="Q01", scale="coverage_more", subdomain="OPS",
@@ -342,7 +344,7 @@ QUESTIONS = [
 ]
 
 
-def as_dicts():
+def as_dicts() -> list[dict[str, Any]]:
     """Return the bank as dicts with a 1-based position, for seeding."""
     return [
         dict(code=q["code"], scale=q["scale"], subdomain=q["subdomain"],
@@ -353,7 +355,7 @@ def as_dicts():
     ]
 
 
-def segments():
+def segments() -> list[dict[str, Any]]:
     """Group the bank into short segments, one per subdomain (3 questions each).
 
     A 63-question form in one page is intimidating and boring. Presenting one

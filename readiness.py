@@ -19,6 +19,7 @@ Two ideas drive the design:
 """
 
 import ast
+from typing import Any
 
 from constants import (
     DEFAULT_HOURLY_RATE,
@@ -94,7 +95,7 @@ def _eval_node(node, resolve):
     if isinstance(node, ast.Expression):
         return _eval_node(node.body, resolve)
     if isinstance(node, ast.Constant):
-        return float(node.value)
+        return float(node.value)  # type: ignore[arg-type]
     if isinstance(node, ast.Name):
         return resolve(node.id)
     if isinstance(node, ast.UnaryOp):
@@ -113,6 +114,8 @@ def _eval_node(node, resolve):
         if isinstance(node.op, ast.Pow):
             return left ** right
     if isinstance(node, ast.Call):
+        if not isinstance(node.func, ast.Name):
+            raise ValueError("only direct helper calls are supported")
         args = [_eval_node(a, resolve) for a in node.args]
         return METRIC_HELPERS[node.func.id](*args)
     raise ValueError(f"cannot evaluate {type(node).__name__}")
@@ -194,7 +197,7 @@ def validate_metrics(question_codes) -> None:
 #   1 Quick Wins (0-90 days)        low-complexity, repetitive work
 #   2 Process Automation (3-12mo)   structural change to the flow
 #   3 AI Enablement (12-24mo)       predictive/generative AI on a clean base
-PAIN_CATALOG = {
+PAIN_CATALOG: dict[str, dict[str, Any]] = {
     # --- Pillar 1: Operational Efficiency --------------------------------
     "Q01": dict(title="Tribal Knowledge Risk", severity="High", phase=1,
                 base_hours=28, share=0.1, investment=90000,
@@ -355,8 +358,8 @@ def labour_line(staff, rate):
     return staff * WORKING_HOURS_PER_MONTH * 12 * rate
 
 
-EFFICIENCY = {"Low": 0.70, "Medium": 0.60, "High": 0.50}
-EASE = {"Low": 1.00, "Medium": 0.60, "High": 0.30}
+EFFICIENCY: dict[str, float] = {"Low": 0.70, "Medium": 0.60, "High": 0.50}
+EASE: dict[str, float] = {"Low": 1.00, "Medium": 0.60, "High": 0.30}
 
 CONFIDENCE_BANDS = (
     (95, "Exceptional Confidence"),
@@ -396,7 +399,7 @@ def _horizon(complexity, priority):
 
 
 def compute(questions, answers, respondent_coverage=1 / 3.0, consistency=1.0,
-            staff=None):
+            staff=None) -> dict[str, Any]:
     """Compute the full Elipsis result.
 
     questions : iterable of mappings with keys
@@ -459,8 +462,8 @@ def compute(questions, answers, respondent_coverage=1 / 3.0, consistency=1.0,
     validate_metrics({q["code"] for q in questions})
     # Anything a formula may legitimately reference but that has no score yet
     # (unanswered questions, untouched subdomains/pillars) resolves to zero.
-    known_names = ({q["code"] for q in questions}
-                   | set(SUBDOMAIN_LABELS) | set(PILLAR_LABELS))
+    known_names = frozenset({q["code"] for q in questions}
+                         | set(SUBDOMAIN_LABELS) | set(PILLAR_LABELS))
     raw_metrics = MetricEngine(scope, known_names).all_metrics()
     metrics = {code: round(value, 1) for code, value in raw_metrics.items()}
 
@@ -586,7 +589,7 @@ def _inputs_ready(formula: str, scope: dict) -> bool:
 
 
 # --- Live scoring while the form is being filled --------------------------
-def compute_live(questions, answers, segment_code: str):
+def compute_live(questions, answers, segment_code: str) -> dict[str, Any]:
     """Score the form so far, without submitting it.
 
     Called after every answer so the respondent sees their section update as
@@ -635,8 +638,8 @@ def compute_live(questions, answers, segment_code: str):
     scope.update(pillars)
     scope.update({q["code"]: round(scored[q["id"]], 1)
                   for q in questions if q["id"] in scored})
-    known = ({q["code"] for q in questions}
-             | set(SUBDOMAIN_LABELS) | set(PILLAR_LABELS))
+    known = frozenset({q["code"] for q in questions}
+                     | set(SUBDOMAIN_LABELS) | set(PILLAR_LABELS))
     metrics = MetricEngine(scope, known).all_metrics()
 
     # A metric is only trustworthy once every input its formula names has a

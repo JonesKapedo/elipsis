@@ -26,7 +26,7 @@ def resolve_database_url():
     url = url or _sqlite_url()
     if url.startswith("postgres"):
         try:
-            import psycopg  # noqa: F401
+            import psycopg  # noqa: F401  # type: ignore[import-not-found]
         except ImportError:
             print("[elipsis] PostgreSQL configured but psycopg is not installed "
                   "-> falling back to SQLite", flush=True)

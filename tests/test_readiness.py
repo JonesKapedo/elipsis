@@ -89,7 +89,7 @@ def test_evaluator_rejects_unknown_references(monkeypatch):
 def test_circular_metric_reference_is_reported(monkeypatch):
     monkeypatch.setitem(C.METRIC_FORMULAS, "LOOP_A", "LOOP_B")
     monkeypatch.setitem(C.METRIC_FORMULAS, "LOOP_B", "LOOP_A")
-    engine = R.MetricEngine({}, set())
+    engine = R.MetricEngine({}, frozenset())
     with pytest.raises(ValueError, match="circular"):
         engine.resolve("LOOP_A")
 

@@ -33,9 +33,9 @@ def questionnaire(db: Session = Depends(get_db)):
     return [schemas.QuestionOut(
                 id=q.id, code=q.code, scale=q.scale,
                 options=[schemas.OptionOut(score=s, emoji=e, label=label, help=h)
-                         for s, e, label, h in (scale_options(q.scale) or ())],
+                         for s, e, label, h in (scale_options(q.scale or "") or ())],
                 subdomain=q.subdomain, pillar=q.pillar,
-                text=q.text, why=q.why, weight=q.weight,
+                text=q.text, why=q.why, weight=q.weight or 0,
                 evidence_required=bool(q.evidence_required))
             for q in services.get_questions(db, bank.id)]
 
