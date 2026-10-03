@@ -3,7 +3,7 @@ import math
 from aiogram import types
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-from scoring import score_tasks, estimate_roi
+from telegram_bot.scoring import score_tasks, estimate_roi
 from constants import BRAND_NAME, INDEX_NAME, INDEX_SHORT, CURRENCY
 
 

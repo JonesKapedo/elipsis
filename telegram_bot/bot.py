@@ -1,17 +1,19 @@
 """Telegram bot entry point (aiogram).
 
-Deliberately NOT named main.py: Vercel scans the repository root for
-`app.py / index.py / server.py / main.py / wsgi.py / asgi.py` when detecting a
-FastAPI entrypoint, and a root main.py that defines no `app` makes the web
-deployment fail with "Found main.py but it does not define a top-level app
-FastAPI instance". The FastAPI app lives in elipsis_api/main.py and is
-declared via [tool.vercel] in pyproject.toml.
+Run with:
+
+    python -m telegram_bot.bot
+
+Lives inside the telegram_bot package rather than the repository root because
+Vercel scans the root for app.py/index.py/server.py/main.py/wsgi.py/asgi.py
+when detecting a FastAPI entrypoint -- a bot module at the root competes with
+the web platform for that name.
 """
 import os
 from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
 from aiogram.fsm.storage.memory import MemoryStorage
-from handlers import start_handler, answer_handler
+from telegram_bot.handlers import start_handler, answer_handler
 from dotenv import load_dotenv
 
 load_dotenv()

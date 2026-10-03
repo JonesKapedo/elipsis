@@ -16,19 +16,20 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Every extra must be a direct key of this table. Declaring a sub-table such as
+# [project.optional-dependencies.dev] and *then* assigning `dev = [...]` nests an
+# object inside the key, which pip tolerates but Vercel rejects with
+# "optional-dependencies.dev: Expected array, received object".
+
 # Telegram bot — install with: pip install -r requirements-bot.txt
 bot = [
     "aiogram==3.31.0",
     "aiohttp==3.14.3",
     "python-dotenv==1.2.4",
 ]
-
-[project.optional-dependencies.postgres]
 # 3.2.9 ships no psycopg-binary wheel (binary builds start at 3.2.10), so the
 # [binary] extra cannot be pinned there.
 postgres = ["psycopg[binary]==3.2.13"]
-
-[project.optional-dependencies.dev]
 dev = ["pytest==9.1.1", "httpx>=0.27"]
 
 [tool.pytest.ini_options]
@@ -37,13 +38,13 @@ python_files = ["test_*.py"]
 addopts = "-q"
 
 [tool.setuptools]
-packages = ["elipsis_api", "elipsis_api.routers"]
-py-modules = ["constants", "readiness", "elipsis_questions", "scoring"]
+packages = ["elipsis_api", "elipsis_api.routers", "telegram_bot"]
+py-modules = ["constants", "readiness", "elipsis_questions"]
 
 # --- Vercel --------------------------------------------------------------
-# The repository root also holds the Telegram bot. Vercel scans the root for
-# app.py/index.py/server.py/main.py/wsgi.py/asgi.py, so the bot is named
-# bot.py rather than main.py -- otherwise the build fails with "Found main.py
-# but it does not define a top-level app FastAPI instance".
+# The FastAPI app is the only thing deployed. The repository root holds no
+# aiogram code, so Vercel's scan of the root for
+# app.py/index.py/server.py/main.py/wsgi.py/asgi.py finds nothing to
+# misidentify and this entrypoint is what gets built.
 [tool.vercel]
 entrypoint = "elipsis_api.main:app"
