@@ -20,11 +20,16 @@ def _not_found(request, user):
 
 
 @router.get("/")
-def landing(request: Request, user=Depends(get_current_user)):
-    """The sign-in wall: signed-in users go straight to the dashboard."""
+def landing(request: Request, user=Depends(get_current_user),
+            db: Session = Depends(get_db)):
+    """Marketing page for visitors; signed-in users go straight to the dashboard."""
     if user is not None:
         return RedirectResponse("/dashboard", status_code=303)
-    return RedirectResponse("/login", status_code=303)
+    bank = services.get_bank(db)
+    total_questions = db.scalar(select(func.count()).select_from(models.Question).where(
+        models.Question.questionnaire_id == bank.id)) if bank else 0
+    return templates.TemplateResponse(
+        request, "landing.html", {"user": user, "total_questions": total_questions or 0})
 
 
 @router.get("/login")

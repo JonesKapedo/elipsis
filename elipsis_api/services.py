@@ -1,5 +1,6 @@
 """Service layer: seeding and the assessment lifecycle (SQLAlchemy + shared engine)."""
 
+import os
 from datetime import datetime, timezone
 from typing import Any
 
@@ -15,6 +16,28 @@ from elipsis_api import models, security
 
 def _now():
     return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+
+
+DEFAULT_ADMIN_EMAIL = "admin@elipsis.local"
+DEFAULT_ADMIN_PASSWORD = "elipsis"
+
+
+def _seed_admin(db: Session):
+    """Create the first administrator from the environment.
+
+    The credentials are configuration, not constants, so a deployment can
+    never be left running on published defaults. Set ELIPSIS_ADMIN_EMAIL and
+    ELIPSIS_ADMIN_PASSWORD in the environment before the first request.
+    """
+    email = os.getenv("ELIPSIS_ADMIN_EMAIL") or DEFAULT_ADMIN_EMAIL
+    password = os.getenv("ELIPSIS_ADMIN_PASSWORD") or DEFAULT_ADMIN_PASSWORD
+    if password == DEFAULT_ADMIN_PASSWORD:
+        print("[elipsis] WARNING: no ELIPSIS_ADMIN_PASSWORD set, so the first "
+              "administrator uses the default password. Set ELIPSIS_ADMIN_EMAIL "
+              "and ELIPSIS_ADMIN_PASSWORD before exposing this instance.",
+              flush=True)
+    db.add(models.User(email=email, name="Elipsis Admin", role="admin",
+                       password_hash=security.hash_password(password)))
 
 
 def seed(db: Session):
@@ -62,8 +85,7 @@ def seed(db: Session):
                                  head="Operations Manager", staff_count=6))
 
     if db.scalar(select(models.User)) is None:
-        db.add(models.User(email="admin@elipsis.local", name="Elipsis Admin",
-                           role="admin", password_hash=security.hash_password("elipsis")))
+        _seed_admin(db)
 
     db.commit()
     return bank.id

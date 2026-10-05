@@ -105,8 +105,12 @@ python run_api.py            # -> http://127.0.0.1:8001
 python run_api.py --reload   # auto-reload during development
 ```
 
-Open **<http://127.0.0.1:8001>** and sign in with
-**<admin@elipsis.local> / elipsis**.
+Open **<http://127.0.0.1:8001>** and sign in.
+
+The first administrator is created from `ELIPSIS_ADMIN_EMAIL` and
+`ELIPSIS_ADMIN_PASSWORD` (defaults: `admin@elipsis.local` / `elipsis`, with a
+startup warning while the default password is in use). **Set both before
+exposing an instance** — the sign-in page deliberately does not display them.
 
 Interactive API docs: **<http://127.0.0.1:8001/docs>**
 

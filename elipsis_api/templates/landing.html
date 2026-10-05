@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Business transformation intelligence{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">{{ BRAND_MARK }} {{ BRAND_SHORT }}</p>
+  <h1>See exactly where your business<br>is losing money to friction.</h1>
+  <p class="lede">{{ BRAND_TAGLINE }} One assessment, {{ total_questions }}
+  plain-English questions, about 25 minutes — and you get a board-ready picture
+  of the {{ CURRENCY }} your operation is losing, what to fix first, and what
+  it takes to pay back.</p>
+  <div class="hero-actions">
+    <a class="btn big" href="/login">Start an assessment →</a>
+    <a class="btn ghost big" href="#what">See what you get</a>
+  </div>
+  <ul class="hero-trust">
+    <li>No consultants</li><li>~25 minutes</li><li>Board-ready output</li>
+  </ul>
+</section>
+
+<section class="stats">
+  <div><b>7</b><span>intelligence pillars</span></div>
+  <div><b>36</b><span>executive metrics</span></div>
+  <div><b>{{ total_questions }}</b><span>plain questions</span></div>
+  <div><b>3</b><span>prioritised horizons</span></div>
+</section>
+
+<section id="what">
+  <h2>Seven pillars, one score</h2>
+  <p class="lede">Every question feeds at least one pillar, and every pillar
+  rolls into the {{ INDEX_NAME }} — a single number your board can track.</p>
+  <div class="pillars">
+    {% for code, label, weight, objective in PILLARS %}
+    <article class="pillar-card">
+      <span class="tag-code">{{ code }}</span>
+      <h4>{{ label }}</h4>
+      <p class="muted">{{ objective }}</p>
+      <p class="weight">Weight {{ (weight * 100)|round|int }}%</p>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section>
+  <h2>How it works</h2>
+  <div class="steps">
+    <article class="step-card">
+      <span class="step-n">1</span>
+      <h4>Answer in plain English</h4>
+      <p class="muted">Short segments you can finish in a few minutes each.
+      No consultants, no jargon, no spreadsheet.</p>
+    </article>
+    <article class="step-card">
+      <span class="step-n">2</span>
+      <h4>Get scored live</h4>
+      <p class="muted">Your {{ INDEX_SHORT }} updates as you answer, so you
+      can see the shape of your own business immediately.</p>
+    </article>
+    <article class="step-card">
+      <span class="step-n">3</span>
+      <h4>Walk in with the answer</h4>
+      <p class="muted">A priced, prioritised roadmap with payback months —
+      the cost of the friction, what fixing it saves, and what to do first.</p>
+    </article>
+  </div>
+</section>
+
+<section class="cta-panel">
+  <h2>Find out what friction is costing you.</h2>
+  <p class="lede">Twenty-five minutes now, and every future board meeting gets
+  easier.</p>
+  <a class="btn big" href="/login">Start an assessment →</a>
+</section>
+{% endblock %}
