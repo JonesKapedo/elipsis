@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Guided demo{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">GUIDED DEMO</p>
+  <h1>See Elipsis end-to-end in under a minute.</h1>
+  <p class="lede">We create a demo organisation with three departments, pre-fill realistic answers,
+  complete the scoring model, and drop you on the results page — then you can compare units side by side.</p>
+</section>
+
+<section class="steps">
+  <article class="step-card">
+    <span class="step-n">1</span>
+    <h4>Multi-department org</h4>
+    <p class="muted">Operations, Finance, and Customer Service with different maturity profiles.</p>
+  </article>
+  <article class="step-card">
+    <span class="step-n">2</span>
+    <h4>Pre-filled answers</h4>
+    <p class="muted">All {{ total_questions or 63 }} questions scored deterministically — no typing required.</p>
+  </article>
+  <article class="step-card">
+    <span class="step-n">3</span>
+    <h4>Full outputs</h4>
+    <p class="muted">Index, 36 metrics, roadmap, financials — plus department comparison.</p>
+  </article>
+</section>
+
+<section class="cta-panel">
+  <h2>Run the guided demo</h2>
+  <p class="lede">Requires a signed-in admin session. Demo data can be cleared from the dashboard anytime.</p>
+  {% if user %}
+  <form method="post" action="/demo">
+    <button class="btn big" type="submit">Generate demo assessments →</button>
+  </form>
+  {% else %}
+  <a class="btn big" href="/login">Sign in first →</a>
+  {% endif %}
+</section>
+
+<section class="block">
+  <h3>After the demo</h3>
+  <ul class="price-list">
+    <li>Open results for Operations (primary)</li>
+    <li>Compare all three departments on <a href="/compare">/compare</a></li>
+    <li>Create an emailable share link from any results page</li>
+    <li>Clear demo data from the dashboard when finished</li>
+  </ul>
+</section>
+{% endblock %}
