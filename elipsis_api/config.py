@@ -55,11 +55,12 @@ def _sqlite_url() -> str:
 def _postgres_usable(url: str) -> bool:
     """True when psycopg is installed *and* the database actually answers.
 
-    Checking only the import was not enough. With the driver present but no
-    server listening, the first query would raise and take the whole app down
-    at startup. Probing here turns a stale URL in .env into a warning and a
-    SQLite fallback instead of an outage.
+    On Vercel (VERCEL=1) we skip the live probe: a slow/unreachable host would
+    burn cold-start budget. Trust the configured URL and let the first request
+    fail clearly if the DSN is wrong.
     """
+    if os.getenv("VERCEL") == "1":
+        return True
     try:
         import psycopg  # noqa: F401  # type: ignore[import-not-found]
     except ImportError:
@@ -70,7 +71,7 @@ def _postgres_usable(url: str) -> bool:
         from sqlalchemy import create_engine
 
         probe = create_engine(url, pool_pre_ping=True,
-                              connect_args={"connect_timeout": 5})
+                              connect_args={"connect_timeout": 3})
         with probe.connect():
             return True
     except Exception as exc:  # noqa: BLE001 - any failure means "unusable"
@@ -83,14 +84,12 @@ def _postgres_usable(url: str) -> bool:
 def resolve_database_url() -> str:
     """Prefer PostgreSQL when configured and reachable; else SQLite.
 
-    The SQLite path points at the same file used by the offline stdlib server,
-    so both transports read and write the same data.
-
     ELIPSIS_* is the current variable name; TURBINEZ_* remains accepted so an
     existing .env keeps working through the rebrand.
     """
     url = os.getenv("ELIPSIS_DATABASE_URL") or os.getenv("TURBINEZ_DATABASE_URL")
-    url = url or _sqlite_url()
+    if not url:
+        return _sqlite_url()
     if url.startswith("postgres") and not _postgres_usable(url):
         return _sqlite_url()
     return url
