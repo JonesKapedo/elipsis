@@ -11,6 +11,11 @@
   <h1>{{ organization.name }}{% if department %} &mdash; {{ department.name }}{% endif %}</h1>
   <p class="muted">Completed {{ assessment.completed_at or '' }} &nbsp;&middot;&nbsp;
   {{ result.answered }} of {{ result.total }} questions answered</p>
+  <div class="hero-actions" style="margin-top:0.75rem">
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/report">Printable report</a>
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/export.json">Export JSON</a>
+    <a class="btn ghost" href="/start">New assessment</a>
+  </div>
 </section>
 
 <section class="headline">
@@ -23,8 +28,14 @@
     <p class="muted">Organisation score {{ '%.1f'|format(result.organisation_score) }}
     &nbsp;&middot;&nbsp; {{ CONFIDENCE_NAME }} {{ '%.1f'|format(result.confidence_index) }}
     ({{ result.confidence_band }})</p>
-    <a class="btn ghost" href="/assessment/{{ assessment.id }}/report">Open printable report</a>
   </div>
+</section>
+
+<section class="kpis">
+  <div class="kpi accent"><span>Annual savings potential</span><b>{{ result.financial.annual_savings|money }}</b></div>
+  <div class="kpi"><span>Indicative investment</span><b>{{ result.financial.investment|money }}</b></div>
+  <div class="kpi"><span>ROI</span><b>{{ '%.0f'|format(result.financial.roi) }}%</b></div>
+  <div class="kpi"><span>Payback</span><b>{{ '%.1f'|format(result.financial.payback_months) }} mo</b></div>
 </section>
 
 <section class="block">
@@ -120,7 +131,7 @@
 <section class="block">
   <h3>Pain points</h3>
   <table class="table">
-    <thead><tr><th>Severity</th><th>Finding</th><th class="num">Impact</th><th>Trigger</th></tr></thead>
+    <thead><tr><th>Severity</th><th>Finding</th><th class="num">Impact</th><th>Detail</th></tr></thead>
     <tbody>
       {% for p in result.pain_points %}
       <tr>
@@ -146,6 +157,21 @@
     <div class="kpi"><span>Return on investment</span><b>{{ '%.0f'|format(result.financial.roi) }}%</b></div>
     <div class="kpi"><span>Payback period</span><b>{{ '%.1f'|format(result.financial.payback_months) }} months</b></div>
   </div>
+  {% if result.financial.assumptions %}
+  {% set a = result.financial.assumptions %}
+  <h4 style="margin-top:1.25rem">Assumptions (checkable)</h4>
+  <table class="table">
+    <tbody>
+      <tr><td>Staff in scope</td><td class="num">{{ a.staff }}</td></tr>
+      <tr><td>Blended hourly rate</td><td class="num">{{ CURRENCY }} {{ '%.0f'|format(a.hourly_rate) }}</td></tr>
+      <tr><td>Working hours / month</td><td class="num">{{ a.working_hours_per_month }}</td></tr>
+      <tr><td>Labour line</td><td class="num">{{ a.labour_line|money }}</td></tr>
+      <tr><td>Savings cap share</td><td class="num">{{ '%.0f'|format(a.max_savings_share * 100) }}%</td></tr>
+      <tr><td>Cap applied</td><td class="num">{{ 'yes' if a.capped else 'no' }}</td></tr>
+      <tr><td>Hours freed (modelled)</td><td class="num">{{ a.hours_freed }}</td></tr>
+    </tbody>
+  </table>
+  {% endif %}
   <p class="muted">Financial figures are management estimates derived from the
   assessment, not audited results.</p>
 </section>
