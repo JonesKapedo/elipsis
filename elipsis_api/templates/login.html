@@ -4,46 +4,30 @@
 {% block content %}
 <div class="auth auth-pro">
   <section class="auth-pitch">
-    <p class="eyebrow">{{ BRAND_MARK }} SECURE ACCESS</p>
-    <h1>Your organisation’s<br>transformation workspace.</h1>
-    <p class="lede">Measure readiness, quantify friction cost, and prioritise a board-ready roadmap — from one signed-in account.</p>
-
+    <p class="eyebrow">WELCOME BACK</p>
+    <h1>Sign in to your transformation workspace.</h1>
+    <p class="lede">Pick up assessments, compare departments, and share board packs from one secure account.</p>
     <ul class="auth-points">
       <li>
-        <span class="auth-icon" aria-hidden="true">◈</span>
+        <span class="auth-icon">◈</span>
         <div>
           <strong>{{ INDEX_NAME }}</strong>
-          <p class="muted">{{ total_questions or 63 }} questions across seven weighted pillars, with live scores as you progress.</p>
+          <p class="muted">{{ total_questions or 63 }} questions · seven pillars · live scores</p>
         </div>
       </li>
       <li>
-        <span class="auth-icon" aria-hidden="true">▣</span>
+        <span class="auth-icon">▣</span>
         <div>
-          <strong>Executive pack</strong>
-          <p class="muted">36 metrics, KES financial model with printed assumptions, and a three-horizon implementation roadmap.</p>
-        </div>
-      </li>
-      <li>
-        <span class="auth-icon" aria-hidden="true">⇄</span>
-        <div>
-          <strong>Portfolio controls</strong>
-          <p class="muted">Department comparison, emailable share links, and machine-readable JSON export.</p>
+          <strong>Board-ready outputs</strong>
+          <p class="muted">Metrics, {{ CURRENCY }} impact, roadmap, emailable links</p>
         </div>
       </li>
     </ul>
-
     <div class="auth-proof">
       <div><b>7</b><span>pillars</span></div>
       <div><b>36</b><span>metrics</span></div>
       <div><b>{{ total_questions or 63 }}</b><span>questions</span></div>
-      <div><b>3</b><span>horizons</span></div>
     </div>
-
-    <ul class="auth-trust">
-      <li>Session cookies · HttpOnly</li>
-      <li>PBKDF2 password hashing</li>
-      <li>Read-only share links</li>
-    </ul>
   </section>
 
   <section class="auth-card auth-card-pro" aria-labelledby="signin-heading">
@@ -51,13 +35,13 @@
       <span class="mark" aria-hidden="true">{{ BRAND_MARK }}</span>
       <div>
         <strong>{{ BRAND_NAME }}</strong>
-        <span class="muted">Workspace sign-in</span>
+        <span class="muted">Secure sign-in</span>
       </div>
     </div>
 
     <div class="auth-card-head">
       <h2 id="signin-heading">Sign in</h2>
-      <p class="muted">Use the credentials issued by your administrator.</p>
+      <p class="muted">New here? <a href="/signup"><strong>Create a free account</strong></a></p>
     </div>
 
     {% if error %}
@@ -68,39 +52,28 @@
       <label for="email">Work email
         <input id="email" type="email" name="email" required
                autocomplete="username" placeholder="name@company.com" autofocus
-               spellcheck="false">
+               spellcheck="false" value="{{ email if email else '' }}">
       </label>
       <label for="password">Password
         <input id="password" type="password" name="password" required
-               autocomplete="current-password" placeholder="••••••••"
-               minlength="4">
+               autocomplete="current-password" placeholder="Your password" minlength="4">
       </label>
-      <button class="btn big full" type="submit">Continue to workspace →</button>
+      <button class="btn big full" type="submit">Sign in →</button>
     </form>
 
-    <p class="auth-secure muted">
-      Encrypted session · Signed out devices stay signed out ·
-      <a href="/security">Security overview</a>
-    </p>
-
-    <div class="auth-divider"><span>Explore without signing in</span></div>
-
-    <div class="auth-alt">
-      <a class="btn ghost full" href="/sample">View sample report</a>
-      <a class="btn ghost full" href="/methodology">Read methodology</a>
-    </div>
+    <div class="auth-divider"><span>or</span></div>
+    <a class="btn ghost full" href="/signup">Create free account</a>
 
     <div class="auth-help auth-demo">
       <div class="auth-demo-head">
-        <span class="tag ok">Trial</span>
-        <strong>Demo credentials</strong>
+        <span class="tag ok">Demo</span>
+        <strong>Try without registering</strong>
       </div>
       <dl class="auth-creds">
         <div><dt>Email</dt><dd><code>admin@elipsis.local</code></dd></div>
         <div><dt>Password</dt><dd><code>elipsis</code></dd></div>
       </dl>
-      <p class="muted small">Change these via <code>ELIPSIS_ADMIN_EMAIL</code> and <code>ELIPSIS_ADMIN_PASSWORD</code> in production.</p>
-      <p class="muted small">Need an organisation workspace? <a href="/contact">Contact sales</a>.</p>
+      <p class="muted small">Or <a href="/sample">browse the sample report</a> with no account.</p>
     </div>
   </section>
 </div>
