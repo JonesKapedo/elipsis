@@ -86,6 +86,67 @@ def use_cases(request: Request, user=Depends(get_current_user)):
     return templates.TemplateResponse(request, "use_cases.html", {"user": user})
 
 
+@router.get("/about")
+def about(request: Request, user=Depends(get_current_user)):
+    return templates.TemplateResponse(request, "about.html", {"user": user})
+
+
+@router.get("/security")
+def security_page(request: Request, user=Depends(get_current_user)):
+    return templates.TemplateResponse(request, "security.html", {"user": user})
+
+
+@router.get("/contact")
+def contact_get(request: Request, user=Depends(get_current_user)):
+    return templates.TemplateResponse(
+        request, "contact.html",
+        {"user": user, "sent": False, "error": None, "form": None})
+
+
+@router.post("/contact")
+def contact_post(
+    request: Request,
+    name: str = Form(...),
+    email: str = Form(...),
+    organization: str = Form(""),
+    topic: str = Form("other"),
+    message: str = Form(...),
+    user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    name = (name or "").strip()[:120]
+    email = (email or "").strip().lower()[:200]
+    organization = (organization or "").strip()[:200] or None
+    topic = (topic or "other").strip()[:40]
+    message = (message or "").strip()[:4000]
+    form = {"name": name, "email": email, "organization": organization or "",
+            "message": message}
+    if not name or not email or not message or "@" not in email:
+        return templates.TemplateResponse(
+            request, "contact.html",
+            {"user": user, "sent": False,
+             "error": "Please provide a valid name, email, and message.",
+             "form": form},
+            status_code=400)
+    try:
+        db.add(models.ContactMessage(
+            name=name, email=email, organization=organization,
+            topic=topic, message=message))
+        db.commit()
+        print(f"[elipsis] contact from {email} topic={topic}", flush=True)
+    except Exception as exc:  # noqa: BLE001
+        print(f"[elipsis] contact save failed: {exc}", flush=True)
+        return templates.TemplateResponse(
+            request, "contact.html",
+            {"user": user, "sent": False,
+             "error": "Could not save your message. Please try again.",
+             "form": form},
+            status_code=500)
+    return templates.TemplateResponse(
+        request, "contact.html",
+        {"user": user, "sent": True, "error": None, "form": None})
+
+
 @router.get("/demo")
 def demo_page(request: Request, user=Depends(get_current_user),
               db: Session = Depends(get_db)):
