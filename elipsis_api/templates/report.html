@@ -10,13 +10,13 @@
 
 <div class="report-toolbar noprint">
   <a class="btn ghost sm" href="/assessment/{{ assessment.id }}/results">← Results</a>
-  <button class="btn sm" type="button" onclick="window.print()">Export PDF / Print</button>
+  <a class="btn sm" href="/assessment/{{ assessment.id }}/report.pdf">Download PDF</a>
+  <button class="btn ghost sm" type="button" onclick="window.print()">Print / Save as PDF</button>
   <a class="btn ghost sm" href="/assessment/{{ assessment.id }}/export.json">Export JSON</a>
 </div>
 
 <article class="report-shell">
 
-  <!-- ========== COVER ========== -->
   <header class="report-cover">
     <div class="report-brand-row">
       <div class="report-brand"><span class="mark">{{ BRAND_MARK }}</span> {{ BRAND_NAME }}</div>
@@ -63,7 +63,6 @@
     </div>
   </header>
 
-  <!-- ========== 1. EXECUTIVE NARRATIVE ========== -->
   <section class="report-section">
     <h2>1. Executive narrative</h2>
     <p class="report-lead">
@@ -75,11 +74,6 @@
       <strong>{{ '%.1f'|format(result.readiness_index) }}</strong> places the unit in the
       <strong>{{ result.maturity_band }}</strong> band on the {{ MATURITY_NAME }}.
     </p>
-    <p>
-      In practical terms, this band means the organisation has meaningful friction and automation opportunity,
-      but is not yet operating as a transformation-ready enterprise. The priority is not more technology for its own sake —
-      it is sequenced removal of the highest-cost operational drag, with investment justified by measured return.
-    </p>
     <div class="insight-box">
       <p><strong>What leadership should take from this pack</strong></p>
       <p>
@@ -87,9 +81,6 @@
         against an indicative investment of <strong>{{ result.financial.investment|money }}</strong>
         (payback <strong>{{ '%.1f'|format(result.financial.payback_months) }} months</strong>,
         ROI <strong>{{ '%.0f'|format(result.financial.roi) }}%</strong>).
-        These figures are sized to stated headcount and a blended rate of
-        {% if fx %}{{ CURRENCY }} {{ '%.0f'|format(fx.hourly_rate) }}{% else %}{{ CURRENCY }} {{ DEFAULT_HOURLY_RATE if DEFAULT_HOURLY_RATE is defined else 500 }}{% endif %}/hour.
-        They are decision-support estimates, not audited forecasts.
       </p>
     </div>
     {% if result.top_opportunities %}
@@ -102,22 +93,11 @@
     {% endif %}
   </section>
 
-  <!-- ========== 2. PILLARS ========== -->
   <section class="report-section page-break">
     <h2>2. Intelligence pillars — full profile</h2>
-    <p>
-      Each pillar is scored 0–100 from the questions mapped to it. Weights reflect how strongly each area
-      typically drives automation and transformation ROI. Lower pillars are not “failures”; they are the
-      highest-leverage places to intervene.
-    </p>
     <table class="report-table">
       <thead>
-        <tr>
-          <th>Pillar</th>
-          <th class="num">Score</th>
-          <th class="num">Weight</th>
-          <th>Reading</th>
-        </tr>
+        <tr><th>Pillar</th><th class="num">Score</th><th class="num">Weight</th><th>Reading</th></tr>
       </thead>
       <tbody>
         {% for code, score in result.pillars.items() %}
@@ -137,31 +117,13 @@
         {% endfor %}
       </tbody>
     </table>
-    <div class="insight-box">
-      <p><strong>Interpretation</strong></p>
-      <p>
-        Weighted contribution to the {{ INDEX_SHORT }} is dominated by pillars with both low scores and high weights.
-        Automation Readiness and Operational Efficiency typically carry the largest economic weight —
-        if either is weak, friction cost remains high even when digital tools are present.
-      </p>
-    </div>
   </section>
 
-  <!-- ========== 3. SUBDOMAINS ========== -->
   <section class="report-section">
     <h2>3. Subdomain diagnostics</h2>
-    <p>
-      Subdomains show where friction concentrates inside the assessed scope.
-      Scores below 30 indicate processes that are heavily manual, poorly instrumented, or dependent on key individuals.
-    </p>
     <table class="report-table">
       <thead>
-        <tr>
-          <th>Subdomain</th>
-          <th>Pillar</th>
-          <th class="num">Score</th>
-          <th>Priority signal</th>
-        </tr>
+        <tr><th>Subdomain</th><th>Pillar</th><th class="num">Score</th><th>Priority signal</th></tr>
       </thead>
       <tbody>
         {% for code, score in result.subdomains.items() %}
@@ -170,11 +132,7 @@
           <td style="color:#6b7280;font-size:.84rem">{{ PILLAR_LABELS.get(SUBDOMAIN_PILLAR.get(code), '') }}</td>
           <td class="num">{{ '%.1f'|format(score) }}</td>
           <td style="font-size:.84rem;color:#4b5563">
-            {% if score < 25 %}Urgent
-            {% elif score < 40 %}High
-            {% elif score < 55 %}Watch
-            {% else %}Stable
-            {% endif %}
+            {% if score < 25 %}Urgent{% elif score < 40 %}High{% elif score < 55 %}Watch{% else %}Stable{% endif %}
           </td>
         </tr>
         {% endfor %}
@@ -182,25 +140,13 @@
     </table>
   </section>
 
-  <!-- ========== 4. METRICS ========== -->
   <section class="report-section page-break">
     <h2>4. Executive metrics (36 indicators)</h2>
-    <p>
-      Derived indicators summarise patterns across answers. <strong>Risk</strong> metrics are inverted:
-      a higher value means more exposure. Use these in board discussions as the “language” behind the index.
-    </p>
     {% for pcode, rows in result.metrics_by_pillar.items() %}
     {% if rows %}
     <h3>{{ PILLAR_LABELS.get(pcode, pcode) }}</h3>
     <table class="report-table">
-      <thead>
-        <tr>
-          <th>Metric</th>
-          <th>Type</th>
-          <th class="num">Value</th>
-          <th>Reading</th>
-        </tr>
-      </thead>
+      <thead><tr><th>Metric</th><th>Type</th><th class="num">Value</th><th>Reading</th></tr></thead>
       <tbody>
         {% for m in rows %}
         <tr>
@@ -216,23 +162,11 @@
     {% endfor %}
   </section>
 
-  <!-- ========== 5. PAIN POINTS ========== -->
   <section class="report-section">
     <h2>5. Material pain points</h2>
-    <p>
-      Pain points are triggered when answer patterns cross evidence thresholds.
-      Severity reflects both operational exposure and the strength of the underlying signal.
-    </p>
     {% if result.pain_points %}
     <table class="report-table">
-      <thead>
-        <tr>
-          <th>Severity</th>
-          <th>Finding</th>
-          <th class="num">Impact</th>
-          <th>Detail</th>
-        </tr>
-      </thead>
+      <thead><tr><th>Severity</th><th>Finding</th><th class="num">Impact</th><th>Detail</th></tr></thead>
       <tbody>
         {% for p in result.pain_points %}
         <tr>
@@ -245,17 +179,12 @@
       </tbody>
     </table>
     {% else %}
-    <p class="muted">No formal pain-point thresholds were crossed. Review low pillar scores and subdomain gaps above as latent risks.</p>
+    <p class="muted">No formal pain-point thresholds were crossed.</p>
     {% endif %}
   </section>
 
-  <!-- ========== 6. OPPORTUNITIES ========== -->
   <section class="report-section page-break">
     <h2>6. Highest-impact opportunities</h2>
-    <p>
-      Ranked interventions drawn from the recommendation engine. Each item includes horizon, suggested technology class, and modelled ROI.
-      Horizon 1 items are designed for visible progress inside 90 days.
-    </p>
     <ol class="opp-list">
       {% set ns = namespace(n=0) %}
       {% for phase in result.roadmap %}
@@ -267,52 +196,29 @@
           <div class="opp-meta">
             {{ phase.label }} · {{ phase.horizon }}
             {% if r.technology %} · {{ r.technology }}{% endif %}
-            {% if r.complexity %} · Complexity: {{ r.complexity }}{% endif %}
             · ROI {{ '%.0f'|format(r.roi) }}%
-            {% if r.solution %}<br>{{ r.solution }}{% endif %}
           </div>
         </li>
         {% endif %}
         {% endfor %}
       {% endfor %}
-      {% if ns.n == 0 %}
-      <li><strong>No prioritised actions generated</strong>
-        <div class="opp-meta">Complete more of the instrument or review evidence tags to unlock recommendations.</div>
-      </li>
-      {% endif %}
     </ol>
   </section>
 
-  <!-- ========== 7. ROADMAP ========== -->
   <section class="report-section">
     <h2>7. Implementation roadmap</h2>
-    <p>
-      Sequencing matters. Quick wins fund credibility; process automation removes structural cost;
-      AI enablement delivers only after data and workflow foundations exist.
-    </p>
     {% for phase in result.roadmap %}
     <div class="phase-block">
       <div class="phase-title">{{ phase.label }} · {{ phase.horizon }}</div>
       <p style="margin:.2rem 0 .6rem;font-size:.9rem">{{ phase.note }}</p>
       {% if phase.items %}
       <table class="report-table">
-        <thead>
-          <tr>
-            <th class="num">Priority</th>
-            <th>Recommendation</th>
-            <th>Technology</th>
-            <th>Complexity</th>
-            <th class="num">ROI</th>
-          </tr>
-        </thead>
+        <thead><tr><th class="num">Priority</th><th>Recommendation</th><th>Technology</th><th>Complexity</th><th class="num">ROI</th></tr></thead>
         <tbody>
           {% for r in phase['items'] %}
           <tr>
             <td class="num">{{ '%.0f'|format(r.priority) }}</td>
-            <td>
-              <strong>{{ r.title }}</strong>
-              {% if r.solution %}<div style="font-size:.82rem;color:#6b7280;margin-top:.2rem">{{ r.solution }}</div>{% endif %}
-            </td>
+            <td><strong>{{ r.title }}</strong>{% if r.solution %}<div style="font-size:.82rem;color:#6b7280;margin-top:.2rem">{{ r.solution }}</div>{% endif %}</td>
             <td>{{ r.technology or '—' }}</td>
             <td>{{ r.complexity or '—' }}</td>
             <td class="num">{{ '%.0f'|format(r.roi) }}%</td>
@@ -320,19 +226,24 @@
           {% endfor %}
         </tbody>
       </table>
-      {% else %}
-      <p style="color:#6b7280;font-size:.9rem">No actions assigned to this horizon for this assessment.</p>
       {% endif %}
     </div>
     {% endfor %}
   </section>
 
-  <!-- ========== 8. FINANCIALS ========== -->
   <section class="report-section page-break">
-    <h2>8. Financial impact model</h2>
+    <h2>8. Financial impact model — deep dive</h2>
+    <p class="report-lead">
+      Friction cost is not a line item on the P&L — it is the annualised cost of manual workarounds,
+      rework, wait states, and under-used capacity that the assessment signals expose.
+      The model converts those signals into {{ CURRENCY }} using stated headcount, a blended labour rate,
+      and a conservative savings ceiling so the number is useful in a board pack without overclaiming.
+    </p>
     <p>
-      The financial layer converts friction signals into {{ CURRENCY }} terms using organisation size,
-      a blended labour rate, and a conservative savings ceiling so estimates remain board-credible.
+      <strong>How to read this section.</strong>
+      Treat annual savings as an upper bound for prioritisation, not a budget request.
+      The payback period assumes sequenced delivery of the roadmap’s highest-ROI items;
+      delaying Horizon 1 extends payback roughly in proportion to delayed savings capture.
     </p>
     <table class="report-table">
       <tbody>
@@ -355,23 +266,63 @@
         <tr><td>Savings ceiling</td><td class="num">{{ '%.0f'|format(fx.max_savings_share * 100) }}% of labour line</td></tr>
         <tr><td>Ceiling applied</td><td class="num">{{ 'Yes' if fx.capped else 'No' }}</td></tr>
         <tr><td>Modelled hours freed / year</td><td class="num">{{ fx.hours_freed }}</td></tr>
-        {% if fx.capped and fx.raw_savings is defined %}
-        <tr><td>Raw savings before ceiling</td><td class="num">{{ fx.raw_savings|money }}</td></tr>
-        {% endif %}
       </tbody>
     </table>
     {% endif %}
     <div class="insight-box">
       <p><strong>How to use these numbers</strong></p>
       <p>
-        Treat savings as an upper bound for prioritisation, not a budget line.
         Validate the top three opportunities with process owners, then re-run the assessment after 90 days of execution
         to measure movement in the {{ INDEX_SHORT }} and subdomain scores.
       </p>
     </div>
   </section>
 
-  <!-- ========== 9. GOVERNANCE ========== -->
+  {% if comparison_rows %}
+  <section class="report-section">
+    <h2>8b. Department comparison inside this organisation</h2>
+    <p>
+      When more than one unit has completed the instrument, relative {{ INDEX_SHORT }} scores show
+      where transformation capital and management attention should concentrate first.
+    </p>
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th>Department / unit</th>
+          <th class="num">{{ INDEX_SHORT }}</th>
+          <th>Band</th>
+          <th>Respondent</th>
+          <th>Completed</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in comparison_rows %}
+        <tr>
+          <td><strong>{{ row.department }}</strong></td>
+          <td class="num">{{ '%.1f'|format(row.readiness_index or 0) }}</td>
+          <td>{{ row.maturity_band or '—' }}</td>
+          <td style="font-size:.84rem;color:#4b5563">{{ row.respondent or '—' }}</td>
+          <td style="font-size:.84rem;color:#4b5563">{{ row.completed_at or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if comparison_average is not none %}
+    <p class="muted" style="margin-top:.6rem">
+      Organisation average {{ INDEX_SHORT }}: <strong>{{ '%.1f'|format(comparison_average) }}</strong>
+      across {{ comparison_rows|length }} completed unit assessments.
+    </p>
+    {% endif %}
+    <div class="insight-box">
+      <p><strong>Portfolio reading</strong></p>
+      <p>
+        Units below the organisation average are the highest-leverage places for Horizon 1 investment.
+        Units well above average are candidates to standardise practices outward.
+      </p>
+    </div>
+  </section>
+  {% endif %}
+
   <section class="report-section">
     <h2>9. Scope, confidence & governance</h2>
     <table class="report-table">
@@ -381,27 +332,21 @@
         <tr><td>Respondent</td><td>{{ assessment.respondent or '—' }}</td></tr>
         <tr><td>Questions answered</td><td>{{ result.answered }} / {{ result.total }}</td></tr>
         <tr><td>{{ CONFIDENCE_NAME }}</td><td>{{ '%.1f'|format(result.confidence_index) }} ({{ result.confidence_band }})</td></tr>
-        <tr><td>Instrument</td><td>{{ QUESTIONNAIRE_CODE }} · {{ QUESTIONNAIRE_NAME if QUESTIONNAIRE_NAME is defined else ASSESSMENT_NAME }}</td></tr>
         <tr><td>Completed</td><td>{{ assessment.completed_at or '—' }}</td></tr>
       </tbody>
     </table>
-    <p>
-      Confidence rises with completion rate and evidence tags on answers.
-      Preliminary findings should be stress-tested with operational evidence before capital commitment.
-    </p>
   </section>
 
   <footer class="report-footer-note">
     <p>
       <strong>{{ BRAND_NAME }}</strong> — {{ BRAND_TAGLINE }}
-      This document is a management decision-support pack generated from the {{ FRAMEWORK_NAME }}.
-      Financial figures are estimates derived from assessment responses and stated assumptions; they are not audited results.
-      © {{ BRAND_NAME }}. Confidential — intended for the assessed organisation’s leadership.
+      This document is a management decision-support pack. Financial figures are estimates, not audited results.
+      © {{ BRAND_NAME }}. Confidential.
     </p>
   </footer>
 </article>
 
 <p class="noprint" style="text-align:center;margin:1.5rem 0 0;color:#6b7280;font-size:.85rem">
-  Use <strong>Export PDF / Print</strong>, then choose “Save as PDF” in your browser print dialog for a board-ready file.
+  Prefer a file? Use <strong>Download PDF</strong> for a server-generated board pack, or <strong>Print / Save as PDF</strong> from the browser.
 </p>
 {% endblock %}
