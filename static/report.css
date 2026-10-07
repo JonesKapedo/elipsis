@@ -1,0 +1,176 @@
+/* Elipsis executive report — screen + print (Save as PDF) */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap");
+
+body.report-body{
+  background:#f4f2ec;
+  font-family:"Inter",system-ui,sans-serif;
+  color:#111827;
+}
+body.report-body .topbar,
+body.report-body .site-footer,
+body.report-body .skip-link{display:none !important}
+body.report-body main{
+  max-width:900px;
+  margin:0 auto;
+  padding:1.5rem 1.25rem 4rem;
+  background:transparent;
+}
+
+.report-shell{
+  background:#fff;
+  border:1px solid #e5e0d4;
+  border-radius:4px;
+  box-shadow:0 12px 40px rgba(17,24,39,.08);
+  overflow:hidden;
+}
+
+/* Cover */
+.report-cover{
+  padding:2.75rem 2.5rem 2.25rem;
+  border-bottom:3px solid #b45309;
+  background:linear-gradient(180deg,#fffefb 0%,#fff 100%);
+}
+.report-brand-row{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  gap:1rem;margin-bottom:1.75rem;
+}
+.report-brand{
+  font-weight:800;font-size:1.05rem;letter-spacing:-.02em;
+  display:flex;align-items:center;gap:.5rem;
+}
+.report-brand .mark{
+  width:1.85rem;height:1.85rem;border-radius:8px;
+  background:linear-gradient(135deg,#b45309,#d97706);
+  color:#fff;display:grid;place-items:center;font-size:1rem;
+}
+.report-doc-type{
+  font-size:.68rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:#b45309;margin:0 0 .35rem;
+}
+.report-cover h1{
+  font-family:"Source Serif 4",Georgia,serif;font-weight:700;
+  font-size:clamp(1.85rem,4vw,2.55rem);line-height:1.15;
+  margin:0 0 .65rem;letter-spacing:-.02em;color:#0f172a;
+}
+.report-org{
+  font-size:1.05rem;font-weight:600;color:#1f2937;margin:.2rem 0;
+}
+.report-meta-line{
+  color:#6b7280;font-size:.88rem;margin:.15rem 0 0;
+}
+.report-score-block{
+  display:grid;grid-template-columns:auto 1fr;gap:1.5rem 2rem;
+  align-items:center;margin-top:1.75rem;padding-top:1.5rem;
+  border-top:1px solid #e5e7eb;
+}
+.report-score-num{
+  font-family:"Source Serif 4",Georgia,serif;font-weight:700;
+  font-size:4rem;line-height:1;color:#b45309;letter-spacing:-.03em;
+}
+.report-score-num span{font-size:1.1rem;color:#9ca3af;font-family:Inter,sans-serif;font-weight:600}
+.report-score-label{
+  font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;
+  font-weight:700;color:#6b7280;margin-bottom:.25rem;
+}
+.report-band{
+  display:inline-block;background:#fff7ed;border:1px solid #fdba74;
+  color:#c2410c;border-radius:999px;padding:.2rem .75rem;
+  font-size:.85rem;font-weight:700;
+}
+.report-kpis{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:1rem;
+}
+.report-kpi{
+  background:#fafaf9;border:1px solid #e7e5e4;border-radius:10px;padding:.85rem 1rem;
+}
+.report-kpi span{
+  display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;
+  font-weight:700;color:#78716c;margin-bottom:.25rem;
+}
+.report-kpi b{
+  font-family:"Source Serif 4",Georgia,serif;font-size:1.35rem;font-weight:700;color:#0f172a;
+}
+.report-kpi em{font-style:normal;font-size:.78rem;color:#6b7280;font-weight:500}
+
+/* Sections */
+.report-section{
+  padding:1.75rem 2.5rem;
+  border-bottom:1px solid #e5e7eb;
+}
+.report-section:last-of-type{border-bottom:0}
+.report-section h2{
+  font-family:"Source Serif 4",Georgia,serif;font-weight:700;
+  font-size:1.35rem;margin:0 0 .85rem;padding:0;border:0;
+  color:#0f172a;letter-spacing:-.015em;
+}
+.report-section h3{
+  font-size:.95rem;font-weight:700;margin:1.25rem 0 .5rem;color:#1f2937;
+}
+.report-section p{margin:.45rem 0;line-height:1.65;color:#374151;font-size:.94rem}
+.report-lead{font-size:1.02rem;color:#1f2937;line-height:1.7}
+
+.report-table{width:100%;border-collapse:collapse;font-size:.88rem;margin:.6rem 0 1rem}
+.report-table th{
+  text-align:left;font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;
+  font-weight:700;color:#6b7280;padding:.5rem .4rem;border-bottom:2px solid #e5e7eb;
+}
+.report-table td{
+  padding:.55rem .4rem;border-bottom:1px solid #f3f4f6;vertical-align:top;color:#111827;
+}
+.report-table .num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.report-table tr:hover td{background:#fafaf9}
+
+.insight-box{
+  background:#fffbeb;border-left:4px solid #d97706;padding:.9rem 1.1rem;
+  margin:1rem 0;border-radius:0 8px 8px 0;
+}
+.insight-box p{margin:.3rem 0;font-size:.9rem;color:#422006}
+
+.opp-list{list-style:none;padding:0;margin:.5rem 0 0;counter-reset:opp}
+.opp-list li{
+  counter-increment:opp;position:relative;
+  padding:.85rem 0 .85rem 2.6rem;border-bottom:1px solid #f3f4f6;
+}
+.opp-list li:last-child{border-bottom:0}
+.opp-list li::before{
+  content:counter(opp);
+  position:absolute;left:0;top:.85rem;
+  width:1.85rem;height:1.85rem;border-radius:8px;
+  background:#fff7ed;border:1px solid #fdba74;color:#c2410c;
+  display:grid;place-items:center;font-weight:800;font-size:.8rem;
+}
+.opp-list strong{display:block;font-size:.95rem;color:#0f172a;margin-bottom:.2rem}
+.opp-list .opp-meta{font-size:.82rem;color:#6b7280;line-height:1.45}
+
+.phase-block{margin:1rem 0 1.4rem}
+.phase-title{
+  font-weight:800;font-size:.9rem;color:#0f766e;
+  text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem;
+}
+
+.report-footer-note{
+  padding:1.25rem 2.5rem 1.75rem;background:#fafaf9;
+  font-size:.78rem;color:#6b7280;line-height:1.55;
+}
+
+.report-toolbar{
+  display:flex;flex-wrap:wrap;gap:.65rem;justify-content:flex-end;
+  margin:0 0 1rem;padding:0 .25rem;
+}
+
+@media print{
+  body.report-body{background:#fff}
+  body.report-body main{max-width:none;padding:0;margin:0}
+  .report-shell{border:0;box-shadow:none;border-radius:0}
+  .report-toolbar,.noprint{display:none !important}
+  .report-section{break-inside:avoid;page-break-inside:avoid}
+  .report-cover{page-break-after:always}
+  .report-section.page-break{page-break-before:always}
+  a{color:inherit;text-decoration:none}
+}
+
+@media (max-width:700px){
+  .report-cover,.report-section,.report-footer-note{padding-left:1.25rem;padding-right:1.25rem}
+  .report-kpis{grid-template-columns:1fr}
+  .report-score-block{grid-template-columns:1fr}
+}
