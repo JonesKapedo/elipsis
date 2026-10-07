@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}About{% endblock %}
+{% block content %}
+<section class="hero compact">
+  <p class="eyebrow">ABOUT {{ BRAND_SHORT }}</p>
+  <h1>Intelligence for operational transformation.</h1>
+  <p class="lede">{{ BRAND_NAME }} turns a structured assessment into a board-ready picture of friction cost, automation readiness, and a prioritised roadmap — without a 14-week consulting engagement.</p>
+</section>
+
+<section class="steps">
+  <article class="step-card">
+    <span class="step-n">01</span>
+    <h4>Measurement first</h4>
+    <p class="muted">Seven weighted pillars and thirty-six declarative metrics. Every number can be traced back to answers and formulas.</p>
+  </article>
+  <article class="step-card">
+    <span class="step-n">02</span>
+    <h4>Financial honesty</h4>
+    <p class="muted">Savings sized to headcount and rates, with a conservative ceiling and printed assumptions your CFO can challenge.</p>
+  </article>
+  <article class="step-card">
+    <span class="step-n">03</span>
+    <h4>Actionable sequence</h4>
+    <p class="muted">Quick wins, process automation, then AI enablement — ordered by complexity and return, not by fashion.</p>
+  </article>
+</section>
+
+<section class="block">
+  <h3>Who it is for</h3>
+  <p class="muted">COOs, transformation offices, finance leaders, and digital teams who need a shared baseline across departments — and a pack they can email without another meeting.</p>
+  <div class="hero-actions">
+    <a class="btn" href="/login">Sign in</a>
+    <a class="btn ghost" href="/sample">See a sample report</a>
+    <a class="btn ghost" href="/contact">Talk to us</a>
+  </div>
+</section>
+{% endblock %}
