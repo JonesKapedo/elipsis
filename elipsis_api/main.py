@@ -25,7 +25,7 @@ from constants import BRAND_NAME, FRAMEWORK_NAME  # noqa: E402
 from elipsis_api import services  # noqa: E402
 from elipsis_api.config import DATABASE_URL  # noqa: E402
 from elipsis_api.database import Base, SessionLocal, engine  # noqa: E402
-from elipsis_api.routers import api, pages, auth_pages  # noqa: E402
+from elipsis_api.routers import api, pages, auth_pages, report_routes  # noqa: E402
 from elipsis_api import state as runtime_state  # noqa: E402
 
 
@@ -58,6 +58,7 @@ app = FastAPI(
 
 app.include_router(api.router)
 app.include_router(auth_pages.router)
+app.include_router(report_routes.router)  # PDF + expanded report (before pages)
 app.include_router(pages.router)
 
 _static = Path(__file__).resolve().parent.parent / "static"
