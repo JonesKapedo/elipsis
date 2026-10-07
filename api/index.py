@@ -1,6 +1,10 @@
-"""Vercel serverless entrypoint for the Elipsis FastAPI app.
+"""Vercel serverless entrypoint for the Elipsis FastAPI app."""
+import os
+import sys
 
-Vercel looks for an ASGI `app` under /api. Importing from elipsis_api.main
-keeps a single source of truth for routes, lifespan, and static mounts.
-"""
-from elipsis_api.main import app  # noqa: F401
+# Project root (parent of /api) must be on sys.path so `elipsis_api` imports.
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+
+from elipsis_api.main import app  # noqa: E402, F401
