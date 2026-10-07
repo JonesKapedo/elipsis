@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Newsreader", "Iowan Old Style", Georgia, serif;
+  --font-sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --color-navy: #0a1628;
+  --color-navy-2: #12213a;
+  --color-navy-3: #1a2f52;
+  --color-ink: #12151c;
+  --color-charcoal: #1a1f2b;
+  --color-paper: #f4f1ea;
+  --color-paper-2: #ebe6db;
+  --color-cream: #faf8f3;
+  --color-steel: #2e5a88;
+  --color-steel-2: #3d6fa3;
+  --color-mist: #8b93a1;
+  --color-line: #d8d2c6;
+  --color-line-dark: #24324a;
+
+  --color-background: #f4f1ea;
+  --color-foreground: #12151c;
+  --color-card: #faf8f3;
+  --color-card-foreground: #12151c;
+  --color-muted: #ebe6db;
+  --color-muted-foreground: #5c6370;
+  --color-primary: #0a1628;
+  --color-primary-foreground: #f4f1ea;
+  --color-secondary: #e6e0d4;
+  --color-secondary-foreground: #12151c;
+  --color-accent: #2e5a88;
+  --color-accent-foreground: #faf8f3;
+  --color-border: #d8d2c6;
+  --color-input: #d8d2c6;
+  --color-ring: #2e5a88;
+  --color-destructive: #8a3b32;
+  --color-destructive-foreground: #faf8f3;
+
+  --color-good: #2f6b4f;
+  --color-warn: #8a6a2f;
+  --color-risk: #8a3b32;
+
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 28px;
+  --radius: 12px;
+
+  --shadow-soft: 0 1px 0 rgba(18,21,28,.04), 0 12px 32px rgba(10,22,40,.06);
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-smoothing: grayscale;
+  }
+  button:not(:disabled), [role="button"]:not(:disabled) { cursor: pointer; }
+  * { border-color: var(--color-border); }
+  html, body, #root { min-height: 100%; }
+  body {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    line-height: 1.55;
+  }
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+  }
+  p { text-wrap: pretty; }
+  :focus-visible { outline: 2px solid var(--color-steel); outline-offset: 2px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+@media print {
+  nav, aside, .no-print { display: none !important; }
+  body { background: white; color: black; }
+}

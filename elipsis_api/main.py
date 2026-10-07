@@ -2,8 +2,6 @@
 
 Run with:
     uvicorn elipsis_api.main:app --reload --port 8001
-or:
-    python3 run_api.py
 
 On Vercel the app is deployed as a serverless function; the entrypoint is
 declared in pyproject.toml under [tool.vercel].
@@ -14,7 +12,6 @@ import sys
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -45,6 +42,6 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(title=f"{BRAND_NAME} API", description=FRAMEWORK_NAME,
               version="0.1.0", lifespan=lifespan)
 
-app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+# API routes
 app.include_router(api.router)
 app.include_router(pages.router)

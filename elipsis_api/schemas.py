@@ -143,10 +143,40 @@ class PhaseOut(BaseModel):
     items: List[RecommendationOut]
 
 
+class BenchmarkOut(BaseModel):
+    """Industry / size-band benchmark comparison."""
+    industry: str
+    size_band: str
+    industry_avg: float
+    size_avg: float
+    digital_avg: float
+    automation_avg: float
+    ai_avg: float
+    percentile: float
+    pillar_bench: List[Dict[str, object]]
+
+
+class AuthOut(BaseModel):
+    user_id: int
+    email: str
+    name: str
+    role: str
+    token: str
+
+
+class LoginIn(BaseModel):
+    email: str
+    password: str
+
+
+class LoginOut(BaseModel):
+    token: str
+    user: AuthOut
+
+
 class ResultOut(BaseModel):
     readiness_index: float
     organisation_score: float
-    # Retained for backward compatibility with pre-rebrand API clients.
     department_score: float
     confidence_index: float
     confidence_band: str
@@ -163,3 +193,20 @@ class ResultOut(BaseModel):
     roadmap: List[PhaseOut]
     top_opportunities: List[str]
     financial: FinancialOut
+    benchmarks: Optional[BenchmarkOut] = None
+    sample_report: Optional[Dict[str, object]] = None
+    report_url: Optional[str] = None
+
+
+class SampleReportOut(BaseModel):
+    org_name: str
+    version: str
+    ready_on: str
+    index: int
+    maturity: str
+    pillars: Dict[str, float]
+    metrics: Dict[str, float]
+    pain_points: List[Dict[str, object]]
+    recommendations: List[Dict[str, object]]
+    roadmap: List[Dict[str, object]]
+    financial: Dict[str, object]

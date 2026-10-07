@@ -1,0 +1,53 @@
+export default {
+  content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  theme: {
+    extend: {
+      fontFamily: {
+        display: ["Newsreader", "Iowan Old Style", "Georgia", "serif"],
+        sans: ["IBM Plex Sans", "Segoe UI", "system-ui", "sans-serif"],
+        mono: ["IBM Plex Mono", "ui-monospace", "SF Mono", "monospace"],
+      },
+      colors: {
+        navy: {
+          50: "#f5f6fa", 100: "#e8eaf0", 200: "#d3dae4", 300: "#b8c3d4",
+          400: "#9da8b9", 500: "#7e8b9e", 600: "#5f6f84", 700: "#3f4d60",
+          800: "#202a3d", 900: "#0a1628", 950: "#030711",
+        },
+        navy2: { 100: "#12213a", 200: "#1a2f52", 300: "#24324a", 400: "#2e5a88", 500: "#3d6fa3" },
+        ink: "#12151c",
+        paper: "#f4f1ea",
+        paper2: "#ebe6db",
+        cream: "#faf8f3",
+        steel: "#2e5a88",
+        steel2: "#3d6fa3",
+        mist: "#8b93a1",
+        line: "#d8d2c6",
+        linedark: "#24324a",
+        background: "#f4f1ea",
+        foreground: "#12151c",
+        card: "#faf8f3",
+        muted: "#ebe6db",
+        mutedforeground: "#5c6370",
+        primary: "#0a1628",,
+        primaryforeground: "#f4f1ea",
+        secondary: "#e6e0d4",
+        secondaryforeground: "#12151c",
+        accent: "#2e5a88",
+        accentforeground: "#faf8f3",
+        border: "#d8d2c6",
+        input: "#d8d2c6",
+        ring: "#2e5a88",
+        good: "#2f6b4f",
+        warn: "#8a6a2f",
+        risk: "#8a3b32",
+      },
+      borderRadius: {
+        xs: "4px", sm: "8px", md: "12px", lg: "18px", xl: "28px",
+      },
+      boxShadow: {
+        soft: "0 1px 0 rgba(18,21,28,.04), 0 12px 32px rgba(10,22,40,.06)",
+      },
+    },
+  },
+  plugins: [],
+};

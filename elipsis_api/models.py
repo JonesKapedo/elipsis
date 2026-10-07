@@ -207,3 +207,47 @@ class AuthSession(Base):
     user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id"), nullable=False)
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class RoadmapItem(Base):
+    __tablename__ = "roadmap_items"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    assessment_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("assessments.id"), nullable=False)
+    phase: Mapped[int | None] = mapped_column(Integer)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    solution: Mapped[str | None] = mapped_column(Text)
+    technology: Mapped[str | None] = mapped_column(String)
+    complexity: Mapped[str | None] = mapped_column(String)
+    priority: Mapped[float | None] = mapped_column(Float)
+    horizon: Mapped[str | None] = mapped_column(String)
+    roi: Mapped[float | None] = mapped_column(Float)
+    kpi: Mapped[str | None] = mapped_column(String)
+
+
+class RoadmapPhase(Base):
+    __tablename__ = "roadmap_phases"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    assessment_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("assessments.id"), nullable=False)
+    number: Mapped[int] = mapped_column(Integer)
+    label: Mapped[str] = mapped_column(String, nullable=False)
+    horizon: Mapped[str | None] = mapped_column(String)
+    note: Mapped[str | None] = mapped_column(Text)
+    count: Mapped[int | None] = mapped_column(Integer)
+    value: Mapped[float | None] = mapped_column(Float)
+
+
+class Benchmark(Base):
+    __tablename__ = "benchmarks"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    assessment_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("assessments.id"), nullable=False)
+    industry: Mapped[str | None] = mapped_column(String)
+    size_band: Mapped[str | None] = mapped_column(String)
+    industry_avg: Mapped[float | None] = mapped_column(Float)
+    size_avg: Mapped[float | None] = mapped_column(Float)
+    digital_avg: Mapped[float | None] = mapped_column(Float)
+    automation_avg: Mapped[float | None] = mapped_column(Float)
+    ai_avg: Mapped[float | None] = mapped_column(Float)
+    percentile: Mapped[float | None] = mapped_column(Float)
