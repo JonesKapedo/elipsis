@@ -1,9 +1,6 @@
 {
+  "version": 2,
   "builds": [
-    {
-      "src": "frontend/package.json",
-      "use": "@vercel/node"
-    },
     {
       "src": "elipsis_api/main.py",
       "use": "@vercel/python"
@@ -11,18 +8,8 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "elipsis_api.main:app"
-    },
-    {
-      "src": "/(.)*",
-      "dest": "frontend/dist/$1"
+      "src": "/(.*)",
+      "dest": "elipsis_api/main.py"
     }
-  ],
-  "env": {
-    "ELIPSIS_DATABASE_URL": "postgresql://USER:PASSWORD@HOST/DATABASE",
-    "ELIPSIS_ADMIN_EMAIL": "admin@elipsis.local",
-    "ELIPSIS_ADMIN_PASSWORD": "change-me-now",
-    "ELIPSIS_JWT_SECRET": ".env from vercel"
-  }
+  ]
 }
