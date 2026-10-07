@@ -1,32 +1,33 @@
 {% extends "base.html" %}
 {% block title %}Sign in{% endblock %}
+{% block body_class %}page-auth{% endblock %}
 {% block content %}
-<div class="auth">
+<div class="auth auth-pro">
   <section class="auth-pitch">
-    <p class="eyebrow">{{ BRAND_MARK }} {{ BRAND_SHORT }} ACCESS</p>
-    <h1>Sign in to your<br>transformation workspace.</h1>
-    <p class="lede">Run assessments, compare departments, export board packs, and share read-only report links — all from one account.</p>
+    <p class="eyebrow">{{ BRAND_MARK }} SECURE ACCESS</p>
+    <h1>Your organisation’s<br>transformation workspace.</h1>
+    <p class="lede">Measure readiness, quantify friction cost, and prioritise a board-ready roadmap — from one signed-in account.</p>
 
     <ul class="auth-points">
       <li>
-        <span>1</span>
+        <span class="auth-icon" aria-hidden="true">◈</span>
         <div>
-          <strong>Structured assessment</strong>
-          <p class="muted">{{ total_questions or 63 }} plain-English questions across seven weighted pillars. Autosave and live scores as you go.</p>
+          <strong>{{ INDEX_NAME }}</strong>
+          <p class="muted">{{ total_questions or 63 }} questions across seven weighted pillars, with live scores as you progress.</p>
         </div>
       </li>
       <li>
-        <span>2</span>
+        <span class="auth-icon" aria-hidden="true">▣</span>
         <div>
-          <strong>Executive outputs</strong>
-          <p class="muted">{{ INDEX_NAME }}, 36 metrics, financial impact with assumptions, and a three-horizon roadmap.</p>
+          <strong>Executive pack</strong>
+          <p class="muted">36 metrics, KES financial model with printed assumptions, and a three-horizon implementation roadmap.</p>
         </div>
       </li>
       <li>
-        <span>3</span>
+        <span class="auth-icon" aria-hidden="true">⇄</span>
         <div>
-          <strong>Portfolio tools</strong>
-          <p class="muted">Department comparison, emailable share links, JSON export, and guided demo mode.</p>
+          <strong>Portfolio controls</strong>
+          <p class="muted">Department comparison, emailable share links, and machine-readable JSON export.</p>
         </div>
       </li>
     </ul>
@@ -37,12 +38,26 @@
       <div><b>{{ total_questions or 63 }}</b><span>questions</span></div>
       <div><b>3</b><span>horizons</span></div>
     </div>
+
+    <ul class="auth-trust">
+      <li>Session cookies · HttpOnly</li>
+      <li>PBKDF2 password hashing</li>
+      <li>Read-only share links</li>
+    </ul>
   </section>
 
-  <section class="auth-card">
+  <section class="auth-card auth-card-pro" aria-labelledby="signin-heading">
+    <div class="auth-card-brand">
+      <span class="mark" aria-hidden="true">{{ BRAND_MARK }}</span>
+      <div>
+        <strong>{{ BRAND_NAME }}</strong>
+        <span class="muted">Workspace sign-in</span>
+      </div>
+    </div>
+
     <div class="auth-card-head">
-      <h2>Welcome back</h2>
-      <p class="muted">Enter your work email and password to continue.</p>
+      <h2 id="signin-heading">Sign in</h2>
+      <p class="muted">Use the credentials issued by your administrator.</p>
     </div>
 
     {% if error %}
@@ -52,27 +67,40 @@
     <form method="post" action="/login" class="stack" novalidate>
       <label for="email">Work email
         <input id="email" type="email" name="email" required
-               autocomplete="username" placeholder="you@company.com" autofocus>
+               autocomplete="username" placeholder="name@company.com" autofocus
+               spellcheck="false">
       </label>
       <label for="password">Password
         <input id="password" type="password" name="password" required
-               autocomplete="current-password" placeholder="Enter your password"
+               autocomplete="current-password" placeholder="••••••••"
                minlength="4">
       </label>
-      <button class="btn big full" type="submit">Sign in securely →</button>
+      <button class="btn big full" type="submit">Continue to workspace →</button>
     </form>
 
-    <div class="auth-divider"><span>or explore without an account</span></div>
+    <p class="auth-secure muted">
+      Encrypted session · Signed out devices stay signed out ·
+      <a href="/security">Security overview</a>
+    </p>
+
+    <div class="auth-divider"><span>Explore without signing in</span></div>
 
     <div class="auth-alt">
       <a class="btn ghost full" href="/sample">View sample report</a>
-      <a class="btn ghost full" href="/demo">Guided demo overview</a>
+      <a class="btn ghost full" href="/methodology">Read methodology</a>
     </div>
 
-    <div class="auth-help">
-      <p><strong>Demo access</strong> (local / trial instances)</p>
-      <p class="muted">Email <code>admin@elipsis.local</code> · password <code>elipsis</code></p>
-      <p class="muted" style="margin-top:.75rem">Need an organisation account? <a href="/contact">Contact us</a> or read the <a href="/methodology">methodology</a>.</p>
+    <div class="auth-help auth-demo">
+      <div class="auth-demo-head">
+        <span class="tag ok">Trial</span>
+        <strong>Demo credentials</strong>
+      </div>
+      <dl class="auth-creds">
+        <div><dt>Email</dt><dd><code>admin@elipsis.local</code></dd></div>
+        <div><dt>Password</dt><dd><code>elipsis</code></dd></div>
+      </dl>
+      <p class="muted small">Change these via <code>ELIPSIS_ADMIN_EMAIL</code> and <code>ELIPSIS_ADMIN_PASSWORD</code> in production.</p>
+      <p class="muted small">Need an organisation workspace? <a href="/contact">Contact sales</a>.</p>
     </div>
   </section>
 </div>
