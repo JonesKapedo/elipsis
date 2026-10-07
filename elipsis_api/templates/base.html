@@ -13,16 +13,18 @@
   <a class="brand" href="/"><span class="mark">{{ BRAND_MARK }}</span> {{ BRAND_NAME }}</a>
   <nav>
     {% if user %}
-    <a href="/dashboard">📊 Dashboard</a>
-    <a href="/start">＋ New assessment</a>
-    <a href="/assessments">🗂️ Assessments</a>
-    <a href="/docs">🔌 API</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/start">New assessment</a>
+    <a href="/compare">Compare</a>
+    <a href="/demo">Demo</a>
+    <a href="/assessments">Assessments</a>
     {% else %}
     <a href="/#what">Product</a>
-    <a href="/sample">Sample report</a>
+    <a href="/sample">Sample</a>
+    <a href="/use-cases">Use cases</a>
     <a href="/methodology">Methodology</a>
     <a href="/pricing">Pricing</a>
-    <a href="/docs">API</a>
+    <a href="/faq">FAQ</a>
     {% endif %}
   </nav>
   <div class="session">
@@ -42,10 +44,13 @@
       <p class="muted">{{ FRAMEWORK_NAME }} · {{ INDEX_NAME }}</p>
     </div>
     <div class="footer-links">
-      <a href="/sample">Sample report</a>
+      <a href="/sample">Sample</a>
+      <a href="/demo">Guided demo</a>
+      <a href="/use-cases">Use cases</a>
       <a href="/methodology">Methodology</a>
       <a href="/pricing">Pricing</a>
-      <a href="/docs">API docs</a>
+      <a href="/faq">FAQ</a>
+      <a href="/docs">API</a>
       <a href="/login">Sign in</a>
     </div>
   </div>
