@@ -11,6 +11,7 @@ from elipsis_api import models, schemas, services
 from elipsis_api.config import SESSION_COOKIE
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
+from elipsis_api.sample import SAMPLE_ORG, sample_result
 
 router = APIRouter()
 
@@ -48,12 +49,33 @@ def _set_session_cookie(response, token: str) -> None:
 @router.get("/")
 def landing(request: Request, user=Depends(get_current_user),
             db: Session = Depends(get_db)):
-    """Marketing page for visitors; signed-in users go straight to the dashboard."""
     if user is not None:
         return RedirectResponse("/dashboard", status_code=303)
     return templates.TemplateResponse(
         request, "landing.html",
         {"user": user, "total_questions": _question_count(db)})
+
+
+@router.get("/sample")
+def sample_report(request: Request, user=Depends(get_current_user)):
+    """Public sample report — same engine as live assessments."""
+    result = sample_result()
+    return templates.TemplateResponse(
+        request, "sample.html",
+        {"user": user, "result": result, "org": SAMPLE_ORG})
+
+
+@router.get("/pricing")
+def pricing(request: Request, user=Depends(get_current_user)):
+    return templates.TemplateResponse(request, "pricing.html", {"user": user})
+
+
+@router.get("/methodology")
+def methodology(request: Request, user=Depends(get_current_user),
+                db: Session = Depends(get_db)):
+    return templates.TemplateResponse(
+        request, "methodology.html",
+        {"user": user, "total_questions": _question_count(db) or 63})
 
 
 @router.get("/login")
@@ -290,3 +312,29 @@ def assessment_report(assessment_id: int, request: Request,
         "department": db.get(models.Department, assessment.department_id)
         if assessment.department_id else None,
     })
+
+
+@router.get("/assessment/{assessment_id}/export.json")
+def assessment_export_json(assessment_id: int, request: Request,
+                           user=Depends(get_current_user), db: Session = Depends(get_db)):
+    """Machine-readable export of the full computed result."""
+    if user is None:
+        return JSONResponse({"error": "not signed in"}, status_code=401)
+    assessment, result = services.compute(db, assessment_id)
+    if assessment is None or result is None:
+        return JSONResponse({"error": "assessment not found"}, status_code=404)
+    org = db.get(models.Organization, assessment.organization_id)
+    dept = (db.get(models.Department, assessment.department_id)
+            if assessment.department_id else None)
+    payload = {
+        "assessment": {
+            "id": assessment.id,
+            "status": assessment.status,
+            "respondent": assessment.respondent,
+            "completed_at": assessment.completed_at,
+            "organization": org.name if org else None,
+            "department": dept.name if dept else None,
+        },
+        "result": result,
+    }
+    return JSONResponse(payload)
