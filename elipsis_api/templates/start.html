@@ -1,29 +1,87 @@
 {% extends "base.html" %}
 {% block title %}New assessment{% endblock %}
 {% block content %}
-<section class="narrow">
-  <h1>New {{ INDEX_SHORT }} assessment</h1>
-  <p class="lede">{{ QUESTIONNAIRE_NAME }} &mdash; {{ QUESTIONNAIRE_CODE }}.
-  {{ total_questions }} questions across the seven intelligence pillars, taking about
-  50 minutes. Every question contributes to at least one pillar and to the
-  thirty-six executive metrics.</p>
-  <form method="post" action="/start" class="stack">
-    <h3>Organisation</h3>
-    <label>Existing organisation
-      <select name="organization_id">
-        <option value="">&mdash; create new &mdash;</option>
-        {% for o in organizations %}<option value="{{ o.id }}">{{ o.name }}</option>{% endfor %}
-      </select>
-    </label>
-    <label>New organisation name <input name="org_name" placeholder="e.g. Blue Ridge Logistics Ltd"></label>
-    <label>Industry <input name="industry" placeholder="e.g. Logistics"></label>
-    <label>Employees <input name="employee_count" type="number" min="0" placeholder="120"></label>
-    <label>Country <input name="country" value="Kenya"></label>
-    <label>City <input name="city" placeholder="Nairobi"></label>
-    <h3>Scope</h3>
-    <label>Department <input name="department" value="Operations"></label>
-    <label>Respondent <input name="respondent" placeholder="e.g. Operations Manager"></label>
-    <button class="btn" type="submit">Begin assessment</button>
-  </form>
+<section class="head">
+  <p class="eyebrow">NEW ASSESSMENT</p>
+  <h1>Configure {{ INDEX_SHORT }} scope</h1>
+  <p class="lede">{{ QUESTIONNAIRE_NAME }} ({{ QUESTIONNAIRE_CODE }}) ·
+  {{ total_questions }} questions · about 25 minutes · autosave on every answer.</p>
 </section>
+
+<div class="split-layout">
+  <section class="block">
+    <form method="post" action="/start" class="stack">
+      <h3>Organisation</h3>
+      <label>Existing organisation
+        <select name="organization_id">
+          <option value="">— Create new organisation —</option>
+          {% for o in organizations %}
+          <option value="{{ o.id }}">{{ o.name }}{% if o.industry %} · {{ o.industry }}{% endif %}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <div class="form-grid">
+        <label>New organisation name
+          <input name="org_name" placeholder="e.g. Blue Ridge Logistics Ltd" autocomplete="organization">
+        </label>
+        <label>Industry
+          <input name="industry" placeholder="e.g. Logistics" list="industry-list">
+        </label>
+        <label>Employees
+          <input name="employee_count" type="number" min="0" placeholder="120">
+        </label>
+        <label>Country
+          <input name="country" value="Kenya" autocomplete="country-name">
+        </label>
+        <label>City
+          <input name="city" placeholder="Nairobi" autocomplete="address-level2">
+        </label>
+      </div>
+
+      <h3>Scope</h3>
+      <div class="form-grid">
+        <label>Department
+          <input name="department" value="Operations" list="dept-list">
+        </label>
+        <label>Respondent title
+          <input name="respondent" placeholder="e.g. Operations Manager">
+        </label>
+      </div>
+
+      <datalist id="industry-list">
+        <option value="Logistics"></option>
+        <option value="Manufacturing"></option>
+        <option value="Financial services"></option>
+        <option value="Retail"></option>
+        <option value="Healthcare"></option>
+        <option value="Public sector"></option>
+      </datalist>
+      <datalist id="dept-list">
+        <option value="Operations"></option>
+        <option value="Finance"></option>
+        <option value="Customer Service"></option>
+        <option value="Supply Chain"></option>
+        <option value="IT"></option>
+        <option value="HR"></option>
+      </datalist>
+
+      <div class="hero-actions">
+        <button class="btn big" type="submit">Begin assessment →</button>
+        <a class="btn ghost" href="/demo">Or run guided demo</a>
+      </div>
+    </form>
+  </section>
+
+  <aside class="block side-card">
+    <h3>What happens next</h3>
+    <ol class="opp">
+      <li>Answer short segments (about three questions each).</li>
+      <li>Scores update live as you progress.</li>
+      <li>Submit for the full index, metrics, and roadmap.</li>
+      <li>Share a read-only link or export JSON.</li>
+    </ol>
+    <p class="muted small">Tip: employee count drives the financial model. Use a realistic headcount for credible savings estimates.</p>
+  </aside>
+</div>
 {% endblock %}
