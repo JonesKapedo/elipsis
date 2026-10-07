@@ -23,32 +23,28 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from constants import BRAND_NAME, FRAMEWORK_NAME  # noqa: E402
 from elipsis_api import services  # noqa: E402
-from elipsis_api.config import BASE_DIR, DATABASE_URL  # noqa: E402
+from elipsis_api.config import DATABASE_URL  # noqa: E402
 from elipsis_api.database import Base, SessionLocal, engine  # noqa: E402
 from elipsis_api.routers import api, pages  # noqa: E402
-
-_SEED_OK = False
-_SEED_ERROR: str | None = None
+from elipsis_api import state as runtime_state  # noqa: E402
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     """Create schema and seed once per cold start; never crash the process."""
-    global _SEED_OK, _SEED_ERROR
     try:
         Base.metadata.create_all(bind=engine)
         db = SessionLocal()
         try:
             services.seed(db)
-            _SEED_OK = True
-            _SEED_ERROR = None
+            runtime_state.set_seed(True, None)
         finally:
             db.close()
         print(f"[elipsis] database ready: {DATABASE_URL.split('://', 1)[0]}", flush=True)
     except Exception as exc:  # noqa: BLE001
-        _SEED_OK = False
-        _SEED_ERROR = f"{exc.__class__.__name__}: {exc}"
-        print(f"[elipsis] startup seed failed: {_SEED_ERROR}", flush=True)
+        err = f"{exc.__class__.__name__}: {exc}"
+        runtime_state.set_seed(False, err)
+        print(f"[elipsis] startup seed failed: {err}", flush=True)
         traceback.print_exc()
     yield
 
@@ -60,11 +56,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# API + page routes
 app.include_router(api.router)
 app.include_router(pages.router)
 
-# CSS and other static assets (repo-root /static)
 _static = Path(__file__).resolve().parent.parent / "static"
 if _static.is_dir():
     app.mount("/static", StaticFiles(directory=str(_static)), name="static")
@@ -74,10 +68,7 @@ if _static.is_dir():
 async def http_exception_handler(_request: Request, exc: StarletteHTTPException):
     if isinstance(exc.detail, (dict, list)):
         return JSONResponse(status_code=exc.status_code, content=exc.detail)
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": exc.detail},
-    )
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
 
 @app.exception_handler(RequestValidationError)
@@ -94,13 +85,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
     print(f"[elipsis] unhandled {exc.__class__.__name__} on {request.url.path}: {exc}",
           flush=True)
     traceback.print_exc()
-    # Avoid exposing internals in production-like environments.
     detail = "internal_error"
     if os.getenv("ELIPSIS_DEBUG") == "1" or os.getenv("VERCEL_ENV") == "preview":
         detail = f"{exc.__class__.__name__}: {exc}"
     return JSONResponse(status_code=500, content={"detail": detail})
-
-
-def seed_status() -> dict:
-    """Expose startup seed state for health checks."""
-    return {"seed_ok": _SEED_OK, "seed_error": _SEED_ERROR}
