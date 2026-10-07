@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Methodology{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">METHODOLOGY</p>
+  <h1>Not a questionnaire. A measurement model.</h1>
+  <p class="lede">{{ total_questions }} questions, 21 subdomains, 7 weighted pillars,
+  36 executive metrics, and a financial model sized to your headcount.
+  Every number is explainable.</p>
+</section>
+
+<section class="block">
+  <h3>1. Instrument</h3>
+  <p class="lede">ORG-001 is organised as short segments (typically three questions per subdomain).
+  Each item uses a scale matched to the work — coverage, steps, approvals, hours —
+  not a generic 1–5 attitude scale.</p>
+  <div class="stats">
+    <div><b>{{ total_questions }}</b><span>questions</span></div>
+    <div><b>21</b><span>subdomains</span></div>
+    <div><b>7</b><span>pillars</span></div>
+    <div><b>36</b><span>metrics</span></div>
+  </div>
+</section>
+
+<section class="block">
+  <h3>2. Pillar weights</h3>
+  <p class="muted">Weights reflect how strongly each area usually drives automation and transformation ROI.</p>
+  <table class="table">
+    <thead><tr><th>Code</th><th>Pillar</th><th class="num">Weight</th><th>Objective</th></tr></thead>
+    <tbody>
+      {% for code, label, weight, objective in PILLARS %}
+      <tr>
+        <td><span class="qcode">{{ code }}</span></td>
+        <td>{{ label }}</td>
+        <td class="num">{{ '%.0f'|format(weight * 100) }}%</td>
+        <td class="muted">{{ objective }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="block">
+  <h3>3. Scoring pipeline</h3>
+  <div class="steps">
+    <article class="step-card">
+      <span class="step-n">A</span>
+      <h4>Evidence-adjusted answers</h4>
+      <p class="muted">Scores are tempered by evidence strength so “we think so” does not equal “we can show it”.</p>
+    </article>
+    <article class="step-card">
+      <span class="step-n">B</span>
+      <h4>Subdomain → pillar roll-up</h4>
+      <p class="muted">Weighted means by subdomain, then by pillar, then into the {{ INDEX_SHORT }}.</p>
+    </article>
+    <article class="step-card">
+      <span class="step-n">C</span>
+      <h4>Declarative metrics</h4>
+      <p class="muted">36 formulas evaluated by a restricted AST interpreter — no black-box model weights.</p>
+    </article>
+    <article class="step-card">
+      <span class="step-n">D</span>
+      <h4>Pain → roadmap</h4>
+      <p class="muted">Low scores trigger pain points; recommendations are phased by complexity and ROI.</p>
+    </article>
+  </div>
+</section>
+
+<section class="block">
+  <h3>4. Financial model</h3>
+  <p class="lede">Annual savings are sized from staff count, blended hourly rate, recoverable friction,
+  and a conservative ceiling on the labour line so board packs stay credible.</p>
+  <ul class="price-list">
+    <li>Hours × rate driven by organisation size</li>
+    <li>Severity scales with low subdomain scores</li>
+    <li>Recoverable value capped (default 12% of labour line)</li>
+    <li>Investment and payback months printed with assumptions</li>
+  </ul>
+</section>
+
+<section class="cta-panel">
+  <h2>See the model applied to a demo organisation</h2>
+  <a class="btn big" href="/sample">Open sample report →</a>
+</section>
+{% endblock %}
