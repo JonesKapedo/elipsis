@@ -3,54 +3,77 @@
 {% block content %}
 <div class="auth">
   <section class="auth-pitch">
-    <p class="eyebrow">{{ BRAND_MARK }} {{ BRAND_SHORT }}</p>
-    <h1>Find out what your business<br>is losing to friction.</h1>
-    <p class="lede">{{ BRAND_TAGLINE }} Answer {{ QUESTIONNAIRE_CODE }}'s
-    {{ total_questions }} short questions — in plain English, about 25 minutes —
-    and see exactly where your money and time are going.</p>
+    <p class="eyebrow">{{ BRAND_MARK }} {{ BRAND_SHORT }} ACCESS</p>
+    <h1>Sign in to your<br>transformation workspace.</h1>
+    <p class="lede">Run assessments, compare departments, export board packs, and share read-only report links — all from one account.</p>
 
     <ul class="auth-points">
-      <li><span>⚙️</span><div><strong>Seven intelligence pillars</strong>
-        <p class="muted">How work flows, what can be automated, your data, your
-        technology and whether you can grow.</p></div></li>
-      <li><span>📊</span><div><strong>36 executive metrics</strong>
-        <p class="muted">Plain measures your board will understand — workflow
-        friction, spreadsheet dependency, key-person risk and more.</p></div></li>
-      <li><span>💰</span><div><strong>The cost, in {{ CURRENCY }}</strong>
-        <p class="muted">What the friction costs you each year, what fixing it
-        saves, and how long it takes to pay back.</p></div></li>
-      <li><span>🚀</span><div><strong>A three-phase roadmap</strong>
-        <p class="muted">Quick wins first, then process automation, then AI —
-        in the order that actually pays back.</p></div></li>
+      <li>
+        <span>1</span>
+        <div>
+          <strong>Structured assessment</strong>
+          <p class="muted">{{ total_questions or 63 }} plain-English questions across seven weighted pillars. Autosave and live scores as you go.</p>
+        </div>
+      </li>
+      <li>
+        <span>2</span>
+        <div>
+          <strong>Executive outputs</strong>
+          <p class="muted">{{ INDEX_NAME }}, 36 metrics, financial impact with assumptions, and a three-horizon roadmap.</p>
+        </div>
+      </li>
+      <li>
+        <span>3</span>
+        <div>
+          <strong>Portfolio tools</strong>
+          <p class="muted">Department comparison, emailable share links, JSON export, and guided demo mode.</p>
+        </div>
+      </li>
     </ul>
 
     <div class="auth-proof">
-      <div><b>7</b><span>intelligence pillars</span></div>
-      <div><b>36</b><span>executive metrics</span></div>
-      <div><b>{{ total_questions }}</b><span>plain questions</span></div>
+      <div><b>7</b><span>pillars</span></div>
+      <div><b>36</b><span>metrics</span></div>
+      <div><b>{{ total_questions or 63 }}</b><span>questions</span></div>
+      <div><b>3</b><span>horizons</span></div>
     </div>
   </section>
 
   <section class="auth-card">
-    <h2>Sign in to continue</h2>
-    <p class="muted">Use the account your administrator gave you.</p>
+    <div class="auth-card-head">
+      <h2>Welcome back</h2>
+      <p class="muted">Enter your work email and password to continue.</p>
+    </div>
 
-    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    {% if error %}
+    <p class="error" role="alert">{{ error }}</p>
+    {% endif %}
 
-    <form method="post" action="/login" class="stack">
-      <label>Email address
-        <input type="email" name="email" required autocomplete="username"
-               placeholder="you@company.com" autofocus>
+    <form method="post" action="/login" class="stack" novalidate>
+      <label for="email">Work email
+        <input id="email" type="email" name="email" required
+               autocomplete="username" placeholder="you@company.com" autofocus>
       </label>
-      <label>Password
-        <input type="password" name="password" required
-               autocomplete="current-password" placeholder="••••••••">
+      <label for="password">Password
+        <input id="password" type="password" name="password" required
+               autocomplete="current-password" placeholder="Enter your password"
+               minlength="4">
       </label>
-      <button class="btn big full" type="submit">Sign in →</button>
+      <button class="btn big full" type="submit">Sign in securely →</button>
     </form>
 
-    <p class="auth-help">No account yet? Ask your administrator for an
-    invitation, or <a href="/">read what {{ BRAND_NAME }} measures</a>.</p>
+    <div class="auth-divider"><span>or explore without an account</span></div>
+
+    <div class="auth-alt">
+      <a class="btn ghost full" href="/sample">View sample report</a>
+      <a class="btn ghost full" href="/demo">Guided demo overview</a>
+    </div>
+
+    <div class="auth-help">
+      <p><strong>Demo access</strong> (local / trial instances)</p>
+      <p class="muted">Email <code>admin@elipsis.local</code> · password <code>elipsis</code></p>
+      <p class="muted" style="margin-top:.75rem">Need an organisation account? <a href="/contact">Contact us</a> or read the <a href="/methodology">methodology</a>.</p>
+    </div>
   </section>
 </div>
 {% endblock %}
