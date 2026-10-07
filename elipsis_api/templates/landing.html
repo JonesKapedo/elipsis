@@ -1,19 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Business transformation intelligence{% endblock %}
+{% block title %}See what friction is costing you{% endblock %}
 {% block content %}
-<section class="hero">
-  <p class="eyebrow">{{ BRAND_MARK }} {{ BRAND_SHORT }}</p>
-  <h1>See exactly where your business<br>is losing money to friction.</h1>
-  <p class="lede">{{ BRAND_TAGLINE }} One assessment, {{ total_questions }}
-  plain-English questions, about 25 minutes — and you get a board-ready picture
-  of the {{ CURRENCY }} your operation is losing, what to fix first, and what
-  it takes to pay back.</p>
+<section class="hero hero-pro">
+  <div class="hero-badge">Board-ready in ~25 minutes</div>
+  <h1>Stop guessing where your operation is leaking time and money.</h1>
+  <p class="lede">{{ BRAND_NAME }} turns {{ total_questions }} plain-English answers into a scored readiness index, a {{ CURRENCY }} friction model, and a prioritised roadmap your board will actually read.</p>
   <div class="hero-actions">
-    <a class="btn big" href="/login">Start an assessment →</a>
-    <a class="btn ghost big" href="/sample">View sample report</a>
+    <a class="btn big" href="/signup">Get your free assessment →</a>
+    <a class="btn ghost big" href="/sample">Preview a sample report</a>
   </div>
   <ul class="hero-trust">
-    <li>No consultants</li><li>~25 minutes</li><li>Board-ready output</li>
+    <li>No consultants required</li>
+    <li>~25 minutes</li>
+    <li>Shareable board pack</li>
+    <li>KES financial model</li>
   </ul>
 </section>
 
@@ -21,14 +21,43 @@
   <div><b>7</b><span>intelligence pillars</span></div>
   <div><b>36</b><span>executive metrics</span></div>
   <div><b>{{ total_questions }}</b><span>plain questions</span></div>
-  <div><b>3</b><span>prioritised horizons</span></div>
+  <div><b>3</b><span>roadmap horizons</span></div>
+</section>
+
+<section class="block showcase">
+  <div class="showcase-grid">
+    <div>
+      <p class="eyebrow">WHAT YOU WALK AWAY WITH</p>
+      <h2 style="border:0;padding:0;margin:.3rem 0 .8rem">A number your board can track — and the story behind it.</h2>
+      <ul class="price-list">
+        <li><strong>{{ INDEX_NAME }}</strong> — one score, seven weighted pillars</li>
+        <li>Annual savings potential in {{ CURRENCY }}, with assumptions printed</li>
+        <li>Pain points ranked by severity and impact</li>
+        <li>Quick wins → process automation → AI enablement</li>
+        <li>Department comparison across your organisation</li>
+      </ul>
+      <div class="hero-actions">
+        <a class="btn" href="/signup">Create free account</a>
+        <a class="btn ghost" href="/methodology">How scoring works</a>
+      </div>
+    </div>
+    <div class="showcase-card">
+      <p class="eyebrow">SAMPLE INDEX</p>
+      <div class="gauge-num">62.4<span>/100</span></div>
+      <p class="band">Emerging</p>
+      <div class="showcase-metrics">
+        <div><span>Annual savings</span><b>KES 4.2M</b></div>
+        <div><span>Payback</span><b>7.4 mo</b></div>
+        <div><span>ROI</span><b>148%</b></div>
+      </div>
+      <a class="btn ghost full" href="/sample" style="margin-top:1rem">Open full sample →</a>
+    </div>
+  </div>
 </section>
 
 <section id="what">
   <h2>Seven pillars, one score</h2>
-  <p class="lede">Every question feeds at least one pillar, and every pillar
-  rolls into the {{ INDEX_NAME }} — a single number your board can track.
-  Weights reflect how much each area typically drives automation ROI.</p>
+  <p class="lede">Every answer feeds at least one pillar. Weights reflect how much each area typically drives automation ROI — so the index is useful, not decorative.</p>
   <div class="pillars">
     {% for code, label, weight, objective in PILLARS %}
     <article class="pillar-card">
@@ -42,83 +71,33 @@
 </section>
 
 <section>
-  <h2>How it works</h2>
+  <h2>How an assessment works</h2>
   <div class="steps">
     <article class="step-card">
       <span class="step-n">1</span>
       <h4>Answer in plain English</h4>
-      <p class="muted">Twenty-one short segments. Autosave after every answer. Live scores as you go.</p>
+      <p class="muted">Short segments. Autosave. Live scores as you go — no 60-page questionnaire.</p>
     </article>
     <article class="step-card">
       <span class="step-n">2</span>
-      <h4>Get the full model</h4>
-      <p class="muted">{{ INDEX_SHORT }}, 36 metrics, pain points, financial impact, and a three-horizon roadmap.</p>
+      <h4>See the full model</h4>
+      <p class="muted">Index, 36 metrics, friction cost, and a three-horizon roadmap ordered by return.</p>
     </article>
     <article class="step-card">
       <span class="step-n">3</span>
-      <h4>Export and act</h4>
-      <p class="muted">Printable report, JSON export, and prioritised actions your operators can own.</p>
-    </article>
-  </div>
-  <p style="margin-top:1rem"><a href="/methodology">Read the methodology →</a>
-  &nbsp;·&nbsp; <a href="/pricing">See pricing →</a></p>
-</section>
-
-<section>
-  <h2>Thirty-six executive metrics</h2>
-  <p class="lede">Each pillar produces labelled scores and risk indexes. Formulas
-  are declarative and evaluated safely — no black-box numbers.</p>
-  <div class="pillars">
-    <article class="pillar-card">
-      <h4>Efficiency & automation</h4>
-      <p class="muted">Process Efficiency · Workflow Friction · Approval Complexity ·
-      Operational Waste · Human Dependency · Repetition Index · Automation
-      Compatibility · Manual Burden · Opportunity & Urgency · Quick-Win Potential ·
-      Estimated Automation ROI</p>
-    </article>
-    <article class="pillar-card">
-      <h4>Digital, data & AI</h4>
-      <p class="muted">Digital Maturity · Software Utilisation · Spreadsheet &
-      Paper Dependency · Data Quality · Analytics Maturity · Reporting Effectiveness ·
-      Decision Intelligence · AI Readiness · Generative & Predictive Opportunity ·
-      Knowledge Automation · AI Value Potential</p>
-    </article>
-    <article class="pillar-card">
-      <h4>Technology & scale</h4>
-      <p class="muted">Technology Readiness · Integration Complexity · Security
-      Readiness · Deployment Readiness · Scalability · Growth Constraint ·
-      Key Person Risk · Organisational Resilience · Future Readiness</p>
-    </article>
-  </div>
-</section>
-
-<section>
-  <h2>Three-phase roadmap</h2>
-  <div class="steps">
-    <article class="step-card">
-      <span class="step-n">1</span>
-      <h4>Quick wins · 0–90 days</h4>
-      <p class="muted">Low-complexity automation on repetitive work. Fast payback.</p>
-    </article>
-    <article class="step-card">
-      <span class="step-n">2</span>
-      <h4>Process automation · 3–12 months</h4>
-      <p class="muted">Approvals, integrations, controls, and chronic friction.</p>
-    </article>
-    <article class="step-card">
-      <span class="step-n">3</span>
-      <h4>AI enablement · 12–24 months</h4>
-      <p class="muted">Predictive and generative AI once process and data are ready.</p>
+      <h4>Share and act</h4>
+      <p class="muted">Email a read-only link, export JSON, compare departments, prioritise the first 90 days.</p>
     </article>
   </div>
 </section>
 
 <section class="cta-panel">
+  <p class="eyebrow" style="color:#fbbf24">READY WHEN YOU ARE</p>
   <h2>Find out what friction is costing you.</h2>
-  <p class="lede">Twenty-five minutes now, and every future board meeting gets easier.</p>
-  <div class="hero-actions">
-    <a class="btn big" href="/login">Start an assessment →</a>
-    <a class="btn ghost big" href="/sample">Browse the sample report</a>
+  <p class="lede">Create a free account, run an assessment in under half an hour, and walk into your next leadership meeting with numbers — not opinions.</p>
+  <div class="hero-actions" style="justify-content:center">
+    <a class="btn big" href="/signup">Start free assessment →</a>
+    <a class="btn ghost big" href="/login">I already have an account</a>
   </div>
 </section>
 {% endblock %}
