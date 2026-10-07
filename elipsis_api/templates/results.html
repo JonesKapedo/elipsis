@@ -12,7 +12,8 @@
   <p class="muted">Completed {{ assessment.completed_at or '' }} &nbsp;&middot;&nbsp;
   {{ result.answered }} of {{ result.total }} questions answered</p>
   <div class="hero-actions" style="margin-top:0.75rem">
-    <a class="btn ghost" href="/assessment/{{ assessment.id }}/report">Printable report</a>
+    <a class="btn" href="/assessment/{{ assessment.id }}/report.pdf">Download PDF</a>
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/report">View board pack</a>
     <a class="btn ghost" href="/assessment/{{ assessment.id }}/export.json">Export JSON</a>
     <form method="post" action="/assessment/{{ assessment.id }}/share" style="display:inline">
       <button class="btn ghost" type="submit">Create share link</button>
