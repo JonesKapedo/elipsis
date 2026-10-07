@@ -22,3 +22,6 @@ python-dotenv==1.2.4
 # NOTE: 3.2.9 has no psycopg-binary wheel (the binary builds start at 3.2.10),
 # so pinning [binary] to 3.2.9 makes `pip install -r requirements.txt` fail.
 psycopg[binary]==3.2.13
+
+# Server-side board-pack PDF generation
+reportlab==4.2.5
