@@ -25,7 +25,7 @@ from constants import BRAND_NAME, FRAMEWORK_NAME  # noqa: E402
 from elipsis_api import services  # noqa: E402
 from elipsis_api.config import DATABASE_URL  # noqa: E402
 from elipsis_api.database import Base, SessionLocal, engine  # noqa: E402
-from elipsis_api.routers import api, pages  # noqa: E402
+from elipsis_api.routers import api, pages, auth_pages  # noqa: E402
 from elipsis_api import state as runtime_state  # noqa: E402
 
 
@@ -52,11 +52,12 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(
     title=f"{BRAND_NAME} API",
     description=FRAMEWORK_NAME,
-    version="0.2.1",
+    version="0.3.0",
     lifespan=lifespan,
 )
 
 app.include_router(api.router)
+app.include_router(auth_pages.router)
 app.include_router(pages.router)
 
 _static = Path(__file__).resolve().parent.parent / "static"
