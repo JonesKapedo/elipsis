@@ -59,12 +59,10 @@ class Question(Base):
     questionnaire_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("questionnaires.id"), nullable=False)
     code: Mapped[str] = mapped_column(String, nullable=False)
-    # Which answer scale this question uses (constants.SCALES key).
     scale: Mapped[str | None] = mapped_column(String)
     subdomain: Mapped[str] = mapped_column(String, nullable=False)
     pillar: Mapped[str] = mapped_column(String, nullable=False)
     text: Mapped[str] = mapped_column(Text, nullable=False)
-    # Why leadership should care about this question, shown under the prompt.
     why: Mapped[str | None] = mapped_column(Text)
     weight: Mapped[int | None] = mapped_column(Integer, default=3)
     evidence_required: Mapped[int | None] = mapped_column(Integer, default=0)
@@ -126,7 +124,6 @@ class SubdomainScore(Base):
 
 
 class MetricScore(Base):
-    """One row per derived executive metric per assessment (36 rows)."""
     __tablename__ = "metric_scores"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     assessment_id: Mapped[int] = mapped_column(
@@ -134,7 +131,7 @@ class MetricScore(Base):
     metric: Mapped[str] = mapped_column(String, nullable=False)
     pillar: Mapped[str] = mapped_column(String, nullable=False)
     label: Mapped[str | None] = mapped_column(String)
-    kind: Mapped[str | None] = mapped_column(String)  # "score" (higher better) | "risk" (higher worse)
+    kind: Mapped[str | None] = mapped_column(String)
     score: Mapped[float | None] = mapped_column(Float)
     reading: Mapped[str | None] = mapped_column(Text)
 
@@ -165,7 +162,6 @@ class Recommendation(Base):
     priority_score: Mapped[float | None] = mapped_column(Float)
     horizon: Mapped[str | None] = mapped_column(String)
     expected_roi: Mapped[float | None] = mapped_column(Float)
-    # 1 Quick Wins | 2 Process Automation | 3 AI Enablement
     phase: Mapped[int | None] = mapped_column(Integer)
 
 
@@ -206,6 +202,17 @@ class AuthSession(Base):
     token: Mapped[str] = mapped_column(String, primary_key=True)
     user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id"), nullable=False)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class ShareLink(Base):
+    """Public, unguessable link so a report can be emailed without a login."""
+    __tablename__ = "share_links"
+    token: Mapped[str] = mapped_column(String, primary_key=True)
+    assessment_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("assessments.id"), nullable=False)
+    created_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    label: Mapped[str | None] = mapped_column(String)
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
 
 
