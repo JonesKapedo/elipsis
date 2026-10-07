@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Contact{% endblock %}
+{% block content %}
+<section class="hero compact">
+  <p class="eyebrow">CONTACT</p>
+  <h1>Talk to the {{ BRAND_NAME }} team.</h1>
+  <p class="lede">Pilots, multi-department programmes, API access, or a walkthrough of the sample pack — send a note and we will respond.</p>
+</section>
+
+<div class="split-layout">
+  <section class="block">
+    {% if sent %}
+    <div class="success" role="status">Thank you. Your message has been received. We will get back to you shortly.</div>
+    {% endif %}
+    {% if error %}
+    <p class="error" role="alert">{{ error }}</p>
+    {% endif %}
+    <form method="post" action="/contact" class="stack">
+      <label>Full name
+        <input name="name" required maxlength="120" placeholder="Jane Wanjiku" value="{{ form.name if form else '' }}">
+      </label>
+      <label>Work email
+        <input type="email" name="email" required maxlength="200" placeholder="jane@company.com" value="{{ form.email if form else '' }}">
+      </label>
+      <label>Organisation
+        <input name="organization" maxlength="200" placeholder="Company Ltd" value="{{ form.organization if form else '' }}">
+      </label>
+      <label>Topic
+        <select name="topic">
+          <option value="pilot">Pilot / pilot</option>
+          <option value="demo">Product demo</option>
+          <option value="enterprise">Enterprise programme</option>
+          <option value="api">API / integration</option>
+          <option value="other">Other</option>
+        </select>
+      </label>
+      <label>Message
+        <textarea name="message" required rows="5" maxlength="4000" placeholder="How can we help?">{{ form.message if form else '' }}</textarea>
+      </label>
+      <button class="btn big" type="submit">Send message →</button>
+    </form>
+  </section>
+
+  <aside class="block side-card">
+    <h3>Other ways in</h3>
+    <ul class="price-list">
+      <li><a href="/sample">Browse the sample report</a></li>
+      <li><a href="/demo">Run the guided demo</a> (after sign-in)</li>
+      <li><a href="/pricing">Review pricing tiers</a></li>
+      <li><a href="/docs">Open API documentation</a></li>
+    </ul>
+    <p class="muted small">Messages are stored for follow-up on this deployment. For production use, connect your CRM or inbox webhook.</p>
+  </aside>
+</div>
+{% endblock %}
