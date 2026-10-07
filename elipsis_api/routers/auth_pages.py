@@ -1,4 +1,4 @@
-"""Sign-up routes (kept separate for safer deploys)."""
+"""Sign-up and resilient login (mounted before pages so these win)."""
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
@@ -54,5 +54,23 @@ def signup(request: Request,
             status_code=500)
     token = services.create_session(db, account.id)
     response = RedirectResponse("/start", status_code=303)
+    _set_session_cookie(response, token)
+    return response
+
+
+@router.post("/login")
+def login_resilient(request: Request, email: str = Form(...), password: str = Form(...),
+                    db: Session = Depends(get_db)):
+    account = auth_extra.authenticate_resilient(db, email, password)
+    if account is None:
+        return templates.TemplateResponse(
+            request, "login.html",
+            {"user": None,
+             "error": "Invalid email or password. Create a free account if you are new.",
+             "email": (email or "").strip().lower(),
+             "total_questions": _question_count(db) or 63},
+            status_code=401)
+    token = services.create_session(db, account.id)
+    response = RedirectResponse("/dashboard", status_code=303)
     _set_session_cookie(response, token)
     return response
