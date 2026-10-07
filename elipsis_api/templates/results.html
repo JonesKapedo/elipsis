@@ -14,8 +14,22 @@
   <div class="hero-actions" style="margin-top:0.75rem">
     <a class="btn ghost" href="/assessment/{{ assessment.id }}/report">Printable report</a>
     <a class="btn ghost" href="/assessment/{{ assessment.id }}/export.json">Export JSON</a>
+    <form method="post" action="/assessment/{{ assessment.id }}/share" style="display:inline">
+      <button class="btn ghost" type="submit">Create share link</button>
+    </form>
+    {% if organization %}
+    <a class="btn ghost" href="/compare/{{ organization.id }}">Compare departments</a>
+    {% endif %}
     <a class="btn ghost" href="/start">New assessment</a>
   </div>
+  {% if share_url %}
+  <div class="block" style="margin-top:1rem">
+    <h3>Emailable link ready</h3>
+    <p class="muted">Anyone with this URL can view a read-only board pack (no login).</p>
+    <p><code style="word-break:break-all">{{ share_url }}</code></p>
+    <p><a href="{{ share_url }}" target="_blank" rel="noopener">Open shared report →</a></p>
+  </div>
+  {% endif %}
 </section>
 
 <section class="headline">
@@ -53,8 +67,7 @@
 
 <section class="block">
   <h3>Executive metrics</h3>
-  <p class="muted">Thirty-six derived indicators grouped by pillar. <b>Risk</b> metrics are
-  inverted: a high value means more exposure.</p>
+  <p class="muted">Thirty-six derived indicators. <b>Risk</b> metrics: higher means more exposure.</p>
   {% for pcode, rows in result.metrics_by_pillar.items() %}
   {% if rows %}
   <h4>{{ PILLAR_LABELS.get(pcode, pcode) }}</h4>
@@ -77,7 +90,7 @@
   <div class="phase">
     <div class="phase-head">
       <h4>{{ phase.label }}</h4>
-      <span class="muted">{{ phase.horizon }} &nbsp;&middot;&nbsp; {{ phase.count }} action{{ '' if phase.count == 1 else 's' }}</span>
+      <span class="muted">{{ phase.horizon }} · {{ phase.count }} action{{ '' if phase.count == 1 else 's' }}</span>
     </div>
     <p class="muted">{{ phase.note }}</p>
     {% if phase.items %}
@@ -97,8 +110,6 @@
         {% endfor %}
       </tbody>
     </table>
-    {% else %}
-    <p class="muted">No actions in this phase.</p>
     {% endif %}
   </div>
   {% endfor %}
@@ -172,7 +183,6 @@
     </tbody>
   </table>
   {% endif %}
-  <p class="muted">Financial figures are management estimates derived from the
-  assessment, not audited results.</p>
+  <p class="muted">Financial figures are management estimates, not audited results.</p>
 </section>
 {% endblock %}
