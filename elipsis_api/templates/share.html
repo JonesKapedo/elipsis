@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Shared report{% endblock %}
+{% macro bar(pct) %}
+<div class="bar"><span style="width:{{ '%.1f'|format(pct if pct is not none else 0) }}%"></span></div>
+{% endmacro %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">SHARED REPORT · {{ link.label or 'Board pack' }}</p>
+  <h1>{{ organization.name if organization else 'Assessment' }}{% if department %} — {{ department.name }}{% endif %}</h1>
+  <p class="muted">Read-only link · Generated {{ assessment.completed_at or '' }} ·
+  {{ result.answered }} of {{ result.total }} questions</p>
+</section>
+
+<section class="headline">
+  <div class="gauge">
+    <div class="gauge-num">{{ '%.1f'|format(result.readiness_index) }}<span>/100</span></div>
+    <div class="gauge-label">{{ INDEX_SHORT }}</div>
+  </div>
+  <div class="headline-meta">
+    <p class="band">{{ result.maturity_band }}</p>
+    <p class="muted">{{ CONFIDENCE_NAME }} {{ '%.1f'|format(result.confidence_index) }}
+    ({{ result.confidence_band }})</p>
+  </div>
+</section>
+
+<section class="kpis">
+  <div class="kpi accent"><span>Annual savings</span><b>{{ result.financial.annual_savings|money }}</b></div>
+  <div class="kpi"><span>Investment</span><b>{{ result.financial.investment|money }}</b></div>
+  <div class="kpi"><span>ROI</span><b>{{ '%.0f'|format(result.financial.roi) }}%</b></div>
+  <div class="kpi"><span>Payback</span><b>{{ '%.1f'|format(result.financial.payback_months) }} mo</b></div>
+</section>
+
+<section class="block">
+  <h3>Pillars</h3>
+  <div class="metrics">
+    {% for code, score in result.pillars.items() %}
+    <div class="metric">
+      <div class="metric-top"><span>{{ PILLAR_LABELS.get(code, code) }}</span><b>{{ '%.1f'|format(score) }}</b></div>
+      {{ bar(score) }}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="block">
+  <h3>Top opportunities</h3>
+  <ol class="opp">
+    {% for o in result.top_opportunities %}<li>{{ o }}</li>{% endfor %}
+  </ol>
+</section>
+
+<section class="block">
+  <h3>Roadmap snapshot</h3>
+  {% for phase in result.roadmap %}
+  <div class="phase">
+    <div class="phase-head">
+      <h4>{{ phase.label }}</h4>
+      <span class="muted">{{ phase.horizon }} · {{ phase.count }} actions</span>
+    </div>
+    <p class="muted">{{ phase.note }}</p>
+  </div>
+  {% endfor %}
+</section>
+
+<section class="cta-panel">
+  <h2>Want a live assessment for your organisation?</h2>
+  <a class="btn big" href="/login">Sign in to Elipsis →</a>
+</section>
+{% endblock %}
