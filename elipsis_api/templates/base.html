@@ -4,26 +4,50 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block title %}Home{% endblock %} &middot; {{ BRAND_NAME }}</title>
+<meta name="description" content="{{ BRAND_TAGLINE }} Measure transformation readiness, friction cost, and a prioritised roadmap.">
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 <header class="topbar">
   <a class="brand" href="/"><span class="mark">{{ BRAND_MARK }}</span> {{ BRAND_NAME }}</a>
   <nav>
+    {% if user %}
     <a href="/dashboard">📊 Dashboard</a>
     <a href="/start">＋ New assessment</a>
     <a href="/assessments">🗂️ Assessments</a>
     <a href="/docs">🔌 API</a>
+    {% else %}
+    <a href="/#what">Product</a>
+    <a href="/sample">Sample report</a>
+    <a href="/methodology">Methodology</a>
+    <a href="/pricing">Pricing</a>
+    <a href="/docs">API</a>
+    {% endif %}
   </nav>
   <div class="session">
-    {% if user %}<span class="who">{{ user.name or user.email }}</span>
-    <a href="/logout">Sign out</a>{% endif %}
+    {% if user %}
+    <span class="who">{{ user.name or user.email }}</span>
+    <a href="/logout">Sign out</a>
+    {% else %}
+    <a class="btn sm" href="/login">Sign in</a>
+    {% endif %}
   </div>
 </header>
 <main>{% block content %}{% endblock %}</main>
 <footer>
-  <p>{{ BRAND_NAME }} &mdash; {{ BRAND_TAGLINE }}</p>
-  <p class="muted">{{ FRAMEWORK_NAME }} &middot; {{ INDEX_NAME }}</p>
+  <div class="footer-grid">
+    <div>
+      <p><strong>{{ BRAND_NAME }}</strong> — {{ BRAND_TAGLINE }}</p>
+      <p class="muted">{{ FRAMEWORK_NAME }} · {{ INDEX_NAME }}</p>
+    </div>
+    <div class="footer-links">
+      <a href="/sample">Sample report</a>
+      <a href="/methodology">Methodology</a>
+      <a href="/pricing">Pricing</a>
+      <a href="/docs">API docs</a>
+      <a href="/login">Sign in</a>
+    </div>
+  </div>
 </footer>
 </body>
 </html>
