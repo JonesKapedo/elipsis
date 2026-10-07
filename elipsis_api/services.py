@@ -21,14 +21,14 @@ def _now():
 DEFAULT_ADMIN_EMAIL = "admin@elipsis.local"
 DEFAULT_ADMIN_PASSWORD = "elipsis"
 
+DEMO_DEPARTMENTS = [
+    ("Operations", 3),
+    ("Finance", 2),
+    ("Customer Service", 4),
+]
+
 
 def _seed_admin(db: Session):
-    """Create the first administrator from the environment.
-
-    The credentials are configuration, not constants, so a deployment can
-    never be left running on published defaults. Set ELIPSIS_ADMIN_EMAIL and
-    ELIPSIS_ADMIN_PASSWORD in the environment before the first request.
-    """
     email = os.getenv("ELIPSIS_ADMIN_EMAIL") or DEFAULT_ADMIN_EMAIL
     password = os.getenv("ELIPSIS_ADMIN_PASSWORD") or DEFAULT_ADMIN_PASSWORD
     if password == DEFAULT_ADMIN_PASSWORD:
@@ -41,11 +41,6 @@ def _seed_admin(db: Session):
 
 
 def seed(db: Session):
-    """Idempotently seed the ORG-001 bank, a demo organisation and an admin user.
-
-    The bank is rebuilt whenever the question count changes, so switching
-    instruments (FIN-001 -> ORG-001) cannot leave stale rows behind.
-    """
     bank = db.scalar(select(models.Questionnaire).where(
         models.Questionnaire.code == QUESTIONNAIRE["code"]))
     if bank is None:
@@ -69,7 +64,6 @@ def seed(db: Session):
                 subdomain=item["subdomain"], pillar=SUBDOMAIN_PILLAR[item["subdomain"]],
                 text=item["text"], why=item["why"], weight=item["weight"],
                 evidence_required=1 if item["evidence_required"] else 0, position=pos))
-    # Keep the instrument metadata current after a version bump.
     bank.name = QUESTIONNAIRE["name"]
     bank.version = QUESTIONNAIRE["version"]
     bank.department = QUESTIONNAIRE["department"]
@@ -145,7 +139,6 @@ def compute(db: Session, assessment_id: int) -> tuple[models.Assessment | None, 
     q_dicts = [dict(id=q.id, code=q.code, subdomain=q.subdomain, pillar=q.pillar,
                     weight=q.weight, evidence_required=bool(q.evidence_required))
                for q in questions]
-    # Financial impact is sized by the organisation being assessed.
     org = db.get(models.Organization, assessment.organization_id)
     staff = getattr(org, "employee_count", None) if org else None
     return assessment, _compute(q_dicts, answers_map(db, assessment_id), staff=staff)
@@ -164,7 +157,6 @@ def save(db: Session, assessment_id: int, result):
     for code, score in result["subdomains"].items():
         db.add(models.SubdomainScore(assessment_id=assessment_id, subdomain=code, score=score))
 
-    # The thirty-six derived executive metrics.
     for row in result["metric_rows"]:
         db.add(models.MetricScore(
             assessment_id=assessment_id, metric=row["code"], pillar=row["pillar"],
@@ -232,7 +224,8 @@ def list_assessments(db: Session) -> list[dict[str, Any]]:
               isouter=True)
         .order_by(models.Assessment.id.desc())).all()
     return [dict(id=a.id, status=a.status, readiness_index=a.readiness_index,
-                 maturity_band=a.maturity_band, organization=org_name, department=dept_name)
+                 maturity_band=a.maturity_band, organization=org_name, department=dept_name,
+                 organization_id=a.organization_id, department_id=a.department_id)
             for a, org_name, dept_name in rows]
 
 
@@ -265,9 +258,8 @@ def delete_session(db: Session, token: str | None):
         db.delete(session)
         db.commit()
 
-# --- Segmented assessment + live scoring ---------------------------------
+
 def question_dicts(db: Session, assessment_id: int) -> list[dict[str, Any]]:
-    """Question rows for an assessment as plain dicts the engine understands."""
     assessment = db.get(models.Assessment, assessment_id)
     if assessment is None:
         return []
@@ -278,11 +270,6 @@ def question_dicts(db: Session, assessment_id: int) -> list[dict[str, Any]]:
 
 
 def build_segments(db: Session, assessment_id: int) -> list[dict[str, Any]]:
-    """Group the instrument into short steps, one subdomain at a time.
-
-    Each step carries its position in the form and whether it is finished, so
-    the UI can show a stepper the respondent can navigate freely.
-    """
     assessment = db.get(models.Assessment, assessment_id)
     if assessment is None:
         return []
@@ -316,7 +303,6 @@ def build_segments(db: Session, assessment_id: int) -> list[dict[str, Any]]:
 
 
 def live_scores(db: Session, assessment_id: int, segment_code: str = ""):
-    """Running scores for the form as currently answered."""
     questions = question_dicts(db, assessment_id)
     if not questions:
         return None
@@ -324,11 +310,6 @@ def live_scores(db: Session, assessment_id: int, segment_code: str = ""):
 
 
 def save_answers(db: Session, assessment_id: int, items):
-    """Upsert answers without computing the final result.
-
-    Used by the live endpoint so a half-finished form survives a refresh and
-    can be resumed later.
-    """
     assessment = db.get(models.Assessment, assessment_id)
     if assessment is None:
         return 0
@@ -350,16 +331,11 @@ def save_answers(db: Session, assessment_id: int, items):
 
 
 def dashboard_data(db: Session, limit: int = 8) -> dict[str, Any]:
-    """Everything the dashboard needs in one pass.
-
-    Aggregates every completed assessment into a portfolio view so a leader
-    can see the whole book of business, not just one assessment.
-    """
     rows = list_assessments(db)
     completed = [r for r in rows if r.get("status") == "completed"
                  and r.get("readiness_index") is not None]
 
-    pillar_totals, pillar_counts = {}, {}
+    pillar_totals = {}
     for row in completed:
         metrics = db.scalars(select(models.MetricScore).where(
             models.MetricScore.assessment_id == row["id"])).all()
@@ -387,28 +363,7 @@ def dashboard_data(db: Session, limit: int = 8) -> dict[str, Any]:
                 portfolio_pillars=portfolio_pillars, all_completed=completed)
 
 
-def _persist_telemetry_results(assessment_id: int, db: Session, result: Dict[str, Any]):
-    """Save telem-style results to the database."""
-    bench = result.get("benchmarks")
-    if bench:
-        db.add(models.Benchmark(
-            assessment_id=assessment_id,
-            industry=bench["industry"], size_band=bench["size_band"],
-            industry_avg=bench["industry_avg"], size_avg=bench["size_avg"],
-            digital_avg=bench["digital_avg"], automation_avg=bench["automation_avg"],
-            ai_avg=bench["ai_avg"], percentile=bench["percentile"]))
-    for phase in result.get("roadmap", []):
-        db.add(models.RoadmapPhase(
-            assessment_id=assessment_id,
-            number=phase.get("number", 0), label=phase.get("label", ""),
-            horizon=phase.get("horizon", ""), note=phase.get("note", ""),
-            count=phase.get("count", 0), value=phase.get("value", 0)))
-    db.commit()
-    return result
-
-
 def _band_counts(completed: list[dict[str, Any]]) -> dict[str, int]:
-    """Count assessments by maturity band."""
     counts = {}
     for row in completed:
         band = row.get("maturity_band") or "Unknown"
@@ -417,20 +372,171 @@ def _band_counts(completed: list[dict[str, Any]]) -> dict[str, int]:
 
 
 def reset_demo_data(db: Session):
-    """Delete every assessment and its rows, keeping the instrument and users.
-
-    Demos repeat far better when the dashboard is not full of test runs.
-    The question bank, seeded organisation and demo account are untouched.
-    """
     assessment_ids = list(db.scalars(select(models.Assessment.id)))
     removed = 0
     if assessment_ids:
-        # Child rows first, because SQLite has no cascading deletes here.
         for model in (models.Answer, models.MetricScore, models.PillarScore,
                       models.SubdomainScore, models.PainPoint,
-                      models.Recommendation, models.FinancialModel, models.Report):
-            db.execute(delete(model).where(model.assessment_id.in_(assessment_ids)))
+                      models.Recommendation, models.FinancialModel, models.Report,
+                      models.ShareLink):
+            db.execute(delete(model).where(
+                model.assessment_id.in_(assessment_ids)
+                if hasattr(model, "assessment_id") else model.token != ""))
+        # ShareLink uses assessment_id; delete explicitly
+        db.execute(delete(models.ShareLink).where(
+            models.ShareLink.assessment_id.in_(assessment_ids)))
         db.execute(delete(models.Assessment).where(models.Assessment.id.in_(assessment_ids)))
         removed = len(assessment_ids)
     db.commit()
     return removed
+
+
+# --- Share links --------------------------------------------------------------
+
+def create_share_link(db: Session, assessment_id: int, user_id: int | None = None,
+                      label: str | None = None) -> models.ShareLink:
+    assessment = db.get(models.Assessment, assessment_id)
+    if assessment is None:
+        raise ValueError("assessment not found")
+    if assessment.status != "completed":
+        raise ValueError("only completed assessments can be shared")
+    token = security.new_token()
+    link = models.ShareLink(
+        token=token,
+        assessment_id=assessment_id,
+        created_by=user_id,
+        label=label or "Board pack",
+        created_at=_now(),
+    )
+    db.add(link)
+    db.commit()
+    return link
+
+
+def resolve_share_token(db: Session, token: str):
+    link = db.get(models.ShareLink, token)
+    if link is None:
+        return None, None, None
+    assessment, result = compute(db, link.assessment_id)
+    return link, assessment, result
+
+
+# --- Department comparison ----------------------------------------------------
+
+def list_organizations(db: Session) -> list[models.Organization]:
+    return list(db.scalars(select(models.Organization).order_by(models.Organization.name)))
+
+
+def department_comparison(db: Session, organization_id: int) -> dict[str, Any]:
+    """Side-by-side view of completed assessments by department for one org."""
+    org = db.get(models.Organization, organization_id)
+    if org is None:
+        return {"organization": None, "rows": [], "pillars": []}
+
+    rows = db.execute(
+        select(models.Assessment, models.Department.name)
+        .join(models.Department, models.Department.id == models.Assessment.department_id,
+              isouter=True)
+        .where(
+            models.Assessment.organization_id == organization_id,
+            models.Assessment.status == "completed",
+        )
+        .order_by(models.Assessment.readiness_index.desc())
+    ).all()
+
+    units = []
+    pillar_codes = list(PILLAR_WEIGHTS.keys())
+    for assessment, dept_name in rows:
+        pillars = {
+            p.pillar: p.score
+            for p in db.scalars(select(models.PillarScore).where(
+                models.PillarScore.assessment_id == assessment.id))
+        }
+        fin = db.scalar(select(models.FinancialModel).where(
+            models.FinancialModel.assessment_id == assessment.id))
+        units.append(dict(
+            id=assessment.id,
+            department=dept_name or "Organisation-wide",
+            readiness_index=assessment.readiness_index,
+            maturity_band=assessment.maturity_band,
+            confidence_index=assessment.confidence_index,
+            pillars=pillars,
+            annual_savings=fin.annual_savings if fin else None,
+            payback_months=fin.payback_months if fin else None,
+        ))
+
+    return dict(
+        organization=org,
+        rows=units,
+        pillars=pillar_codes,
+        average=round(
+            sum(u["readiness_index"] for u in units if u["readiness_index"] is not None) / len(units),
+            1,
+        ) if units else None,
+    )
+
+
+# --- Guided demo mode ---------------------------------------------------------
+
+def _demo_score(position: int, bias: int) -> int:
+    """Deterministic 1–5 score with a departmental bias."""
+    base = 1 + ((position * 5 + bias * 3) % 5)
+    return max(1, min(5, base))
+
+
+def run_guided_demo(db: Session) -> models.Assessment:
+    """Create a multi-department demo org, pre-fill answers, and complete them.
+
+    Returns the primary (Operations) assessment so the UI can open results.
+    """
+    bank = get_bank(db)
+    if bank is None:
+        raise ValueError("questionnaire not seeded")
+
+    org = models.Organization(
+        name="Guided Demo Co",
+        industry="Logistics",
+        sub_industry="Freight & Distribution",
+        employee_count=180,
+        revenue_band="SME",
+        country="Kenya",
+        city="Nairobi",
+    )
+    db.add(org)
+    db.flush()
+
+    questions = get_questions(db, bank.id)
+    primary = None
+    for dept_name, bias in DEMO_DEPARTMENTS:
+        dept = models.Department(
+            organization_id=org.id, name=dept_name,
+            head=f"{dept_name} Lead", staff_count=20 + bias * 5)
+        db.add(dept)
+        db.flush()
+        assessment = models.Assessment(
+            organization_id=org.id,
+            department_id=dept.id,
+            questionnaire_id=bank.id,
+            respondent=f"Demo · {dept_name}",
+            status="in_progress",
+            started_at=_now(),
+        )
+        db.add(assessment)
+        db.flush()
+        for q in questions:
+            score = _demo_score(q.position or 1, bias)
+            db.add(models.Answer(
+                assessment_id=assessment.id,
+                question_id=q.id,
+                score=score,
+                evidence="documented",
+            ))
+        db.commit()
+        _, result = compute(db, assessment.id)
+        if result is not None:
+            save(db, assessment.id, result)
+        if primary is None:
+            primary = assessment
+
+    db.refresh(primary)
+    return primary
