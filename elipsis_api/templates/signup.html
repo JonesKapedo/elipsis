@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Create account{% endblock %}
+{% block body_class %}page-auth{% endblock %}
+{% block content %}
+<div class="auth auth-pro">
+  <section class="auth-pitch">
+    <p class="eyebrow">CREATE YOUR WORKSPACE</p>
+    <h1>Start measuring what friction really costs.</h1>
+    <p class="lede">Free account. No credit card. Run your first assessment in about 25 minutes and get a board-ready pack.</p>
+    <ul class="auth-points">
+      <li>
+        <span class="auth-icon">1</span>
+        <div>
+          <strong>Register in under a minute</strong>
+          <p class="muted">Work email and a password. You are signed in immediately.</p>
+        </div>
+      </li>
+      <li>
+        <span class="auth-icon">2</span>
+        <div>
+          <strong>Configure your organisation</strong>
+          <p class="muted">Name, industry, headcount — so the financial model is sized correctly.</p>
+        </div>
+      </li>
+      <li>
+        <span class="auth-icon">3</span>
+        <div>
+          <strong>Answer and act</strong>
+          <p class="muted">{{ total_questions or 63 }} questions, live scores, shareable results.</p>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <section class="auth-card auth-card-pro" aria-labelledby="signup-heading">
+    <div class="auth-card-brand">
+      <span class="mark" aria-hidden="true">{{ BRAND_MARK }}</span>
+      <div>
+        <strong>{{ BRAND_NAME }}</strong>
+        <span class="muted">New workspace</span>
+      </div>
+    </div>
+
+    <div class="auth-card-head">
+      <h2 id="signup-heading">Create account</h2>
+      <p class="muted">Already registered? <a href="/login">Sign in</a></p>
+    </div>
+
+    {% if error %}
+    <p class="error" role="alert">{{ error }}</p>
+    {% endif %}
+
+    <form method="post" action="/signup" class="stack" novalidate>
+      <label for="name">Full name
+        <input id="name" name="name" required maxlength="120"
+               placeholder="Jane Wanjiku" value="{{ form.name if form else '' }}" autofocus>
+      </label>
+      <label for="email">Work email
+        <input id="email" type="email" name="email" required maxlength="200"
+               autocomplete="email" placeholder="jane@company.com"
+               value="{{ form.email if form else '' }}" spellcheck="false">
+      </label>
+      <label for="password">Password
+        <input id="password" type="password" name="password" required
+               autocomplete="new-password" placeholder="At least 8 characters" minlength="8">
+      </label>
+      <label for="password2">Confirm password
+        <input id="password2" type="password" name="password2" required
+               autocomplete="new-password" placeholder="Repeat password" minlength="8">
+      </label>
+      <button class="btn big full" type="submit">Create account & continue →</button>
+    </form>
+
+    <p class="auth-secure muted">
+      By continuing you agree to use {{ BRAND_NAME }} for legitimate business assessment.
+      <a href="/security">Security overview</a>
+    </p>
+  </section>
+</div>
+{% endblock %}
