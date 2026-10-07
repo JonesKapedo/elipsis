@@ -4,7 +4,7 @@ Run with:
     uvicorn elipsis_api.main:app --reload --port 8001
 
 On Vercel the app is deployed as a serverless function; the entrypoint is
-declared in pyproject.toml under [tool.vercel].
+api/index.py (exports `app` from this module).
 """
 
 import os
@@ -28,16 +28,19 @@ from elipsis_api.routers import api, pages  # noqa: E402
 async def lifespan(_app: FastAPI):
     """Create the schema and seed the question bank once per cold start.
 
-    Uses the lifespan handler rather than the deprecated `on_event` hook,
-    which is the form Vercel supports for FastAPI.
+    Errors are logged rather than crashing the whole function so a bad
+    database URL still surfaces a usable error page instead of a bare 500.
     """
-    Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
     try:
-        services.seed(db)
-    finally:
-        db.close()
-    print(f"[elipsis] database: {DATABASE_URL}", flush=True)
+        Base.metadata.create_all(bind=engine)
+        db = SessionLocal()
+        try:
+            services.seed(db)
+        finally:
+            db.close()
+        print(f"[elipsis] database: {DATABASE_URL}", flush=True)
+    except Exception as exc:  # noqa: BLE001
+        print(f"[elipsis] startup seed failed: {exc!r}", flush=True)
     yield
 
 
