@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Security{% endblock %}
+{% block content %}
+<section class="hero compact">
+  <p class="eyebrow">SECURITY & TRUST</p>
+  <h1>Designed for serious operational data.</h1>
+  <p class="lede">Session-based access, hashed passwords, and explicit share links — so board packs move by design, not by screenshot.</p>
+</section>
+
+<section class="steps">
+  <article class="step-card">
+    <span class="step-n">A</span>
+    <h4>Authentication</h4>
+    <p class="muted">PBKDF2-HMAC-SHA256 password hashing. HttpOnly session cookies with SameSite=Lax; Secure flag on HTTPS (Vercel).</p>
+  </article>
+  <article class="step-card">
+    <span class="step-n">B</span>
+    <h4>Share links</h4>
+    <p class="muted">Completed reports can be shared via unguessable tokens. Recipients do not need an account; links are read-only.</p>
+  </article>
+  <article class="step-card">
+    <span class="step-n">C</span>
+    <h4>Data durability</h4>
+    <p class="muted">Configure <code>ELIPSIS_DATABASE_URL</code> to PostgreSQL for production. SQLite on serverless is ephemeral by design.</p>
+  </article>
+  <article class="step-card">
+    <span class="step-n">D</span>
+    <h4>Admin hygiene</h4>
+    <p class="muted">Set <code>ELIPSIS_ADMIN_EMAIL</code> and <code>ELIPSIS_ADMIN_PASSWORD</code> before public exposure. Defaults are for demos only.</p>
+  </article>
+</section>
+
+<section class="block">
+  <h3>Operational recommendations</h3>
+  <ul class="price-list">
+    <li>Use a managed Postgres (Neon, Supabase, RDS) in production</li>
+    <li>Rotate admin credentials after first deploy</li>
+    <li>Treat share links as sensitive — revoke by clearing demo data or rotating tokens in a future release</li>
+    <li>Review API access under <a href="/docs">/docs</a> before integrating downstream systems</li>
+  </ul>
+  <div class="hero-actions">
+    <a class="btn" href="/contact">Ask a security question</a>
+    <a class="btn ghost" href="/login">Sign in</a>
+  </div>
+</section>
+{% endblock %}
