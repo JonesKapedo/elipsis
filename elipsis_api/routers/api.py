@@ -1,5 +1,7 @@
 """JSON API router (/api/v1) — the primary programmatic interface."""
 
+import os
+
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -8,9 +10,11 @@ from constants import BRAND_NAME, INDEX_NAME, scale_options
 from elipsis_api import schemas, services
 from elipsis_api.config import DATABASE_URL, SESSION_COOKIE
 from elipsis_api.database import get_db, ping_db
-from elipsis_api.main import seed_status
+from elipsis_api.state import seed_status
 
 router = APIRouter(prefix="/api/v1", tags=["api"])
+
+_SECURE_COOKIE = os.getenv("VERCEL") == "1" or os.getenv("ELIPSIS_SECURE_COOKIE") == "1"
 
 
 def _assessment_out(a):
@@ -19,11 +23,6 @@ def _assessment_out(a):
         questionnaire_id=a.questionnaire_id, respondent=a.respondent, status=a.status,
         readiness_index=a.readiness_index, maturity_band=a.maturity_band,
         confidence_index=a.confidence_index)
-
-
-def _result_payload(result: dict) -> dict:
-    """Normalize compute() output for the ResultOut schema when possible."""
-    return result
 
 
 @router.get("/health", response_model=schemas.HealthOut)
@@ -84,11 +83,10 @@ def create_assessment(payload: schemas.AssessmentIn, db: Session = Depends(get_d
 
 @router.get("/assessments/{assessment_id}")
 def assessment_result(assessment_id: int, db: Session = Depends(get_db)):
-    """Full computed result for a completed (or in-progress) assessment."""
     assessment, result = services.compute(db, assessment_id)
     if assessment is None or result is None:
         raise HTTPException(status_code=404, detail="assessment not found")
-    return _result_payload(result)
+    return result
 
 
 @router.get("/assessments/{assessment_id}/results")
@@ -110,14 +108,11 @@ def assessment_submit(assessment_id: int, payload: schemas.SubmitIn,
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     if result is None:
         raise HTTPException(status_code=404, detail="assessment not found")
-    return _result_payload(result)
+    return result
 
-
-# --- Authentication (session-cookie based, shared with HTML pages) -------------
 
 @router.post("/auth/login", response_model=schemas.LoginOut)
 def login(payload: schemas.LoginIn, response: Response, db: Session = Depends(get_db)):
-    """Authenticate an administrator and set the session cookie."""
     user = services.authenticate(db, payload.email, payload.password)
     if user is None:
         raise HTTPException(status_code=401, detail="Incorrect email or password")
@@ -127,7 +122,7 @@ def login(payload: schemas.LoginIn, response: Response, db: Session = Depends(ge
         token,
         httponly=True,
         samesite="lax",
-        secure=True,
+        secure=_SECURE_COOKIE,
         max_age=60 * 60 * 24 * 14,
     )
     return schemas.LoginOut(
@@ -144,7 +139,6 @@ def login(payload: schemas.LoginIn, response: Response, db: Session = Depends(ge
 
 @router.get("/auth/me", response_model=schemas.AuthOut)
 def me(request: Request, db: Session = Depends(get_db)):
-    """Current session user, or 401."""
     user = services.user_for_token(db, request.cookies.get(SESSION_COOKIE))
     if user is None:
         raise HTTPException(status_code=401, detail="unauthorized")
@@ -159,7 +153,6 @@ def me(request: Request, db: Session = Depends(get_db)):
 
 @router.post("/auth/logout")
 def logout(request: Request, response: Response, db: Session = Depends(get_db)):
-    """End the current session."""
     services.delete_session(db, request.cookies.get(SESSION_COOKIE))
     response.delete_cookie(SESSION_COOKIE)
     return JSONResponse(content={"ok": True})
