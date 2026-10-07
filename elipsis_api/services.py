@@ -189,13 +189,19 @@ def save(db: Session, assessment_id: int, result):
             title=p.get("title"), detail=p.get("detail"),
             impact=p.get("impact")))
 
-    for phase in (result.get("roadmap") or []):
+    for idx, phase in enumerate(result.get("roadmap") or [], start=1):
         for r in phase.get("items") or []:
             db.add(models.Recommendation(
-                assessment_id=assessment_id, phase=phase.get("label"),
-                title=r.get("title"), solution=r.get("solution"),
-                technology=r.get("technology"), complexity=r.get("complexity"),
-                roi=r.get("roi"), priority=r.get("priority")))
+                assessment_id=assessment_id,
+                title=r.get("title") or "Recommendation",
+                solution=r.get("solution"),
+                technology=r.get("technology"),
+                complexity=r.get("complexity"),
+                priority_score=r.get("priority"),
+                expected_roi=r.get("roi"),
+                horizon=phase.get("horizon") or phase.get("label"),
+                phase=idx,
+            ))
 
     fin = result.get("financial") or {}
     db.add(models.FinancialModel(
@@ -474,7 +480,6 @@ def list_organizations(db: Session) -> list[models.Organization]:
 
 
 def department_comparison(db: Session, organization_id: int) -> dict[str, Any]:
-    """Side-by-side view of completed assessments by department for one org."""
     org = db.get(models.Organization, organization_id)
     if org is None:
         return {"organization": None, "rows": [], "pillars": [], "average": None}
@@ -525,7 +530,6 @@ def _demo_score(position: int, bias: int) -> int:
 
 
 def run_guided_demo(db: Session) -> models.Assessment:
-    """Create a multi-department demo org, pre-fill answers, and complete them."""
     bank = get_bank(db)
     if bank is None:
         raise ValueError("questionnaire not seeded")
