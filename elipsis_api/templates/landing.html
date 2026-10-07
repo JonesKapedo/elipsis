@@ -27,7 +27,8 @@
 <section id="what">
   <h2>Seven pillars, one score</h2>
   <p class="lede">Every question feeds at least one pillar, and every pillar
-  rolls into the {{ INDEX_NAME }} — a single number your board can track.</p>
+  rolls into the {{ INDEX_NAME }} — a single number your board can track.
+  Weights reflect how much each area typically drives automation ROI.</p>
   <div class="pillars">
     {% for code, label, weight, objective in PILLARS %}
     <article class="pillar-card">
@@ -41,25 +42,136 @@
 </section>
 
 <section>
+  <h2>What the assessment measures</h2>
+  <p class="lede">{{ total_questions }} questions across 21 subdomains. Each
+  answer uses a scale built for that question — steps, approvals, hours, volume —
+  so scores stay grounded in how the work actually runs.</p>
+  <div class="steps">
+    <article class="step-card">
+      <span class="step-n">OEI</span>
+      <h4>Operational efficiency</h4>
+      <p class="muted">Process steps, approval layers, rework, and human
+      dependency — the friction that burns hours every week.</p>
+    </article>
+    <article class="step-card">
+      <span class="step-n">ARI</span>
+      <h4>Automation readiness</h4>
+      <p class="muted">Repetitive work, rule-based decisions, and quick-win
+      candidates with an estimated automation ROI.</p>
+    </article>
+    <article class="step-card">
+      <span class="step-n">DMI · DII</span>
+      <h4>Digital & data maturity</h4>
+      <p class="muted">Spreadsheet and paper dependence, system utilisation,
+      data quality, reporting, and decision intelligence.</p>
+    </article>
+    <article class="step-card">
+      <span class="step-n">AIR · TII · SSI</span>
+      <h4>AI, tech & scale</h4>
+      <p class="muted">AI opportunity, integration and security readiness,
+      key-person risk, and capacity to grow without breaking.</p>
+    </article>
+  </div>
+</section>
+
+<section>
   <h2>How it works</h2>
   <div class="steps">
     <article class="step-card">
       <span class="step-n">1</span>
       <h4>Answer in plain English</h4>
-      <p class="muted">Short segments you can finish in a few minutes each.
-      No consultants, no jargon, no spreadsheet.</p>
+      <p class="muted">Twenty-one short segments of three questions. No jargon,
+      no consultants, no spreadsheet. Autosave after every answer.</p>
     </article>
     <article class="step-card">
       <span class="step-n">2</span>
       <h4>Get scored live</h4>
-      <p class="muted">Your {{ INDEX_SHORT }} updates as you answer, so you
-      can see the shape of your own business immediately.</p>
+      <p class="muted">Your {{ INDEX_SHORT }} and section metrics update as you
+      go, so you see the shape of your operation immediately.</p>
     </article>
     <article class="step-card">
       <span class="step-n">3</span>
       <h4>Walk in with the answer</h4>
       <p class="muted">A priced, prioritised roadmap with payback months —
-      the cost of the friction, what fixing it saves, and what to do first.</p>
+      cost of friction, savings, and what to do first, second, and third.</p>
+    </article>
+  </div>
+</section>
+
+<section>
+  <h2>Thirty-six executive metrics</h2>
+  <p class="lede">Each pillar produces labelled scores and risk indexes. Formulas
+  are declarative and evaluated safely — no black-box numbers.</p>
+  <div class="pillars">
+    <article class="pillar-card">
+      <h4>Efficiency & automation</h4>
+      <p class="muted">Process Efficiency · Workflow Friction · Approval Complexity ·
+      Operational Waste · Human Dependency · Repetition Index · Automation
+      Compatibility · Manual Burden · Opportunity & Urgency · Quick-Win Potential ·
+      Estimated Automation ROI</p>
+    </article>
+    <article class="pillar-card">
+      <h4>Digital, data & AI</h4>
+      <p class="muted">Digital Maturity · Software Utilisation · Spreadsheet &
+      Paper Dependency · Data Quality · Analytics Maturity · Reporting Effectiveness ·
+      Decision Intelligence · AI Readiness · Generative & Predictive Opportunity ·
+      Knowledge Automation · AI Value Potential</p>
+    </article>
+    <article class="pillar-card">
+      <h4>Technology & scale</h4>
+      <p class="muted">Technology Readiness · Integration Complexity · Security
+      Readiness · Deployment Readiness · Scalability · Growth Constraint ·
+      Key Person Risk · Organisational Resilience · Future Readiness</p>
+    </article>
+  </div>
+</section>
+
+<section>
+  <h2>Three-phase roadmap</h2>
+  <p class="lede">Recommendations are ordered by impact and feasibility so you
+  know what to fund this quarter versus next year.</p>
+  <div class="steps">
+    <article class="step-card">
+      <span class="step-n">1</span>
+      <h4>Quick wins · 0–90 days</h4>
+      <p class="muted">Low-complexity automation on repetitive work. Fast payback,
+      minimal change management.</p>
+    </article>
+    <article class="step-card">
+      <span class="step-n">2</span>
+      <h4>Process automation · 3–12 months</h4>
+      <p class="muted">Structural change: approvals, integrations, controls, and
+      the systems that remove chronic friction.</p>
+    </article>
+    <article class="step-card">
+      <span class="step-n">3</span>
+      <h4>AI enablement · 12–24 months</h4>
+      <p class="muted">Predictive and generative AI on a clean process and data
+      base — once the foundation is ready.</p>
+    </article>
+  </div>
+</section>
+
+<section>
+  <h2>Financial impact you can check</h2>
+  <p class="lede">Annual savings are sized to your organisation: affected staff,
+  hours, blended rate, and a 12% ceiling on the labour line. The report prints
+  the working so a client can verify the arithmetic.</p>
+  <div class="steps">
+    <article class="step-card">
+      <h4>Sized to you</h4>
+      <p class="muted">Staff count, industry context, and severity feed the model.
+      Rates scale with organisation size ({{ CURRENCY }} terms).</p>
+    </article>
+    <article class="step-card">
+      <h4>Transparent ceiling</h4>
+      <p class="muted">Recoverable value is capped at 12% of the labour line so
+      claims stay credible in a board pack.</p>
+    </article>
+    <article class="step-card">
+      <h4>Payback in months</h4>
+      <p class="muted">Each phase of the roadmap carries cost, savings, and
+      expected payback so prioritisation is financial, not only technical.</p>
     </article>
   </div>
 </section>
@@ -67,7 +179,8 @@
 <section class="cta-panel">
   <h2>Find out what friction is costing you.</h2>
   <p class="lede">Twenty-five minutes now, and every future board meeting gets
-  easier.</p>
+  easier. Sign in, start an assessment, and walk away with the {{ INDEX_NAME }},
+  36 metrics, pain points, and a three-horizon plan.</p>
   <a class="btn big" href="/login">Start an assessment →</a>
 </section>
 {% endblock %}
