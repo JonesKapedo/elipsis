@@ -1,10 +1,4 @@
-"""SQLAlchemy ORM models for Elipsis.
-
-The persisted column names are deliberately neutral (`readiness_index`,
-`pillar`, `subdomain`) so that the Turbinez -> Elipsis rebrand required no
-migration. `create_all` only ever adds tables; schema changes that touch an
-existing table are applied by recreating the local SQLite file in development.
-"""
+"""SQLAlchemy ORM models for Elipsis."""
 
 from datetime import datetime, timezone
 
@@ -206,13 +200,24 @@ class AuthSession(Base):
 
 
 class ShareLink(Base):
-    """Public, unguessable link so a report can be emailed without a login."""
     __tablename__ = "share_links"
     token: Mapped[str] = mapped_column(String, primary_key=True)
     assessment_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("assessments.id"), nullable=False)
     created_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
     label: Mapped[str | None] = mapped_column(String)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class ContactMessage(Base):
+    """Inbound contact form submissions."""
+    __tablename__ = "contact_messages"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    email: Mapped[str] = mapped_column(String, nullable=False)
+    organization: Mapped[str | None] = mapped_column(String)
+    topic: Mapped[str | None] = mapped_column(String)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
 
 
