@@ -37,12 +37,8 @@ def _question_count(db: Session) -> int:
 
 def _set_session_cookie(response, token: str) -> None:
     response.set_cookie(
-        SESSION_COOKIE,
-        token,
-        httponly=True,
-        samesite="lax",
-        secure=_SECURE_COOKIE,
-        max_age=_COOKIE_MAX_AGE,
+        SESSION_COOKIE, token, httponly=True, samesite="lax",
+        secure=_SECURE_COOKIE, max_age=_COOKIE_MAX_AGE,
     )
 
 
@@ -58,7 +54,6 @@ def landing(request: Request, user=Depends(get_current_user),
 
 @router.get("/sample")
 def sample_report(request: Request, user=Depends(get_current_user)):
-    """Public sample report — same engine as live assessments."""
     result = sample_result()
     return templates.TemplateResponse(
         request, "sample.html",
@@ -76,6 +71,99 @@ def methodology(request: Request, user=Depends(get_current_user),
     return templates.TemplateResponse(
         request, "methodology.html",
         {"user": user, "total_questions": _question_count(db) or 63})
+
+
+@router.get("/faq")
+def faq(request: Request, user=Depends(get_current_user),
+        db: Session = Depends(get_db)):
+    return templates.TemplateResponse(
+        request, "faq.html",
+        {"user": user, "total_questions": _question_count(db) or 63})
+
+
+@router.get("/use-cases")
+def use_cases(request: Request, user=Depends(get_current_user)):
+    return templates.TemplateResponse(request, "use_cases.html", {"user": user})
+
+
+@router.get("/demo")
+def demo_page(request: Request, user=Depends(get_current_user),
+              db: Session = Depends(get_db)):
+    return templates.TemplateResponse(
+        request, "demo.html",
+        {"user": user, "total_questions": _question_count(db) or 63})
+
+
+@router.post("/demo")
+def demo_run(request: Request, user=Depends(get_current_user),
+             db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    try:
+        assessment = services.run_guided_demo(db)
+    except Exception:
+        return RedirectResponse("/demo", status_code=303)
+    return RedirectResponse(f"/assessment/{assessment.id}/results", status_code=303)
+
+
+@router.get("/compare")
+def compare_index(request: Request, user=Depends(get_current_user),
+                  db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    return templates.TemplateResponse(request, "compare.html", {
+        "user": user,
+        "organization": None,
+        "organizations": services.list_organizations(db),
+        "rows": [],
+        "pillars": [],
+        "average": None,
+    })
+
+
+@router.get("/compare/{organization_id}")
+def compare_org(organization_id: int, request: Request,
+                user=Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    data = services.department_comparison(db, organization_id)
+    if data.get("organization") is None:
+        return _not_found(request, user)
+    return templates.TemplateResponse(request, "compare.html", {
+        "user": user,
+        "organizations": [],
+        **data,
+    })
+
+
+@router.get("/share/{token}")
+def shared_report(token: str, request: Request, user=Depends(get_current_user),
+                  db: Session = Depends(get_db)):
+    link, assessment, result = services.resolve_share_token(db, token)
+    if link is None or assessment is None or result is None:
+        return _not_found(request, user)
+    return templates.TemplateResponse(request, "share.html", {
+        "user": user,
+        "link": link,
+        "assessment": assessment,
+        "result": result,
+        "organization": db.get(models.Organization, assessment.organization_id),
+        "department": db.get(models.Department, assessment.department_id)
+        if assessment.department_id else None,
+    })
+
+
+@router.post("/assessment/{assessment_id}/share")
+def create_share(assessment_id: int, request: Request,
+                 user=Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    try:
+        link = services.create_share_link(db, assessment_id, user_id=user.id)
+    except ValueError:
+        return RedirectResponse(f"/assessment/{assessment_id}/results", status_code=303)
+    return RedirectResponse(f"/assessment/{assessment_id}/results?shared={link.token}",
+                            status_code=303)
 
 
 @router.get("/login")
@@ -189,7 +277,6 @@ def assessment_step(assessment_id: int, number: int, request: Request,
         return _not_found(request, user)
     number = max(1, min(number, len(steps)))
     step = steps[number - 1]
-
     live = services.live_scores(db, assessment_id, step["subdomain"])
     organization = db.get(models.Organization, assessment.organization_id)
     department = (db.get(models.Department, assessment.department_id)
@@ -290,11 +377,16 @@ def assessment_results(assessment_id: int, request: Request,
     assessment, result = services.compute(db, assessment_id)
     if assessment is None or result is None:
         return _not_found(request, user)
+    shared = request.query_params.get("shared")
+    share_url = None
+    if shared:
+        share_url = str(request.base_url).rstrip("/") + f"/share/{shared}"
     return templates.TemplateResponse(request, "results.html", {
         "user": user, "result": result, "assessment": assessment,
         "organization": db.get(models.Organization, assessment.organization_id),
         "department": db.get(models.Department, assessment.department_id)
         if assessment.department_id else None,
+        "share_url": share_url,
     })
 
 
@@ -317,7 +409,6 @@ def assessment_report(assessment_id: int, request: Request,
 @router.get("/assessment/{assessment_id}/export.json")
 def assessment_export_json(assessment_id: int, request: Request,
                            user=Depends(get_current_user), db: Session = Depends(get_db)):
-    """Machine-readable export of the full computed result."""
     if user is None:
         return JSONResponse({"error": "not signed in"}, status_code=401)
     assessment, result = services.compute(db, assessment_id)
@@ -326,7 +417,7 @@ def assessment_export_json(assessment_id: int, request: Request,
     org = db.get(models.Organization, assessment.organization_id)
     dept = (db.get(models.Department, assessment.department_id)
             if assessment.department_id else None)
-    payload = {
+    return JSONResponse({
         "assessment": {
             "id": assessment.id,
             "status": assessment.status,
@@ -336,5 +427,4 @@ def assessment_export_json(assessment_id: int, request: Request,
             "department": dept.name if dept else None,
         },
         "result": result,
-    }
-    return JSONResponse(payload)
+    })
