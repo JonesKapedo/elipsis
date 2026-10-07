@@ -3,23 +3,34 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% block title %}Home{% endblock %} &middot; {{ BRAND_NAME }}</title>
+<title>{% block title %}Home{% endblock %} · {{ BRAND_NAME }}</title>
 <meta name="description" content="{{ BRAND_TAGLINE }} Measure transformation readiness, friction cost, and a prioritised roadmap.">
+<meta name="theme-color" content="#05080f">
 <link rel="stylesheet" href="/static/style.css">
 <link rel="stylesheet" href="/static/extras.css">
+{% block head %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
+<a class="skip-link" href="#main">Skip to content</a>
 <header class="topbar">
-  <a class="brand" href="/"><span class="mark">{{ BRAND_MARK }}</span> {{ BRAND_NAME }}</a>
-  <nav>
+  <a class="brand" href="/">
+    <span class="mark" aria-hidden="true">{{ BRAND_MARK }}</span>
+    <span>{{ BRAND_NAME }}</span>
+  </a>
+  <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" onclick="
+    const n=document.getElementById('site-nav');
+    const open=n.classList.toggle('open');
+    this.setAttribute('aria-expanded', open);
+  ">☰</button>
+  <nav id="site-nav" class="site-nav">
     {% if user %}
     <a href="/dashboard">Dashboard</a>
     <a href="/start">New assessment</a>
     <a href="/compare">Compare</a>
-    <a href="/demo">Demo</a>
     <a href="/assessments">Assessments</a>
+    <a href="/demo">Demo</a>
     {% else %}
-    <a href="/#what">Product</a>
+    <a href="/about">About</a>
     <a href="/sample">Sample</a>
     <a href="/use-cases">Use cases</a>
     <a href="/methodology">Methodology</a>
@@ -30,29 +41,46 @@
   <div class="session">
     {% if user %}
     <span class="who">{{ user.name or user.email }}</span>
-    <a href="/logout">Sign out</a>
+    <a class="btn sm ghost" href="/logout">Sign out</a>
     {% else %}
     <a class="btn sm" href="/login">Sign in</a>
     {% endif %}
   </div>
 </header>
-<main>{% block content %}{% endblock %}</main>
-<footer>
+
+<main id="main">{% block content %}{% endblock %}</main>
+
+<footer class="site-footer">
   <div class="footer-grid">
-    <div>
-      <p><strong>{{ BRAND_NAME }}</strong> — {{ BRAND_TAGLINE }}</p>
-      <p class="muted">{{ FRAMEWORK_NAME }} · {{ INDEX_NAME }}</p>
+    <div class="footer-brand">
+      <p class="brand-line"><span class="mark">{{ BRAND_MARK }}</span> <strong>{{ BRAND_NAME }}</strong></p>
+      <p class="muted">{{ BRAND_TAGLINE }}</p>
+      <p class="muted small">{{ FRAMEWORK_NAME }} · {{ INDEX_NAME }}</p>
     </div>
-    <div class="footer-links">
-      <a href="/sample">Sample</a>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <a href="/sample">Sample report</a>
       <a href="/demo">Guided demo</a>
-      <a href="/use-cases">Use cases</a>
       <a href="/methodology">Methodology</a>
       <a href="/pricing">Pricing</a>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <a href="/about">About</a>
+      <a href="/use-cases">Use cases</a>
+      <a href="/security">Security</a>
+      <a href="/contact">Contact</a>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
       <a href="/faq">FAQ</a>
-      <a href="/docs">API</a>
+      <a href="/docs">API docs</a>
       <a href="/login">Sign in</a>
     </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© {{ BRAND_NAME }}</span>
+    <span class="muted">Built for operators who need numbers, not slide theatres.</span>
   </div>
 </footer>
 </body>
