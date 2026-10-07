@@ -7,7 +7,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 PACKAGE_DIR = Path(__file__).resolve().parent
 TEMPLATES_DIR = PACKAGE_DIR / "templates"
-STATIC_DIR = PACKAGE_DIR / "static"
+STATIC_DIR = BASE_DIR / "static"
 
 # The web platform used to ignore .env entirely -- only the Telegram bot loaded
 # it -- so the documented `cp .env.example .env` step silently did nothing here.
