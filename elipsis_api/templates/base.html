@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block title %}Home{% endblock %} · {{ BRAND_NAME }}</title>
 <meta name="description" content="{{ BRAND_TAGLINE }} Measure transformation readiness, friction cost, and a prioritised roadmap.">
-<meta name="theme-color" content="#05080f">
+<meta name="theme-color" content="#f3efe6">
 <link rel="stylesheet" href="/static/style.css">
 <link rel="stylesheet" href="/static/extras.css">
 {% block head %}{% endblock %}
@@ -32,9 +32,8 @@
     {% else %}
     <a href="/about">About</a>
     <a href="/sample">Sample</a>
-    <a href="/use-cases">Use cases</a>
-    <a href="/methodology">Methodology</a>
     <a href="/pricing">Pricing</a>
+    <a href="/methodology">Methodology</a>
     <a href="/faq">FAQ</a>
     {% endif %}
   </nav>
@@ -43,7 +42,8 @@
     <span class="who">{{ user.name or user.email }}</span>
     <a class="btn sm ghost" href="/logout">Sign out</a>
     {% else %}
-    <a class="btn sm" href="/login">Sign in</a>
+    <a href="/login" class="muted" style="font-weight:600;color:var(--muted)">Sign in</a>
+    <a class="btn sm" href="/signup">Get started</a>
     {% endif %}
   </div>
 </header>
@@ -72,10 +72,11 @@
       <a href="/contact">Contact</a>
     </div>
     <div class="footer-col">
-      <h4>Resources</h4>
+      <h4>Get started</h4>
+      <a href="/signup">Create account</a>
+      <a href="/login">Sign in</a>
       <a href="/faq">FAQ</a>
       <a href="/docs">API docs</a>
-      <a href="/login">Sign in</a>
     </div>
   </div>
   <div class="footer-bottom">
