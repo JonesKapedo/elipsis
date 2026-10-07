@@ -10,7 +10,7 @@
   it takes to pay back.</p>
   <div class="hero-actions">
     <a class="btn big" href="/login">Start an assessment →</a>
-    <a class="btn ghost big" href="#what">See what you get</a>
+    <a class="btn ghost big" href="/sample">View sample report</a>
   </div>
   <ul class="hero-trust">
     <li>No consultants</li><li>~25 minutes</li><li>Board-ready output</li>
@@ -42,60 +42,26 @@
 </section>
 
 <section>
-  <h2>What the assessment measures</h2>
-  <p class="lede">{{ total_questions }} questions across 21 subdomains. Each
-  answer uses a scale built for that question — steps, approvals, hours, volume —
-  so scores stay grounded in how the work actually runs.</p>
-  <div class="steps">
-    <article class="step-card">
-      <span class="step-n">OEI</span>
-      <h4>Operational efficiency</h4>
-      <p class="muted">Process steps, approval layers, rework, and human
-      dependency — the friction that burns hours every week.</p>
-    </article>
-    <article class="step-card">
-      <span class="step-n">ARI</span>
-      <h4>Automation readiness</h4>
-      <p class="muted">Repetitive work, rule-based decisions, and quick-win
-      candidates with an estimated automation ROI.</p>
-    </article>
-    <article class="step-card">
-      <span class="step-n">DMI · DII</span>
-      <h4>Digital & data maturity</h4>
-      <p class="muted">Spreadsheet and paper dependence, system utilisation,
-      data quality, reporting, and decision intelligence.</p>
-    </article>
-    <article class="step-card">
-      <span class="step-n">AIR · TII · SSI</span>
-      <h4>AI, tech & scale</h4>
-      <p class="muted">AI opportunity, integration and security readiness,
-      key-person risk, and capacity to grow without breaking.</p>
-    </article>
-  </div>
-</section>
-
-<section>
   <h2>How it works</h2>
   <div class="steps">
     <article class="step-card">
       <span class="step-n">1</span>
       <h4>Answer in plain English</h4>
-      <p class="muted">Twenty-one short segments of three questions. No jargon,
-      no consultants, no spreadsheet. Autosave after every answer.</p>
+      <p class="muted">Twenty-one short segments. Autosave after every answer. Live scores as you go.</p>
     </article>
     <article class="step-card">
       <span class="step-n">2</span>
-      <h4>Get scored live</h4>
-      <p class="muted">Your {{ INDEX_SHORT }} and section metrics update as you
-      go, so you see the shape of your operation immediately.</p>
+      <h4>Get the full model</h4>
+      <p class="muted">{{ INDEX_SHORT }}, 36 metrics, pain points, financial impact, and a three-horizon roadmap.</p>
     </article>
     <article class="step-card">
       <span class="step-n">3</span>
-      <h4>Walk in with the answer</h4>
-      <p class="muted">A priced, prioritised roadmap with payback months —
-      cost of friction, savings, and what to do first, second, and third.</p>
+      <h4>Export and act</h4>
+      <p class="muted">Printable report, JSON export, and prioritised actions your operators can own.</p>
     </article>
   </div>
+  <p style="margin-top:1rem"><a href="/methodology">Read the methodology →</a>
+  &nbsp;·&nbsp; <a href="/pricing">See pricing →</a></p>
 </section>
 
 <section>
@@ -128,59 +94,31 @@
 
 <section>
   <h2>Three-phase roadmap</h2>
-  <p class="lede">Recommendations are ordered by impact and feasibility so you
-  know what to fund this quarter versus next year.</p>
   <div class="steps">
     <article class="step-card">
       <span class="step-n">1</span>
       <h4>Quick wins · 0–90 days</h4>
-      <p class="muted">Low-complexity automation on repetitive work. Fast payback,
-      minimal change management.</p>
+      <p class="muted">Low-complexity automation on repetitive work. Fast payback.</p>
     </article>
     <article class="step-card">
       <span class="step-n">2</span>
       <h4>Process automation · 3–12 months</h4>
-      <p class="muted">Structural change: approvals, integrations, controls, and
-      the systems that remove chronic friction.</p>
+      <p class="muted">Approvals, integrations, controls, and chronic friction.</p>
     </article>
     <article class="step-card">
       <span class="step-n">3</span>
       <h4>AI enablement · 12–24 months</h4>
-      <p class="muted">Predictive and generative AI on a clean process and data
-      base — once the foundation is ready.</p>
-    </article>
-  </div>
-</section>
-
-<section>
-  <h2>Financial impact you can check</h2>
-  <p class="lede">Annual savings are sized to your organisation: affected staff,
-  hours, blended rate, and a 12% ceiling on the labour line. The report prints
-  the working so a client can verify the arithmetic.</p>
-  <div class="steps">
-    <article class="step-card">
-      <h4>Sized to you</h4>
-      <p class="muted">Staff count, industry context, and severity feed the model.
-      Rates scale with organisation size ({{ CURRENCY }} terms).</p>
-    </article>
-    <article class="step-card">
-      <h4>Transparent ceiling</h4>
-      <p class="muted">Recoverable value is capped at 12% of the labour line so
-      claims stay credible in a board pack.</p>
-    </article>
-    <article class="step-card">
-      <h4>Payback in months</h4>
-      <p class="muted">Each phase of the roadmap carries cost, savings, and
-      expected payback so prioritisation is financial, not only technical.</p>
+      <p class="muted">Predictive and generative AI once process and data are ready.</p>
     </article>
   </div>
 </section>
 
 <section class="cta-panel">
   <h2>Find out what friction is costing you.</h2>
-  <p class="lede">Twenty-five minutes now, and every future board meeting gets
-  easier. Sign in, start an assessment, and walk away with the {{ INDEX_NAME }},
-  36 metrics, pain points, and a three-horizon plan.</p>
-  <a class="btn big" href="/login">Start an assessment →</a>
+  <p class="lede">Twenty-five minutes now, and every future board meeting gets easier.</p>
+  <div class="hero-actions">
+    <a class="btn big" href="/login">Start an assessment →</a>
+    <a class="btn ghost big" href="/sample">Browse the sample report</a>
+  </div>
 </section>
 {% endblock %}
