@@ -10,8 +10,10 @@ declared in pyproject.toml under [tool.vercel].
 import os
 import sys
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -45,3 +47,8 @@ app = FastAPI(title=f"{BRAND_NAME} API", description=FRAMEWORK_NAME,
 # API routes
 app.include_router(api.router)
 app.include_router(pages.router)
+
+# Serve CSS and other static assets (repo-root /static)
+_static = Path(__file__).resolve().parent.parent / "static"
+if _static.is_dir():
+    app.mount("/static", StaticFiles(directory=str(_static)), name="static")
