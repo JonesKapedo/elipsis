@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}FAQ{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">FAQ</p>
+  <h1>Common questions about Elipsis</h1>
+</section>
+
+<section class="block">
+  <h3>What is the {{ INDEX_NAME }}?</h3>
+  <p class="muted">A weighted score (0–100) across seven transformation pillars. It summarises readiness for automation and digital change in a single number boards can track.</p>
+</section>
+<section class="block">
+  <h3>How long does an assessment take?</h3>
+  <p class="muted">About 25 minutes for {{ total_questions or 63 }} plain-English questions in short segments. Answers autosave; you can resume later.</p>
+</section>
+<section class="block">
+  <h3>Can I share a report without giving someone a login?</h3>
+  <p class="muted">Yes. From any completed results page, create a share link. Anyone with the URL can view a read-only pack — ideal for emailing a board pack.</p>
+</section>
+<section class="block">
+  <h3>What is department comparison?</h3>
+  <p class="muted">When several units in the same organisation complete assessments, <a href="/compare">Compare</a> ranks them on the index, maturity, savings, and a pillar heatmap.</p>
+</section>
+<section class="block">
+  <h3>Is the financial model audited?</h3>
+  <p class="muted">No. Figures are management estimates from staff count, rates, and friction severity, with a conservative savings ceiling. Assumptions are printed so stakeholders can challenge them.</p>
+</section>
+<section class="block">
+  <h3>How do I try without filling 63 questions?</h3>
+  <p class="muted">Use the <a href="/sample">public sample report</a>, or sign in and run the <a href="/demo">guided demo</a> which pre-fills multi-department answers.</p>
+</section>
+<section class="cta-panel">
+  <a class="btn big" href="/login">Start an assessment →</a>
+  <a class="btn ghost big" href="/methodology">Read the methodology</a>
+</section>
+{% endblock %}
