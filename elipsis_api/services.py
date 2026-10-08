@@ -4,7 +4,7 @@ import os
 from datetime import datetime, timezone
 from typing import Any, Dict
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from constants import PILLAR_WEIGHTS, SUBDOMAIN_PILLAR
@@ -186,8 +186,8 @@ def save(db: Session, assessment_id: int, result):
     for p in (result.get("pain_points") or []):
         db.add(models.PainPoint(
             assessment_id=assessment_id, severity=p.get("severity"),
-            title=p.get("title"), detail=p.get("detail"),
-            impact=p.get("impact")))
+            title=p.get("title") or "Pain point", detail=p.get("detail"),
+            trigger_code=p.get("trigger"), impact_score=p.get("impact")))
 
     for idx, phase in enumerate(result.get("roadmap") or [], start=1):
         for r in phase.get("items") or []:
@@ -242,18 +242,41 @@ def submit(db: Session, assessment_id: int, answers):
     return assessment, result
 
 
-def list_assessments(db: Session) -> list[dict[str, Any]]:
-    rows = db.execute(
+def list_assessments(db: Session, org_ids: list[int] | None = None) -> list[dict[str, Any]]:
+    if org_ids is not None and not org_ids:
+        return []
+    query = (
         select(models.Assessment, models.Organization.name, models.Department.name)
         .join(models.Organization, models.Organization.id == models.Assessment.organization_id)
         .join(models.Department, models.Department.id == models.Assessment.department_id, isouter=True)
         .order_by(models.Assessment.id.desc())
-    ).all()
+    )
+    if org_ids is not None:
+        query = query.where(models.Assessment.organization_id.in_(org_ids))
+    rows = db.execute(query).all()
+    ids = [a.id for a, _, _ in rows]
+    progress = {}
+    if ids:
+        progress = dict(db.execute(
+            select(models.Answer.assessment_id, func.count())
+            .where(models.Answer.assessment_id.in_(ids))
+            .group_by(models.Answer.assessment_id)).all())
+    savings = {}
+    if ids:
+        savings = dict(db.execute(
+            select(models.FinancialModel.assessment_id, models.FinancialModel.annual_savings)
+            .where(models.FinancialModel.assessment_id.in_(ids))).all())
+    total_q = len(QUESTIONS)
     out = []
     for a, org_name, dept_name in rows:
+        answered = int(progress.get(a.id) or 0)
         out.append(dict(
             id=a.id, status=a.status, respondent=a.respondent,
+            organization_id=a.organization_id,
             organization=org_name, department=dept_name,
+            answered=answered, total_questions=total_q,
+            progress=round(100 * min(answered, total_q) / total_q) if total_q else 0,
+            annual_savings=savings.get(a.id),
             readiness_index=a.readiness_index, maturity_band=a.maturity_band,
             confidence_index=a.confidence_index, completed_at=a.completed_at,
             started_at=a.started_at,
@@ -361,7 +384,7 @@ def live_scores(db: Session, assessment_id: int, segment_code: str = ""):
         return None
     questions = question_dicts(db, assessment_id)
     answers = answers_map(db, assessment_id)
-    return _compute_live(questions, answers, segment=segment_code or None)
+    return _compute_live(questions, answers, segment_code or "")
 
 
 def save_answers(db: Session, assessment_id: int, items):
@@ -385,20 +408,21 @@ def save_answers(db: Session, assessment_id: int, items):
     db.commit()
 
 
-def dashboard_data(db: Session, limit: int = 8) -> dict[str, Any]:
-    rows = list_assessments(db)
+def dashboard_data(db: Session, limit: int = 8,
+                   org_ids: list[int] | None = None) -> dict[str, Any]:
+    rows = list_assessments(db, org_ids)
     completed = [r for r in rows if r.get("status") == "completed"
                  and r.get("readiness_index") is not None]
 
     pillar_totals = {}
-    for row in completed:
-        metrics = db.scalars(select(models.MetricScore).where(
-            models.MetricScore.assessment_id == row["id"])).all()
-        for m in metrics:
-            if m.score is None:
+    completed_ids = [r["id"] for r in completed]
+    if completed_ids:
+        for p in db.scalars(select(models.PillarScore).where(
+                models.PillarScore.assessment_id.in_(completed_ids))):
+            if p.score is None:
                 continue
-            bucket = pillar_totals.setdefault(m.pillar, [0.0, 0])
-            bucket[0] += m.score
+            bucket = pillar_totals.setdefault(p.pillar, [0.0, 0])
+            bucket[0] += p.score
             bucket[1] += 1
 
     portfolio_pillars = {code: round(total / count, 1)
@@ -413,6 +437,7 @@ def dashboard_data(db: Session, limit: int = 8) -> dict[str, Any]:
         best=max(scores) if scores else None,
         lowest=min(scores) if scores else None,
         bands=_band_counts(completed),
+        savings=round(sum(r.get("annual_savings") or 0 for r in completed), 2),
     )
     return dict(summary=summary, rows=rows[:limit],
                 portfolio_pillars=portfolio_pillars, all_completed=completed)
@@ -426,8 +451,13 @@ def _band_counts(completed: list[dict[str, Any]]) -> dict[str, int]:
     return counts
 
 
-def reset_demo_data(db: Session):
-    assessment_ids = list(db.scalars(select(models.Assessment.id)))
+def reset_demo_data(db: Session, org_ids: list[int] | None = None):
+    query = select(models.Assessment.id)
+    if org_ids is not None:
+        if not org_ids:
+            return 0
+        query = query.where(models.Assessment.organization_id.in_(org_ids))
+    assessment_ids = list(db.scalars(query))
     removed = 0
     if assessment_ids:
         for model in (models.Answer, models.MetricScore, models.PillarScore,
@@ -475,8 +505,119 @@ def resolve_share_token(db: Session, token: str):
     return link, assessment, result
 
 
-def list_organizations(db: Session) -> list[models.Organization]:
-    return list(db.scalars(select(models.Organization).order_by(models.Organization.name)))
+def list_organizations(db: Session, org_ids: list[int] | None = None) -> list[models.Organization]:
+    query = select(models.Organization).order_by(models.Organization.name)
+    if org_ids is not None:
+        if not org_ids:
+            return []
+        query = query.where(models.Organization.id.in_(org_ids))
+    return list(db.scalars(query))
+
+
+# --- Company scoping -------------------------------------------------------
+
+def is_admin(user) -> bool:
+    if user is None:
+        return False
+    if (getattr(user, "role", "") or "") == "admin":
+        return True
+    admin_email = (os.getenv("ELIPSIS_ADMIN_EMAIL") or DEFAULT_ADMIN_EMAIL).lower()
+    return (getattr(user, "email", "") or "").lower() == admin_email
+
+
+def owned_org_ids(db: Session, user) -> list[int]:
+    if user is None:
+        return []
+    return list(db.scalars(select(models.OrgOwner.organization_id).where(
+        models.OrgOwner.user_id == user.id)))
+
+
+def owned_orgs(db: Session, user) -> list[models.Organization]:
+    return list_organizations(db, owned_org_ids(db, user))
+
+
+def claim_org(db: Session, user_id: int, organization_id: int) -> None:
+    exists = db.scalar(select(models.OrgOwner).where(
+        models.OrgOwner.user_id == user_id,
+        models.OrgOwner.organization_id == organization_id))
+    if exists is None:
+        db.add(models.OrgOwner(user_id=user_id, organization_id=organization_id))
+        db.commit()
+
+
+def visible_org_ids(db: Session, user) -> list[int] | None:
+    """Organisations a user should see. ``None`` means everything (admin portfolio).
+
+    A user who owns companies always sees only those, so every surface is
+    tailored to their company; admins without companies see the portfolio.
+    """
+    owned = owned_org_ids(db, user)
+    if owned:
+        return owned
+    return None if is_admin(user) else []
+
+
+def can_access_org(db: Session, user, organization_id: int | None) -> bool:
+    if user is None or organization_id is None:
+        return False
+    if is_admin(user):
+        return True
+    return organization_id in owned_org_ids(db, user)
+
+
+def company_overview(db: Session, org: models.Organization) -> dict[str, Any]:
+    """Everything the dashboard and company page show about one company."""
+    rows = list_assessments(db, [org.id])
+    completed = sorted([r for r in rows if r["status"] == "completed"
+                        and r.get("readiness_index") is not None],
+                       key=lambda r: (r.get("completed_at") or "", r["id"]))
+    latest_by_dept: dict[str, dict[str, Any]] = {}
+    for r in completed:
+        latest_by_dept[r.get("department") or "Organisation-wide"] = r
+    latest_ids = [r["id"] for r in latest_by_dept.values()]
+
+    pillars: dict[str, list[float]] = {}
+    pains: list[dict[str, Any]] = []
+    quick_wins: list[dict[str, Any]] = []
+    if latest_ids:
+        for p in db.scalars(select(models.PillarScore).where(
+                models.PillarScore.assessment_id.in_(latest_ids))):
+            if p.score is not None:
+                pillars.setdefault(p.pillar, []).append(p.score)
+        dept_of = {r["id"]: r.get("department") for r in latest_by_dept.values()}
+        for p in db.scalars(select(models.PainPoint).where(
+                models.PainPoint.assessment_id.in_(latest_ids))
+                .order_by(models.PainPoint.impact_score.desc()).limit(6)):
+            pains.append(dict(title=p.title, severity=p.severity, impact=p.impact_score,
+                              detail=p.detail, assessment_id=p.assessment_id,
+                              department=dept_of.get(p.assessment_id)))
+        for r in db.scalars(select(models.Recommendation).where(
+                models.Recommendation.assessment_id.in_(latest_ids),
+                models.Recommendation.phase == 1)
+                .order_by(models.Recommendation.priority_score.desc()).limit(5)):
+            quick_wins.append(dict(title=r.title, technology=r.technology,
+                                   roi=r.expected_roi, priority=r.priority_score,
+                                   assessment_id=r.assessment_id))
+
+    scores = [r["readiness_index"] for r in latest_by_dept.values()]
+    leaderboard = sorted(latest_by_dept.values(),
+                         key=lambda r: r.get("readiness_index") or 0, reverse=True)
+    return dict(
+        organization=org,
+        rows=rows,
+        completed=completed,
+        in_progress=[r for r in rows if r["status"] != "completed"],
+        latest=completed[-1] if completed else None,
+        trend=[dict(label=(r.get("completed_at") or "")[:10], value=r["readiness_index"],
+                    department=r.get("department"), id=r["id"]) for r in completed],
+        leaderboard=leaderboard,
+        pillars={code: round(sum(v) / len(v), 1) for code, v in pillars.items() if v},
+        average=round(sum(scores) / len(scores), 1) if scores else None,
+        savings=round(sum(r.get("annual_savings") or 0 for r in leaderboard), 2),
+        pains=pains,
+        quick_wins=quick_wins,
+        departments=len(latest_by_dept),
+    )
 
 
 def department_comparison(db: Session, organization_id: int) -> dict[str, Any]:
@@ -503,8 +644,13 @@ def department_comparison(db: Session, organization_id: int) -> dict[str, Any]:
             for p in db.scalars(select(models.PillarScore).where(
                 models.PillarScore.assessment_id == assessment.id))
         }
+        fin = db.scalar(select(models.FinancialModel).where(
+            models.FinancialModel.assessment_id == assessment.id))
         units.append({
+            "id": assessment.id,
             "assessment_id": assessment.id,
+            "annual_savings": fin.annual_savings if fin else None,
+            "payback_months": fin.payback_months if fin else None,
             "department": dept_name or "Organisation-wide",
             "respondent": assessment.respondent,
             "readiness_index": assessment.readiness_index,

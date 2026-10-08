@@ -12,98 +12,91 @@
 <link rel="stylesheet" href="/static/style.css">
 <link rel="stylesheet" href="/static/extras.css">
 <link rel="stylesheet" href="/static/motion.css">
+<link rel="stylesheet" href="/static/app.css">
 {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
 <a class="skip-link" href="#main">Skip to content</a>
-{% if user %}
-<div class="diamond-wrap" id="diamond-wrap">
-  <button class="diamond" type="button" id="diamond-btn" aria-expanded="false" aria-controls="diamond-menu">
-    <span id="diamond-mark">{{ (user.name or user.email or 'E')[:1] }}</span>
-  </button>
-  <nav class="diamond-menu" id="diamond-menu" hidden>
-    <a href="/company">My Company</a>
-    <a href="/pro">PRO features</a>
-    <a href="/letter">Write to Elipsis Team</a>
-  </nav>
-</div>
-<script>
-(function(){
-  var wrap = document.getElementById("diamond-wrap");
-  var btn = document.getElementById("diamond-btn");
-  var menu = document.getElementById("diamond-menu");
-  var mark = document.getElementById("diamond-mark");
-  var hideTimer = null;
-  var m = document.cookie.match(/(?:^|; )elipsis_symbol=([^;]+)/);
-  if (m && mark) mark.textContent = decodeURIComponent(m[1]);
-
-  function openMenu() {
-    menu.removeAttribute("hidden");
-    btn.setAttribute("aria-expanded", "true");
-    clearTimeout(hideTimer);
-  }
-  function closeMenu() {
-    menu.setAttribute("hidden", "");
-    btn.setAttribute("aria-expanded", "false");
-    clearTimeout(hideTimer);
-  }
-  function scheduleHide() {
-    clearTimeout(hideTimer);
-    hideTimer = setTimeout(closeMenu, 3000);
-  }
-
-  btn.addEventListener("click", function(e){
-    e.stopPropagation();
-    if (menu.hasAttribute("hidden")) openMenu();
-    else closeMenu();
-  });
-  wrap.addEventListener("mouseenter", function(){ clearTimeout(hideTimer); });
-  wrap.addEventListener("mouseleave", scheduleHide);
-  wrap.addEventListener("focusin", function(){ clearTimeout(hideTimer); });
-  wrap.addEventListener("focusout", function(e){
-    if (!wrap.contains(e.relatedTarget)) scheduleHide();
-  });
-  document.addEventListener("click", function(e){
-    if (!wrap.contains(e.target)) closeMenu();
-  });
-})();
-</script>
-{% endif %}
-<header class="topbar">
-  <a class="brand" href="/">
+<header class="topbar app-topbar">
+  <a class="brand" href="{{ '/dashboard' if user else '/' }}">
     <span class="mark" aria-hidden="true">{{ BRAND_MARK }}</span>
     <span>{{ BRAND_NAME }}</span>
   </a>
-  <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" onclick="
-    const n=document.getElementById('site-nav');
-    const open=n.classList.toggle('open');
-    this.setAttribute('aria-expanded', open);
-  ">☰</button>
-  <nav id="site-nav" class="site-nav">
-    {% if user %}
-    <a href="/dashboard">Dashboard</a>
-    <a href="/start">New assessment</a>
-    <a href="/compare">Compare</a>
-    <a href="/assessments">Assessments</a>
-    <a href="/demo">Demo</a>
-    {% else %}
-    <a href="/about">About</a>
-    <a href="/sample">Sample</a>
-    <a href="/pricing">Pricing</a>
-    <a href="/methodology">Methodology</a>
-    <a href="/faq">FAQ</a>
+  <div class="menu-wrap" id="menu-wrap">
+    {% if not user %}
+    <a class="btn sm menu-cta" href="/signup">Get started</a>
     {% endif %}
-  </nav>
-  <div class="session">
-    {% if user %}
-    <span class="who">{{ user.name or user.email }}</span>
-    <a class="btn sm ghost" href="/logout">Sign out</a>
-    {% else %}
-    <a href="/login" style="font-weight:700;color:var(--muted)">Sign in</a>
-    <a class="btn sm" href="/signup">Get started</a>
-    {% endif %}
+    <button class="menu-btn" type="button" id="menu-btn" aria-expanded="false" aria-controls="app-menu" aria-haspopup="true">
+      <span class="menu-avatar" id="menu-mark" aria-hidden="true">{% if user %}{{ (user.name or user.email or 'E')[:1]|upper }}{% else %}&#9776;{% endif %}</span>
+      <span class="menu-label">Menu</span>
+      <svg class="menu-chev" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+    </button>
+    <nav class="app-menu" id="app-menu" aria-label="Main menu" hidden>
+      {% if user %}
+      <div class="menu-head">
+        <strong>{{ user.name or user.email }}</strong>
+        <span class="muted small">{{ user.email }}</span>
+      </div>
+      <div class="menu-group">
+        <span class="menu-title">Workspace</span>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/company">My company</a>
+        <a href="/assessments">Assessments</a>
+        <a href="/compare">Compare departments</a>
+        <a href="/start">New assessment</a>
+      </div>
+      <div class="menu-group">
+        <span class="menu-title">More</span>
+        <a href="/pro">PRO features</a>
+        <a href="/demo">Guided demo</a>
+        <a href="/letter">Write to the team</a>
+        <a href="/settings">Settings</a>
+      </div>
+      <div class="menu-group">
+        <a href="/logout" class="menu-danger">Sign out</a>
+      </div>
+      {% else %}
+      <div class="menu-group">
+        <a href="/about">About</a>
+        <a href="/sample">Sample report</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/methodology">Methodology</a>
+        <a href="/faq">FAQ</a>
+      </div>
+      <div class="menu-group">
+        <a href="/login">Sign in</a>
+        <a href="/signup">Create account</a>
+      </div>
+      {% endif %}
+    </nav>
   </div>
 </header>
+<script>
+(function(){
+  var wrap = document.getElementById("menu-wrap");
+  var btn = document.getElementById("menu-btn");
+  var menu = document.getElementById("app-menu");
+  var mark = document.getElementById("menu-mark");
+  {% if user %}
+  var m = document.cookie.match(/(?:^|; )elipsis_symbol=([^;]+)/);
+  if (m && mark) mark.textContent = decodeURIComponent(m[1]);
+  {% endif %}
+  var path = location.pathname;
+  menu.querySelectorAll("a").forEach(function(a){
+    if (a.getAttribute("href") === path) a.setAttribute("aria-current", "page");
+  });
+  function setOpen(open){
+    if (open) menu.removeAttribute("hidden"); else menu.setAttribute("hidden", "");
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) { var first = menu.querySelector("a"); if (first) first.focus(); }
+  }
+  btn.addEventListener("click", function(e){ e.stopPropagation(); setOpen(menu.hasAttribute("hidden")); });
+  document.addEventListener("click", function(e){ if (!wrap.contains(e.target)) setOpen(false); });
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape" && !menu.hasAttribute("hidden")) { setOpen(false); btn.focus(); }
+  });
+})();
+</script>
 
 <main id="main">{% block content %}{% endblock %}</main>
 

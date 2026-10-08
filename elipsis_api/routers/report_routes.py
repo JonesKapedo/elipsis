@@ -7,11 +7,19 @@ from sqlalchemy.orm import Session
 from constants import (
     BRAND_NAME, BRAND_TAGLINE, CURRENCY, INDEX_NAME, INDEX_SHORT, PILLAR_LABELS,
 )
-from elipsis_api import models, services
+from elipsis_api import analytics, models, services
+from elipsis_api.narrative import company_portrait
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
 
 router = APIRouter()
+
+
+def _guarded(db: Session, user, assessment_id: int):
+    assessment = db.get(models.Assessment, assessment_id)
+    if assessment is None or not services.can_access_org(db, user, assessment.organization_id):
+        return None, None
+    return services.compute(db, assessment_id)
 
 
 def _not_found(request, user):
@@ -23,10 +31,11 @@ def assessment_report(assessment_id: int, request: Request,
                       user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
-    assessment, result = services.compute(db, assessment_id)
+    assessment, result = _guarded(db, user, assessment_id)
     if assessment is None or result is None:
         return _not_found(request, user)
     org = db.get(models.Organization, assessment.organization_id)
+    dept = db.get(models.Department, assessment.department_id) if assessment.department_id else None
     comparison_rows, comparison_average = [], None
     if org is not None:
         try:
@@ -38,10 +47,12 @@ def assessment_report(assessment_id: int, request: Request,
     return templates.TemplateResponse(request, "report.html", {
         "user": user, "result": result, "assessment": assessment,
         "organization": org,
-        "department": db.get(models.Department, assessment.department_id)
-        if assessment.department_id else None,
+        "department": dept,
         "comparison_rows": comparison_rows,
         "comparison_average": comparison_average,
+        "comparison_max": max([r.get("readiness_index") or 0 for r in comparison_rows] + [1]),
+        "portrait": company_portrait(org, dept, result),
+        "insight": analytics.build(result),
     })
 
 
@@ -53,7 +64,7 @@ def assessment_report_pdf(assessment_id: int, request: Request,
 
     if user is None:
         return login_redirect()
-    assessment, result = services.compute(db, assessment_id)
+    assessment, result = _guarded(db, user, assessment_id)
     if assessment is None or result is None:
         return _not_found(request, user)
     org = db.get(models.Organization, assessment.organization_id)
@@ -71,6 +82,7 @@ def assessment_report_pdf(assessment_id: int, request: Request,
             index_name=INDEX_NAME, index_short=INDEX_SHORT, currency=CURRENCY,
             organization=org, department=dept, assessment=assessment, result=result,
             pillar_labels=PILLAR_LABELS, comparison_rows=comparison_rows or None,
+            insight=analytics.build(result),
         )
     except Exception as exc:  # noqa: BLE001
         print(f"[elipsis] PDF build failed: {exc}", flush=True)

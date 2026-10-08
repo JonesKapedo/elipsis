@@ -3,7 +3,7 @@ import math
 from aiogram import types
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-from telegram_bot.scoring import score_tasks, estimate_roi
+from telegram_bot.scoring import ScoringInputError, assess
 from constants import BRAND_NAME, INDEX_NAME, INDEX_SHORT, CURRENCY
 
 
@@ -77,12 +77,16 @@ async def answer_handler(message: types.Message, state: FSMContext):
             return
         await state.update_data(staff=value)
         data = await state.get_data()
-        score = score_tasks(data)
-        roi = estimate_roi(data)
+        try:
+            summary = "\n".join(assess(data).summary_lines(CURRENCY))
+        except ScoringInputError:
+            await state.clear()
+            await message.answer("Something in those answers didn't add up. "
+                                 "Send /start to try again.")
+            return
         await message.answer(
             f"Thank you — here is your preliminary {INDEX_SHORT}.\n\n"
-            f"Automation opportunity: {score}\n"
-            f"Estimated monthly savings: {CURRENCY} {roi:,.0f}\n\n"
+            f"{summary}\n\n"
             f"This is an early indicator only. A full {INDEX_NAME} looks at the "
             f"whole department across all seven readiness pillars."
         )

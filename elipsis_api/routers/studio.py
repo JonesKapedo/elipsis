@@ -38,52 +38,44 @@ def _prefs(db: Session, user) -> models.UserPref:
 
 
 def _is_admin(user) -> bool:
-    if user is None:
-        return False
-    if (user.role or "") == "admin":
-        return True
-    admin_email = (os.getenv("ELIPSIS_ADMIN_EMAIL") or "admin@elipsis.local").lower()
-    return (user.email or "").lower() == admin_email
+    return services.is_admin(user)
 
 
 def _owned_orgs(db: Session, user):
-    ids = list(db.scalars(select(models.OrgOwner.organization_id).where(
-        models.OrgOwner.user_id == user.id)))
-    if not ids:
-        return []
-    return list(db.scalars(select(models.Organization).where(
-        models.Organization.id.in_(ids)).order_by(models.Organization.name)))
+    return services.owned_orgs(db, user)
 
 
 def _claim(db: Session, user_id: int, organization_id: int):
-    exists = db.scalar(select(models.OrgOwner).where(
-        models.OrgOwner.user_id == user_id,
-        models.OrgOwner.organization_id == organization_id))
-    if exists is None:
-        db.add(models.OrgOwner(user_id=user_id, organization_id=organization_id))
-        db.commit()
+    services.claim_org(db, user_id, organization_id)
+
+
+def _parse_staff(raw: str):
+    raw = (raw or "").strip()
+    return int(raw) if raw.isdigit() and int(raw) > 0 else None
 
 
 @router.get("/company")
 def my_company(request: Request, user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
-    orgs = _owned_orgs(db, user)
+    from elipsis_api import analytics
     rows = []
-    for org in orgs:
-        assessments = list(db.scalars(select(models.Assessment).where(
-            models.Assessment.organization_id == org.id).order_by(models.Assessment.id.desc())))
-        latest = None
-        portrait = None
-        for assessment in assessments:
-            if assessment.status == "completed":
-                _, result = services.compute(db, assessment.id)
-                if result:
-                    dept = db.get(models.Department, assessment.department_id) if assessment.department_id else None
-                    portrait = company_portrait(org, dept, result)
-                    latest = assessment
-                    break
-        rows.append({"org": org, "assessments": assessments, "portrait": portrait, "latest": latest})
+    for org in _owned_orgs(db, user):
+        overview = services.company_overview(db, org)
+        portrait, insight, latest = None, None, None
+        if overview["latest"]:
+            latest = db.get(models.Assessment, overview["latest"]["id"])
+            _, result = services.compute(db, latest.id)
+            if result:
+                dept = db.get(models.Department, latest.department_id) if latest.department_id else None
+                portrait = company_portrait(org, dept, result)
+                insight = analytics.build(result)
+        rows.append({
+            "org": org, "overview": overview, "portrait": portrait, "insight": insight,
+            "latest": latest, "assessments": overview["rows"],
+            "spark": analytics.sparkline([t["value"] for t in overview["trend"]]),
+            "editing": request.query_params.get("edit") == str(org.id),
+        })
     return templates.TemplateResponse(request, "company.html", {
         "user": user, "rows": rows, "prefs": _prefs(db, user),
     })
@@ -96,18 +88,40 @@ def create_company(request: Request, name: str = Form(...), industry: str = Form
                    db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
+    if not name.strip():
+        return RedirectResponse("/company", status_code=303)
     org = models.Organization(
         name=name.strip()[:160],
-        industry=industry.strip() or None,
-        employee_count=int(employee_count) if employee_count.strip().isdigit() else None,
-        country=country.strip() or None,
-        city=city.strip() or None,
+        industry=industry.strip()[:120] or None,
+        employee_count=_parse_staff(employee_count),
+        country=country.strip()[:80] or None,
+        city=city.strip()[:80] or None,
     )
     db.add(org)
     db.commit()
     db.refresh(org)
     _claim(db, user.id, org.id)
-    return RedirectResponse("/company", status_code=303)
+    return RedirectResponse(f"/dashboard?org={org.id}", status_code=303)
+
+
+@router.post("/company/{organization_id}/edit")
+def edit_company(organization_id: int, name: str = Form(...), industry: str = Form(""),
+                 employee_count: str = Form(""), country: str = Form(""),
+                 city: str = Form(""), user=Depends(get_current_user),
+                 db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    org = db.get(models.Organization, organization_id)
+    if org is None or organization_id not in services.owned_org_ids(db, user):
+        return RedirectResponse("/company", status_code=303)
+    if name.strip():
+        org.name = name.strip()[:160]
+    org.industry = industry.strip()[:120] or None
+    org.employee_count = _parse_staff(employee_count)
+    org.country = country.strip()[:80] or None
+    org.city = city.strip()[:80] or None
+    db.commit()
+    return RedirectResponse(f"/company#org-{org.id}", status_code=303)
 
 
 @router.get("/pro")
