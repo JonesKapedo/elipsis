@@ -17,30 +17,54 @@
 <body class="{% block body_class %}{% endblock %}">
 <a class="skip-link" href="#main">Skip to content</a>
 {% if user %}
-<div class="diamond-wrap">
+<div class="diamond-wrap" id="diamond-wrap">
   <button class="diamond" type="button" id="diamond-btn" aria-expanded="false" aria-controls="diamond-menu">
     <span id="diamond-mark">{{ (user.name or user.email or 'E')[:1] }}</span>
   </button>
   <nav class="diamond-menu" id="diamond-menu" hidden>
     <a href="/company">My Company</a>
     <a href="/pro">PRO features</a>
-    <a href="/settings">Settings</a>
     <a href="/letter">Write to Elipsis Team</a>
   </nav>
 </div>
 <script>
 (function(){
-  var mark = document.getElementById("diamond-mark");
-  var m = document.cookie.match(/(?:^|; )elipsis_symbol=([^;]+)/);
-  if (m && mark) mark.textContent = decodeURIComponent(m[1]);
-  if (document.cookie.indexOf("elipsis_density=compact") !== -1) document.body.classList.add("density-compact");
-  if (document.cookie.indexOf("elipsis_motion=off") !== -1) document.body.classList.add("motion-off");
+  var wrap = document.getElementById("diamond-wrap");
   var btn = document.getElementById("diamond-btn");
   var menu = document.getElementById("diamond-menu");
-  btn.addEventListener("click", function(){
-    var open = menu.hasAttribute("hidden");
-    if (open) menu.removeAttribute("hidden"); else menu.setAttribute("hidden", "");
-    btn.setAttribute("aria-expanded", open ? "true" : "false");
+  var mark = document.getElementById("diamond-mark");
+  var hideTimer = null;
+  var m = document.cookie.match(/(?:^|; )elipsis_symbol=([^;]+)/);
+  if (m && mark) mark.textContent = decodeURIComponent(m[1]);
+
+  function openMenu() {
+    menu.removeAttribute("hidden");
+    btn.setAttribute("aria-expanded", "true");
+    clearTimeout(hideTimer);
+  }
+  function closeMenu() {
+    menu.setAttribute("hidden", "");
+    btn.setAttribute("aria-expanded", "false");
+    clearTimeout(hideTimer);
+  }
+  function scheduleHide() {
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(closeMenu, 3000);
+  }
+
+  btn.addEventListener("click", function(e){
+    e.stopPropagation();
+    if (menu.hasAttribute("hidden")) openMenu();
+    else closeMenu();
+  });
+  wrap.addEventListener("mouseenter", function(){ clearTimeout(hideTimer); });
+  wrap.addEventListener("mouseleave", scheduleHide);
+  wrap.addEventListener("focusin", function(){ clearTimeout(hideTimer); });
+  wrap.addEventListener("focusout", function(e){
+    if (!wrap.contains(e.relatedTarget)) scheduleHide();
+  });
+  document.addEventListener("click", function(e){
+    if (!wrap.contains(e.target)) closeMenu();
   });
 })();
 </script>
