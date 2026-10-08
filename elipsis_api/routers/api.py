@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from constants import BRAND_NAME, INDEX_NAME, scale_options
-from elipsis_api import schemas, services
+from elipsis_api import models, schemas, services
 from elipsis_api.config import DATABASE_URL, SESSION_COOKIE
 from elipsis_api.database import get_db, ping_db
 from elipsis_api.state import seed_status
@@ -68,17 +68,55 @@ def questionnaire(db: Session = Depends(get_db)):
             for q in services.get_questions(db, bank.id)]
 
 
+def _api_user(request: Request, db: Session):
+    return services.user_for_token(db, request.cookies.get(SESSION_COOKIE))
+
+
 @router.get("/assessments")
-def list_assessments(db: Session = Depends(get_db)):
-    return services.list_assessments(db)
+def list_assessments(request: Request, db: Session = Depends(get_db)):
+    user = _api_user(request, db)
+    return services.list_assessments(db, services.visible_org_ids(db, user) if user else None)
 
 
 @router.post("/assessments", response_model=schemas.AssessmentOut, status_code=201)
-def create_assessment(payload: schemas.AssessmentIn, db: Session = Depends(get_db)):
+def create_assessment(payload: schemas.AssessmentIn, request: Request,
+                      db: Session = Depends(get_db)):
+    user = _api_user(request, db)
+    if user and payload.organization_id and not services.can_access_org(
+            db, user, payload.organization_id):
+        raise HTTPException(status_code=404, detail="organization not found")
     try:
-        return _assessment_out(services.create_assessment(db, payload))
+        assessment = services.create_assessment(db, payload)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if user is not None:
+        services.claim_org(db, user.id, assessment.organization_id)
+    return _assessment_out(assessment)
+
+
+@router.get("/assessments/{assessment_id}/analytics")
+def assessment_analytics(assessment_id: int, db: Session = Depends(get_db)):
+    from elipsis_api import analytics
+    _, result = services.compute(db, assessment_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="assessment not found")
+    return analytics.build(result)
+
+
+@router.get("/organizations/{organization_id}/overview")
+def organization_overview(organization_id: int, request: Request,
+                          db: Session = Depends(get_db)):
+    user = _api_user(request, db)
+    if user is None:
+        raise HTTPException(status_code=401, detail="unauthorized")
+    org = db.get(models.Organization, organization_id)
+    if org is None or not services.can_access_org(db, user, organization_id):
+        raise HTTPException(status_code=404, detail="organization not found")
+    data = services.company_overview(db, org)
+    data["organization"] = {"id": org.id, "name": org.name, "industry": org.industry,
+                            "employee_count": org.employee_count, "city": org.city,
+                            "country": org.country}
+    return data
 
 
 @router.get("/assessments/{assessment_id}")

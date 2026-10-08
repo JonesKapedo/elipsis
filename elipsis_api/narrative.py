@@ -17,7 +17,13 @@ def company_portrait(organization, department, result: dict) -> dict:
     name = getattr(organization, "name", None) or "the organisation"
     dept = getattr(department, "name", None)
     index = float(result.get("readiness_index") or 0)
-    pillars = result.get("pillars") or []
+    raw_pillars = result.get("pillars") or []
+    if isinstance(raw_pillars, dict):
+        from constants import PILLAR_LABELS
+        pillars = [{"code": c, "label": PILLAR_LABELS.get(c, c), "score": v}
+                   for c, v in raw_pillars.items()]
+    else:
+        pillars = list(raw_pillars)
     weakest = min(pillars, key=lambda p: p.get("score") or 0) if pillars else None
     strongest = max(pillars, key=lambda p: p.get("score") or 0) if pillars else None
     pains = result.get("pain_points") or result.get("pains") or []

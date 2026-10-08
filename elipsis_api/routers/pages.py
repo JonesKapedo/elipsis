@@ -7,10 +7,11 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from elipsis_api import models, schemas, services
+from elipsis_api import analytics, models, schemas, services
 from elipsis_api.config import SESSION_COOKIE
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
+from constants import SUBDOMAIN_PILLAR
 from elipsis_api.sample import SAMPLE_ORG, sample_result
 
 router = APIRouter()
@@ -22,6 +23,19 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 14
 def _not_found(request, user):
     return templates.TemplateResponse(request, "404.html", {"user": user},
                                       status_code=404)
+
+
+def _owned_assessment(db: Session, user, assessment_id: int):
+    """Return the assessment only if this user may see its company."""
+    assessment = db.get(models.Assessment, assessment_id)
+    if assessment is None or not services.can_access_org(db, user, assessment.organization_id):
+        return None
+    return assessment
+
+
+def _int_param(request: Request, name: str) -> int | None:
+    raw = request.query_params.get(name) or ""
+    return int(raw) if raw.isdigit() else None
 
 
 def _question_count(db: Session) -> int:
@@ -157,6 +171,7 @@ def demo_run(request: Request, user=Depends(get_current_user),
         return login_redirect()
     try:
         assessment = services.run_guided_demo(db)
+        services.claim_org(db, user.id, assessment.organization_id)
     except Exception:
         return RedirectResponse("/demo", status_code=303)
     return RedirectResponse(f"/assessment/{assessment.id}/results", status_code=303)
@@ -170,7 +185,7 @@ def compare_index(request: Request, user=Depends(get_current_user),
     return templates.TemplateResponse(request, "compare.html", {
         "user": user,
         "organization": None,
-        "organizations": services.list_organizations(db),
+        "organizations": services.list_organizations(db, services.visible_org_ids(db, user)),
         "rows": [],
         "pillars": [],
         "average": None,
@@ -182,12 +197,21 @@ def compare_org(organization_id: int, request: Request,
                 user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
+    if not services.can_access_org(db, user, organization_id):
+        return _not_found(request, user)
     data = services.department_comparison(db, organization_id)
     if data.get("organization") is None:
         return _not_found(request, user)
+    best = {}
+    for code in data.get("pillars") or []:
+        values = [u["pillars"].get(code) for u in data.get("rows") or []
+                  if u["pillars"].get(code) is not None]
+        if values:
+            best[code] = (max(values), min(values))
     return templates.TemplateResponse(request, "compare.html", {
         "user": user,
         "organizations": [],
+        "best": best,
         **data,
     })
 
@@ -214,6 +238,8 @@ def create_share(assessment_id: int, request: Request,
                  user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
+    if _owned_assessment(db, user, assessment_id) is None:
+        return _not_found(request, user)
     try:
         link = services.create_share_link(db, assessment_id, user_id=user.id)
     except ValueError:
@@ -261,9 +287,18 @@ def logout(request: Request, db: Session = Depends(get_db)):
 def assessments(request: Request, user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
+    visible = services.visible_org_ids(db, user)
+    focus = _int_param(request, "org")
+    scope = visible
+    if focus is not None and (visible is None or focus in visible):
+        scope = [focus]
+    rows = services.list_assessments(db, scope)
     return templates.TemplateResponse(
         request, "assessments.html",
-        {"user": user, "rows": services.list_assessments(db)})
+        {"user": user, "rows": rows,
+         "organizations": services.list_organizations(db, visible),
+         "focus": focus,
+         "status": request.query_params.get("status") or ""})
 
 
 @router.get("/start")
@@ -274,6 +309,8 @@ def start_form(request: Request, user=Depends(get_current_user), db: Session = D
     orgs = _owned_orgs(db, user)
     return templates.TemplateResponse(
         request, "start.html", {"user": user, "organizations": orgs,
+                                "selected_org": _int_param(request, "org")
+                                or (orgs[0].id if len(orgs) == 1 else None),
                                 "total_questions": _question_count(db)})
 
 
@@ -291,6 +328,8 @@ def start_create(request: Request,
     try:
         if organization_id.strip():
             payload.organization_id = int(organization_id)
+            if not services.can_access_org(db, user, payload.organization_id):
+                return RedirectResponse("/start", status_code=303)
         else:
             if not org_name.strip():
                 return RedirectResponse("/start", status_code=303)
@@ -311,7 +350,7 @@ def assessment_detail(assessment_id: int, request: Request,
                       user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
-    assessment = db.get(models.Assessment, assessment_id)
+    assessment = _owned_assessment(db, user, assessment_id)
     if assessment is None:
         return _not_found(request, user)
     if assessment.status == "completed":
@@ -326,7 +365,7 @@ def assessment_step(assessment_id: int, number: int, request: Request,
                     user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
-    assessment = db.get(models.Assessment, assessment_id)
+    assessment = _owned_assessment(db, user, assessment_id)
     if assessment is None:
         return _not_found(request, user)
     if assessment.status == "completed":
@@ -358,6 +397,8 @@ async def assessment_live(assessment_id: int, request: Request,
                           user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return JSONResponse({"error": "not signed in"}, status_code=401)
+    if _owned_assessment(db, user, assessment_id) is None:
+        return JSONResponse({"error": "assessment not found"}, status_code=404)
     try:
         payload = await request.json()
     except Exception:  # noqa: BLE001
@@ -382,7 +423,7 @@ def dashboard_reset(request: Request, user=Depends(get_current_user),
                     db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
-    services.reset_demo_data(db)
+    services.reset_demo_data(db, services.visible_org_ids(db, user))
     return RedirectResponse("/dashboard", status_code=303)
 
 
@@ -391,15 +432,36 @@ def dashboard(request: Request, user=Depends(get_current_user),
               db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
-    data = services.dashboard_data(db)
+    visible = services.visible_org_ids(db, user)
+    organizations = services.list_organizations(db, visible)
+    focus_id = _int_param(request, "org")
+    company = None
+    if focus_id is not None and any(o.id == focus_id for o in organizations):
+        company = next(o for o in organizations if o.id == focus_id)
+    elif visible:
+        company = organizations[0] if organizations else None
+
+    scope = [company.id] if company else visible
+    data = services.dashboard_data(db, org_ids=scope)
+    overview = services.company_overview(db, company) if company else None
     recent = data["all_completed"][0] if data["all_completed"] else None
-    recent_live = None
+    recent_live, insight = None, None
     if recent:
-        assessment = db.get(models.Assessment, recent["id"])
-        if assessment is not None:
-            recent_live = services.compute(db, recent["id"])[1]
+        recent_live = services.compute(db, recent["id"])[1]
+        insight = analytics.build(recent_live)
+        insight["radar"] = analytics.radar(
+            recent_live.get("pillars") or {}, overlay=data["portfolio_pillars"] or None)
+    trend_source = overview["trend"] if overview else [
+        dict(label=(r.get("completed_at") or "")[:10], value=r["readiness_index"],
+             department=r.get("department"), id=r["id"])
+        for r in sorted(data["all_completed"], key=lambda r: r["id"])]
     return templates.TemplateResponse(request, "dashboard.html", {
         "user": user, **data, "recent": recent, "recent_live": recent_live,
+        "insight": insight, "company": company, "overview": overview,
+        "organizations": organizations, "is_portfolio": company is None,
+        "trend": trend_source[-12:],
+        "spark": analytics.sparkline([t["value"] for t in trend_source[-12:]]),
+        "in_progress_rows": [r for r in data["rows"] if r["status"] != "completed"][:4],
     })
 
 
@@ -408,7 +470,7 @@ async def assessment_submit(assessment_id: int, request: Request,
                             user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
-    assessment = db.get(models.Assessment, assessment_id)
+    assessment = _owned_assessment(db, user, assessment_id)
     if assessment is None:
         return _not_found(request, user)
     form = await request.form()
@@ -434,6 +496,8 @@ def assessment_results(assessment_id: int, request: Request,
                        user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
+    if _owned_assessment(db, user, assessment_id) is None:
+        return _not_found(request, user)
     assessment, result = services.compute(db, assessment_id)
     if assessment is None or result is None:
         return _not_found(request, user)
@@ -447,25 +511,59 @@ def assessment_results(assessment_id: int, request: Request,
         "department": db.get(models.Department, assessment.department_id)
         if assessment.department_id else None,
         "share_url": share_url,
+        "insight": analytics.build(result),
     })
 
 
-@router.get("/assessment/{assessment_id}/report")
-def assessment_report(assessment_id: int, request: Request,
+@router.get("/assessment/{assessment_id}/pillar/{code}")
+def assessment_pillar(assessment_id: int, code: str, request: Request,
                       user=Depends(get_current_user), db: Session = Depends(get_db)):
+    """Drill-down: one pillar's subdomains, answers, metrics, pains and actions."""
     if user is None:
         return login_redirect()
-    assessment, result = services.compute(db, assessment_id)
-    if assessment is None or result is None:
+    if _owned_assessment(db, user, assessment_id) is None:
         return _not_found(request, user)
-    from elipsis_api.narrative import company_portrait
-    org = db.get(models.Organization, assessment.organization_id)
-    dept = db.get(models.Department, assessment.department_id) if assessment.department_id else None
-    return templates.TemplateResponse(request, "report.html", {
-        "user": user, "result": result, "assessment": assessment,
-        "organization": org,
-        "department": dept,
-        "portrait": company_portrait(org, dept, result),
+    assessment, result = services.compute(db, assessment_id)
+    code = code.upper()
+    if assessment is None or result is None or code not in (result.get("pillars") or {}):
+        return _not_found(request, user)
+    from constants import scale_options
+    questions = services.get_questions(db, assessment.questionnaire_id)
+    answers = services.answers_map(db, assessment_id)
+    pillar_codes = {q.code for q in questions if q.pillar == code}
+    sections = []
+    for sub, score in (result.get("subdomains") or {}).items():
+        if SUBDOMAIN_PILLAR.get(sub) != code:
+            continue
+        items = []
+        for q in questions:
+            if q.subdomain != sub:
+                continue
+            answer = answers.get(q.id) or {}
+            value = answer.get("score")
+            label = None
+            for opt_score, _emoji, opt_label, _help in (scale_options(q.scale or "") or ()):
+                if opt_score == value:
+                    label = opt_label
+            items.append(dict(code=q.code, text=q.text, why=q.why, score=value,
+                              label=label, evidence=answer.get("evidence"),
+                              weight=q.weight))
+        sections.append(dict(code=sub, score=score, questions=items,
+                             level=analytics.heat_level(score)))
+    insight = analytics.build(result)
+    contribution = next((c for c in insight["contributions"] if c["code"] == code), None)
+    steps = services.build_segments(db, assessment_id)
+    step_of = {st["subdomain"]: st["number"] for st in steps}
+    return templates.TemplateResponse(request, "pillar.html", {
+        "user": user, "assessment": assessment, "result": result,
+        "organization": db.get(models.Organization, assessment.organization_id),
+        "code": code, "score": result["pillars"][code],
+        "contribution": contribution, "sections": sections,
+        "metrics": (result.get("metrics_by_pillar") or {}).get(code, []),
+        "pains": [p for p in result.get("pain_points") or [] if p.get("trigger") in pillar_codes],
+        "recs": [r for r in result.get("recommendations") or [] if r.get("pillar") == code],
+        "step_of": step_of,
+        "siblings": list((result.get("pillars") or {}).keys()),
     })
 
 
@@ -474,6 +572,8 @@ def assessment_export_json(assessment_id: int, request: Request,
                            user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return JSONResponse({"error": "not signed in"}, status_code=401)
+    if _owned_assessment(db, user, assessment_id) is None:
+        return JSONResponse({"error": "assessment not found"}, status_code=404)
     assessment, result = services.compute(db, assessment_id)
     if assessment is None or result is None:
         return JSONResponse({"error": "assessment not found"}, status_code=404)
