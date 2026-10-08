@@ -1,7 +1,7 @@
-"""Vercel serverless entrypoint for the Elipsis FastAPI app.
+"""Legacy /api entrypoint (optional).
 
-Vercel looks for a top-level `app` in this file (or the entrypoint declared
-in pyproject.toml under [tool.vercel]).
+Prefer root main.py or [tool.vercel] entrypoint = "elipsis_api.main:app".
+Kept so older configs that pointed at /api still resolve to the same app.
 """
 import os
 import sys

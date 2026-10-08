@@ -3,8 +3,8 @@
 Run with:
     uvicorn elipsis_api.main:app --reload --port 8001
 
-On Vercel the app is deployed as a serverless function; the entrypoint is
-api/index.py (exports `app` from this module).
+On Vercel use zero-config FastAPI (root main.py or pyproject entrypoint).
+Do not catch-all rewrite to /api/index — that turns every path into 404.
 """
 
 import os
@@ -25,8 +25,22 @@ from constants import BRAND_NAME, FRAMEWORK_NAME  # noqa: E402
 from elipsis_api import services  # noqa: E402
 from elipsis_api.config import DATABASE_URL  # noqa: E402
 from elipsis_api.database import Base, SessionLocal, engine  # noqa: E402
-from elipsis_api.routers import api, pages, auth_pages, report_routes  # noqa: E402
 from elipsis_api import state as runtime_state  # noqa: E402
+
+# Import routers defensively so a single broken module does not empty the app.
+from elipsis_api.routers import api, pages  # noqa: E402
+
+try:
+    from elipsis_api.routers import auth_pages  # noqa: E402
+except Exception as _exc:  # noqa: BLE001
+    auth_pages = None
+    print(f"[elipsis] auth_pages import failed: {_exc}", flush=True)
+
+try:
+    from elipsis_api.routers import report_routes  # noqa: E402
+except Exception as _exc:  # noqa: BLE001
+    report_routes = None
+    print(f"[elipsis] report_routes import failed: {_exc}", flush=True)
 
 
 @asynccontextmanager
@@ -52,13 +66,15 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(
     title=f"{BRAND_NAME} API",
     description=FRAMEWORK_NAME,
-    version="0.3.0",
+    version="0.3.1",
     lifespan=lifespan,
 )
 
 app.include_router(api.router)
-app.include_router(auth_pages.router)
-app.include_router(report_routes.router)  # PDF + expanded report (before pages)
+if auth_pages is not None:
+    app.include_router(auth_pages.router)
+if report_routes is not None:
+    app.include_router(report_routes.router)
 app.include_router(pages.router)
 
 _static = Path(__file__).resolve().parent.parent / "static"
