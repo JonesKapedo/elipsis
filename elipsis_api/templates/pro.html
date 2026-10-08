@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Pro{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">PRO</p>
+  <h1>Self-assessment stays free. The floor sweep does not.</h1>
+  <p class="lede">A digital assessment gives the starting picture. A physical assessment is a thorough sweep of how procedures actually run, so the company knows which ones can be automated and which ones would break if you tried.</p>
+  {% if request.query_params.get('locked') %}<p class="error">The bid board is a Pro surface. Unlock it once, then you can see open physical-assessment requests.</p>{% endif %}
+</section>
+
+<section class="stats">
+  {% for key, spec in packages.items() %}
+  <div><b>KES {{ '{:,}'.format(spec[1]) }}</b><span>{{ spec[0] }}</span></div>
+  {% endfor %}
+</section>
+
+<div class="split-layout">
+  <section class="block">
+    <h2>Request a physical assessment</h2>
+    <form method="post" action="/physical" class="stack">
+      <label>Company <input name="company_name" required></label>
+      <label>Linked organisation
+        <select name="organization_id">
+          <option value="">— none —</option>
+          {% for o in orgs %}<option value="{{ o.id }}">{{ o.name }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Package
+        <select name="package">
+          {% for key, spec in packages.items() %}
+          <option value="{{ key }}">{{ spec[0] }} — KES {{ '{:,}'.format(spec[1]) }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Sites <input name="sites" type="number" min="1" value="1"></label>
+      <label>What should the sweep pay attention to? <textarea name="notes" rows="4"></textarea></label>
+      <p class="muted small">Each extra site adds KES 60,000. Payment uses Paystack. Until your live keys are set, checkout stays on a clearly marked dummy page.</p>
+      <button class="btn" type="submit">Continue to payment</button>
+    </form>
+  </section>
+  <aside class="block">
+    <h2>Bid board</h2>
+    <p>Open physical requests sit on a restricted page so companies are not browsing each other's work by default.</p>
+    <p><strong>KES {{ '{:,}'.format(pro_price) }}</strong> one-time unlock.</p>
+    {% if prefs.pro_until == 'active' %}
+    <a class="btn" href="/bids">Open bids</a>
+    {% else %}
+    <form method="post" action="/pro/checkout"><button class="btn" type="submit">Unlock bids</button></form>
+    {% endif %}
+    <h3>What each package is for</h3>
+    <ul>
+      {% for key, spec in packages.items() %}
+      <li><strong>{{ spec[0] }}.</strong> {{ spec[2] }}</li>
+      {% endfor %}
+    </ul>
+  </aside>
+</div>
+{% endblock %}

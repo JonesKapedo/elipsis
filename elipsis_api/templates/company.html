@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}My company{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">MY COMPANY</p>
+  <h1>Digital structure, not a highlight reel.</h1>
+  <p class="lede">Every completed assessment is read back as a picture of how the company actually works: where work is written down, where it still depends on people, and what is safe to automate.</p>
+</section>
+
+{% for row in rows %}
+<article class="block">
+  <h2>{{ row.org.name }}</h2>
+  <p class="muted">{{ row.org.industry or 'Industry not set' }}{% if row.org.city %} · {{ row.org.city }}{% endif %}{% if row.org.employee_count %} · {{ row.org.employee_count }} people{% endif %}</p>
+  {% if row.portrait %}
+  <p class="tag ok">{{ row.portrait.posture }}</p>
+  <h3>Company overview</h3>
+  <p>{{ row.portrait.structure }}</p>
+  <ul>
+    {% for line in row.portrait.pillar_lines %}
+    <li>{{ line }}</li>
+    {% endfor %}
+  </ul>
+  <p>{{ row.portrait.leverage }}</p>
+  {% if row.portrait.money %}<p>{{ row.portrait.money }}</p>{% endif %}
+  {% if row.latest %}
+  <p><a class="btn sm" href="/assessment/{{ row.latest.id }}/report">Open the full report</a></p>
+  {% endif %}
+  {% else %}
+  <p class="muted">No completed assessment yet. The overview appears after the first full submission.</p>
+  {% endif %}
+  <h3>Assessments</h3>
+  <ul>
+    {% for a in row.assessments %}
+    <li><a href="/assessment/{{ a.id }}">#{{ a.id }}</a> — {{ a.status }} · {{ a.completed_at or a.created_at or '' }}</li>
+    {% else %}
+    <li class="muted">None yet.</li>
+    {% endfor %}
+  </ul>
+</article>
+{% else %}
+<p class="muted">You have no company yet. Create one below — assessments stay free.</p>
+{% endfor %}
+
+<section class="block">
+  <h2>Add a company</h2>
+  <form method="post" action="/company" class="stack">
+    <label>Name <input name="name" required placeholder="Company legal name"></label>
+    <div class="form-grid">
+      <label>Industry <input name="industry"></label>
+      <label>Employees <input name="employee_count" type="number" min="1"></label>
+      <label>City <input name="city"></label>
+      <label>Country <input name="country" value="Kenya"></label>
+    </div>
+    <button class="btn" type="submit">Save company</button>
+  </form>
+</section>
+{% endblock %}

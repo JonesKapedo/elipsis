@@ -199,6 +199,10 @@ class AuthSession(Base):
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
 
 
+# services.py and services_auth.py both construct models.Session.
+Session = AuthSession
+
+
 class ShareLink(Base):
     __tablename__ = "share_links"
     token: Mapped[str] = mapped_column(String, primary_key=True)
@@ -247,6 +251,63 @@ class RoadmapPhase(Base):
     horizon: Mapped[str | None] = mapped_column(String)
     note: Mapped[str | None] = mapped_column(Text)
     count: Mapped[int | None] = mapped_column(Integer)
+
+
+class OrgOwner(Base):
+    """Links a user to organisations they created. Assessments stay free."""
+    __tablename__ = "org_owners"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    organization_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("organizations.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class UserPref(Base):
+    __tablename__ = "user_prefs"
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), primary_key=True)
+    symbol: Mapped[str | None] = mapped_column(String, default="E")
+    motion: Mapped[str | None] = mapped_column(String, default="on")
+    density: Mapped[str | None] = mapped_column(String, default="comfortable")
+    pro_until: Mapped[str | None] = mapped_column(String)
+
+
+class PhysicalRequest(Base):
+    __tablename__ = "physical_requests"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    organization_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("organizations.id"))
+    company_name: Mapped[str] = mapped_column(String, nullable=False)
+    package: Mapped[str] = mapped_column(String, nullable=False)
+    amount_kes: Mapped[int] = mapped_column(Integer, nullable=False)
+    sites: Mapped[int | None] = mapped_column(Integer, default=1)
+    notes: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String, default="draft")
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class Payment(Base):
+    __tablename__ = "payments"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    reference: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    purpose: Mapped[str] = mapped_column(String, nullable=False)
+    amount_kes: Mapped[int] = mapped_column(Integer, nullable=False)
+    related_id: Mapped[int | None] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String, default="pending")
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class TeamLetter(Base):
+    __tablename__ = "team_letters"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    email: Mapped[str] = mapped_column(String, nullable=False)
+    organization: Mapped[str | None] = mapped_column(String)
+    role_title: Mapped[str | None] = mapped_column(String)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
     value: Mapped[float | None] = mapped_column(Float)
 
 

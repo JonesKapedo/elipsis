@@ -42,6 +42,12 @@ except Exception as _exc:  # noqa: BLE001
     report_routes = None
     print(f"[elipsis] report_routes import failed: {_exc}", flush=True)
 
+try:
+    from elipsis_api.routers import studio  # noqa: E402
+except Exception as _exc:  # noqa: BLE001
+    studio = None
+    print(f"[elipsis] studio import failed: {_exc}", flush=True)
+
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -75,6 +81,8 @@ if auth_pages is not None:
     app.include_router(auth_pages.router)
 if report_routes is not None:
     app.include_router(report_routes.router)
+if studio is not None:
+    app.include_router(studio.router)
 app.include_router(pages.router)
 
 _static = Path(__file__).resolve().parent.parent / "static"

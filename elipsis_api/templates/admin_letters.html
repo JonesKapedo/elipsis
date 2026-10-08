@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Letters{% endblock %}
+{% block content %}
+<section class="head"><p class="eyebrow">ADMIN</p><h1>Letters to the team</h1></section>
+{% for row in rows %}
+<article class="block">
+  <h2>{{ row.name }} · {{ row.organization or 'individual' }}</h2>
+  <p class="muted">{{ row.email }}{% if row.role_title %} · {{ row.role_title }}{% endif %} · {{ row.created_at }}</p>
+  <p>{{ row.body }}</p>
+</article>
+{% else %}
+<p class="muted">No letters yet.</p>
+{% endfor %}
+{% endblock %}

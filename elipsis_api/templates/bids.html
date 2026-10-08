@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Bids{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">PRO · BIDS</p>
+  <h1>Physical assessments waiting to be scoped.</h1>
+  <p class="lede">These are paid requests for a floor sweep: procedures walked, timed, and judged for automation. Self-serve digital assessments are not listed here and are never charged.</p>
+</section>
+{% for row in rows %}
+<article class="block">
+  <h2>{{ row.company_name }}</h2>
+  <p>{{ packages[row.package][0] if row.package in packages else row.package }} · {{ row.sites or 1 }} site(s) · KES {{ '{:,}'.format(row.amount_kes) }}</p>
+  {% if row.notes %}<p>{{ row.notes }}</p>{% endif %}
+  <p class="muted small">{{ row.created_at }} {% if row.id in mine %}· your request{% endif %}</p>
+</article>
+{% else %}
+<p class="muted">No open bids yet.</p>
+{% endfor %}
+{% endblock %}

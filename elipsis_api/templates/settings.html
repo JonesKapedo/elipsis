@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">SETTINGS</p>
+  <h1>How Elipsis sits on your screen.</h1>
+</section>
+<form method="post" action="/settings" class="block stack">
+  <label>Mark in the diamond
+    <input name="symbol" maxlength="2" value="{{ prefs.symbol or 'E' }}">
+  </label>
+  <label>Motion
+    <select name="motion">
+      <option value="on" {% if prefs.motion != 'off' %}selected{% endif %}>On — quiet movement</option>
+      <option value="off" {% if prefs.motion == 'off' %}selected{% endif %}>Off — reduce motion</option>
+    </select>
+  </label>
+  <label>Density
+    <select name="density">
+      <option value="comfortable" {% if prefs.density != 'compact' %}selected{% endif %}>Comfortable</option>
+      <option value="compact" {% if prefs.density == 'compact' %}selected{% endif %}>Compact</option>
+    </select>
+  </label>
+  <button class="btn" type="submit">Save</button>
+</form>
+{% endblock %}

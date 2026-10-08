@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Write to Elipsis{% endblock %}
+{% block content %}
+<section class="letter-stage">
+  <p class="eyebrow">A LETTER</p>
+  <h1 id="type-target" class="type-target" aria-live="polite"></h1>
+  <noscript>
+    <p>We are living through the first years in which machines can draft, decide, and imitate judgement. Most organisations are either ignoring that or buying tools before they understand their own work. The useful path is quieter: know the procedures, keep humans on the decisions that carry consequence, and let software take the repetition. If that is the conversation you want, write to us below.</p>
+  </noscript>
+</section>
+{% if sent %}
+<p class="block">Received. If this account is an administrator, the letter is on <a href="/admin/letters">the desk</a>.</p>
+{% else %}
+<form method="post" action="/letter" class="block stack" id="letter-form" hidden>
+  <h2>Write back</h2>
+  <label>Name <input name="name" required value="{{ user.name if user and user.name else '' }}"></label>
+  <label>Email <input type="email" name="email" required value="{{ user.email if user else '' }}"></label>
+  <label>Company <input name="organization"></label>
+  <label>Role <input name="role_title"></label>
+  <label>What you want Elipsis to understand <textarea name="body" rows="6" required></textarea></label>
+  <button class="btn" type="submit">Send</button>
+</form>
+{% endif %}
+<script>
+(function () {
+  var text = "We are living in the years when intelligence can be rented. Superintelligence is still a horizon, not a product, but ordinary AI is already good enough to copy the shallow parts of office work. The mistake is to treat that as a strategy. Tools piled on undocumented procedures just make the mess faster. The organisations that will benefit are the ones that can point at a process and say: this is written, this is repeated, this is safe to hand to a machine, and this must stay with a person. That is the use of these systems — capacity returned to judgement, not a theatre of prompts. If that is the work you are trying to do, tell us who you are.";
+  var el = document.getElementById("type-target");
+  var form = document.getElementById("letter-form");
+  if (!el) return;
+  var reduced = document.cookie.indexOf("elipsis_motion=off") !== -1 || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function reveal() {
+    if (reduced) { el.textContent = text; if (form) form.hidden = false; return; }
+    var i = 0;
+    var timer = setInterval(function () {
+      el.textContent = text.slice(0, i);
+      i += 2;
+      if (i > text.length) { clearInterval(timer); if (form) form.hidden = false; }
+    }, 16);
+  }
+  setTimeout(reveal, 5000);
+})();
+</script>
+{% endblock %}

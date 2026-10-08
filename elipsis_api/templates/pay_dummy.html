@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Payment{% endblock %}
+{% block content %}
+<section class="block stack">
+  <p class="eyebrow">PAYSTACK · DUMMY</p>
+  <h1>KES {{ '{:,}'.format(payment.amount_kes) }}</h1>
+  <p>Reference <code>{{ payment.reference }}</code>. Public key in use: <code>{{ public_key }}</code>.</p>
+  <p class="muted">This page runs only while <code>PAYSTACK_SECRET_KEY</code> is still the placeholder. Replace it with your live secret and this step redirects to Paystack instead.</p>
+  <form method="post" action="/pay/dummy/{{ payment.reference }}">
+    <button class="btn" type="submit">Simulate successful payment</button>
+  </form>
+</section>
+{% endblock %}

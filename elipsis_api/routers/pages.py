@@ -270,7 +270,8 @@ def assessments(request: Request, user=Depends(get_current_user), db: Session = 
 def start_form(request: Request, user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
-    orgs = db.scalars(select(models.Organization).order_by(models.Organization.name)).all()
+    from elipsis_api.routers.studio import _owned_orgs
+    orgs = _owned_orgs(db, user)
     return templates.TemplateResponse(
         request, "start.html", {"user": user, "organizations": orgs,
                                 "total_questions": _question_count(db)})
@@ -298,6 +299,8 @@ def start_create(request: Request,
                 employee_count=int(employee_count) if employee_count.strip().isdigit() else None,
                 country=country or None, city=city or None)
         assessment = services.create_assessment(db, payload)
+        from elipsis_api.routers.studio import _claim
+        _claim(db, user.id, assessment.organization_id)
     except (ValueError, Exception):
         return RedirectResponse("/start", status_code=303)
     return RedirectResponse(f"/assessment/{assessment.id}", status_code=303)
@@ -455,11 +458,14 @@ def assessment_report(assessment_id: int, request: Request,
     assessment, result = services.compute(db, assessment_id)
     if assessment is None or result is None:
         return _not_found(request, user)
+    from elipsis_api.narrative import company_portrait
+    org = db.get(models.Organization, assessment.organization_id)
+    dept = db.get(models.Department, assessment.department_id) if assessment.department_id else None
     return templates.TemplateResponse(request, "report.html", {
         "user": user, "result": result, "assessment": assessment,
-        "organization": db.get(models.Organization, assessment.organization_id),
-        "department": db.get(models.Department, assessment.department_id)
-        if assessment.department_id else None,
+        "organization": org,
+        "department": dept,
+        "portrait": company_portrait(org, dept, result),
     })
 
 

@@ -93,6 +93,18 @@
     {% endif %}
   </section>
 
+  {% if portrait %}
+  <section class="report-section">
+    <h2>1b. How the company is put together</h2>
+    <p class="report-lead">{{ portrait.structure }}</p>
+    <p>{{ portrait.leverage }}</p>
+    {% if portrait.money %}<p>{{ portrait.money }}</p>{% endif %}
+    {% if portrait.pillar_lines %}
+    <ul>{% for line in portrait.pillar_lines %}<li>{{ line }}</li>{% endfor %}</ul>
+    {% endif %}
+  </section>
+  {% endif %}
+
   <section class="report-section page-break">
     <h2>2. Intelligence pillars — full profile</h2>
     <table class="report-table">
