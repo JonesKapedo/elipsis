@@ -28,7 +28,12 @@ from elipsis_api.database import Base, SessionLocal, engine  # noqa: E402
 from elipsis_api import state as runtime_state  # noqa: E402
 
 # Import routers defensively so a single broken module does not empty the app.
-from elipsis_api.routers import api, pages  # noqa: E402
+from elipsis_api.routers import api, pages
+try:
+    from elipsis_api.routers import collect as collect_routes
+except Exception as _exc:
+    collect_routes = None
+    print(f"[elipsis] collect import failed: {_exc}", flush=True)  # noqa: E402
 
 try:
     from elipsis_api.routers import auth_pages  # noqa: E402
@@ -83,6 +88,8 @@ if report_routes is not None:
     app.include_router(report_routes.router)
 if studio is not None:
     app.include_router(studio.router)
+if collect_routes is not None:
+    app.include_router(collect_routes.router)
 app.include_router(pages.router)
 
 _static = Path(__file__).resolve().parent.parent / "static"
