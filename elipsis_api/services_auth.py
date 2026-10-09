@@ -41,28 +41,18 @@ def register_user(db: Session, email: str, password: str, name: str | None = Non
 
 
 def create_session(db: Session, user_id: int) -> str:
-    token = security.new_token()
-    db.add(models.Session(user_id=user_id, token=token))
-    db.commit()
-    return token
+    from elipsis_api import session_auth
+    return session_auth.issue_session(db, user_id)
 
 
 def user_for_token(db: Session, token: str | None):
-    if not token:
-        return None
-    sess = db.scalar(select(models.Session).where(models.Session.token == token))
-    if sess is None:
-        return None
-    return db.get(models.User, sess.user_id)
+    from elipsis_api import session_auth
+    return session_auth.resolve_user(db, token)
 
 
 def delete_session(db: Session, token: str | None):
-    if not token:
-        return
-    sess = db.scalar(select(models.Session).where(models.Session.token == token))
-    if sess:
-        db.delete(sess)
-        db.commit()
+    from elipsis_api import session_auth
+    session_auth.revoke_session(db, token)
 
 
 def question_dicts(db: Session, assessment_id: int) -> list[dict[str, Any]]:

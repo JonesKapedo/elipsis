@@ -70,6 +70,16 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
     return session_auth.resolve_user(db, request.cookies.get(SESSION_COOKIE))
 
 
+def safe_next(raw: str | None) -> str | None:
+    """Only same-site paths. Blocks open redirects."""
+    if not raw:
+        return None
+    raw = raw.strip()
+    if not raw.startswith("/") or raw.startswith("//") or "\\" in raw or "\n" in raw:
+        return None
+    return raw[:300]
+
+
 def login_redirect():
     return RedirectResponse("/login", status_code=303)
 
