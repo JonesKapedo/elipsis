@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Step {{ step.number }}{% endblock %}
 {% block content %}
+{% set remaining_pct = 100 - (live.percent or 0) %}
 <div class="step-layout"
      data-live-url="/assessment/{{ assessment.id }}/live"
      data-segment="{{ step.subdomain }}">
@@ -15,23 +16,75 @@
       {% endif %}
     </header>
 
-    <div class="stepper">
-      <div class="stepper-track"><span id="trackFill" style="width:{{ live.percent }}%"></span></div>
-      <div class="stepper-meta">
-        <span id="progressText">{{ live.answered }} of {{ live.total }} questions answered</span>
-        <span>Step <strong>{{ step.number }}</strong> of {{ total_steps }}</span>
+    <div class="stepper bottle-progress" aria-label="Assessment progress">
+      <div class="bottle-row">
+        <div class="bottle-wrap" title="Each answer is a sip — the bottle empties as you finish">
+          <svg class="elipsis-bottle" viewBox="0 0 80 160" width="72" height="144" role="img" aria-hidden="true">
+            <defs>
+              <linearGradient id="whiskeyGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#f59e0b"/>
+                <stop offset="55%" stop-color="#b45309"/>
+                <stop offset="100%" stop-color="#78350f"/>
+              </linearGradient>
+              <clipPath id="bottleClip">
+                <path d="M28 18 h24 v14 c0 4 6 8 6 14 v88 c0 12 -8 18 -18 18 h-0 c-10 0 -18 -6 -18 -18 V46 c0 -6 6 -10 6 -14 z"/>
+              </clipPath>
+            </defs>
+            <!-- neck / cork -->
+            <rect x="32" y="6" width="16" height="12" rx="2" fill="#3f2a1a"/>
+            <rect x="30" y="14" width="20" height="6" rx="1" fill="#5c4033"/>
+            <!-- glass outline -->
+            <path d="M28 18 h24 v14 c0 4 6 8 6 14 v88 c0 12 -8 18 -18 18 h-0 c-10 0 -18 -6 -18 -18 V46 c0 -6 6 -10 6 -14 z"
+                  fill="rgba(255,252,247,.55)" stroke="#3f2a1a" stroke-width="2"/>
+            <!-- liquid (grows from bottom; height driven by remaining %) -->
+            <g clip-path="url(#bottleClip)">
+              <rect id="bottleLiquid"
+                    x="20" y="{{ 34 + (112 * (live.percent or 0) / 100) }}"
+                    width="40" height="{{ 112 * remaining_pct / 100 }}"
+                    fill="url(#whiskeyGrad)"
+                    data-max-height="112" data-top="34"/>
+              <!-- meniscus shine -->
+              <ellipse id="bottleShine"
+                       cx="40" cy="{{ 34 + (112 * (live.percent or 0) / 100) + 3 }}"
+                       rx="16" ry="3" fill="rgba(255,255,255,.22)"/>
+            </g>
+            <!-- brand label -->
+            <rect x="26" y="78" width="28" height="22" rx="2" fill="#0a1628" opacity="0.92"/>
+            <text x="40" y="88" text-anchor="middle" fill="#f8f6f1" font-size="5.5" font-weight="700" font-family="Georgia, serif">ELIPSIS</text>
+            <text x="40" y="96" text-anchor="middle" fill="#c8f542" font-size="3.8" font-family="system-ui,sans-serif">RESERVE</text>
+          </svg>
+        </div>
+
+        <div class="bottle-meta">
+          <p class="bottle-tag">Elipsis Reserve</p>
+          <p class="bottle-copy">Each answer is a sip. The bottle starts full and empties as you complete the assessment.</p>
+          <div class="stepper-track"><span id="trackFill" style="width:{{ live.percent }}%"></span></div>
+          <div class="stepper-meta">
+            <span id="progressText">{{ live.answered }} of {{ live.total }} questions answered</span>
+            <span>Section <strong>{{ step.number }}</strong> of {{ total_steps }}</span>
+          </div>
+          <p class="bottle-level" id="bottleLevel">
+            {% if live.percent|int >= 100 %}
+              Bottle empty — assessment complete
+            {% elif live.percent|int == 0 %}
+              Bottle full — first sip when you answer
+            {% else %}
+              About {{ '%.0f'|format(remaining_pct) }}% remaining
+            {% endif %}
+          </p>
+        </div>
       </div>
-      <ol class="steps-dots">
+
+      {# Compact section navigator: dots only, no vertical numbers #}
+      <div class="section-pills" role="navigation" aria-label="Assessment sections">
         {% for s in steps %}
-        <li>
-          <a href="/assessment/{{ assessment.id }}/step/{{ s.number }}"
-             class="dot {{ 'done' if s.complete }} {{ 'current' if s.number == step.number }}"
-             title="Step {{ s.number }} — {{ SUBDOMAIN_LABELS.get(s.subdomain, s.subdomain) }} ({{ s.answered }}/{{ s.total }})">
-            {% if s.complete %}✓{% else %}{{ s.number }}{% endif %}
-          </a>
-        </li>
+        <a href="/assessment/{{ assessment.id }}/step/{{ s.number }}"
+           class="section-pill {{ 'done' if s.complete }} {{ 'current' if s.number == step.number }}"
+           title="{{ SUBDOMAIN_LABELS.get(s.subdomain, s.subdomain) }} ({{ s.answered }}/{{ s.total }})">
+          <span class="pill-mark">{% if s.complete %}✓{% elif s.number == step.number %}●{% else %}○{% endif %}</span>
+        </a>
         {% endfor %}
-      </ol>
+      </div>
     </div>
 
     <form id="answerForm" method="post" action="/assessment/{{ assessment.id }}/submit">
@@ -81,10 +134,10 @@
         <span class="muted" id="saveState">Answers save automatically</span>
 
         {% if is_last %}
-        <button class="btn" type="submit" id="finishBtn">Finish &amp; see my results →</button>
+        <button class="btn" type="submit" id="finishBtn">Finish & see my results →</button>
         {% else %}
         <a class="btn" id="nextBtn" href="/assessment/{{ assessment.id }}/step/{{ step.number + 1 }}"
-           onclick="return validateStep()">Save &amp; continue →</a>
+           onclick="return validateStep()">Save & continue →</a>
         {% endif %}
       </nav>
     </form>
@@ -141,6 +194,31 @@
   const url = root.dataset.liveUrl;
   const segment = root.dataset.segment;
   const form = document.getElementById('answerForm');
+  const liquid = document.getElementById('bottleLiquid');
+  const shine = document.getElementById('bottleShine');
+  const maxH = liquid ? parseFloat(liquid.getAttribute('data-max-height') || '112') : 112;
+  const topY = liquid ? parseFloat(liquid.getAttribute('data-top') || '34') : 34;
+
+  function setBottle(percent) {
+    const p = Math.max(0, Math.min(100, Number(percent) || 0));
+    const remaining = 100 - p;
+    const h = maxH * remaining / 100;
+    const y = topY + (maxH - h);
+    if (liquid) {
+      liquid.setAttribute('y', y);
+      liquid.setAttribute('height', h);
+    }
+    if (shine) {
+      shine.setAttribute('cy', y + 3);
+      shine.style.opacity = h < 4 ? '0' : '1';
+    }
+    const level = document.getElementById('bottleLevel');
+    if (level) {
+      if (p >= 100) level.textContent = 'Bottle empty — assessment complete';
+      else if (p <= 0) level.textContent = 'Bottle full — first sip when you answer';
+      else level.textContent = 'About ' + Math.round(remaining) + '% remaining';
+    }
+  }
 
   window.validateStep = function () {
     const boxes = Array.from(form.querySelectorAll('.qcard'));
@@ -195,6 +273,7 @@
         document.getElementById('progressText').textContent =
           data.answered + ' of ' + data.total + ' questions answered';
         document.getElementById('trackFill').style.width = data.percent + '%';
+        setBottle(data.percent);
       })
       .catch(() => {
         document.getElementById('saveState').textContent = 'Could not save — retrying';
@@ -204,7 +283,6 @@
   function schedule() { clearTimeout(timer); timer = setTimeout(push, 400); }
 
   form.addEventListener('change', event => {
-    // Paint the chosen option immediately for instant feedback.
     form.querySelectorAll('.choice').forEach(c => c.classList.remove('picked'));
     const lbl = event.target.closest('.choice');
     if (lbl) lbl.classList.add('picked');
