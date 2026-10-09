@@ -1,0 +1,46 @@
+<svg width="400" height="100" viewBox="0 0 400 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gradient Definition -->
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="50%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="50%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Icon: Three dots with circuit connections -->
+  <g transform="translate(10, 30)">
+    <!-- Connection lines -->
+    <line x1="18" y1="20" x2="38" y2="20" stroke="url(#logoGradient)" stroke-width="3" opacity="0.4"/>
+    <line x1="58" y1="20" x2="78" y2="20" stroke="url(#logoGradient)" stroke-width="3" opacity="0.4"/>
+    
+    <!-- Main connection with pulse effect -->
+    <line x1="26" y1="20" x2="42" y2="20" stroke="url(#logoGradient)" stroke-width="4" stroke-linecap="round"/>
+    <line x1="54" y1="20" x2="70" y2="20" stroke="url(#logoGradient)" stroke-width="4" stroke-linecap="round"/>
+    
+    <!-- Three AI nodes/dots -->
+    <circle cx="18" cy="20" r="10" fill="url(#logoGradient)"/>
+    <circle cx="48" cy="20" r="10" fill="url(#logoGradient)"/>
+    <circle cx="78" cy="20" r="10" fill="url(#logoGradient)"/>
+    
+    <!-- Inner glow effect -->
+    <circle cx="18" cy="20" r="4" fill="white" opacity="0.6"/>
+    <circle cx="48" cy="20" r="4" fill="white" opacity="0.6"/>
+    <circle cx="78" cy="20" r="4" fill="white" opacity="0.6"/>
+  </g>
+  
+  <!-- Text: ELIPSIS -->
+  <text x="120" y="55" font-family="Arial, sans-serif" font-size="42" font-weight="bold" fill="url(#textGradient)">
+    ELIPSIS
+  </text>
+  
+  <!-- Tagline -->
+  <text x="120" y="75" font-family="Arial, sans-serif" font-size="12" fill="#64748b" letter-spacing="2">
+    AI &amp; AUTOMATION READINESS
+  </text>
+</svg>
