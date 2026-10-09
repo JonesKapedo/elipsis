@@ -12,7 +12,7 @@
 <body class="{% if authed %}is-app{% else %}is-public{% endif %}">
 <a class="skip-link" href="#main">Skip to content</a>
 
-{% if user %}
+{% if authed %}
 <div class="app-layout">
   <aside class="app-sidebar no-print" id="app-sidebar">
     <div class="sidebar-brand">
@@ -70,6 +70,7 @@
 <script>
 (function () {
   var layout = document.querySelector('.app-layout');
+  if (!layout) return;
   var toggle = document.getElementById('sidebar-toggle');
   var closeBtn = document.getElementById('sidebar-close');
   var backdrop = document.getElementById('sidebar-backdrop');
@@ -95,7 +96,7 @@
   </nav>
 </header>
 <main id="main" class="pub-main">
-  {% block content %}{% endblock %}
+  {{ self.content() }}
 </main>
 <footer class="pub-footer no-print">
   <div>
