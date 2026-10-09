@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="/static/style.css">
 <link rel="stylesheet" href="/static/extras.css">
 <link rel="stylesheet" href="/static/app.css">
+<link rel="stylesheet" href="/static/app-shell.css">
 <link rel="stylesheet" href="/static/editorial.css">
 {% block head %}{% endblock %}
 </head>
@@ -100,7 +101,6 @@
   if (toggle) toggle.addEventListener('click', open);
   if (closeBtn) closeBtn.addEventListener('click', close);
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
-  // Mark current path
   var path = location.pathname;
   document.querySelectorAll('.sidebar-nav a.nav-item').forEach(function (a) {
     var href = a.getAttribute('href');
