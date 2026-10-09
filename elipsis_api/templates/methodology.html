@@ -1,36 +1,39 @@
 {% extends "base.html" %}
 {% block title %}Methodology{% endblock %}
+{% block topbar_title %}Method{% endblock %}
 {% block content %}
-<section class="hero">
-  <p class="eyebrow">METHODOLOGY</p>
-  <h1>Not a questionnaire. A measurement model.</h1>
-  <p class="lede">{{ total_questions }} questions, 21 subdomains, 7 weighted pillars,
-  36 executive metrics, and a financial model sized to your headcount.
-  Every number is explainable.</p>
-</section>
-
-<section class="block">
-  <h3>1. Instrument</h3>
-  <p class="lede">ORG-001 is organised as short segments (typically three questions per subdomain).
-  Each item uses a scale matched to the work — coverage, steps, approvals, hours —
-  not a generic 1–5 attitude scale.</p>
-  <div class="stats">
-    <div><b>{{ total_questions }}</b><span>questions</span></div>
-    <div><b>21</b><span>subdomains</span></div>
-    <div><b>7</b><span>pillars</span></div>
-    <div><b>36</b><span>metrics</span></div>
+<section class="dash-hero" style="margin-bottom:1.5rem">
+  <div>
+    <p class="eyebrow">Methodology</p>
+    <h1>Not a questionnaire. A measurement model.</h1>
+    <p class="lede">{{ total_questions }} questions, 21 subdomains, 7 weighted pillars,
+    36 executive metrics, and a financial model sized to your headcount.
+    Every number is explainable — formulas live in one auditable file.</p>
   </div>
 </section>
 
 <section class="block">
-  <h3>2. Pillar weights</h3>
-  <p class="muted">Weights reflect how strongly each area usually drives automation and transformation ROI.</p>
+  <h3 style="margin:0 0 .75rem;border:0;padding:0;font-size:1.05rem;">1. Instrument — ORG-001</h3>
+  <p class="muted" style="margin-top:0">Organised as short segments (typically three questions per subdomain).
+  Each item uses a scale matched to the work — coverage, steps, approvals, hours —
+  not a generic 1–5 attitude scale.</p>
+  <div class="kpis" style="margin-top:1rem;margin-bottom:0">
+    <div class="kpi"><span class="kpi-lb">Questions</span><b>{{ total_questions }}</b></div>
+    <div class="kpi"><span class="kpi-lb">Subdomains</span><b>21</b></div>
+    <div class="kpi"><span class="kpi-lb">Pillars</span><b>7</b></div>
+    <div class="kpi accent"><span class="kpi-lb">Metrics</span><b>36</b></div>
+  </div>
+</section>
+
+<section class="block">
+  <h3 style="margin:0 0 .75rem;border:0;padding:0;font-size:1.05rem;">2. Seven intelligence pillars</h3>
+  <p class="muted" style="margin-top:0">Weights reflect how strongly each area usually drives automation and transformation ROI.</p>
   <table class="table">
     <thead><tr><th>Code</th><th>Pillar</th><th class="num">Weight</th><th>Objective</th></tr></thead>
     <tbody>
       {% for code, label, weight, objective in PILLARS %}
       <tr>
-        <td><span class="qcode">{{ code }}</span></td>
+        <td><strong>{{ code }}</strong></td>
         <td>{{ label }}</td>
         <td class="num">{{ '%.0f'|format(weight * 100) }}%</td>
         <td class="muted">{{ objective }}</td>
@@ -41,45 +44,78 @@
 </section>
 
 <section class="block">
-  <h3>3. Scoring pipeline</h3>
-  <div class="steps">
-    <article class="step-card">
-      <span class="step-n">A</span>
-      <h4>Evidence-adjusted answers</h4>
-      <p class="muted">Scores are tempered by evidence strength so “we think so” does not equal “we can show it”.</p>
-    </article>
-    <article class="step-card">
-      <span class="step-n">B</span>
-      <h4>Subdomain → pillar roll-up</h4>
-      <p class="muted">Weighted means by subdomain, then by pillar, then into the {{ INDEX_SHORT }}.</p>
-    </article>
-    <article class="step-card">
-      <span class="step-n">C</span>
-      <h4>Declarative metrics</h4>
-      <p class="muted">36 formulas evaluated by a restricted AST interpreter — no black-box model weights.</p>
-    </article>
-    <article class="step-card">
-      <span class="step-n">D</span>
-      <h4>Pain → roadmap</h4>
-      <p class="muted">Low scores trigger pain points; recommendations are phased by complexity and ROI.</p>
-    </article>
+  <h3 style="margin:0 0 1rem;border:0;padding:0;font-size:1.05rem;">3. Scoring pipeline</h3>
+  <div class="pillar-grid">
+    <div class="pcard">
+      <div class="pcard-top"><div><h4>A · Evidence-adjusted answers</h4></div></div>
+      <p class="muted small">Scores are tempered by evidence strength so “we think so” does not equal “we can show it”.</p>
+    </div>
+    <div class="pcard">
+      <div class="pcard-top"><div><h4>B · Subdomain → pillar roll-up</h4></div></div>
+      <p class="muted small">Weighted means by subdomain, then by pillar, then into the {{ INDEX_SHORT }} (0–100).</p>
+    </div>
+    <div class="pcard">
+      <div class="pcard-top"><div><h4>C · Declarative metrics</h4></div></div>
+      <p class="muted small">36 formulas evaluated by a restricted AST interpreter. Typos fail at import — no silent wrong numbers.</p>
+    </div>
+    <div class="pcard">
+      <div class="pcard-top"><div><h4>D · Pain → roadmap</h4></div></div>
+      <p class="muted small">Low scores trigger named pain points; recommendations phased by complexity and modelled ROI.</p>
+    </div>
   </div>
 </section>
 
 <section class="block">
-  <h3>4. Financial model</h3>
-  <p class="lede">Annual savings are sized from staff count, blended hourly rate, recoverable friction,
+  <h3 style="margin:0 0 .75rem;border:0;padding:0;font-size:1.05rem;">4. Maturity bands</h3>
+  <p class="muted" style="margin-top:0">Contiguous ranges on the 0–100 {{ INDEX_SHORT }}. Fractional scores map cleanly.</p>
+  <table class="table">
+    <thead><tr><th>Band</th><th>Range</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>Foundational</td><td>0 – 20</td><td class="muted">Manual, person-dependent, high friction</td></tr>
+      <tr><td>Emerging</td><td>21 – 40</td><td class="muted">Some process, still spreadsheet-heavy</td></tr>
+      <tr><td>Developing</td><td>41 – 60</td><td class="muted">Partial digitalisation, uneven ownership</td></tr>
+      <tr><td>Transformation Ready</td><td>61 – 80</td><td class="muted">Clear candidates for structural automation</td></tr>
+      <tr><td>Intelligent Enterprise Ready</td><td>81 – 100</td><td class="muted">Data, controls and scale support AI programmes</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="block">
+  <h3 style="margin:0 0 .75rem;border:0;padding:0;font-size:1.05rem;">5. Financial model</h3>
+  <p class="lede" style="margin-top:0">Annual savings sized from staff count, blended hourly rate, recoverable friction,
   and a conservative ceiling on the labour line so board packs stay credible.</p>
-  <ul class="price-list">
-    <li>Hours × rate driven by organisation size</li>
+  <ul style="margin:.75rem 0 0;padding-left:1.2rem;color:var(--soft,#3d3a45);font-size:.92rem;line-height:1.7">
+    <li>Hours × rate driven by organisation size (default rate in constants)</li>
     <li>Severity scales with low subdomain scores</li>
     <li>Recoverable value capped (default 12% of labour line)</li>
-    <li>Investment and payback months printed with assumptions</li>
+    <li>Investment, payback months, 3- and 5-year return printed with assumptions</li>
   </ul>
 </section>
 
-<section class="cta-panel">
-  <h2>See the model applied to a demo organisation</h2>
-  <a class="btn big" href="/sample">Open sample report →</a>
+<section class="block">
+  <h3 style="margin:0 0 .75rem;border:0;padding:0;font-size:1.05rem;">6. Implementation roadmap</h3>
+  <div class="pillar-grid">
+    <div class="pcard">
+      <div class="pcard-top"><div><h4>Phase 1 · Quick wins</h4><span class="pcard-w">0–90 days</span></div></div>
+      <p class="muted small">Low-complexity automation on repetitive work. Immediate hours back.</p>
+    </div>
+    <div class="pcard">
+      <div class="pcard-top"><div><h4>Phase 2 · Process automation</h4><span class="pcard-w">3–12 months</span></div></div>
+      <p class="muted small">Structural change: approvals, integrations, controls, ownership.</p>
+    </div>
+    <div class="pcard">
+      <div class="pcard-top"><div><h4>Phase 3 · AI enablement</h4><span class="pcard-w">12–24 months</span></div></div>
+      <p class="muted small">Predictive and generative AI on a clean process and data base.</p>
+    </div>
+  </div>
+</section>
+
+<section class="model-panel" style="margin-top:1.5rem">
+  <h3>See the model applied</h3>
+  <p>Open a completed sample report or start a free digital assessment for your organisation.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.5rem">
+    <a class="btn" href="/sample" style="background:#fff;color:var(--navy)">Open sample report</a>
+    <a class="btn ghost" href="/signup" style="border-color:rgba(255,255,255,.25);color:#fff">Start free assessment</a>
+  </div>
 </section>
 {% endblock %}
