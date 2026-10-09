@@ -1,0 +1,49 @@
+/* Editorial helpers — diamond menu retired in favour of vertical sidebar */
+.diamond, .diamond-wrap, .diamond-btn, .diamond-face, .diamond-menu { display: none !important; }
+
+main { max-width: 72rem; }
+.site-footer { border-top: 1px solid var(--line, #e4dccb); background: transparent; }
+.eyebrow { color: #0e3b34; letter-spacing: 0.18em; }
+
+.ink-panel {
+  background: var(--ink, #14121a);
+  color: #f6f4ef;
+  padding: 1.5rem;
+}
+.ink-panel .eyebrow, .ink-panel p { color: #c8f542; }
+.ink-panel ul { margin: 1rem 0 0; padding: 0; list-style: none; }
+.ink-panel li { margin: 0.7rem 0; color: #f6f4ef; font-size: 0.95rem; }
+
+.paper {
+  background: var(--panel, #fffcf7);
+  border: 1px solid var(--line, #e4dccb);
+  padding: 1.25rem 1.35rem;
+}
+.trio { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.auth-simple { max-width: 28rem; margin: 1.5rem auto 3rem; }
+.stack label, .auth-simple label { display: block; font-weight: 650; font-size: 0.92rem; margin-top: 0.85rem; }
+input, select, textarea {
+  width: 100%;
+  margin-top: 0.35rem;
+  border: 1px solid var(--line, #e4dccb);
+  background: var(--panel, #fffcf7);
+  color: var(--ink, #14121a);
+  padding: 0.7rem 0.75rem;
+  font: inherit;
+  border-radius: 0;
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: #0e3b34; }
+
+.choices { display: flex; flex-direction: column; gap: 0.5rem; }
+.choice-emoji { display: none; }
+.choice-face {
+  display: block;
+  border: 1px solid var(--line, #e4dccb);
+  border-radius: 0;
+  padding: 0.75rem 0.85rem;
+  background: var(--panel, #fffcf7);
+}
+
+@media print {
+  .shell, .diamond, .site-footer, .no-print, .app-sidebar, .app-topbar { display: none !important; }
+}
