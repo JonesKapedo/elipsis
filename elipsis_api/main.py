@@ -30,13 +30,6 @@ from elipsis_api import state as runtime_state  # noqa: E402
 # Import routers defensively so a single broken module does not empty the app.
 from elipsis_api.routers import api, pages
 
-collect_routes = None
-try:
-    from elipsis_api.routers import collect as collect_routes  # noqa: E402
-except Exception as _exc:  # noqa: BLE001
-    collect_routes = None
-    print(f"[elipsis] collect import failed: {_exc}", flush=True)
-
 try:
     from elipsis_api.routers import auth_pages  # noqa: E402
 except Exception as _exc:  # noqa: BLE001
@@ -67,7 +60,9 @@ async def lifespan(_app: FastAPI):
             runtime_state.set_seed(True, None)
         finally:
             db.close()
-        print(f"[elipsis] database ready: {DATABASE_URL.split('://', 1)[0]}", flush=True)
+        from elipsis_api import database as _dbmod
+        scheme = getattr(_dbmod, "ACTIVE_DATABASE_URL", DATABASE_URL).split("://", 1)[0]
+        print(f"[elipsis] database ready: {scheme}", flush=True)
     except Exception as exc:  # noqa: BLE001
         err = f"{exc.__class__.__name__}: {exc}"
         runtime_state.set_seed(False, err)
@@ -90,8 +85,12 @@ if report_routes is not None:
     app.include_router(report_routes.router)
 if studio is not None:
     app.include_router(studio.router)
-if collect_routes is not None:
-    app.include_router(collect_routes.router)
+try:
+    from elipsis_api.routers import collect as _collect_mod  # noqa: E402
+    app.include_router(_collect_mod.router)
+    print("[elipsis] collect routes mounted", flush=True)
+except Exception as _exc:  # noqa: BLE001
+    print(f"[elipsis] collect not mounted: {_exc}", flush=True)
 app.include_router(pages.router)
 
 _static = Path(__file__).resolve().parent.parent / "static"
