@@ -436,25 +436,28 @@ def dashboard(request: Request, user=Depends(get_current_user),
 
 
 @router.post("/assessment/{assessment_id}/submit")
-def assessment_submit(assessment_id: int, request: Request,
-                      user=Depends(get_current_user), db: Session = Depends(get_db)):
+async def assessment_submit(assessment_id: int, request: Request,
+                            user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
-    if _owned_assessment(db, user, assessment_id) is None:
+    assessment = _owned_assessment(db, user, assessment_id)
+    if assessment is None:
         return _not_found(request, user)
-    form = await_form = None
-    # Collect scores from form fields q{id}
+    form = await request.form()
     answers = []
-    form_data = {}
-    # FastAPI Form collection via request
-    import asyncio
-    async def _collect():
-        return await request.form()
-    # Sync path: use starlette form
-    return _submit_sync(assessment_id, request, user, db)
-
-
-def _submit_sync(assessment_id, request, user, db):
+    for question in services.get_questions(db, assessment.questionnaire_id):
+        raw = form.get(f"q{question.id}")
+        if not isinstance(raw, str) or raw == "":
+            continue
+        try:
+            score = max(0, min(5, int(raw)))
+        except ValueError:
+            continue
+        evidence = form.get(f"e{question.id}")
+        answers.append(schemas.AnswerIn(
+            question_id=question.id, score=score,
+            evidence=evidence if isinstance(evidence, str) else "none"))
+    services.submit(db, assessment_id, answers)
     return RedirectResponse(f"/assessment/{assessment_id}/results", status_code=303)
 
 
