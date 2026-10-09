@@ -38,7 +38,7 @@ from constants import (
     SUBDOMAIN_PILLAR,
     EVIDENCE_LABELS,
 )
-from elipsis_api import services
+from elipsis_api import session_auth
 from elipsis_api.config import SESSION_COOKIE, TEMPLATES_DIR
 from elipsis_api.database import get_db
 
@@ -67,7 +67,7 @@ templates.env.globals.update(
 
 def get_current_user(request: Request, db: Session = Depends(get_db)):
     """Optional authentication — returns the User or None."""
-    return services.user_for_token(db, request.cookies.get(SESSION_COOKIE))
+    return session_auth.resolve_user(db, request.cookies.get(SESSION_COOKIE))
 
 
 def login_redirect():
@@ -78,7 +78,7 @@ def money(value):
     try:
         return f"{CURRENCY} {float(value):,.0f}"
     except (TypeError, ValueError):
-        return f"{CURRENCY} 0"
+        return str(value)
 
 
 templates.env.filters["money"] = money

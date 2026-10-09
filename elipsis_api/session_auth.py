@@ -8,7 +8,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from elipsis_api import models, security
-from elipsis_api.services import DEFAULT_ADMIN_EMAIL, _seed_admin
+
+DEFAULT_ADMIN_EMAIL = "admin@elipsis.local"
 
 
 def issue_session(db: Session, user_id: int) -> str:
@@ -35,6 +36,7 @@ def resolve_user(db: Session, token: str | None):
         # Ephemeral SQLite cold start may have wiped users — reseed admin once.
         if db.scalar(select(models.User)) is None:
             try:
+                from elipsis_api.services import _seed_admin
                 _seed_admin(db)
                 db.commit()
             except Exception as exc:  # noqa: BLE001
