@@ -20,32 +20,29 @@
 <a class="skip-link" href="#main">Skip to content</a>
 
 {% if user %}
-{# ── Authenticated: vertical sidebar shell ── #}
 <div class="app-layout">
   <aside class="app-sidebar no-print" id="app-sidebar">
     <div class="sidebar-brand">
       <a href="/dashboard" class="word">{{ BRAND_NAME }}</a>
       <button type="button" class="sidebar-close" id="sidebar-close" aria-label="Close menu">×</button>
     </div>
-
     <nav class="sidebar-nav" aria-label="Workspace">
       <p class="nav-group-label">Command</p>
-      <a href="/dashboard" class="nav-item {% if request.url.path == '/dashboard' or request.url.path == '/' %}is-active{% endif %}">
+      <a href="/dashboard" class="nav-item">
         <span class="nav-icon">◉</span> Dashboard
       </a>
-      <a href="/start" class="nav-item {% if request.url.path.startswith('/start') or request.url.path.startswith('/assessment') %}is-active{% endif %}">
+      <a href="/start" class="nav-item">
         <span class="nav-icon">＋</span> New assessment
       </a>
-      <a href="/assessments" class="nav-item {% if request.url.path == '/assessments' %}is-active{% endif %}">
+      <a href="/assessments" class="nav-item">
         <span class="nav-icon">☰</span> Assessments
       </a>
-      <a href="/compare" class="nav-item {% if request.url.path.startswith('/compare') %}is-active{% endif %}">
+      <a href="/compare" class="nav-item">
         <span class="nav-icon">⇄</span> Compare
       </a>
-      <a href="/company" class="nav-item {% if request.url.path.startswith('/company') %}is-active{% endif %}">
+      <a href="/company" class="nav-item">
         <span class="nav-icon">▣</span> Company
       </a>
-
       <p class="nav-group-label">Intelligence</p>
       <a href="/methodology" class="nav-item">
         <span class="nav-icon">◇</span> Method
@@ -53,22 +50,20 @@
       <a href="/sample" class="nav-item">
         <span class="nav-icon">▦</span> Sample report
       </a>
-      <a href="/pro" class="nav-item {% if request.url.path.startswith('/pro') %}is-active{% endif %}">
+      <a href="/pro" class="nav-item">
         <span class="nav-icon">★</span> PRO features
       </a>
-
       <p class="nav-group-label">Account</p>
-      <a href="/settings" class="nav-item {% if request.url.path.startswith('/settings') %}is-active{% endif %}">
+      <a href="/settings" class="nav-item">
         <span class="nav-icon">⚙</span> Settings
       </a>
-      <a href="/inbox" class="nav-item {% if request.url.path.startswith('/inbox') or request.url.path.startswith('/letter') %}is-active{% endif %}">
+      <a href="/inbox" class="nav-item">
         <span class="nav-icon">✉</span> Letters
       </a>
       <a href="/logout" class="nav-item nav-danger">
         <span class="nav-icon">→</span> Sign out
       </a>
     </nav>
-
     <div class="sidebar-user">
       <div class="user-avatar">{{ (user.name or user.email or 'EL')[:2]|upper }}</div>
       <div class="user-meta">
@@ -77,7 +72,6 @@
       </div>
     </div>
   </aside>
-
   <div class="app-main">
     <header class="app-topbar no-print">
       <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Open menu" aria-controls="app-sidebar">
@@ -88,9 +82,26 @@
         <a class="btn sm" href="/start">New assessment</a>
       </div>
     </header>
-    <main id="main" class="app-content">{% block content %}{% endblock %}</main>
-  </div>
-</div>
+{% else %}
+<header class="shell no-print">
+  <a class="word" href="/">{{ BRAND_NAME }}</a>
+  <nav class="pub-nav" aria-label="Primary">
+    <a href="/methodology">Method</a>
+    <a href="/pricing">Engagements</a>
+    <a href="/sample">Sample</a>
+    <a href="/physical">On-site</a>
+    <a class="pill" href="/login">Sign in</a>
+  </nav>
+</header>
+{% endif %}
+
+<main id="main" class="{% if user %}app-content{% endif %}">
+{% block content %}{% endblock %}
+</main>
+
+{% if user %}
+  </div>{# app-main #}
+</div>{# app-layout #}
 <script>
 (function () {
   var layout = document.querySelector('.app-layout');
@@ -111,22 +122,7 @@
   });
 })();
 </script>
-
 {% else %}
-{# ── Public marketing header ── #}
-<header class="shell no-print">
-  <a class="word" href="/">{{ BRAND_NAME }}</a>
-  <nav class="pub-nav" aria-label="Primary">
-    <a href="/methodology">Method</a>
-    <a href="/pricing">Engagements</a>
-    <a href="/sample">Sample</a>
-    <a href="/physical">On-site</a>
-    <a class="pill" href="/login">Sign in</a>
-  </nav>
-</header>
-
-<main id="main">{% block content %}{% endblock %}</main>
-
 <footer class="site-footer no-print">
   <div class="footer-grid">
     <div class="footer-brand">
