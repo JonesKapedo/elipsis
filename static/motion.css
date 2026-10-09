@@ -35,3 +35,6 @@ body.density-compact .block { padding: .8rem; }
   .diamond-wrap { top: 8px; right: 8px; }
   .topbar { padding-right: 64px; }
 }
+
+/* Neutralize legacy diamond menu — replaced by vertical sidebar */
+.diamond, .diamond-wrap, .diamond-btn, .diamond-face, .diamond-menu { display: none !important; }
