@@ -103,7 +103,7 @@ def live_scores(db: Session, assessment_id: int, segment_code: str = ""):
         return None
     questions = question_dicts(db, assessment_id)
     answers = answers_map(db, assessment_id)
-    return _compute_live(questions, answers, segment=segment_code or None)
+    return _compute_live(questions, answers, segment_code=segment_code or "")
 
 
 def save_answers(db: Session, assessment_id: int, items):
