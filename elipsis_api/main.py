@@ -29,11 +29,13 @@ from elipsis_api import state as runtime_state  # noqa: E402
 
 # Import routers defensively so a single broken module does not empty the app.
 from elipsis_api.routers import api, pages
+
+collect_routes = None
 try:
-    from elipsis_api.routers import collect as collect_routes
-except Exception as _exc:
+    from elipsis_api.routers import collect as collect_routes  # noqa: E402
+except Exception as _exc:  # noqa: BLE001
     collect_routes = None
-    print(f"[elipsis] collect import failed: {_exc}", flush=True)  # noqa: E402
+    print(f"[elipsis] collect import failed: {_exc}", flush=True)
 
 try:
     from elipsis_api.routers import auth_pages  # noqa: E402
