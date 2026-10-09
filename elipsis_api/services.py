@@ -1,118 +1,178 @@
-"""Service layer: seeding and the assessment lifecycle (SQLAlchemy + shared engine)."""
+"""Service layer: re-exports core + ext + signed session auth."""
+
+from __future__ import annotations
 
 import os
-from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from constants import PILLAR_WEIGHTS, SUBDOMAIN_PILLAR
-from elipsis_questions import QUESTIONS, QUESTIONNAIRE
-from readiness import compute as _compute
-from readiness import compute_live as _compute_live
-from elipsis_api import models, security
+from elipsis_api import models
+from elipsis_api.services_core import (  # noqa: F401
+    DEFAULT_ADMIN_EMAIL,
+    DEFAULT_ADMIN_PASSWORD,
+    DEMO_DEPARTMENTS,
+    _now,
+    _seed_admin,
+    seed,
+    get_bank,
+    get_questions,
+    create_assessment,
+    answers_map,
+    compute,
+    save,
+    submit,
+    list_assessments as _list_assessments_raw,
+)
+from elipsis_api.services_ext import (  # noqa: F401
+    dashboard_data as _dashboard_data_raw,
+    reset_demo_data as _reset_demo_data_raw,
+    create_share_link,
+    resolve_share_token,
+    list_organizations as _list_organizations_raw,
+    department_comparison,
+    run_guided_demo,
+)
+from elipsis_api.services_auth import (  # noqa: F401
+    authenticate,
+    register_user,
+    create_session,
+    user_for_token,
+    delete_session,
+    question_dicts,
+    build_segments,
+    live_scores,
+    save_answers,
+)
 
 
-def _now():
-    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+def is_admin(user) -> bool:
+    if user is None:
+        return False
+    if (getattr(user, "role", "") or "") == "admin":
+        return True
+    admin_email = (os.getenv("ELIPSIS_ADMIN_EMAIL") or DEFAULT_ADMIN_EMAIL).lower()
+    return (getattr(user, "email", "") or "").lower() == admin_email
 
 
-DEFAULT_ADMIN_EMAIL = "admin@elipsis.local"
-DEFAULT_ADMIN_PASSWORD = "elipsis"
-
-DEMO_DEPARTMENTS = [
-    ("Operations", 3),
-    ("Finance", 2),
-    ("Customer Service", 4),
-]
-
-
-def _seed_admin(db: Session):
-    email = os.getenv("ELIPSIS_ADMIN_EMAIL") or DEFAULT_ADMIN_EMAIL
-    password = os.getenv("ELIPSIS_ADMIN_PASSWORD") or DEFAULT_ADMIN_PASSWORD
-    if password == DEFAULT_ADMIN_PASSWORD:
-        print("[elipsis] WARNING: no ELIPSIS_ADMIN_PASSWORD set, so the first "
-              "administrator uses the default password. Set ELIPSIS_ADMIN_EMAIL "
-              "and ELIPSIS_ADMIN_PASSWORD before exposing this instance.",
-              flush=True)
-    db.add(models.User(email=email, name="Elipsis Admin", role="admin",
-                       password_hash=security.hash_password(password)))
-
-
-def seed(db: Session):
-    bank = db.scalar(select(models.Questionnaire).where(
-        models.Questionnaire.code == QUESTIONNAIRE["code"]))
-    if bank is None:
-        bank = models.Questionnaire(
-            code=QUESTIONNAIRE["code"], name=QUESTIONNAIRE["name"],
-            version=QUESTIONNAIRE["version"], department=QUESTIONNAIRE["department"],
-            estimated_minutes=QUESTIONNAIRE["estimated_minutes"], active=1)
-        db.add(bank)
-        db.flush()
-
-    existing = list(db.scalars(select(models.Question).where(
-        models.Question.questionnaire_id == bank.id)))
-    if len(existing) != len(QUESTIONS):
-        if existing:
-            db.execute(delete(models.Question).where(
-                models.Question.questionnaire_id == bank.id))
-            db.flush()
-        for pos, item in enumerate(QUESTIONS, start=1):
-            db.add(models.Question(
-                questionnaire_id=bank.id, code=item["code"], scale=item.get("scale"),
-                subdomain=item["subdomain"], pillar=SUBDOMAIN_PILLAR[item["subdomain"]],
-                text=item["text"], why=item.get("why"), weight=item.get("weight") or 1.0,
-                evidence_required=1 if item.get("evidence_required") else 0, position=pos))
-    bank.name = QUESTIONNAIRE["name"]
-    bank.version = QUESTIONNAIRE["version"]
-    bank.department = QUESTIONNAIRE["department"]
-    bank.estimated_minutes = QUESTIONNAIRE["estimated_minutes"]
-
-    if db.scalar(select(models.Organization)) is None:
-        org = models.Organization(name="Demo Logistics Ltd", industry="Logistics",
-                                  sub_industry="Freight & Distribution", employee_count=120,
-                                  revenue_band="SME", country="Kenya", city="Nairobi")
-        db.add(org)
-        db.flush()
-        db.add(models.Department(organization_id=org.id, name="Operations",
-                                 head="Operations Manager", staff_count=6))
-
-    if db.scalar(select(models.User)) is None:
-        _seed_admin(db)
-
-    db.commit()
-    return bank
+def list_assessments(db: Session, org_ids: list[int] | None = None) -> list[dict[str, Any]]:
+    rows = db.execute(
+        select(models.Assessment, models.Organization.name, models.Department.name)
+        .join(models.Organization, models.Organization.id == models.Assessment.organization_id)
+        .join(models.Department, models.Department.id == models.Assessment.department_id, isouter=True)
+        .order_by(models.Assessment.id.desc())
+    ).all()
+    out = []
+    for a, org_name, dept_name in rows:
+        if org_ids is not None and a.organization_id not in org_ids:
+            continue
+        out.append(dict(
+            id=a.id, status=a.status, respondent=a.respondent,
+            organization_id=a.organization_id,
+            organization=org_name, department=dept_name,
+            readiness_index=a.readiness_index, maturity_band=a.maturity_band,
+            confidence_index=a.confidence_index, completed_at=a.completed_at,
+            started_at=a.started_at,
+        ))
+    return out
 
 
-def get_bank(db: Session) -> models.Questionnaire | None:
-    return db.scalar(select(models.Questionnaire).where(
-        models.Questionnaire.code == QUESTIONNAIRE["code"]))
+def list_organizations(db: Session, org_ids: list[int] | None = None):
+    rows = _list_organizations_raw(db)
+    if org_ids is None:
+        return rows
+    if not org_ids:
+        return []
+    return [o for o in rows if o.id in org_ids]
 
 
-def get_questions(db: Session, questionnaire_id: int) -> list[models.Question]:
-    return list(db.scalars(select(models.Question).where(
-        models.Question.questionnaire_id == questionnaire_id
-    ).order_by(models.Question.position)))
+def dashboard_data(db: Session, limit: int = 8, org_ids: list[int] | None = None) -> dict[str, Any]:
+    rows = list_assessments(db, org_ids)
+    completed = [r for r in rows if r.get("status") == "completed"
+                 and r.get("readiness_index") is not None]
+    pillar_totals: dict[str, list[float]] = {}
+    for row in completed:
+        for p in db.scalars(select(models.PillarScore).where(
+                models.PillarScore.assessment_id == row["id"])):
+            if p.score is None:
+                continue
+            bucket = pillar_totals.setdefault(p.pillar, [0.0, 0])
+            bucket[0] += p.score
+            bucket[1] += 1
+    portfolio_pillars = {code: round(total / count, 1)
+                         for code, (total, count) in pillar_totals.items() if count}
+    scores = [r["readiness_index"] for r in completed]
+    bands: dict[str, int] = {}
+    for row in completed:
+        band = row.get("maturity_band") or "Unknown"
+        bands[band] = bands.get(band, 0) + 1
+    summary = dict(
+        total=len(rows),
+        completed=len(completed),
+        in_progress=len(rows) - len(completed),
+        average=round(sum(scores) / len(scores), 1) if scores else None,
+        best=max(scores) if scores else None,
+        lowest=min(scores) if scores else None,
+        bands=bands,
+        savings=0,
+    )
+    return dict(summary=summary, rows=rows[:limit],
+                portfolio_pillars=portfolio_pillars, all_completed=completed)
 
 
-def create_session(db: Session, user_id: int) -> str:
-    from elipsis_api import session_auth
-    return session_auth.issue_session(db, user_id)
+def reset_demo_data(db: Session, org_ids: list[int] | None = None):
+    return _reset_demo_data_raw(db)
 
 
-def user_for_token(db: Session, token: str | None):
-    from elipsis_api import session_auth
-    return session_auth.resolve_user(db, token)
+def owned_org_ids(db: Session, user) -> list[int]:
+    if user is None:
+        return []
+    return list(db.scalars(select(models.OrgOwner.organization_id).where(
+        models.OrgOwner.user_id == user.id)))
 
 
-def delete_session(db: Session, token: str | None):
-    from elipsis_api import session_auth
-    session_auth.revoke_session(db, token)
+def owned_orgs(db: Session, user) -> list[models.Organization]:
+    return list_organizations(db, owned_org_ids(db, user))
 
 
-def authenticate(db: Session, email: str, password: str):
-    user = db.scalar(select(models.User).where(models.User.email == email.strip().lower()))
-    if user and security.verify_password(password, user.password_hash):
-        return user
-    return None
+def claim_org(db: Session, user_id: int, organization_id: int) -> None:
+    exists = db.scalar(select(models.OrgOwner).where(
+        models.OrgOwner.user_id == user_id,
+        models.OrgOwner.organization_id == organization_id))
+    if exists is None:
+        db.add(models.OrgOwner(user_id=user_id, organization_id=organization_id))
+        db.commit()
+
+
+def visible_org_ids(db: Session, user) -> list[int] | None:
+    owned = owned_org_ids(db, user)
+    if owned:
+        return owned
+    return None if is_admin(user) else []
+
+
+def can_access_org(db: Session, user, organization_id: int | None) -> bool:
+    if user is None or organization_id is None:
+        return False
+    if is_admin(user):
+        return True
+    return organization_id in owned_org_ids(db, user)
+
+
+def company_overview(db: Session, org: models.Organization) -> dict[str, Any]:
+    rows = list_assessments(db, [org.id])
+    completed = sorted(
+        [r for r in rows if r["status"] == "completed" and r.get("readiness_index") is not None],
+        key=lambda r: (r.get("completed_at") or "", r["id"]),
+    )
+    latest = completed[-1] if completed else (rows[0] if rows else None)
+    trend = [{"id": r["id"], "value": r.get("readiness_index") or 0,
+              "label": r.get("completed_at") or r.get("started_at") or ""}
+             for r in completed[-8:]]
+    return {
+        "rows": rows,
+        "latest": latest,
+        "trend": trend,
+        "comparison": department_comparison(db, org.id) if completed else None,
+    }
