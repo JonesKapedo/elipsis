@@ -1,16 +1,21 @@
 {% extends "base.html" %}
 {% block title %}My company{% endblock %}
 {% block content %}
-<section class="head">
-  <p class="eyebrow">MY COMPANY</p>
-  <h1>Digital structure, not a highlight reel.</h1>
-  <p class="lede">Every completed assessment is read back as a picture of how the company actually works: where work is written down, where it still depends on people, and what is safe to automate.</p>
+<section class="hero-lite">
+  <p class="eyebrow">Workspace</p>
+  <h1>My company</h1>
+  <p class="lede">Save your company, run assessments yourself, or share a questionnaire link with employees. When enough people respond, Elipsis builds the report automatically.</p>
 </section>
 
 {% for row in rows %}
-<article class="block">
-  <h2>{{ row.org.name }}</h2>
-  <p class="muted">{{ row.org.industry or 'Industry not set' }}{% if row.org.city %} · {{ row.org.city }}{% endif %}{% if row.org.employee_count %} · {{ row.org.employee_count }} people{% endif %}</p>
+<article class="block" id="org-{{ row.org.id }}">
+  <div class="row-between">
+    <div>
+      <h2>{{ row.org.name }}</h2>
+      <p class="muted">{{ row.org.industry or 'Industry not set' }}{% if row.org.city %} · {{ row.org.city }}{% endif %}{% if row.org.employee_count %} · {{ row.org.employee_count }} people{% endif %}</p>
+    </div>
+  </div>
+
   {% if row.portrait %}
   <p class="tag ok">{{ row.portrait.posture }}</p>
   <h3>Company overview</h3>
@@ -21,17 +26,97 @@
     {% endfor %}
   </ul>
   <p>{{ row.portrait.leverage }}</p>
-  {% if row.portrait.money %}<p>{{ row.portrait.money }}</p>{% endif %}
   {% if row.latest %}
-  <p><a class="btn sm" href="/assessment/{{ row.latest.id }}/report">Open the full report</a></p>
+  <p><a class="btn sm" href="/assessment/{{ row.latest.id }}/results">Open latest report</a></p>
   {% endif %}
   {% else %}
-  <p class="muted">No completed assessment yet. The overview appears after the first full submission.</p>
+  <p class="muted">No completed assessment yet. Start one below or share a questionnaire with your team.</p>
   {% endif %}
-  <h3>Assessments</h3>
-  <ul>
+
+  <div class="card-grid two" style="margin-top:1.25rem">
+    <div class="block soft">
+      <h3>New assessment</h3>
+      <p class="muted">You fill the questionnaire yourself — department or whole company.</p>
+      <form method="post" action="/company/{{ row.org.id }}/assess" class="stack">
+        <label>Scope
+          <select name="department" required>
+            <option value="Organisation-wide">Whole company</option>
+            <option value="Operations">Operations</option>
+            <option value="Finance">Finance</option>
+            <option value="Customer Service">Customer Service</option>
+            <option value="HR">HR</option>
+            <option value="IT">IT</option>
+            <option value="Sales">Sales</option>
+          </select>
+        </label>
+        <label>Your name (optional)
+          <input name="respondent" placeholder="{{ user.name or user.email }}">
+        </label>
+        <button class="btn" type="submit">Begin assessment →</button>
+      </form>
+    </div>
+
+    <div class="block soft">
+      <h3>Share questionnaire</h3>
+      <p class="muted">Employees answer on their own device. You set a deadline and a minimum number of responses.</p>
+      <form method="post" action="/company/{{ row.org.id }}/share" class="stack">
+        <label>Scope
+          <select name="department">
+            <option value="Organisation-wide">Whole company</option>
+            <option value="Operations">Operations</option>
+            <option value="Finance">Finance</option>
+            <option value="Customer Service">Customer Service</option>
+            <option value="HR">HR</option>
+            <option value="IT">IT</option>
+            <option value="Sales">Sales</option>
+          </select>
+        </label>
+        <div class="form-grid">
+          <label>Deadline date
+            <input type="date" name="deadline_date" required>
+          </label>
+          <label>Deadline time
+            <input type="time" name="deadline_time" value="17:00" required>
+          </label>
+        </div>
+        <label>Minimum respondents
+          <input type="number" name="min_respondents" min="1" max="500" value="5" required>
+        </label>
+        <label class="check">
+          <input type="checkbox" name="allow_anonymous" value="1" checked>
+          Allow anonymous responses
+        </label>
+        <label>Note to employees (optional)
+          <textarea name="note" rows="2" placeholder="Please complete by the deadline so we can finalise the readiness report."></textarea>
+        </label>
+        <button class="btn ghost" type="submit">Create share link</button>
+      </form>
+    </div>
+  </div>
+
+  {% if row.campaigns %}
+  <h3 style="margin-top:1.5rem">Active shared questionnaires</h3>
+  <ul class="clean-list">
+    {% for c in row.campaigns %}
+    <li>
+      <a href="/company/campaign/{{ c.token }}"><strong>{{ c.title or 'Team questionnaire' }}</strong></a>
+      — {{ c.completed }}/{{ c.min_respondents }} responses
+      · status {{ c.status }}
+      {% if c.deadline %} · due {{ c.deadline }}{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <h3 style="margin-top:1.5rem">Assessments</h3>
+  <ul class="clean-list">
     {% for a in row.assessments %}
-    <li><a href="/assessment/{{ a.id }}">#{{ a.id }}</a> — {{ a.status }} · {{ a.completed_at or a.created_at or '' }}</li>
+    <li>
+      <a href="/assessment/{{ a.id }}{% if a.status == 'completed' %}/results{% else %}/step/1{% endif %}">#{{ a.id }}</a>
+      — {{ a.status }}
+      {% if a.department %} · {{ a.department }}{% endif %}
+      {% if a.readiness_index is not none %} · index {{ a.readiness_index }}{% endif %}
+    </li>
     {% else %}
     <li class="muted">None yet.</li>
     {% endfor %}

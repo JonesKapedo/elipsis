@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Submitted{% endblock %}
+{% block content %}
+<section class="hero-lite">
+  <p class="eyebrow">Thank you</p>
+  <h1>Response submitted</h1>
+  <p class="lede">Your answers for <strong>{{ org.name }}</strong> were received. You can close this window.</p>
+  <p class="muted">No further action is needed on your side.</p>
+</section>
+<script>try { history.replaceState(null, '', '/q/done'); } catch (e) {}</script>
+{% endblock %}

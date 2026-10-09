@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Questionnaire · {{ org.name }}{% endblock %}
+{% block content %}
+<section class="hero-lite">
+  <p class="eyebrow">{{ org.name }}</p>
+  <h1>{{ campaign.title or 'Readiness questionnaire' }}</h1>
+  <p class="lede">This short survey is tailored for <strong>{{ org.name }}</strong>{% if dept %} ({{ dept.name }}){% endif %}. Answer honestly — results feed a company readiness report.</p>
+  {% if campaign.note %}<p class="muted">{{ campaign.note }}</p>{% endif %}
+  {% if campaign.deadline %}<p>Please submit before <strong>{{ campaign.deadline }}</strong>.</p>{% endif %}
+  {% if closed %}
+  <p class="tag">This questionnaire is closed.</p>
+  {% else %}
+  <form method="post" action="/q/{{ campaign.token }}/start" class="stack block">
+    {% if campaign.allow_anonymous %}
+    <label class="check"><input type="checkbox" name="anonymous" value="1"> Answer anonymously</label>
+    {% endif %}
+    <div id="identityFields">
+      <label>Your name {% if not campaign.allow_anonymous %}<span class="req">*</span>{% endif %}
+        <input name="name" {% if not campaign.allow_anonymous %}required{% endif %} placeholder="Optional if anonymous">
+      </label>
+      <label>Work email {% if not campaign.allow_anonymous %}<span class="req">*</span>{% endif %}
+        <input type="email" name="email" {% if not campaign.allow_anonymous %}required{% endif %} placeholder="Optional if anonymous">
+      </label>
+    </div>
+    <button class="btn" type="submit">Start questionnaire →</button>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Shared questionnaire{% endblock %}
+{% block content %}
+<section class="hero-lite">
+  <p class="eyebrow">Collect</p>
+  <h1>{{ campaign.title or 'Team questionnaire' }}</h1>
+  <p class="lede">For <strong>{{ org.name }}</strong>{% if dept %} · {{ dept.name }}{% endif %}. Employees use the link below. The report unlocks when the minimum responses are in.</p>
+</section>
+
+<article class="block">
+  <h2>Share this link</h2>
+  <p class="share-box"><code id="shareUrl">{{ share_url }}</code>
+    <button type="button" class="btn sm" onclick="navigator.clipboard.writeText(document.getElementById('shareUrl').textContent)">Copy</button>
+  </p>
+  <ul class="clean-list">
+    <li>Deadline: <strong id="deadlineLive">{{ campaign.deadline or 'None' }}</strong></li>
+    <li>Minimum respondents: <strong>{{ campaign.min_respondents }}</strong></li>
+    <li>Responses completed: <strong>{{ completed }}</strong> / {{ campaign.min_respondents }}</li>
+    <li>In progress: <strong>{{ in_progress }}</strong></li>
+    <li>Status: <strong>{{ campaign.status }}</strong></li>
+    <li>Anonymous allowed: <strong>{{ 'Yes' if campaign.allow_anonymous else 'No' }}</strong></li>
+  </ul>
+  {% if campaign.note %}<p class="muted">{{ campaign.note }}</p>{% endif %}
+
+  {% if campaign.status == 'reported' and campaign.master_assessment_id %}
+  <p><a class="btn" href="/assessment/{{ campaign.master_assessment_id }}/results">Open finished report</a></p>
+  {% elif completed >= campaign.min_respondents %}
+  <p class="tag ok">Quota met — report is being prepared. Refresh if the button is not ready yet.</p>
+  <p><a class="btn" href="/company/campaign/{{ campaign.token }}/finalize">Open report</a></p>
+  {% else %}
+  <p class="muted">Waiting for {{ campaign.min_respondents - completed }} more completed response(s).</p>
+  {% endif %}
+</article>
+
+<article class="block">
+  <h2>Responses</h2>
+  <ul class="clean-list">
+    {% for r in responses %}
+    <li>
+      {% if r.is_anonymous %}Anonymous{% else %}{{ r.respondent_name or r.respondent_email or 'Respondent' }}{% endif %}
+      — {{ r.status }}
+      {% if r.status == 'completed' and r.assessment_id %}
+      · <a href="/assessment/{{ r.assessment_id }}/results">view</a>
+      {% endif %}
+    </li>
+    {% else %}
+    <li class="muted">No responses yet.</li>
+    {% endfor %}
+  </ul>
+  <p><a href="/company">← Back to company</a></p>
+</article>
+<script>
+(function(){
+  var el = document.getElementById('deadlineLive');
+  if (!el) return;
+  var raw = el.textContent.trim();
+  if (!raw || raw === 'None') return;
+  function tick(){
+    var end = Date.parse(raw);
+    if (isNaN(end)) return;
+    var left = end - Date.now();
+    if (left <= 0) { el.textContent = raw + ' · closed'; return; }
+    var h = Math.floor(left/3600000), m = Math.floor((left%3600000)/60000);
+    el.textContent = raw + ' · ' + h + 'h ' + m + 'm left';
+  }
+  tick(); setInterval(tick, 30000);
+})();
+</script>
+{% endblock %}

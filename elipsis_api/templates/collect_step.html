@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Section {{ step.number }} · {{ org.name }}{% endblock %}
+{% block content %}
+<div class="assess-layout collect-mode"
+     data-live-url="/q/{{ campaign.token }}/a/{{ assessment.id }}/live"
+     data-segment="{{ step.subdomain }}">
+  <div class="assess-main">
+    <header class="step-head">
+      <p class="eyebrow">{{ org.name }} · section {{ step.number }} of {{ total_steps }}</p>
+      <h1>{{ SUBDOMAIN_LABELS.get(step.subdomain, step.subdomain) }}</h1>
+      <div class="stepper-track"><span style="width:{{ ((step.number-1)/total_steps*100)|round }}%"></span></div>
+    </header>
+
+    <form id="answerForm" method="post" action="/q/{{ campaign.token }}/a/{{ assessment.id }}/submit" class="stack">
+      {% for q in step.questions %}
+      {% set a = answers.get(q.id) or {} %}
+      <article class="qcard" data-qid="{{ q.id }}">
+        <div class="qmeta">
+          <span class="qcode">{{ q.code }}</span>
+          <span class="qnum">Question {{ loop.index }} of {{ step.total }}</span>
+        </div>
+        <p class="qtext">{{ q.text }}</p>
+        <div class="choices">
+          {% for score, emoji, label, help_text in SCALES.get(q.scale) or SCALES.get('coverage_more') or [] %}
+          <label class="choice">
+            <input type="radio" name="q{{ q.id }}" value="{{ score }}"
+                   {% if a.get('score') == score %}checked{% endif %}>
+            <span class="choice-face">
+              <span class="choice-emoji">{{ emoji }}</span>
+              <span class="choice-label">{{ label }}</span>
+            </span>
+          </label>
+          {% endfor %}
+        </div>
+        <input type="hidden" name="e{{ q.id }}" value="{{ a.get('evidence') or 'none' }}">
+      </article>
+      {% endfor %}
+
+      <div class="step-actions">
+        {% if step.number > 1 %}
+        <a class="btn ghost" href="/q/{{ campaign.token }}/a/{{ assessment.id }}/step/{{ step.number - 1 }}">← Back</a>
+        {% endif %}
+        {% if is_last %}
+        <button class="btn" type="submit">Submit questionnaire</button>
+        {% else %}
+        <a class="btn" id="nextBtn" href="/q/{{ campaign.token }}/a/{{ assessment.id }}/step/{{ step.number + 1 }}">Next section →</a>
+        {% endif %}
+        <span id="saveState" class="muted"></span>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+(function(){
+  var root = document.querySelector('.collect-mode');
+  if (!root) return;
+  var form = document.getElementById('answerForm');
+  var url = root.dataset.liveUrl;
+  var segment = root.dataset.segment || '';
+  function collect() {
+    return Array.from(form.querySelectorAll('.qcard')).map(function(card){
+      var qid = card.dataset.qid;
+      var checked = card.querySelector('input[type=radio]:checked');
+      return { question_id: parseInt(qid, 10), score: checked ? parseInt(checked.value, 10) : null, evidence: 'none' };
+    }).filter(function(a){ return a.score !== null; });
+  }
+  function push(cb) {
+    var st = document.getElementById('saveState');
+    if (st) st.textContent = 'Saving…';
+    fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ answers: collect(), segment: segment }) })
+      .then(function(r){ return r.ok ? r.json() : Promise.reject(); })
+      .then(function(){ if (st) st.textContent = 'Saved'; if (cb) cb(); })
+      .catch(function(){ if (st) st.textContent = 'Could not save'; });
+  }
+  var timer = null;
+  form.addEventListener('change', function(){
+    clearTimeout(timer); timer = setTimeout(function(){ push(); }, 300);
+  });
+  var next = document.getElementById('nextBtn');
+  if (next) {
+    next.addEventListener('click', function(ev){
+      ev.preventDefault();
+      push(function(){ window.location.href = next.href; });
+    });
+  }
+})();
+</script>
+{% endblock %}
