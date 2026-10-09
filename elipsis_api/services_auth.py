@@ -14,25 +14,57 @@ from elipsis_api.services_core import answers_map, get_questions
 
 
 def authenticate(db: Session, email: str, password: str):
-    user = db.scalar(select(models.User).where(models.User.email == email.strip().lower()))
+    """Authenticate user with proper validation and update last_login."""
+    if not email or "@" not in email:
+        return None
+    
+    user = db.scalar(select(models.User).where(
+        models.User.email == email.strip().lower()
+    ))
+    
     if user and security.verify_password(password, user.password_hash):
+        # Update last login
+        from elipsis_api.models import _now
+        user.last_login = _now()
+        db.commit()
         return user
+    
     return None
 
 
-def register_user(db: Session, email: str, password: str, name: str | None = None):
+def register_user(db: Session, email: str, password: str, name: str | None = None, user_type: str = "client"):
+    """Register new user with comprehensive validation."""
     email = (email or "").strip().lower()
     name = (name or "").strip()[:120] or None
+    
+    # Email validation
     if not email or "@" not in email:
-        raise ValueError("Enter a valid work email address.")
+        raise ValueError("Please enter a valid email address.")
+    
+    if "." not in email.split("@")[1]:
+        raise ValueError("Please enter a valid email address with a domain.")
+    
+    # Password validation
     if len(password or "") < 8:
-        raise ValueError("Password must be at least 8 characters.")
+        raise ValueError("Password must be at least 8 characters long.")
+    
+    # Check for existing user
     existing = db.scalar(select(models.User).where(models.User.email == email))
     if existing is not None:
-        raise ValueError("An account with this email already exists. Sign in instead.")
+        raise ValueError("An account with this email already exists. Please sign in instead.")
+    
+    # Validate user_type
+    if user_type not in ("client", "bidder"):
+        user_type = "client"
+    
+    # Create user
     user = models.User(
-        email=email, name=name, role="client",
+        email=email,
+        name=name,
+        role="client" if user_type == "client" else "bidder",
+        user_type=user_type,
         password_hash=security.hash_password(password),
+        is_admin=False
     )
     db.add(user)
     db.commit()

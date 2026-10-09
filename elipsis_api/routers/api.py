@@ -4,6 +4,7 @@ import os
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from constants import BRAND_NAME, INDEX_NAME, scale_options
@@ -11,6 +12,7 @@ from elipsis_api import models, schemas, services
 from elipsis_api.config import DATABASE_URL, SESSION_COOKIE
 from elipsis_api.database import get_db, ping_db
 from elipsis_api.state import seed_status
+from elipsis_api.services_marketplace import get_user_organizations, get_organization_departments, update_organization_size
 
 router = APIRouter(prefix="/api/v1", tags=["api"])
 
@@ -149,6 +151,49 @@ def assessment_submit(assessment_id: int, payload: schemas.SubmitIn,
     return result
 
 
+# ============================================================================
+# AUTHENTICATION ENDPOINTS (Enhanced for marketplace)
+# ============================================================================
+
+@router.post("/auth/register")
+def register(request: Request, response: Response, db: Session = Depends(get_db)):
+    """Register new user with user_type support (client or bidder)."""
+    try:
+        data = request.json() if hasattr(request, 'json') else {}
+        email = data.get("email", "")
+        password = data.get("password", "")
+        name = data.get("name")
+        user_type = data.get("user_type", "client")
+        
+        user = services.register_user(db, email, password, name, user_type)
+        token = services.create_session(db, user.id)
+        
+        response.set_cookie(
+            SESSION_COOKIE,
+            token,
+            httponly=True,
+            samesite="lax",
+            secure=_SECURE_COOKIE,
+            max_age=60 * 60 * 24 * 14,
+            path="/",
+        )
+        
+        return {
+            "ok": True,
+            "token": token,
+            "user": {
+                "user_id": user.id,
+                "email": user.email,
+                "name": user.name or "",
+                "role": user.role or "client",
+                "user_type": user.user_type or "client",
+                "token": token,
+            }
+        }
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
 @router.post("/auth/login", response_model=schemas.LoginOut)
 def login(payload: schemas.LoginIn, response: Response, db: Session = Depends(get_db)):
     user = services.authenticate(db, payload.email, payload.password)
@@ -195,3 +240,80 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)):
     services.delete_session(db, request.cookies.get(SESSION_COOKIE))
     response.delete_cookie(SESSION_COOKIE, path="/")
     return JSONResponse(content={"ok": True})
+
+
+# ============================================================================
+# ORGANIZATION ENDPOINTS (Enhanced for marketplace)
+# ============================================================================
+
+@router.get("/organizations/my")
+def my_organizations(request: Request, db: Session = Depends(get_db)):
+    """Get all organizations accessible to the current user."""
+    user = _api_user(request, db)
+    if user is None:
+        raise HTTPException(status_code=401, detail="unauthorized")
+    
+    return get_user_organizations(db, user.id)
+
+
+@router.get("/organizations/{organization_id}/departments")
+def organization_departments(organization_id: int, request: Request, db: Session = Depends(get_db)):
+    """Get all departments for an organization."""
+    user = _api_user(request, db)
+    if user is None:
+        raise HTTPException(status_code=401, detail="unauthorized")
+    
+    # Check access
+    if not services.can_access_org(db, user, organization_id):
+        raise HTTPException(status_code=404, detail="organization not found")
+    
+    return get_organization_departments(db, organization_id)
+
+
+@router.post("/organizations")
+def create_organization(request: Request, db: Session = Depends(get_db)):
+    """Create a new organization with enhanced fields."""
+    user = _api_user(request, db)
+    if user is None:
+        raise HTTPException(status_code=401, detail="unauthorized")
+    
+    try:
+        data = request.json() if hasattr(request, 'json') else {}
+        org = models.Organization(
+            user_id=user.id,
+            name=data.get("name"),
+            industry=data.get("industry"),
+            sub_industry=data.get("sub_industry"),
+            employee_count=data.get("employee_count"),
+            revenue_band=data.get("revenue_band"),
+            country=data.get("country"),
+            city=data.get("city"),
+            annual_revenue_min=data.get("annual_revenue_min"),
+            annual_revenue_max=data.get("annual_revenue_max"),
+            contact_email=data.get("contact_email"),
+            contact_phone=data.get("contact_phone"),
+            website=data.get("website"),
+            description=data.get("description"),
+        )
+        db.add(org)
+        db.commit()
+        db.refresh(org)
+        
+        # Calculate and update company size
+        update_organization_size(db, org.id)
+        
+        # Link to user via OrgOwner
+        owner = models.OrgOwner(user_id=user.id, organization_id=org.id)
+        db.add(owner)
+        db.commit()
+        
+        return {
+            "ok": True,
+            "organization": {
+                "id": org.id,
+                "name": org.name,
+                "company_size": org.company_size,
+            }
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
