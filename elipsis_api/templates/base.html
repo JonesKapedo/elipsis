@@ -1,22 +1,15 @@
-<!doctype html>
+{% set authed = user is defined and user %}
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% block title %}Home{% endblock %} · {{ BRAND_NAME }}</title>
-<meta name="description" content="{{ BRAND_TAGLINE }} A scored operating picture, a financial case, and a sequenced programme.">
-<meta name="theme-color" content="#0a1628">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,650;8..60,700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/style.css">
-<link rel="stylesheet" href="/static/extras.css">
-<link rel="stylesheet" href="/static/app.css">
-<link rel="stylesheet" href="/static/app-shell.css">
-<link rel="stylesheet" href="/static/editorial.css">
-{% block head %}{% endblock %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ BRAND_NAME }}{% endblock %} · {{ BRAND_TAGLINE }}</title>
+  <link rel="stylesheet" href="/static/site.css">
+  <link rel="stylesheet" href="/static/app-shell.css">
+  {% block head %}{% endblock %}
 </head>
-<body data-motion="{{ request.cookies.get('elipsis_motion', 'on') }}" class="{% if user %}signed-in app-shell{% endif %} {% block body_class %}{% endblock %}">
+<body class="{% if authed %}is-app{% else %}is-public{% endif %}">
 <a class="skip-link" href="#main">Skip to content</a>
 
 {% if user %}
@@ -31,8 +24,8 @@
       <a href="/dashboard" class="nav-item">
         <span class="nav-icon">◉</span> Dashboard
       </a>
-      <a href="/start" class="nav-item">
-        <span class="nav-icon">＋</span> New assessment
+      <a href="/company" class="nav-item">
+        <span class="nav-icon">▣</span> My company
       </a>
       <a href="/assessments" class="nav-item">
         <span class="nav-icon">☰</span> Assessments
@@ -40,23 +33,10 @@
       <a href="/compare" class="nav-item">
         <span class="nav-icon">⇄</span> Compare
       </a>
-      <a href="/company" class="nav-item">
-        <span class="nav-icon">▣</span> Company
-      </a>
-      <p class="nav-group-label">Intelligence</p>
-      <a href="/methodology" class="nav-item">
-        <span class="nav-icon">◇</span> Method
-      </a>
-      <a href="/sample" class="nav-item">
-        <span class="nav-icon">▦</span> Sample report
-      </a>
       <a href="/pro" class="nav-item">
         <span class="nav-icon">★</span> PRO features
       </a>
       <p class="nav-group-label">Account</p>
-      <a href="/settings" class="nav-item">
-        <span class="nav-icon">⚙</span> Settings
-      </a>
       <a href="/inbox" class="nav-item">
         <span class="nav-icon">✉</span> Letters
       </a>
@@ -77,13 +57,34 @@
       <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Open menu" aria-controls="app-sidebar">
         <span></span><span></span><span></span>
       </button>
-      <div class="topbar-title">{% block topbar_title %}Workspace{% endblock %}</div>
       <div class="topbar-actions">
-        <a class="btn sm" href="/start">New assessment</a>
+        <a class="btn sm" href="/company">My company</a>
       </div>
     </header>
+    <main id="main" class="app-content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+<div class="sidebar-backdrop no-print" id="sidebar-backdrop"></div>
+<script>
+(function () {
+  var layout = document.querySelector('.app-layout');
+  var toggle = document.getElementById('sidebar-toggle');
+  var closeBtn = document.getElementById('sidebar-close');
+  var backdrop = document.getElementById('sidebar-backdrop');
+  function open() { layout.classList.add('sidebar-open'); }
+  function close() { layout.classList.remove('sidebar-open'); }
+  if (toggle) toggle.addEventListener('click', open);
+  if (closeBtn) closeBtn.addEventListener('click', close);
+  if (backdrop) backdrop.addEventListener('click', close);
+  document.querySelectorAll('.sidebar-nav a.nav-item').forEach(function (a) {
+    if (a.getAttribute('href') === window.location.pathname) a.classList.add('active');
+  });
+})();
+</script>
 {% else %}
-<header class="shell no-print">
+<header class="pub-header no-print">
   <a class="word" href="/">{{ BRAND_NAME }}</a>
   <nav class="pub-nav" aria-label="Primary">
     <a href="/methodology">Method</a>
@@ -93,68 +94,22 @@
     <a class="pill" href="/login">Sign in</a>
   </nav>
 </header>
-{% endif %}
-
-<main id="main" class="{% if user %}app-content{% endif %}">
-{% block content %}{% endblock %}
+<main id="main" class="pub-main">
+  {% block content %}{% endblock %}
 </main>
-
-{% if user %}
-  </div>{# app-main #}
-</div>{# app-layout #}
-<script>
-(function () {
-  var layout = document.querySelector('.app-layout');
-  var toggle = document.getElementById('sidebar-toggle');
-  var closeBtn = document.getElementById('sidebar-close');
-  function open() { layout.classList.add('sidebar-open'); }
-  function close() { layout.classList.remove('sidebar-open'); }
-  if (toggle) toggle.addEventListener('click', open);
-  if (closeBtn) closeBtn.addEventListener('click', close);
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
-  var path = location.pathname;
-  document.querySelectorAll('.sidebar-nav a.nav-item').forEach(function (a) {
-    var href = a.getAttribute('href');
-    if (href === path || (href !== '/dashboard' && path.startsWith(href) && href.length > 1)) {
-      a.classList.add('is-active');
-      a.setAttribute('aria-current', 'page');
-    }
-  });
-})();
-</script>
-{% else %}
-<footer class="site-footer no-print">
-  <div class="footer-grid">
-    <div class="footer-brand">
-      <p class="brand-line"><strong class="serif">{{ BRAND_NAME }}</strong></p>
-      <p class="muted">{{ BRAND_TAGLINE }}</p>
-    </div>
-    <div class="footer-col">
-      <h4>Product</h4>
+<footer class="pub-footer no-print">
+  <div>
+    <strong>{{ BRAND_NAME }}</strong>
+    <p>{{ BRAND_TAGLINE }}</p>
+  </div>
+  <nav>
       <a href="/sample">Sample picture</a>
       <a href="/methodology">Method</a>
       <a href="/pricing">Engagements</a>
       <a href="/physical">On-site sweep</a>
-    </div>
-    <div class="footer-col">
-      <h4>Company</h4>
-      <a href="/about">About</a>
-      <a href="/use-cases">Use cases</a>
-      <a href="/contact">Contact</a>
-      <a href="/faq">FAQ</a>
-    </div>
-    <div class="footer-col">
-      <h4>Account</h4>
-      <a href="/signup">Create account</a>
-      <a href="/login">Sign in</a>
-      <a href="/demo">Guided demo</a>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <span>© {{ BRAND_NAME }}</span>
-    <span class="muted">Digital assessment is free. The floor sweep is the paid engagement.</span>
-  </div>
+  </nav>
 </footer>
 {% endif %}
+{% block scripts %}{% endblock %}
 </body>
 </html>
