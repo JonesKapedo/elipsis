@@ -4,115 +4,141 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block title %}Home{% endblock %} · {{ BRAND_NAME }}</title>
-<meta name="description" content="{{ BRAND_TAGLINE }} Measure transformation readiness, friction cost, and a prioritised roadmap.">
-<meta name="theme-color" content="#f3efe6">
+<meta name="description" content="{{ BRAND_TAGLINE }} A scored operating picture, a financial case, and a sequenced programme.">
+<meta name="theme-color" content="#0a1628">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,650;8..60,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/style.css">
 <link rel="stylesheet" href="/static/extras.css">
-<link rel="stylesheet" href="/static/motion.css">
 <link rel="stylesheet" href="/static/app.css">
+<link rel="stylesheet" href="/static/editorial.css">
 {% block head %}{% endblock %}
 </head>
-<body class="{% block body_class %}{% endblock %}">
+<body data-motion="{{ request.cookies.get('elipsis_motion', 'on') }}" class="{% if user %}signed-in app-shell{% endif %} {% block body_class %}{% endblock %}">
 <a class="skip-link" href="#main">Skip to content</a>
-<header class="topbar app-topbar">
-  <a class="brand" href="{{ '/dashboard' if user else '/' }}">
-    <span class="mark" aria-hidden="true">{{ BRAND_MARK }}</span>
-    <span>{{ BRAND_NAME }}</span>
-  </a>
-  <div class="menu-wrap" id="menu-wrap">
-    {% if not user %}
-    <a class="btn sm menu-cta" href="/signup">Get started</a>
-    {% endif %}
-    <button class="menu-btn" type="button" id="menu-btn" aria-expanded="false" aria-controls="app-menu" aria-haspopup="true">
-      <span class="menu-avatar" id="menu-mark" aria-hidden="true">{% if user %}{{ (user.name or user.email or 'E')[:1]|upper }}{% else %}&#9776;{% endif %}</span>
-      <span class="menu-label">Menu</span>
-      <svg class="menu-chev" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-    </button>
-    <nav class="app-menu" id="app-menu" aria-label="Main menu" hidden>
-      {% if user %}
-      <div class="menu-head">
-        <strong>{{ user.name or user.email }}</strong>
-        <span class="muted small">{{ user.email }}</span>
-      </div>
-      <div class="menu-group">
-        <span class="menu-title">Workspace</span>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/company">My company</a>
-        <a href="/assessments">Assessments</a>
-        <a href="/compare">Compare departments</a>
-        <a href="/start">New assessment</a>
-      </div>
-      <div class="menu-group">
-        <span class="menu-title">More</span>
-        <a href="/pro">PRO features</a>
-        <a href="/demo">Guided demo</a>
-        <a href="/letter">Write to the team</a>
-        <a href="/settings">Settings</a>
-      </div>
-      <div class="menu-group">
-        <a href="/logout" class="menu-danger">Sign out</a>
-      </div>
-      {% else %}
-      <div class="menu-group">
-        <a href="/about">About</a>
-        <a href="/sample">Sample report</a>
-        <a href="/pricing">Pricing</a>
-        <a href="/methodology">Methodology</a>
-        <a href="/faq">FAQ</a>
-      </div>
-      <div class="menu-group">
-        <a href="/login">Sign in</a>
-        <a href="/signup">Create account</a>
-      </div>
-      {% endif %}
+
+{% if user %}
+{# ── Authenticated: vertical sidebar shell ── #}
+<div class="app-layout">
+  <aside class="app-sidebar no-print" id="app-sidebar">
+    <div class="sidebar-brand">
+      <a href="/dashboard" class="word">{{ BRAND_NAME }}</a>
+      <button type="button" class="sidebar-close" id="sidebar-close" aria-label="Close menu">×</button>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Workspace">
+      <p class="nav-group-label">Command</p>
+      <a href="/dashboard" class="nav-item {% if request.url.path == '/dashboard' or request.url.path == '/' %}is-active{% endif %}">
+        <span class="nav-icon">◉</span> Dashboard
+      </a>
+      <a href="/start" class="nav-item {% if request.url.path.startswith('/start') or request.url.path.startswith('/assessment') %}is-active{% endif %}">
+        <span class="nav-icon">＋</span> New assessment
+      </a>
+      <a href="/assessments" class="nav-item {% if request.url.path == '/assessments' %}is-active{% endif %}">
+        <span class="nav-icon">☰</span> Assessments
+      </a>
+      <a href="/compare" class="nav-item {% if request.url.path.startswith('/compare') %}is-active{% endif %}">
+        <span class="nav-icon">⇄</span> Compare
+      </a>
+      <a href="/company" class="nav-item {% if request.url.path.startswith('/company') %}is-active{% endif %}">
+        <span class="nav-icon">▣</span> Company
+      </a>
+
+      <p class="nav-group-label">Intelligence</p>
+      <a href="/methodology" class="nav-item">
+        <span class="nav-icon">◇</span> Method
+      </a>
+      <a href="/sample" class="nav-item">
+        <span class="nav-icon">▦</span> Sample report
+      </a>
+      <a href="/pro" class="nav-item {% if request.url.path.startswith('/pro') %}is-active{% endif %}">
+        <span class="nav-icon">★</span> PRO features
+      </a>
+
+      <p class="nav-group-label">Account</p>
+      <a href="/settings" class="nav-item {% if request.url.path.startswith('/settings') %}is-active{% endif %}">
+        <span class="nav-icon">⚙</span> Settings
+      </a>
+      <a href="/inbox" class="nav-item {% if request.url.path.startswith('/inbox') or request.url.path.startswith('/letter') %}is-active{% endif %}">
+        <span class="nav-icon">✉</span> Letters
+      </a>
+      <a href="/logout" class="nav-item nav-danger">
+        <span class="nav-icon">→</span> Sign out
+      </a>
     </nav>
+
+    <div class="sidebar-user">
+      <div class="user-avatar">{{ (user.name or user.email or 'EL')[:2]|upper }}</div>
+      <div class="user-meta">
+        <strong>{{ user.name or 'Operator' }}</strong>
+        <span>{{ user.email }}</span>
+      </div>
+    </div>
+  </aside>
+
+  <div class="app-main">
+    <header class="app-topbar no-print">
+      <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Open menu" aria-controls="app-sidebar">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="topbar-title">{% block topbar_title %}Workspace{% endblock %}</div>
+      <div class="topbar-actions">
+        <a class="btn sm" href="/start">New assessment</a>
+      </div>
+    </header>
+    <main id="main" class="app-content">{% block content %}{% endblock %}</main>
   </div>
-</header>
+</div>
 <script>
-(function(){
-  var wrap = document.getElementById("menu-wrap");
-  var btn = document.getElementById("menu-btn");
-  var menu = document.getElementById("app-menu");
-  var mark = document.getElementById("menu-mark");
-  {% if user %}
-  var m = document.cookie.match(/(?:^|; )elipsis_symbol=([^;]+)/);
-  if (m && mark) mark.textContent = decodeURIComponent(m[1]);
-  {% endif %}
+(function () {
+  var layout = document.querySelector('.app-layout');
+  var toggle = document.getElementById('sidebar-toggle');
+  var closeBtn = document.getElementById('sidebar-close');
+  function open() { layout.classList.add('sidebar-open'); }
+  function close() { layout.classList.remove('sidebar-open'); }
+  if (toggle) toggle.addEventListener('click', open);
+  if (closeBtn) closeBtn.addEventListener('click', close);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+  // Mark current path
   var path = location.pathname;
-  menu.querySelectorAll("a").forEach(function(a){
-    if (a.getAttribute("href") === path) a.setAttribute("aria-current", "page");
-  });
-  function setOpen(open){
-    if (open) menu.removeAttribute("hidden"); else menu.setAttribute("hidden", "");
-    btn.setAttribute("aria-expanded", open ? "true" : "false");
-    if (open) { var first = menu.querySelector("a"); if (first) first.focus(); }
-  }
-  btn.addEventListener("click", function(e){ e.stopPropagation(); setOpen(menu.hasAttribute("hidden")); });
-  document.addEventListener("click", function(e){ if (!wrap.contains(e.target)) setOpen(false); });
-  document.addEventListener("keydown", function(e){
-    if (e.key === "Escape" && !menu.hasAttribute("hidden")) { setOpen(false); btn.focus(); }
+  document.querySelectorAll('.sidebar-nav a.nav-item').forEach(function (a) {
+    var href = a.getAttribute('href');
+    if (href === path || (href !== '/dashboard' && path.startsWith(href) && href.length > 1)) {
+      a.classList.add('is-active');
+      a.setAttribute('aria-current', 'page');
+    }
   });
 })();
 </script>
 
-<main id="main">{% block content %}{% endblock %}</main>
+{% else %}
+{# ── Public marketing header ── #}
+<header class="shell no-print">
+  <a class="word" href="/">{{ BRAND_NAME }}</a>
+  <nav class="pub-nav" aria-label="Primary">
+    <a href="/methodology">Method</a>
+    <a href="/pricing">Engagements</a>
+    <a href="/sample">Sample</a>
+    <a href="/physical">On-site</a>
+    <a class="pill" href="/login">Sign in</a>
+  </nav>
+</header>
 
-<footer class="site-footer">
+<main id="main">{% block content_public %}{% endblock %}{% block content %}{% endblock %}</main>
+
+<footer class="site-footer no-print">
   <div class="footer-grid">
     <div class="footer-brand">
-      <p class="brand-line"><span class="mark">{{ BRAND_MARK }}</span> <strong>{{ BRAND_NAME }}</strong></p>
+      <p class="brand-line"><strong class="serif">{{ BRAND_NAME }}</strong></p>
       <p class="muted">{{ BRAND_TAGLINE }}</p>
-      <p class="muted small">{{ FRAMEWORK_NAME }} · {{ INDEX_NAME }}</p>
     </div>
     <div class="footer-col">
       <h4>Product</h4>
-      <a href="/sample">Sample report</a>
-      <a href="/demo">Guided demo</a>
-      <a href="/methodology">Methodology</a>
-      <a href="/pricing">Pricing</a>
+      <a href="/sample">Sample picture</a>
+      <a href="/methodology">Method</a>
+      <a href="/pricing">Engagements</a>
+      <a href="/physical">On-site sweep</a>
     </div>
     <div class="footer-col">
       <h4>Company</h4>
@@ -122,16 +148,17 @@
       <a href="/faq">FAQ</a>
     </div>
     <div class="footer-col">
-      <h4>Get started</h4>
+      <h4>Account</h4>
       <a href="/signup">Create account</a>
       <a href="/login">Sign in</a>
-      <a href="/docs">API docs</a>
+      <a href="/demo">Guided demo</a>
     </div>
   </div>
   <div class="footer-bottom">
     <span>© {{ BRAND_NAME }}</span>
-    <span class="muted">Built for operators who need numbers, not slide theatres.</span>
+    <span class="muted">Digital assessment is free. The floor sweep is the paid engagement.</span>
   </div>
 </footer>
+{% endif %}
 </body>
 </html>
