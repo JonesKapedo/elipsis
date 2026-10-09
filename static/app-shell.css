@@ -598,3 +598,107 @@ body.app-shell {
   font-size: 0.85rem;
 }
 .band-name { font-weight: 500; }
+
+/* ==========================================================================
+   Elipsis Reserve — whiskey bottle assessment progress
+   ========================================================================== */
+.bottle-progress { padding: 1.1rem 1.25rem; }
+.bottle-row {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+.bottle-wrap {
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+.elipsis-bottle {
+  display: block;
+  filter: drop-shadow(0 8px 18px rgba(120, 53, 15, 0.18));
+}
+#bottleLiquid {
+  transition: y 0.45s ease, height 0.45s ease;
+}
+#bottleShine {
+  transition: cy 0.45s ease, opacity 0.3s ease;
+}
+.bottle-meta {
+  flex: 1;
+  min-width: 200px;
+}
+.bottle-tag {
+  margin: 0 0 0.25rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent, #b45309);
+}
+.bottle-copy {
+  margin: 0 0 0.75rem;
+  font-size: 0.88rem;
+  color: var(--muted, #6b6570);
+  line-height: 1.45;
+  max-width: 28rem;
+}
+.bottle-level {
+  margin: 0.55rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink, #14121a);
+}
+.bottle-progress .stepper-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-top: 0.45rem;
+  font-size: 0.82rem;
+  color: var(--muted, #6b6570);
+}
+.bottle-progress .stepper-track {
+  margin-top: 0.15rem;
+}
+
+/* Horizontal section pills — no vertical number list */
+.section-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--line, #e4dccb);
+}
+.section-pill {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+  border: 1px solid var(--line, #e4dccb);
+  background: #fffcf7;
+  color: var(--muted, #6b6570);
+  font-size: 0.65rem;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.section-pill:hover {
+  border-color: var(--accent, #b45309);
+  color: var(--accent, #b45309);
+}
+.section-pill.done {
+  background: #ecfdf5;
+  border-color: #86efac;
+  color: #15803d;
+}
+.section-pill.current {
+  background: var(--navy, #0a1628);
+  border-color: var(--navy, #0a1628);
+  color: #fff;
+  box-shadow: 0 0 0 3px rgba(10, 22, 40, 0.12);
+}
+.section-pill .pill-mark { line-height: 1; }
+
+/* Hide legacy numbered dots if any leftover CSS targets them */
+.steps-dots { display: none !important; }
