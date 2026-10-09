@@ -149,6 +149,14 @@ def pro_checkout(request: Request, user=Depends(get_current_user), db: Session =
     return RedirectResponse(data["authorization_url"], status_code=303)
 
 
+@router.get("/physical")
+def physical_page(request: Request, user=Depends(get_current_user), db: Session = Depends(get_db)):
+    """On-site / physical assessment — public nav lands here; form lives on /pro."""
+    if user is None:
+        return login_redirect()
+    return RedirectResponse("/pro", status_code=303)
+
+
 @router.post("/physical")
 def physical_request(request: Request, company_name: str = Form(...), package: str = Form(...),
                      sites: str = Form("1"), notes: str = Form(""),
@@ -267,6 +275,16 @@ def settings_save(symbol: str = Form("E"), motion: str = Form("on"), density: st
     response.set_cookie("elipsis_density", prefs.density, max_age=60 * 60 * 24 * 365, samesite="lax")
     response.set_cookie("elipsis_symbol", prefs.symbol, max_age=60 * 60 * 24 * 365, samesite="lax")
     return response
+
+
+@router.get("/inbox")
+def inbox(request: Request, user=Depends(get_current_user), db: Session = Depends(get_db)):
+    """Letters inbox — admins see the board; everyone else writes a letter."""
+    if user is None:
+        return login_redirect()
+    if _is_admin(user):
+        return RedirectResponse("/admin/letters", status_code=303)
+    return RedirectResponse("/letter", status_code=303)
 
 
 @router.get("/letter")
