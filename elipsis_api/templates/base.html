@@ -21,28 +21,14 @@
     </div>
     <nav class="sidebar-nav" aria-label="Workspace">
       <p class="nav-group-label">Command</p>
-      <a href="/dashboard" class="nav-item">
-        <span class="nav-icon">◉</span> Dashboard
-      </a>
-      <a href="/company" class="nav-item">
-        <span class="nav-icon">▣</span> My company
-      </a>
-      <a href="/assessments" class="nav-item">
-        <span class="nav-icon">☰</span> Assessments
-      </a>
-      <a href="/compare" class="nav-item">
-        <span class="nav-icon">⇄</span> Compare
-      </a>
-      <a href="/pro" class="nav-item">
-        <span class="nav-icon">★</span> PRO features
-      </a>
+      <a href="/dashboard" class="nav-item"><span class="nav-icon">◉</span> Dashboard</a>
+      <a href="/company" class="nav-item"><span class="nav-icon">▣</span> My company</a>
+      <a href="/assessments" class="nav-item"><span class="nav-icon">☰</span> Assessments</a>
+      <a href="/compare" class="nav-item"><span class="nav-icon">⇄</span> Compare</a>
+      <a href="/pro" class="nav-item"><span class="nav-icon">★</span> PRO features</a>
       <p class="nav-group-label">Account</p>
-      <a href="/inbox" class="nav-item">
-        <span class="nav-icon">✉</span> Letters
-      </a>
-      <a href="/logout" class="nav-item nav-danger">
-        <span class="nav-icon">→</span> Sign out
-      </a>
+      <a href="/inbox" class="nav-item"><span class="nav-icon">✉</span> Letters</a>
+      <a href="/logout" class="nav-item nav-danger"><span class="nav-icon">→</span> Sign out</a>
     </nav>
     <div class="sidebar-user">
       <div class="user-avatar">{{ (user.name or user.email or 'EL')[:2]|upper }}</div>
@@ -62,7 +48,23 @@
       </div>
     </header>
     <main id="main" class="app-content">
-      {% block content %}{% endblock %}
+{% else %}
+<header class="pub-header no-print">
+  <a class="word" href="/">{{ BRAND_NAME }}</a>
+  <nav class="pub-nav" aria-label="Primary">
+    <a href="/methodology">Method</a>
+    <a href="/pricing">Engagements</a>
+    <a href="/sample">Sample</a>
+    <a href="/physical">On-site</a>
+    <a class="pill" href="/login">Sign in</a>
+  </nav>
+</header>
+<main id="main" class="pub-main">
+{% endif %}
+
+{% block content %}{% endblock %}
+
+{% if authed %}
     </main>
   </div>
 </div>
@@ -85,18 +87,6 @@
 })();
 </script>
 {% else %}
-<header class="pub-header no-print">
-  <a class="word" href="/">{{ BRAND_NAME }}</a>
-  <nav class="pub-nav" aria-label="Primary">
-    <a href="/methodology">Method</a>
-    <a href="/pricing">Engagements</a>
-    <a href="/sample">Sample</a>
-    <a href="/physical">On-site</a>
-    <a class="pill" href="/login">Sign in</a>
-  </nav>
-</header>
-<main id="main" class="pub-main">
-  {{ self.content() }}
 </main>
 <footer class="pub-footer no-print">
   <div>
@@ -104,10 +94,10 @@
     <p>{{ BRAND_TAGLINE }}</p>
   </div>
   <nav>
-      <a href="/sample">Sample picture</a>
-      <a href="/methodology">Method</a>
-      <a href="/pricing">Engagements</a>
-      <a href="/physical">On-site sweep</a>
+    <a href="/sample">Sample picture</a>
+    <a href="/methodology">Method</a>
+    <a href="/pricing">Engagements</a>
+    <a href="/physical">On-site sweep</a>
   </nav>
 </footer>
 {% endif %}
