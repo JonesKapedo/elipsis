@@ -1,14 +1,33 @@
 {% extends "base.html" %}
 {% block title %}Section {{ step.number }} · {{ org.name }}{% endblock %}
 {% block content %}
-<div class="assess-layout collect-mode"
+<div class="assess-layout collect-mode step-layout"
      data-live-url="/q/{{ campaign.token }}/a/{{ assessment.id }}/live"
-     data-segment="{{ step.subdomain }}">
+     data-segment="{{ step.subdomain }}"
+     data-step="{{ step.number }}"
+     data-total-steps="{{ total_steps }}">
+
+  <div class="progress-sticky no-print" role="progressbar"
+       aria-valuenow="{{ ((step.number-1)/total_steps*100)|round|int }}" aria-valuemin="0" aria-valuemax="100">
+    <div class="progress-sticky-inner">
+      <div class="progress-sticky-bar">
+        <span id="stickyFill" style="width:{{ ((step.number-1)/total_steps*100)|round }}%"></span>
+      </div>
+      <div class="progress-sticky-meta">
+        <span id="stickySection">Section {{ step.number }} of {{ total_steps }}</span>
+        <span class="sep">·</span>
+        <span>{{ org.name }}</span>
+        <span class="sep">·</span>
+        <span id="stickySave" class="save-pill idle">Auto-save on</span>
+      </div>
+    </div>
+  </div>
+
   <div class="assess-main">
     <header class="step-head">
       <p class="eyebrow">{{ org.name }} · section {{ step.number }} of {{ total_steps }}</p>
       <h1>{{ SUBDOMAIN_LABELS.get(step.subdomain, step.subdomain) }}</h1>
-      <div class="stepper-track"><span style="width:{{ ((step.number-1)/total_steps*100)|round }}%"></span></div>
+      <div class="stepper-track"><span id="trackFill" style="width:{{ ((step.number-1)/total_steps*100)|round }}%"></span></div>
     </header>
 
     <form id="answerForm" method="post" action="/q/{{ campaign.token }}/a/{{ assessment.id }}/submit" class="stack">
@@ -36,17 +55,17 @@
       </article>
       {% endfor %}
 
-      <div class="step-actions">
+      <nav class="step-nav sticky-actions">
         {% if step.number > 1 %}
         <a class="btn ghost" href="/q/{{ campaign.token }}/a/{{ assessment.id }}/step/{{ step.number - 1 }}">← Back</a>
-        {% endif %}
+        {% else %}<span></span>{% endif %}
+        <span class="muted save-status" id="saveState"><span class="save-dot"></span> Answers auto-save</span>
         {% if is_last %}
         <button class="btn" type="submit">Submit questionnaire</button>
         {% else %}
         <a class="btn" id="nextBtn" href="/q/{{ campaign.token }}/a/{{ assessment.id }}/step/{{ step.number + 1 }}">Next section →</a>
         {% endif %}
-        <span id="saveState" class="muted"></span>
-      </div>
+      </nav>
     </form>
   </div>
 </div>
@@ -57,24 +76,36 @@
   var form = document.getElementById('answerForm');
   var url = root.dataset.liveUrl;
   var segment = root.dataset.segment || '';
+
   function collect() {
     return Array.from(form.querySelectorAll('.qcard')).map(function(card){
       var qid = card.dataset.qid;
       var checked = card.querySelector('input[type=radio]:checked');
       return { question_id: parseInt(qid, 10), score: checked ? parseInt(checked.value, 10) : null, evidence: 'none' };
-    }).filter(function(a){ return a.score !== null; });
+    }).filter(function(a){ return a.score !== null && !isNaN(a.score); });
+  }
+  function setSave(msg, state) {
+    var el = document.getElementById('saveState');
+    var sticky = document.getElementById('stickySave');
+    if (el) { el.innerHTML = '<span class="save-dot"></span> ' + msg; el.className = 'muted save-status ' + (state || ''); }
+    if (sticky) {
+      sticky.textContent = state === 'ok' ? 'Saved' : state === 'busy' ? 'Saving…' : state === 'err' ? 'Save failed' : 'Auto-save on';
+      sticky.className = 'save-pill ' + (state || 'idle');
+    }
   }
   function push(cb) {
-    var st = document.getElementById('saveState');
-    if (st) st.textContent = 'Saving…';
-    fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'},
+    setSave('Saving…', 'busy');
+    fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'same-origin',
       body: JSON.stringify({ answers: collect(), segment: segment }) })
       .then(function(r){ return r.ok ? r.json() : Promise.reject(); })
-      .then(function(){ if (st) st.textContent = 'Saved'; if (cb) cb(); })
-      .catch(function(){ if (st) st.textContent = 'Could not save'; });
+      .then(function(){ setSave('Saved ✓', 'ok'); if (cb) cb(); })
+      .catch(function(){ setSave('Could not save', 'err'); if (cb) cb(); });
   }
   var timer = null;
-  form.addEventListener('change', function(){
+  form.addEventListener('change', function(event){
+    form.querySelectorAll('.choice').forEach(function(c){ c.classList.remove('picked'); });
+    var lbl = event.target.closest('.choice');
+    if (lbl) lbl.classList.add('picked');
     clearTimeout(timer); timer = setTimeout(function(){ push(); }, 300);
   });
   var next = document.getElementById('nextBtn');
@@ -84,6 +115,9 @@
       push(function(){ window.location.href = next.href; });
     });
   }
+  window.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'hidden') push();
+  });
 })();
 </script>
 {% endblock %}
