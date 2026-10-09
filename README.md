@@ -13,8 +13,11 @@ organisation is to adopt automation — and what that readiness is worth in mone
 
 ## Status
 
-Early implementation. A **FastAPI + SQLAlchemy + Jinja2** web platform backed by a pure
-scoring engine, plus a **Telegram bot** used as a client-acquisition channel.
+Production path: **FastAPI + SQLAlchemy + Jinja2** (Vercel). Pure scoring engine in
+`readiness.py` + declarative metrics in `constants.py`. Vertical sidebar workspace UI,
+investor-facing dashboard that surfaces the seven pillars, 36 metrics, maturity bands,
+and three-phase roadmap. Telegram bot remains a separate acquisition channel.
+Experimental React SPA under `frontend/` is not the deploy target.
 
 ## Naming
 
@@ -127,43 +130,11 @@ python -m telegram_bot.bot
 
 ### Deploy to Vercel
 
-The web platform is declared explicitly, because the repository root also
-contains the Telegram bot and Vercel would otherwise try to deploy that:
+See **DEPLOY.md**. Production UI is the FastAPI + Jinja2 app. Do not point Vercel at
+the Telegram bot or the experimental React SPA under `frontend/`.
 
-```toml
-# pyproject.toml
-[tool.vercel]
-entrypoint = "elipsis_api.main:app"
-```
-
-The bot lives in the **`telegram_bot/`** package, not the repository root. Vercel
-scans the root for `app.py / index.py / server.py / main.py / wsgi.py / asgi.py`
-and deploys whatever it finds there, so keeping aiogram code out of the root
-means the only thing it can build is the web platform.
-
-Vercel installs the root **`requirements.txt`**, which is why that file holds
-the FastAPI stack rather than the bot's `aiogram` (those live in
-`requirements-bot.txt`).
-
-**Storage — read this before going live.** Vercel mounts the deployment bundle
-read-only, so the local `turbinez.db` SQLite file cannot be used there. Without a
-database URL the app falls back to SQLite under `/tmp`, which is **ephemeral**:
-every assessment is lost when the instance recycles, and each cold start reseeds
-an empty database. For a real deployment set a managed PostgreSQL URL in the
-Vercel project's environment variables:
-
-| Variable | Example |
-| --- | --- |
-| `ELIPSIS_DATABASE_URL` | `postgresql://user:pass@host:5432/db?sslmode=require` |
-| `ELIPSIS_TELEGRAM_TOKEN` | *(only needed for the bot)* |
-| `ELIPSIS_SECRET_KEY` | *(only needed for the bot)* |
-
-`psycopg[binary]` is already listed in `requirements.txt`, so a `postgres://` URL
-is honoured as-is. `ELIPSIS_SECRET_KEY` is only read by the Telegram bot; the web
-platform's sessions use a random token in a cookie.
-
-Sign in at **`/login`** with **<admin@elipsis.local> / elipsis** (seeded on first
-request), or create your own user row in the `users` table.
+**Storage:** set `ELIPSIS_DATABASE_URL` to a managed PostgreSQL URL. Without it the
+app uses ephemeral SQLite under `/tmp` and data is lost on cold starts.
 
 ---
 
@@ -193,138 +164,18 @@ elipsis_api/
   routers/api.py       # JSON API  (/api/v1)
   routers/pages.py     # HTML pages (server-rendered)
   templates/           # base, login, dashboard, start, step, results,
-                       # report, assessments, 404
-static/style.css       # dark design system + white print stylesheet
+                       # report, assessments, methodology, …
+static/                # design system + app shell (vertical sidebar)
 
 telegram_bot/
-  bot.py                 # bot entry point (aiogram) — python -m telegram_bot.bot
-  handlers.py            # bot: conversation flow
-  scoring.py             # bot: preliminary scoring + savings estimate (KES)
+  bot.py                 # bot entry point (aiogram)
+  handlers.py            # conversation flow
+  scoring.py             # preliminary scoring + savings estimate
 ```
 
-> The Python package was renamed `turbinez_api` -> `elipsis_api` with the rebrand. The
-> SQLite file is still `turbinez.db` for the same reason: renaming a local file is
-> churn with no benefit.
+## Workspace UI
 
-## API
-
-| Method | Path | Purpose |
-| --- | --- | --- |
-| `GET` | `/api/v1/health` | Service status |
-| `GET` | `/api/v1/questionnaire` | ORG-001 question bank (63 questions) |
-| `GET` | `/api/v1/assessments` | List assessments |
-| `POST` | `/api/v1/assessments` | Create an assessment |
-| `GET` | `/api/v1/assessments/{id}` | Full computed result as JSON |
-| `POST` | `/api/v1/assessments/{id}/submit` | Submit answers, compute result |
-
-The result payload includes `metrics` (36 values), `metric_rows` (labelled, with a
-one-line reading each), `metrics_by_pillar`, and `roadmap` (the three phases).
-
-## Environment
-
-| Variable | Purpose |
-| --- | --- |
-| `ELIPSIS_ENV` | `development` / `production` |
-| `ELIPSIS_TELEGRAM_TOKEN` | Bot token from @BotFather |
-| `ELIPSIS_DATABASE_URL` | PostgreSQL DSN (SQLite when absent) |
-| `ELIPSIS_REDIS_URL` | Redis (for FSM storage/caching) |
-| `ELIPSIS_SECRET_KEY` | Application secret |
-
-> **Compatibility:** the pre-rebrand `TURBINEZ_*` names are still read as a fallback,
-> so an existing `.env` keeps working.
-
-> **Security:** rotate the Telegram token if `.env` has ever been shared or committed.
-
-## How the form works
-
-A 63-question form on one page is intimidating, so the assessment is presented as
-**21 short segments of three questions** — one subdomain at a time. Each step shows:
-
-- a plain-English heading and what the section is checking,
-- **three questions only**, each with a "Why we ask" line,
-- a **live score panel** that updates after every answer, showing the running
-  {{ INDEX_SHORT }}, the section score, the pillar score, and the executive metrics
-  that the section feeds,
-- a clickable stepper so any step can be revisited.
-
-Answers save automatically as you go, so a half-finished assessment survives a refresh.
-A metric only shows a number once every input its formula needs has a real answer;
-until then it shows a dash rather than a misleading figure.
-
-### Answer scales — tailored per question
-
-There is no single universal ladder. Each question names a scale in
-`constants.SCALES` built for what it actually asks, so a question about
-approval layers offers counts of people, a question about retrieval speed
-offers times, and a question about volume offers counts per week.
-
-| Question | Scale | Options run from |
-| --- | --- | --- |
-| How many separate steps to finish a job? | `stepcount` | More than 10 steps → One step |
-| How many people must approve something? | `approvals` | Five or more people → Never needs approval |
-| How quickly can a new hire find an answer? | `speed_more` | They must ask someone → Straight away |
-| How many customer questions per week? | `volume_count` | None → More than 100 a week |
-| How often is information copied and pasted? | `copying_less` | All day, every day → Never |
-
-**Invariant:** the highest-scoring option of *every* scale means "most ready".
-"Ladders for questions where less is better are written in reverse at authoring
-time, so the scoring engine and all 36 metric formulas need no knowledge of
-polarity. `tests/test_questions.py` enforces this.
-
-### Writing rules for questions
-
-Questions are written so that someone with no business or IT background can answer
-them from their own experience: short sentences, no jargon, one idea per question, and
-a "why" that says what is being checked and why it matters.
-
----
-
-## Roadmap
-
-1. ✅ Naming system, pillar framework and confidence model
-2. ✅ Bot input validation + error handling
-3. ✅ Scoring engine: Elipsis Index, confidence index, pain points, recommendations
-4. ✅ Financial model (KES): cost, ROI, payback
-5. ✅ FastAPI + SQLAlchemy platform: dashboard, printable report, REST API, OpenAPI docs
-6. ✅ Generalised ORG-001 instrument: 63 questions, seven pillars, 36 executive metrics
-7. ✅ Three-phase implementation roadmap (Quick Wins → Process Automation → AI)
-8. ✅ Segmented form (21 steps) with live per-section scoring and autosave
-9. ✅ Command-centre dashboard, plain-English instrument, icon-led design system
-10. ✅ Per-question answer scales (48 named scales) replacing the universal ladder
-11. ✅ Test suite (63 tests) covering the engine, instrument, financial model and API
-12. ✅ Financial impact sized by the organisation, with a ceiling and a shown working
-13. ✅ Dashboard "clear demo data" control
-14. Next: evidence uploads, multi-respondent alignment index, assessment
-    comparison view, further verticals, Level 3–6 report tiers
-
-## Tests
-
-```bash
-pip install -e '.[dev]'
-python -m pytest
-```
-
-| File | Covers |
-| --- | --- |
-| `tests/test_questions.py` | 63 unique codes, 9 per pillar, 21 segments, plain-English wording, scale integrity and direction |
-| `tests/test_readiness.py` | Metric bounds, evaluator safety (rejects `__import__`, attribute access, lambdas), readiness gating, maturity band edges, partial/empty forms, roadmap coverage |
-| `tests/test_financial.py` | Savings scale with company size, wage tiers, the 12% ceiling, and arithmetic that reconciles |
-| `tests/test_api.py` | Full round trip: create → answer 21 segments live → submit → results/report/dashboard |
-
-## The financial model
-
-Annual savings are sized by the organisation being assessed:
-
-```text
-affected staff = staff x share of workforce the pain touches
-annual hours   = affected staff x hours per person per year x severity
-current cost   = annual hours x blended hourly rate
-recoverable    = current cost x efficiency(complexity)
-
-total savings  = capped at 12% of the labour line
-```
-
-The blended hourly rate rises with organisation size (KES 250 → 900), and the
-report prints the whole working — staff count, rate, labour line, ceiling and
-hours freed — so a client can check the arithmetic instead of taking it on
-trust.
+Signed-in users get a **vertical sidebar** (Command · Intelligence · Account) with a
+mobile drawer. The old diamond dropdown is retired. The dashboard surfaces the
+measurement model for operators and investors: KPI strip, framework summary, latest
+result with pillar bars, pillar portfolio, maturity spread, and assessment table.
