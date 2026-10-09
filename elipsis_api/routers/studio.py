@@ -6,7 +6,7 @@ import os
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from elipsis_api import models, paystack, services
@@ -70,11 +70,27 @@ def my_company(request: Request, user=Depends(get_current_user), db: Session = D
                 dept = db.get(models.Department, latest.department_id) if latest.department_id else None
                 portrait = company_portrait(org, dept, result)
                 insight = analytics.build(result)
+        camps = []
+        try:
+            for c in db.scalars(select(models.CollectCampaign).where(
+                    models.CollectCampaign.organization_id == org.id).order_by(
+                    models.CollectCampaign.created_at.desc())).all():
+                completed = db.scalar(select(func.count()).select_from(models.CollectResponse).where(
+                    models.CollectResponse.campaign_token == c.token,
+                    models.CollectResponse.status == "completed")) or 0
+                camps.append({
+                    "token": c.token, "title": c.title, "status": c.status,
+                    "deadline": c.deadline, "min_respondents": c.min_respondents,
+                    "completed": int(completed),
+                })
+        except Exception:
+            camps = []
         rows.append({
             "org": org, "overview": overview, "portrait": portrait, "insight": insight,
             "latest": latest, "assessments": overview["rows"],
             "spark": analytics.sparkline([t["value"] for t in overview["trend"]]),
             "editing": request.query_params.get("edit") == str(org.id),
+            "campaigns": camps,
         })
     return templates.TemplateResponse(request, "company.html", {
         "user": user, "rows": rows, "prefs": _prefs(db, user),
@@ -151,7 +167,6 @@ def pro_checkout(request: Request, user=Depends(get_current_user), db: Session =
 
 @router.get("/physical")
 def physical_page(request: Request, user=Depends(get_current_user), db: Session = Depends(get_db)):
-    """On-site / physical assessment — public nav lands here; form lives on /pro."""
     if user is None:
         return login_redirect()
     return RedirectResponse("/pro", status_code=303)
@@ -279,7 +294,6 @@ def settings_save(symbol: str = Form("E"), motion: str = Form("on"), density: st
 
 @router.get("/inbox")
 def inbox(request: Request, user=Depends(get_current_user), db: Session = Depends(get_db)):
-    """Letters inbox — admins see the board; everyone else writes a letter."""
     if user is None:
         return login_redirect()
     if _is_admin(user):
