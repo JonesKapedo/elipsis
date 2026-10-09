@@ -324,3 +324,38 @@ class Benchmark(Base):
     automation_avg: Mapped[float | None] = mapped_column(Float)
     ai_avg: Mapped[float | None] = mapped_column(Float)
     percentile: Mapped[float | None] = mapped_column(Float)
+
+
+class CollectCampaign(Base):
+    """Owner-shared questionnaire invite for employees of one company."""
+    __tablename__ = "collect_campaigns"
+    token: Mapped[str] = mapped_column(String, primary_key=True)
+    organization_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("organizations.id"), nullable=False)
+    department_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("departments.id"))
+    created_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    title: Mapped[str | None] = mapped_column(String)
+    deadline: Mapped[str | None] = mapped_column(String)
+    min_respondents: Mapped[int] = mapped_column(Integer, default=3)
+    allow_anonymous: Mapped[int] = mapped_column(Integer, default=1)
+    status: Mapped[str] = mapped_column(String, default="collecting")
+    master_assessment_id: Mapped[int | None] = mapped_column(Integer)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+    note: Mapped[str | None] = mapped_column(Text)
+
+
+class CollectResponse(Base):
+    """One employee submission against a collect campaign."""
+    __tablename__ = "collect_responses"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    campaign_token: Mapped[str] = mapped_column(
+        String, ForeignKey("collect_campaigns.token"), nullable=False)
+    assessment_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("assessments.id"), nullable=False)
+    respondent_name: Mapped[str | None] = mapped_column(String)
+    respondent_email: Mapped[str | None] = mapped_column(String)
+    is_anonymous: Mapped[int] = mapped_column(Integer, default=0)
+    status: Mapped[str] = mapped_column(String, default="in_progress")
+    submitted_at: Mapped[str | None] = mapped_column(String)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
