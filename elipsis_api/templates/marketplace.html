@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Marketplace{% endblock %}
+{% block content %}
+
+<section class="dash-hero">
+  <div>
+    <p class="eyebrow">Global automation marketplace</p>
+    <h1>Open requests</h1>
+    <p class="lede">
+      Published opportunities for qualified service partners. Clients request physical assessment and automation delivery; verified providers bid in USD.
+    </p>
+  </div>
+  {% if user %}
+  <a class="btn" href="/start">Request an engagement</a>
+  {% else %}
+  <a class="btn" href="/login">Sign in to participate</a>
+  {% endif %}
+</section>
+
+<section class="kpis">
+  <div class="kpi">
+    <span class="kpi-lb">Published</span>
+    <b>{{ count }}</b>
+  </div>
+  <div class="kpi">
+    <span class="kpi-lb">Scope</span>
+    <b>Global</b>
+  </div>
+  <div class="kpi accent">
+    <span class="kpi-lb">Currency</span>
+    <b>USD</b>
+  </div>
+</section>
+
+<section class="block">
+  <div class="block-head">
+    <h3>Live opportunities</h3>
+  </div>
+
+  {% if requests %}
+  <div class="pillar-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+    {% for r in requests %}
+    <article class="pcard">
+      <div class="pcard-top">
+        <div>
+          <h4 style="margin:0 0 0.35rem;">{{ r.title }}</h4>
+          <span class="pcard-w">
+            {% if r.organization %}{{ r.organization.name }}{% else %}Organisation{% endif %}
+            {% if r.organization and r.organization.company_size %}
+              · <span class="tag">{{ r.organization.company_size|capitalize }}</span>
+            {% endif %}
+          </span>
+        </div>
+        <span class="tag ok">{{ r.status|capitalize }}</span>
+      </div>
+      <p class="muted small" style="margin:0.75rem 0;">
+        {{ (r.message or r.requirements or 'No summary provided.')[:220] }}{% if (r.message or r.requirements or '')|length > 220 %}…{% endif %}
+      </p>
+      <div class="muted small" style="display:flex;flex-wrap:wrap;gap:0.75rem;margin-bottom:0.75rem;">
+        {% if r.organization and r.organization.industry %}
+        <span>{{ r.organization.industry }}</span>
+        {% endif %}
+        {% if r.organization and (r.organization.city or r.organization.country) %}
+        <span>{{ [r.organization.city, r.organization.country]|select|join(', ') }}</span>
+        {% endif %}
+        <span>{{ r.bid_count }} bid{{ 's' if r.bid_count != 1 else '' }}</span>
+      </div>
+      <a class="btn ghost sm" href="/marketplace/{{ r.id }}">View request →</a>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="model-panel" style="margin:0;">
+    <h3>No published requests yet</h3>
+    <p>
+      When administrators verify and publish client requests, they appear here for subscribed providers worldwide.
+      {% if user %}You can still run readiness assessments and prepare your organisation profile.{% endif %}
+    </p>
+  </div>
+  {% endif %}
+</section>
+
+<section class="model-panel">
+  <h3>How the marketplace works</h3>
+  <div class="model-grid">
+    <div class="model-card">
+      <strong>Clients</strong>
+      <span>Submit engagement requests with scope and documents. Admin verification protects quality.</span>
+    </div>
+    <div class="model-card">
+      <strong>Providers</strong>
+      <span>Maintain a shop profile, subscribe, and bid on published work in USD.</span>
+    </div>
+    <div class="model-card">
+      <strong>Intelligence</strong>
+      <span>Elipsis assessments inform readiness before physical delivery and automation programmes.</span>
+    </div>
+    <div class="model-card">
+      <strong>Operations</strong>
+      <span>Central request desk verifies, publishes, and tracks marketplace health.</span>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

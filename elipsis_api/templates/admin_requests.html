@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Request desk{% endblock %}
+{% block content %}
+
+<section class="dash-hero">
+  <div>
+    <p class="eyebrow">Operations</p>
+    <h1>Request desk</h1>
+    <p class="lede">
+      Verify, publish, or reject physical assessment and automation requests before they reach the global marketplace.
+    </p>
+  </div>
+  <a class="btn ghost" href="/marketplace">View marketplace</a>
+</section>
+
+<section class="kpis">
+  <div class="kpi">
+    <span class="kpi-lb">Pending</span>
+    <b>{{ stats.pending }}</b>
+  </div>
+  <div class="kpi">
+    <span class="kpi-lb">Published</span>
+    <b>{{ stats.published }}</b>
+  </div>
+  <div class="kpi">
+    <span class="kpi-lb">Total</span>
+    <b>{{ stats.total }}</b>
+  </div>
+  <div class="kpi accent">
+    <span class="kpi-lb">Rejected</span>
+    <b>{{ stats.rejected }}</b>
+  </div>
+</section>
+
+<section class="block">
+  <div class="block-head">
+    <h3>All requests</h3>
+    <div class="head-actions">
+      <a class="btn ghost sm" href="/admin/requests?status=pending">Pending</a>
+      <a class="btn ghost sm" href="/admin/requests?status=published">Published</a>
+      <a class="btn ghost sm" href="/admin/requests">All</a>
+    </div>
+  </div>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Request</th>
+        <th>Organisation</th>
+        <th>Status</th>
+        <th class="num">Bids</th>
+        <th>Created</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in requests %}
+      <tr>
+        <td>
+          <strong>{{ r.title }}</strong>
+          <div class="muted small">{{ (r.message or '')[:80] }}{% if (r.message or '')|length > 80 %}…{% endif %}</div>
+        </td>
+        <td>
+          {% if r.organization %}
+            {{ r.organization.name }}
+            <div class="muted small">{{ r.organization.industry or '' }}{% if r.organization.country %} · {{ r.organization.country }}{% endif %}</div>
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>
+          {% if r.status == 'published' %}<span class="tag ok">Published</span>
+          {% elif r.status == 'pending' %}<span class="tag warn">Pending</span>
+          {% elif r.status == 'rejected' %}<span class="tag">Rejected</span>
+          {% else %}<span class="tag">{{ r.status|capitalize }}</span>{% endif %}
+        </td>
+        <td class="num">{{ r.bid_count }}</td>
+        <td class="muted small">{{ r.created_at or '—' }}</td>
+        <td>
+          <div style="display:flex;flex-wrap:wrap;gap:0.35rem;">
+            {% if r.status in ['pending', 'verified'] %}
+            <form method="post" action="/admin/requests/{{ r.id }}/publish" style="display:inline;">
+              <button class="btn sm" type="submit">Publish</button>
+            </form>
+            <form method="post" action="/admin/requests/{{ r.id }}/reject" style="display:inline;"
+                  onsubmit="var reason=prompt('Rejection reason'); if(!reason) return false; this.querySelector('[name=reason]').value=reason; return true;">
+              <input type="hidden" name="reason" value="">
+              <button class="btn danger sm" type="submit">Reject</button>
+            </form>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="6" class="muted">No requests in this filter. New client submissions will appear here for review.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="model-panel">
+  <h3>Operating standard</h3>
+  <p>
+    Only verified requests are published. This protects clients and providers and keeps the marketplace aligned with professional delivery standards worldwide.
+  </p>
+</section>
+
+{% endblock %}

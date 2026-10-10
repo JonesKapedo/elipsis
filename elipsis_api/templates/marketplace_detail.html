@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}{{ request_row.title }} · Marketplace{% endblock %}
+{% block content %}
+
+<section class="dash-hero">
+  <div>
+    <p class="eyebrow">Marketplace request</p>
+    <h1>{{ request_row.title }}</h1>
+    <p class="lede">
+      {% if organization %}
+        {{ organization.name }}{% if organization.industry %} · {{ organization.industry }}{% endif %}
+        {% if organization.city or organization.country %}
+          · {{ [organization.city, organization.country]|select|join(', ') }}
+        {% endif %}
+      {% endif %}
+    </p>
+  </div>
+  <a class="btn ghost" href="/marketplace">← All requests</a>
+</section>
+
+<section class="kpis">
+  <div class="kpi">
+    <span class="kpi-lb">Status</span>
+    <b>{{ request_row.status|capitalize }}</b>
+  </div>
+  <div class="kpi">
+    <span class="kpi-lb">Bids</span>
+    <b>{{ bid_count }}</b>
+  </div>
+  <div class="kpi accent">
+    <span class="kpi-lb">Documents</span>
+    <b>{{ documents|length }}</b>
+  </div>
+</section>
+
+<section class="block">
+  <div class="block-head"><h3>Brief</h3></div>
+  <p style="white-space:pre-wrap;line-height:1.6;">{{ request_row.message or 'No description provided.' }}</p>
+  {% if request_row.requirements %}
+  <h4 style="margin-top:1.5rem;">Requirements</h4>
+  <p class="muted" style="white-space:pre-wrap;">{{ request_row.requirements }}</p>
+  {% endif %}
+</section>
+
+{% if documents %}
+<section class="block">
+  <div class="block-head"><h3>Documents</h3></div>
+  <ul>
+    {% for d in documents %}
+    <li>{{ d.file_name }}{% if d.file_url %} — <a href="{{ d.file_url }}" target="_blank" rel="noopener">Open</a>{% endif %}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<section class="model-panel">
+  <h3>Next step</h3>
+  <p>
+    Qualified providers with an active subscription can bid via the API. Full bid forms in the product UI are part of the next frontend phase.
+    Until then, contact operations if you are an approved partner.
+  </p>
+</section>
+
+{% endblock %}
