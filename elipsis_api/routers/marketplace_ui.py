@@ -82,6 +82,128 @@ def marketplace_detail(request_id: int, request: Request,
          "documents": documents, "bid_count": int(bid_count)})
 
 
+@router.get("/admin")
+def admin_pulse(request: Request, user=Depends(get_current_user),
+                db: Session = Depends(get_db)):
+    """Admin pulse overview — organisations, assessments, request pipeline."""
+    if user is None:
+        return login_redirect()
+    if not _admin_ok(user):
+        return _not_found(request, user)
+
+    orgs_raw = db.scalars(
+        select(models.Organization).order_by(models.Organization.id.desc()).limit(40)
+    ).all()
+    orgs = []
+    for org in orgs_raw:
+        a_count = db.scalar(
+            select(func.count()).select_from(models.Assessment).where(
+                models.Assessment.organization_id == org.id)
+        ) or 0
+        latest = db.scalar(
+            select(models.Assessment)
+            .where(models.Assessment.organization_id == org.id)
+            .order_by(models.Assessment.id.desc())
+            .limit(1)
+        )
+        orgs.append({
+            "name": org.name,
+            "industry": org.industry,
+            "city": org.city,
+            "country": org.country,
+            "employee_count": org.employee_count,
+            "assessment_count": int(a_count),
+            "latest_at": getattr(latest, "started_at", None) or getattr(latest, "created_at", None) if latest else None,
+        })
+
+    assessments_raw = db.scalars(
+        select(models.Assessment).order_by(models.Assessment.id.desc()).limit(25)
+    ).all()
+    assessments = []
+    for a in assessments_raw:
+        org = db.get(models.Organization, a.organization_id)
+        dept = db.get(models.Department, a.department_id) if a.department_id else None
+        score = None
+        if hasattr(a, "readiness_index") and a.readiness_index is not None:
+            try:
+                score = round(float(a.readiness_index), 1)
+            except (TypeError, ValueError):
+                score = a.readiness_index
+        assessments.append({
+            "org_name": org.name if org else "—",
+            "department": dept.name if dept else None,
+            "status": a.status or "in_progress",
+            "score": score,
+            "created_at": getattr(a, "started_at", None) or getattr(a, "created_at", None),
+        })
+
+    reqs_raw = db.scalars(
+        select(models.PhysicalAssessmentRequest).order_by(
+            models.PhysicalAssessmentRequest.id.desc()).limit(20)
+    ).all()
+    requests = []
+    for req in reqs_raw:
+        org = db.get(models.Organization, req.organization_id)
+        bid_count = db.scalar(
+            select(func.count()).select_from(models.BidSubmission).where(
+                models.BidSubmission.request_id == req.id)
+        ) or 0
+        requests.append({
+            "title": req.title,
+            "org_name": org.name if org else "—",
+            "status": req.status,
+            "bid_count": int(bid_count),
+            "created_at": req.created_at,
+        })
+
+    all_orgs = db.scalar(select(func.count()).select_from(models.Organization)) or 0
+    all_assess = db.scalar(select(func.count()).select_from(models.Assessment)) or 0
+    all_req = db.scalars(select(models.PhysicalAssessmentRequest)).all()
+    pending = sum(1 for r in all_req if r.status == "pending")
+    published = sum(1 for r in all_req if r.status == "published")
+    completed_a = db.scalar(
+        select(func.count()).select_from(models.Assessment).where(
+            models.Assessment.status == "completed")
+    ) or 0
+    bidders = 0
+    try:
+        bidders = db.scalar(select(func.count()).select_from(models.BidderCompany)) or 0
+    except Exception:
+        bidders = db.scalar(
+            select(func.count()).select_from(models.User).where(
+                models.User.user_type == "bidder")
+        ) or 0
+
+    stats = {
+        "orgs": int(all_orgs),
+        "assessments": int(all_assess),
+        "pending_requests": pending,
+        "published_requests": published,
+        "bidders": int(bidders),
+        "completed_assessments": int(completed_a),
+    }
+    max_v = max(stats["orgs"], stats["assessments"], stats["published_requests"], stats["pending_requests"], 1)
+    bar_orgs = min(100, int(100 * stats["orgs"] / max_v))
+    bar_assess = min(100, int(100 * stats["assessments"] / max_v))
+    bar_pub = min(100, int(100 * stats["published_requests"] / max_v))
+    bar_pend = min(100, int(100 * stats["pending_requests"] / max_v))
+
+    return templates.TemplateResponse(
+        request, "admin.html",
+        {
+            "user": user,
+            "stats": stats,
+            "orgs": orgs,
+            "assessments": assessments,
+            "requests": requests,
+            "bar_orgs": bar_orgs,
+            "bar_assess": bar_assess,
+            "bar_pub": bar_pub,
+            "bar_pend": bar_pend,
+        },
+    )
+
+
 @router.get("/admin/requests")
 def admin_requests_page(request: Request, user=Depends(get_current_user),
                         db: Session = Depends(get_db)):
@@ -118,9 +240,11 @@ def admin_requests_page(request: Request, user=Depends(get_current_user),
         "published": sum(1 for r in all_rows if r.status == "published"),
         "rejected": sum(1 for r in all_rows if r.status == "rejected"),
     }
+    active = [r for r in requests if r["status"] in ("pending", "verified", "published")]
+    history = [r for r in requests if r["status"] not in ("pending", "verified", "published")]
     return templates.TemplateResponse(
         request, "admin_requests.html",
-        {"user": user, "requests": requests, "stats": stats})
+        {"user": user, "requests": requests, "active": active, "history": history, "stats": stats})
 
 
 @router.post("/admin/requests/{request_id}/publish")
