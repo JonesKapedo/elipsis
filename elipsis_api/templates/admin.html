@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block title %}Admin pulse{% endblock %}
+{% block content %}
+
+<section class="dash-hero">
+  <div>
+    <p class="eyebrow">Operations · Pulse</p>
+    <h1>What is moving right now</h1>
+    <p class="lede">
+      A living snapshot of organisations on the platform, the assessments they run, and the requests flowing through the marketplace. Use the numbers to spot where adoption is gaining ground.
+    </p>
+  </div>
+  <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+    <a class="btn ghost" href="/admin/requests">Request desk</a>
+    <a class="btn ghost" href="/marketplace">Marketplace</a>
+  </div>
+</section>
+
+<section class="kpis">
+  <div class="kpi">
+    <span class="kpi-lb">Organisations</span>
+    <b>{{ stats.orgs }}</b>
+  </div>
+  <div class="kpi">
+    <span class="kpi-lb">Assessments</span>
+    <b>{{ stats.assessments }}</b>
+  </div>
+  <div class="kpi">
+    <span class="kpi-lb">Open requests</span>
+    <b>{{ stats.pending_requests }}</b>
+  </div>
+  <div class="kpi accent">
+    <span class="kpi-lb">Published</span>
+    <b>{{ stats.published_requests }}</b>
+  </div>
+  <div class="kpi">
+    <span class="kpi-lb">Automation partners</span>
+    <b>{{ stats.bidders }}</b>
+  </div>
+  <div class="kpi">
+    <span class="kpi-lb">Completed</span>
+    <b>{{ stats.completed_assessments }}</b>
+  </div>
+</section>
+
+<section class="block">
+  <div class="block-head">
+    <h3>Adoption at a glance</h3>
+  </div>
+  <p class="muted" style="margin-bottom:1rem;">Simple view of how the platform is being used. Bars show relative volume.</p>
+  <div style="display:grid;gap:0.75rem;max-width:520px;">
+    <div>
+      <div class="row-between" style="margin-bottom:0.25rem;">
+        <span class="small">Organisations registered</span>
+        <strong>{{ stats.orgs }}</strong>
+      </div>
+      <div style="height:10px;background:#e5e7eb;border-radius:5px;overflow:hidden;">
+        <div style="height:100%;width:{{ bar_orgs }}%;background:var(--accent,#0f766e);border-radius:5px;"></div>
+      </div>
+    </div>
+    <div>
+      <div class="row-between" style="margin-bottom:0.25rem;">
+        <span class="small">Assessments started</span>
+        <strong>{{ stats.assessments }}</strong>
+      </div>
+      <div style="height:10px;background:#e5e7eb;border-radius:5px;overflow:hidden;">
+        <div style="height:100%;width:{{ bar_assess }}%;background:#0369a1;border-radius:5px;"></div>
+      </div>
+    </div>
+    <div>
+      <div class="row-between" style="margin-bottom:0.25rem;">
+        <span class="small">Requests in marketplace</span>
+        <strong>{{ stats.published_requests }}</strong>
+      </div>
+      <div style="height:10px;background:#e5e7eb;border-radius:5px;overflow:hidden;">
+        <div style="height:100%;width:{{ bar_pub }}%;background:#7c3aed;border-radius:5px;"></div>
+      </div>
+    </div>
+    <div>
+      <div class="row-between" style="margin-bottom:0.25rem;">
+        <span class="small">Pending review</span>
+        <strong>{{ stats.pending_requests }}</strong>
+      </div>
+      <div style="height:10px;background:#e5e7eb;border-radius:5px;overflow:hidden;">
+        <div style="height:100%;width:{{ bar_pend }}%;background:#d97706;border-radius:5px;"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="block-head">
+    <h3>Registered organisations</h3>
+    <span class="muted small">{{ orgs|length }} shown</span>
+  </div>
+  {% if orgs %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Industry</th>
+        <th>Location</th>
+        <th class="num">People</th>
+        <th class="num">Assessments</th>
+        <th>Latest</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for o in orgs %}
+      <tr>
+        <td><strong>{{ o.name }}</strong></td>
+        <td class="muted">{{ o.industry or '—' }}</td>
+        <td class="muted">{{ o.city or '' }}{% if o.city and o.country %}, {% endif %}{{ o.country or '—' }}</td>
+        <td class="num">{{ o.employee_count or '—' }}</td>
+        <td class="num">{{ o.assessment_count }}</td>
+        <td class="muted small">{{ o.latest_at or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No organisations registered yet. When they appear, they will show here with their assessment activity.</p>
+  {% endif %}
+</section>
+
+<section class="block">
+  <div class="block-head">
+    <h3>Recent assessments</h3>
+  </div>
+  {% if assessments %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Organisation</th>
+        <th>Scope</th>
+        <th>Status</th>
+        <th>Score</th>
+        <th>Started</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in assessments %}
+      <tr>
+        <td><strong>{{ a.org_name }}</strong></td>
+        <td class="muted">{{ a.department or 'Organisation-wide' }}</td>
+        <td>
+          {% if a.status == 'completed' %}<span class="tag ok">Complete</span>
+          {% elif a.status == 'in_progress' %}<span class="tag warn">In progress</span>
+          {% else %}<span class="tag">{{ a.status|capitalize }}</span>{% endif %}
+        </td>
+        <td class="num">{% if a.score is not none %}{{ a.score }}{% else %}—{% endif %}</td>
+        <td class="muted small">{{ a.created_at or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No assessments yet. They will surface here as organisations begin measuring.</p>
+  {% endif %}
+</section>
+
+<section class="block">
+  <div class="block-head">
+    <h3>Request pipeline</h3>
+    <a class="btn ghost sm" href="/admin/requests">Open desk →</a>
+  </div>
+  {% if requests %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Request</th>
+        <th>Organisation</th>
+        <th>Status</th>
+        <th class="num">Bids</th>
+        <th>When</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in requests %}
+      <tr>
+        <td><strong>{{ r.title }}</strong></td>
+        <td class="muted">{{ r.org_name }}</td>
+        <td>
+          {% if r.status == 'published' %}<span class="tag ok">Live</span>
+          {% elif r.status == 'pending' %}<span class="tag warn">Pending</span>
+          {% elif r.status == 'rejected' %}<span class="tag">Closed</span>
+          {% else %}<span class="tag">{{ r.status|capitalize }}</span>{% endif %}
+        </td>
+        <td class="num">{{ r.bid_count }}</td>
+        <td class="muted small">{{ r.created_at or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No requests in the pipeline yet.</p>
+  {% endif %}
+</section>
+
+{% endblock %}
