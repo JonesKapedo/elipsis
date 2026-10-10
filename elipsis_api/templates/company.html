@@ -3,8 +3,8 @@
 {% block content %}
 <section class="hero-lite">
   <p class="eyebrow">Workspace</p>
-  <h1>My company</h1>
-  <p class="lede">Save your company, run assessments yourself, or share a questionnaire link with employees. When enough people respond, Elipsis builds the report automatically.</p>
+  <h1>Your organisation workspace</h1>
+  <p class="lede">This is where readiness becomes visible. Add the organisations you care about, start an assessment, or invite the team. The numbers will tell the story of where friction lives — and what it costs.</p>
 </section>
 
 {% for row in rows %}
@@ -30,7 +30,7 @@
   <p><a class="btn sm" href="/assessment/{{ row.latest.id }}/results">Open latest report</a></p>
   {% endif %}
   {% else %}
-  <p class="muted">No completed assessment yet. Start one below or share a questionnaire with your team.</p>
+  <p class="muted">No completed assessment yet. Begin one below, or share a short questionnaire with the people who know the work best.</p>
   {% endif %}
 
   <div class="card-grid two" style="margin-top:1.25rem">
@@ -59,84 +59,57 @@
     <div class="block soft">
       <h3>Share questionnaire</h3>
       <p class="muted">Employees answer on their own device. You set a deadline and a minimum number of responses.</p>
-      <form method="post" action="/company/{{ row.org.id }}/share" class="stack">
-        <label>Scope
-          <select name="department">
-            <option value="Organisation-wide">Whole company</option>
-            <option value="Operations">Operations</option>
-            <option value="Finance">Finance</option>
-            <option value="Customer Service">Customer Service</option>
-            <option value="HR">HR</option>
-            <option value="IT">IT</option>
-            <option value="Sales">Sales</option>
-          </select>
+      <form method="post" action="/company/{{ row.org.id }}/campaign" class="stack">
+        <label>Deadline (optional)
+          <input type="date" name="deadline">
         </label>
-        <div class="form-grid">
-          <label>Deadline date
-            <input type="date" name="deadline_date" required>
-          </label>
-          <label>Deadline time
-            <input type="time" name="deadline_time" value="17:00" required>
-          </label>
-        </div>
-        <label>Minimum respondents
-          <input type="number" name="min_respondents" min="1" max="500" value="5" required>
-        </label>
-        <label class="check">
-          <input type="checkbox" name="allow_anonymous" value="1" checked>
-          Allow anonymous responses
-        </label>
-        <label>Note to employees (optional)
-          <textarea name="note" rows="2" placeholder="Please complete by the deadline so we can finalise the readiness report."></textarea>
+        <label>Minimum responses
+          <input type="number" name="min_responses" value="3" min="1" max="500">
         </label>
         <button class="btn ghost" type="submit">Create share link</button>
       </form>
     </div>
   </div>
 
-  {% if row.campaigns %}
-  <h3 style="margin-top:1.5rem">Active shared questionnaires</h3>
-  <ul class="clean-list">
-    {% for c in row.campaigns %}
-    <li>
-      <a href="/company/campaign/{{ c.token }}"><strong>{{ c.title or 'Team questionnaire' }}</strong></a>
-      — {{ c.completed }}/{{ c.min_respondents }} responses
-      · status {{ c.status }}
-      {% if c.deadline %} · due {{ c.deadline }}{% endif %}
-    </li>
-    {% endfor %}
-  </ul>
-  {% endif %}
-
+  {% if row.assessments %}
   <h3 style="margin-top:1.5rem">Assessments</h3>
-  <ul class="clean-list">
+  <table class="table">
+    <thead><tr><th>Scope</th><th>Status</th><th>Score</th><th></th></tr></thead>
+    <tbody>
     {% for a in row.assessments %}
-    <li>
-      <a href="/assessment/{{ a.id }}{% if a.status == 'completed' %}/results{% else %}/step/1{% endif %}">#{{ a.id }}</a>
-      — {{ a.status }}
-      {% if a.department %} · {{ a.department }}{% endif %}
-      {% if a.readiness_index is not none %} · index {{ a.readiness_index }}{% endif %}
-    </li>
-    {% else %}
-    <li class="muted">None yet.</li>
+    <tr>
+      <td>{{ a.department or 'Organisation-wide' }}</td>
+      <td>{{ a.status }}</td>
+      <td>{% if a.elipsis_index is not none %}{{ a.elipsis_index }}{% else %}—{% endif %}</td>
+      <td><a href="/assessment/{{ a.id }}/results">Open</a></td>
+    </tr>
     {% endfor %}
-  </ul>
+    </tbody>
+  </table>
+  {% endif %}
 </article>
 {% else %}
-<p class="muted">You have no company yet. Create one below — assessments stay free.</p>
-{% endfor %}
-
 <section class="block">
-  <h2>Add a company</h2>
-  <form method="post" action="/company" class="stack">
-    <label>Name <input name="name" required placeholder="Company legal name"></label>
-    <div class="form-grid">
-      <label>Industry <input name="industry"></label>
-      <label>Employees <input name="employee_count" type="number" min="1"></label>
-      <label>City <input name="city"></label>
-      <label>Country <input name="country" value="Kenya"></label>
-    </div>
-    <button class="btn" type="submit">Save company</button>
+  <h2>Add your first organisation</h2>
+  <p class="muted">Name, industry and headcount let the financial model size the opportunity correctly.</p>
+  <form method="post" action="/company" class="stack" style="max-width:28rem">
+    <label>Organisation name
+      <input name="name" required maxlength="200" placeholder="Acme Holdings">
+    </label>
+    <label>Industry
+      <input name="industry" maxlength="120" placeholder="Manufacturing, Financial services…">
+    </label>
+    <label>Employee count
+      <input name="employee_count" type="number" min="1" placeholder="120">
+    </label>
+    <label>City
+      <input name="city" maxlength="120">
+    </label>
+    <label>Country
+      <input name="country" maxlength="120">
+    </label>
+    <button class="btn" type="submit">Save organisation</button>
   </form>
 </section>
+{% endfor %}
 {% endblock %}

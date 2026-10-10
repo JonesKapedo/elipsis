@@ -7,7 +7,7 @@
     <p class="eyebrow">Global automation marketplace</p>
     <h1>Open requests</h1>
     <p class="lede">
-      Published opportunities for qualified service partners. Clients request physical assessment and automation delivery; verified providers bid in USD.
+      Real organisations looking for partners who can turn readiness into results. Every request has been reviewed. Bid in USD. Deliver with clarity.
     </p>
   </div>
   {% if user %}
@@ -60,46 +60,18 @@
         {% if r.organization and r.organization.industry %}
         <span>{{ r.organization.industry }}</span>
         {% endif %}
-        {% if r.organization and (r.organization.city or r.organization.country) %}
-        <span>{{ [r.organization.city, r.organization.country]|select|join(', ') }}</span>
+        {% if r.organization and r.organization.country %}
+        <span>{{ r.organization.country }}</span>
         {% endif %}
-        <span>{{ r.bid_count }} bid{{ 's' if r.bid_count != 1 else '' }}</span>
+        <span>{{ r.bid_count }} bid{% if r.bid_count != 1 %}s{% endif %}</span>
       </div>
-      <a class="btn ghost sm" href="/marketplace/{{ r.id }}">View request →</a>
+      <a class="btn sm" href="/marketplace/{{ r.id }}">View details</a>
     </article>
     {% endfor %}
   </div>
   {% else %}
-  <div class="model-panel" style="margin:0;">
-    <h3>No published requests yet</h3>
-    <p>
-      When administrators verify and publish client requests, they appear here for subscribed providers worldwide.
-      {% if user %}You can still run readiness assessments and prepare your organisation profile.{% endif %}
-    </p>
-  </div>
+  <p class="muted">No published requests right now. Check back soon, or create an account to submit your own.</p>
   {% endif %}
-</section>
-
-<section class="model-panel">
-  <h3>How the marketplace works</h3>
-  <div class="model-grid">
-    <div class="model-card">
-      <strong>Clients</strong>
-      <span>Submit engagement requests with scope and documents. Admin verification protects quality.</span>
-    </div>
-    <div class="model-card">
-      <strong>Providers</strong>
-      <span>Maintain a shop profile, subscribe, and bid on published work in USD.</span>
-    </div>
-    <div class="model-card">
-      <strong>Intelligence</strong>
-      <span>Elipsis assessments inform readiness before physical delivery and automation programmes.</span>
-    </div>
-    <div class="model-card">
-      <strong>Operations</strong>
-      <span>Central request desk verifies, publishes, and tracks marketplace health.</span>
-    </div>
-  </div>
 </section>
 
 {% endblock %}
