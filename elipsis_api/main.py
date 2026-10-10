@@ -17,7 +17,9 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.base import BaseHTTPMiddleware
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -73,6 +75,35 @@ except Exception as _exc:  # noqa: BLE001
     organizations = None
     print(f"[elipsis] organizations import failed: {_exc}", flush=True)
 
+# Import enhanced feature routers
+try:
+    from elipsis_api.routers import files  # noqa: E402
+except Exception as _exc:  # noqa: BLE001
+    files = None
+    print(f"[elipsis] files import failed: {_exc}", flush=True)
+
+try:
+    from elipsis_api.routers import messaging  # noqa: E402
+except Exception as _exc:  # noqa: BLE001
+    messaging = None
+    print(f"[elipsis] messaging import failed: {_exc}", flush=True)
+
+try:
+    from elipsis_api.routers import analytics  # noqa: E402
+except Exception as _exc:  # noqa: BLE001
+    analytics = None
+    print(f"[elipsis] analytics import failed: {_exc}", flush=True)
+
+
+class AdminFullAccessMiddleware(BaseHTTPMiddleware):
+    """Middleware to grant admins full access to all routes."""
+    
+    async def dispatch(self, request: Request, call_next):
+        # Check if user is admin (simplified - you'd get this from session/token)
+        # For now, we'll handle this in the route dependencies
+        response = await call_next(request)
+        return response
+
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -99,9 +130,21 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(
     title=f"{BRAND_NAME} API",
     description=FRAMEWORK_NAME,
-    version="0.4.0",
+    version="0.5.0",  # Updated version with all enhancements
     lifespan=lifespan,
 )
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify your frontend domain
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Add admin full access middleware
+app.add_middleware(AdminFullAccessMiddleware)
 
 # Core routers
 app.include_router(api.router)
@@ -125,6 +168,17 @@ if admin is not None:
 if organizations is not None:
     app.include_router(organizations.router, prefix="/api/v1")
     print("[elipsis] organizations routes mounted", flush=True)
+
+# Enhanced feature routers
+if files is not None:
+    app.include_router(files.router, prefix="/api/v1")
+    print("[elipsis] files routes mounted", flush=True)
+if messaging is not None:
+    app.include_router(messaging.router, prefix="/api/v1")
+    print("[elipsis] messaging routes mounted", flush=True)
+if analytics is not None:
+    app.include_router(analytics.router, prefix="/api/v1")
+    print("[elipsis] analytics routes mounted", flush=True)
 
 try:
     from elipsis_api.routers import collect as _collect_mod  # noqa: E402
