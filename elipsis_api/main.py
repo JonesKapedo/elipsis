@@ -29,7 +29,6 @@ from elipsis_api.config import DATABASE_URL  # noqa: E402
 from elipsis_api.database import Base, SessionLocal, engine  # noqa: E402
 from elipsis_api import state as runtime_state  # noqa: E402
 
-# Import routers defensively so a single broken module does not empty the app.
 from elipsis_api.routers import api, pages
 
 try:
@@ -50,7 +49,6 @@ except Exception as _exc:  # noqa: BLE001
     studio = None
     print(f"[elipsis] studio import failed: {_exc}", flush=True)
 
-# Import marketplace routers
 try:
     from elipsis_api.routers import marketplace  # noqa: E402
 except Exception as _exc:  # noqa: BLE001
@@ -75,7 +73,6 @@ except Exception as _exc:  # noqa: BLE001
     organizations = None
     print(f"[elipsis] organizations import failed: {_exc}", flush=True)
 
-# Import enhanced feature routers
 try:
     from elipsis_api.routers import files  # noqa: E402
 except Exception as _exc:  # noqa: BLE001
@@ -96,18 +93,13 @@ except Exception as _exc:  # noqa: BLE001
 
 
 class AdminFullAccessMiddleware(BaseHTTPMiddleware):
-    """Middleware to grant admins full access to all routes."""
-    
     async def dispatch(self, request: Request, call_next):
-        # Check if user is admin (simplified - you'd get this from session/token)
-        # For now, we'll handle this in the route dependencies
         response = await call_next(request)
         return response
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    """Create schema and seed once per cold start; never crash the process."""
     try:
         Base.metadata.create_all(bind=engine)
         db = SessionLocal()
@@ -130,23 +122,19 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(
     title=f"{BRAND_NAME} API",
     description=FRAMEWORK_NAME,
-    version="0.5.0",  # Updated version with all enhancements
+    version="0.5.1",
     lifespan=lifespan,
 )
 
-# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your frontend domain
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Add admin full access middleware
 app.add_middleware(AdminFullAccessMiddleware)
 
-# Core routers
 app.include_router(api.router)
 if auth_pages is not None:
     app.include_router(auth_pages.router)
@@ -155,7 +143,6 @@ if report_routes is not None:
 if studio is not None:
     app.include_router(studio.router)
 
-# Marketplace routers
 if marketplace is not None:
     app.include_router(marketplace.router, prefix="/api/v1")
     print("[elipsis] marketplace routes mounted", flush=True)
@@ -169,7 +156,6 @@ if organizations is not None:
     app.include_router(organizations.router, prefix="/api/v1")
     print("[elipsis] organizations routes mounted", flush=True)
 
-# Enhanced feature routers
 if files is not None:
     app.include_router(files.router, prefix="/api/v1")
     print("[elipsis] files routes mounted", flush=True)
@@ -186,16 +172,22 @@ try:
     print("[elipsis] collect routes mounted", flush=True)
 except Exception as _exc:  # noqa: BLE001
     print(f"[elipsis] collect not mounted: {_exc}", flush=True)
-    
+
 app.include_router(pages.router)
 
-# Marketplace + admin request desk (server-rendered professional shell)
 try:
     from elipsis_api.routers import marketplace_ui as _marketplace_ui  # noqa: E402
     app.include_router(_marketplace_ui.router)
     print("[elipsis] marketplace UI routes mounted", flush=True)
 except Exception as _exc:  # noqa: BLE001
     print(f"[elipsis] marketplace UI not mounted: {_exc}", flush=True)
+
+try:
+    from elipsis_api.routers import company_ui as _company_ui  # noqa: E402
+    app.include_router(_company_ui.router)
+    print("[elipsis] company UI routes mounted", flush=True)
+except Exception as _exc:  # noqa: BLE001
+    print(f"[elipsis] company UI not mounted: {_exc}", flush=True)
 
 _static = Path(__file__).resolve().parent.parent / "static"
 if _static.is_dir():
@@ -219,7 +211,6 @@ async def validation_exception_handler(_request: Request, exc: RequestValidation
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
-    """Never leak a bare 500 with no body on serverless."""
     print(f"[elipsis] unhandled {exc.__class__.__name__} on {request.url.path}: {exc}",
           flush=True)
     traceback.print_exc()
