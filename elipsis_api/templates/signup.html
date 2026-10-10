@@ -4,29 +4,29 @@
 {% block content %}
 <div class="auth auth-pro">
   <section class="auth-pitch">
-    <p class="eyebrow">CREATE YOUR WORKSPACE</p>
-    <h1>Start measuring what friction really costs.</h1>
-    <p class="lede">Free account. No credit card. Run your first assessment in about 25 minutes and get a board-ready pack.</p>
+    <p class="eyebrow">JOIN THE PLATFORM</p>
+    <h1>Choose how you show up.</h1>
+    <p class="lede">Whether you run an organisation ready for change, or deliver automation that makes it real — start here. Free. No card required.</p>
     <ul class="auth-points">
       <li>
         <span class="auth-icon">1</span>
         <div>
-          <strong>Register in under a minute</strong>
-          <p class="muted">Work email and a password. You are signed in immediately.</p>
+          <strong>Tell us who you are</strong>
+          <p class="muted">Organisation seeking clarity, or automation partner ready to bid.</p>
         </div>
       </li>
       <li>
         <span class="auth-icon">2</span>
         <div>
-          <strong>Configure your organisation</strong>
-          <p class="muted">Name, industry, headcount — so the financial model is sized correctly.</p>
+          <strong>Set up in under a minute</strong>
+          <p class="muted">Work email and a password. You land in the right workspace immediately.</p>
         </div>
       </li>
       <li>
         <span class="auth-icon">3</span>
         <div>
-          <strong>Answer and act</strong>
-          <p class="muted">{{ total_questions or 63 }} questions, live scores, shareable results.</p>
+          <strong>Act on real numbers</strong>
+          <p class="muted">{{ total_questions or 63 }} questions, live scores, and a board-ready pack when you are ready.</p>
         </div>
       </li>
     </ul>
@@ -51,6 +51,26 @@
     {% endif %}
 
     <form method="post" action="/signup" class="stack" novalidate>
+      <fieldset style="border:none;padding:0;margin:0 0 1rem;">
+        <legend class="muted" style="margin-bottom:0.5rem;font-size:0.9rem;">I am registering as</legend>
+        <div style="display:flex;flex-direction:column;gap:0.6rem;">
+          <label style="display:flex;align-items:flex-start;gap:0.6rem;cursor:pointer;padding:0.75rem;border:1px solid var(--border, #e5e7eb);border-radius:8px;">
+            <input type="radio" name="user_type" value="client" {% if not form or form.user_type != 'bidder' %}checked{% endif %} required style="margin-top:0.2rem;">
+            <div>
+              <strong>Organisation</strong>
+              <p class="muted small" style="margin:0.15rem 0 0;">I want to measure readiness, run assessments, and request automation support.</p>
+            </div>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:0.6rem;cursor:pointer;padding:0.75rem;border:1px solid var(--border, #e5e7eb);border-radius:8px;">
+            <input type="radio" name="user_type" value="bidder" {% if form and form.user_type == 'bidder' %}checked{% endif %} style="margin-top:0.2rem;">
+            <div>
+              <strong>Automation company</strong>
+              <p class="muted small" style="margin:0.15rem 0 0;">I deliver automation and physical assessments. I want to bid on open requests.</p>
+            </div>
+          </label>
+        </div>
+      </fieldset>
+
       <label for="name">Full name
         <input id="name" name="name" required maxlength="120"
                placeholder="Jane Wanjiku" value="{{ form.name if form else '' }}" autofocus>
