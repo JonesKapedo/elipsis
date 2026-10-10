@@ -7,19 +7,15 @@
   <title>{% block title %}{{ BRAND_NAME }}{% endblock %} · {{ BRAND_TAGLINE }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css">
-  <link rel="stylesheet" href="/static/app-shell.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/app.css">
-  <link rel="stylesheet" href="/static/extras.css">
   {% block head %}{% endblock %}
 </head>
-<body class="{% if authed %}is-app{% else %}is-public{% endif %}">
-<a class="skip-link" href="#main">Skip to content</a>
+<body class="{% block body_class %}{% endblock %} {% if authed %}app-shell{% endif %}">
+<a class="skip" href="#main">Skip to content</a>
 
 {% if authed %}
-<div class="app-layout">
-  <aside class="app-sidebar no-print" id="app-sidebar">
+<aside class="app-sidebar" id="app-sidebar">
     <div class="sidebar-brand">
       <a href="/dashboard" class="word">{{ BRAND_NAME }}</a>
       <button type="button" class="sidebar-close" id="sidebar-close" aria-label="Close menu">×</button>
@@ -37,6 +33,7 @@
 
       {% if (user.role or '') == 'admin' or user.is_admin %}
       <p class="nav-group-label">Operations</p>
+      <a href="/admin" class="nav-item"><span class="nav-icon">◎</span> Admin pulse</a>
       <a href="/admin/requests" class="nav-item"><span class="nav-icon">☑</span> Request desk</a>
       {% endif %}
 
@@ -81,43 +78,17 @@
 {% if authed %}
     </main>
   </div>
-</div>
-<div class="sidebar-backdrop no-print" id="sidebar-backdrop"></div>
-<script>
-(function () {
-  var layout = document.querySelector('.app-layout');
-  if (!layout) return;
-  var toggle = document.getElementById('sidebar-toggle');
-  var closeBtn = document.getElementById('sidebar-close');
-  var backdrop = document.getElementById('sidebar-backdrop');
-  function open() { layout.classList.add('sidebar-open'); }
-  function close() { layout.classList.remove('sidebar-open'); }
-  if (toggle) toggle.addEventListener('click', open);
-  if (closeBtn) closeBtn.addEventListener('click', close);
-  if (backdrop) backdrop.addEventListener('click', close);
-  document.querySelectorAll('.sidebar-nav a.nav-item').forEach(function (a) {
-    var href = a.getAttribute('href');
-    if (href && (window.location.pathname === href || (href !== '/' && window.location.pathname.startsWith(href)))) {
-      a.classList.add('active');
-    }
-  });
-})();
-</script>
 {% else %}
 </main>
 <footer class="pub-footer no-print">
-  <div>
-    <strong>{{ BRAND_NAME }}</strong>
-    <p>{{ BRAND_TAGLINE }}</p>
+  <div class="foot-inner">
+    <span>{{ BRAND_NAME }}</span>
+    <span class="muted">{{ BRAND_TAGLINE }}</span>
   </div>
-  <nav>
-    <a href="/marketplace">Marketplace</a>
-    <a href="/methodology">Method</a>
-    <a href="/pricing">Engagements</a>
-    <a href="/sample">Sample report</a>
-  </nav>
 </footer>
 {% endif %}
+
+<script src="/static/app.js" defer></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>
