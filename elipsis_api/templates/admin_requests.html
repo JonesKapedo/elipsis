@@ -7,40 +7,42 @@
     <p class="eyebrow">Operations</p>
     <h1>Request desk</h1>
     <p class="lede">
-      Verify, publish, or reject physical assessment and automation requests before they reach the global marketplace.
+      Every engagement request lands here first. Publish the ones ready for partners; set aside the ones that need more clarity. The marketplace stays sharp because you decide what goes live.
     </p>
   </div>
-  <a class="btn ghost" href="/marketplace">View marketplace</a>
+  <a class="btn ghost" href="/marketplace">View live marketplace</a>
 </section>
 
 <section class="kpis">
   <div class="kpi">
-    <span class="kpi-lb">Pending</span>
+    <span class="kpi-lb">Waiting review</span>
     <b>{{ stats.pending }}</b>
   </div>
   <div class="kpi">
-    <span class="kpi-lb">Published</span>
+    <span class="kpi-lb">Live now</span>
     <b>{{ stats.published }}</b>
   </div>
   <div class="kpi">
-    <span class="kpi-lb">Total</span>
+    <span class="kpi-lb">Total ever</span>
     <b>{{ stats.total }}</b>
   </div>
   <div class="kpi accent">
-    <span class="kpi-lb">Rejected</span>
+    <span class="kpi-lb">Closed / rejected</span>
     <b>{{ stats.rejected }}</b>
   </div>
 </section>
 
 <section class="block">
   <div class="block-head">
-    <h3>All requests</h3>
+    <h3>Active queue</h3>
     <div class="head-actions">
       <a class="btn ghost sm" href="/admin/requests?status=pending">Pending</a>
       <a class="btn ghost sm" href="/admin/requests?status=published">Published</a>
-      <a class="btn ghost sm" href="/admin/requests">All</a>
+      <a class="btn ghost sm" href="/admin/requests">All active</a>
     </div>
   </div>
+
+  <p class="muted small" style="margin-bottom:0.75rem;">Ranked by most recent activity. Newest at the top.</p>
 
   <table class="table">
     <thead>
@@ -49,7 +51,7 @@
         <th>Organisation</th>
         <th>Status</th>
         <th class="num">Bids</th>
-        <th>Created</th>
+        <th>When</th>
         <th></th>
       </tr>
     </thead>
@@ -69,13 +71,13 @@
           {% endif %}
         </td>
         <td>
-          {% if r.status == 'published' %}<span class="tag ok">Published</span>
+          {% if r.status == 'published' %}<span class="tag ok">Live</span>
           {% elif r.status == 'pending' %}<span class="tag warn">Pending</span>
           {% elif r.status == 'rejected' %}<span class="tag">Rejected</span>
           {% else %}<span class="tag">{{ r.status|capitalize }}</span>{% endif %}
         </td>
         <td class="num">{{ r.bid_count }}</td>
-        <td class="muted small">{{ r.created_at or '—' }}</td>
+        <td class="muted small">{{ r.published_at or r.created_at or '—' }}</td>
         <td>
           <div style="display:flex;flex-wrap:wrap;gap:0.35rem;">
             {% if r.status in ['pending', 'verified'] %}
@@ -83,9 +85,9 @@
               <button class="btn sm" type="submit">Publish</button>
             </form>
             <form method="post" action="/admin/requests/{{ r.id }}/reject" style="display:inline;"
-                  onsubmit="var reason=prompt('Rejection reason'); if(!reason) return false; this.querySelector('[name=reason]').value=reason; return true;">
+                  onsubmit="var reason=prompt('Brief reason for closing this request'); if(reason===null) return false; this.querySelector('[name=reason]').value=reason; return true;">
               <input type="hidden" name="reason" value="">
-              <button class="btn danger sm" type="submit">Reject</button>
+              <button class="btn danger sm" type="submit">Close</button>
             </form>
             {% endif %}
           </div>
@@ -93,17 +95,59 @@
       </tr>
       {% else %}
       <tr>
-        <td colspan="6" class="muted">No requests in this filter. New client submissions will appear here for review.</td>
+        <td colspan="6" class="muted">Queue is clear. New submissions from organisations will appear here for your review.</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
 </section>
 
+<section class="block">
+  <div class="block-head">
+    <h3>History — closed or taken down</h3>
+  </div>
+  <p class="muted small" style="margin-bottom:0.75rem;">Requests that have already been dealt with. Useful for audit and pattern spotting.</p>
+  {% if history %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Request</th>
+        <th>Organisation</th>
+        <th>Outcome</th>
+        <th class="num">Bids</th>
+        <th>When</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in history %}
+      <tr>
+        <td>
+          <strong>{{ r.title }}</strong>
+          <div class="muted small">{{ (r.message or '')[:60] }}{% if (r.message or '')|length > 60 %}…{% endif %}</div>
+        </td>
+        <td class="muted">
+          {% if r.organization %}{{ r.organization.name }}{% else %}—{% endif %}
+        </td>
+        <td>
+          {% if r.status == 'rejected' %}<span class="tag">Rejected</span>
+          {% elif r.status == 'completed' %}<span class="tag ok">Completed</span>
+          {% else %}<span class="tag">{{ r.status|capitalize }}</span>{% endif %}
+        </td>
+        <td class="num">{{ r.bid_count }}</td>
+        <td class="muted small">{{ r.created_at or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No closed requests yet. Once you reject or complete items, they will settle here.</p>
+  {% endif %}
+</section>
+
 <section class="model-panel">
-  <h3>Operating standard</h3>
+  <h3>Keep the signal clean</h3>
   <p>
-    Only verified requests are published. This protects clients and providers and keeps the marketplace aligned with professional delivery standards worldwide.
+    Publish only what is ready for real partners. A tight queue means higher-quality bids and clearer outcomes for every organisation that trusts the marketplace.
   </p>
 </section>
 
