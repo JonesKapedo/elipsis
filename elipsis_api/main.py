@@ -48,6 +48,31 @@ except Exception as _exc:  # noqa: BLE001
     studio = None
     print(f"[elipsis] studio import failed: {_exc}", flush=True)
 
+# Import marketplace routers
+try:
+    from elipsis_api.routers import marketplace  # noqa: E402
+except Exception as _exc:  # noqa: BLE001
+    marketplace = None
+    print(f"[elipsis] marketplace import failed: {_exc}", flush=True)
+
+try:
+    from elipsis_api.routers import bidder  # noqa: E402
+except Exception as _exc:  # noqa: BLE001
+    bidder = None
+    print(f"[elipsis] bidder import failed: {_exc}", flush=True)
+
+try:
+    from elipsis_api.routers import admin  # noqa: E402
+except Exception as _exc:  # noqa: BLE001
+    admin = None
+    print(f"[elipsis] admin import failed: {_exc}", flush=True)
+
+try:
+    from elipsis_api.routers import organizations  # noqa: E402
+except Exception as _exc:  # noqa: BLE001
+    organizations = None
+    print(f"[elipsis] organizations import failed: {_exc}", flush=True)
+
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -74,10 +99,11 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(
     title=f"{BRAND_NAME} API",
     description=FRAMEWORK_NAME,
-    version="0.3.1",
+    version="0.4.0",
     lifespan=lifespan,
 )
 
+# Core routers
 app.include_router(api.router)
 if auth_pages is not None:
     app.include_router(auth_pages.router)
@@ -85,12 +111,28 @@ if report_routes is not None:
     app.include_router(report_routes.router)
 if studio is not None:
     app.include_router(studio.router)
+
+# Marketplace routers
+if marketplace is not None:
+    app.include_router(marketplace.router, prefix="/api/v1")
+    print("[elipsis] marketplace routes mounted", flush=True)
+if bidder is not None:
+    app.include_router(bidder.router, prefix="/api/v1")
+    print("[elipsis] bidder routes mounted", flush=True)
+if admin is not None:
+    app.include_router(admin.router, prefix="/api/v1")
+    print("[elipsis] admin routes mounted", flush=True)
+if organizations is not None:
+    app.include_router(organizations.router, prefix="/api/v1")
+    print("[elipsis] organizations routes mounted", flush=True)
+
 try:
     from elipsis_api.routers import collect as _collect_mod  # noqa: E402
     app.include_router(_collect_mod.router)
     print("[elipsis] collect routes mounted", flush=True)
 except Exception as _exc:  # noqa: BLE001
     print(f"[elipsis] collect not mounted: {_exc}", flush=True)
+    
 app.include_router(pages.router)
 
 _static = Path(__file__).resolve().parent.parent / "static"
