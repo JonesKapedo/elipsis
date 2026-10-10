@@ -29,8 +29,10 @@ def signup(request: Request,
            email: str = Form(...),
            password: str = Form(...),
            password2: str = Form(...),
+           user_type: str = Form("client"),
            db: Session = Depends(get_db)):
-    form = {"name": (name or "").strip(), "email": (email or "").strip()}
+    form = {"name": (name or "").strip(), "email": (email or "").strip(),
+            "user_type": (user_type or "client").strip()}
     if password != password2:
         return templates.TemplateResponse(
             request, "signup.html",
@@ -38,7 +40,7 @@ def signup(request: Request,
              "form": form, "total_questions": _question_count(db) or 63},
             status_code=400)
     try:
-        account = auth_extra.register_user(db, email, password, name=name)
+        account = auth_extra.register_user(db, email, password, name=name, user_type=form["user_type"])
     except ValueError as exc:
         return templates.TemplateResponse(
             request, "signup.html",
@@ -53,7 +55,8 @@ def signup(request: Request,
              "form": form, "total_questions": _question_count(db) or 63},
             status_code=500)
     token = services.create_session(db, account.id)
-    response = RedirectResponse("/start", status_code=303)
+    dest = "/marketplace" if form.get("user_type") == "bidder" else "/company"
+    response = RedirectResponse(dest, status_code=303)
     _set_session_cookie(response, token)
     return response
 

@@ -7,7 +7,7 @@ from elipsis_api import models, security
 from elipsis_api.services import _seed_admin
 
 
-def register_user(db: Session, email: str, password: str, name: str | None = None):
+def register_user(db: Session, email: str, password: str, name: str | None = None, user_type: str = "client"):
     email = (email or "").strip().lower()
     name = (name or "").strip()[:120] or None
     if not email or "@" not in email:
@@ -17,11 +17,15 @@ def register_user(db: Session, email: str, password: str, name: str | None = Non
     existing = db.scalar(select(models.User).where(models.User.email == email))
     if existing is not None:
         raise ValueError("An account with this email already exists. Sign in instead.")
+    if user_type not in ("client", "bidder"):
+        user_type = "client"
     user = models.User(
         email=email,
         name=name,
-        role="client",
+        role="bidder" if user_type == "bidder" else "client",
+        user_type=user_type,
         password_hash=security.hash_password(password),
+        is_admin=False,
     )
     db.add(user)
     db.commit()
