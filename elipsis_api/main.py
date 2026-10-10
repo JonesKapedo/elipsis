@@ -189,6 +189,14 @@ except Exception as _exc:  # noqa: BLE001
     
 app.include_router(pages.router)
 
+# Marketplace + admin request desk (server-rendered professional shell)
+try:
+    from elipsis_api.routers import marketplace_ui as _marketplace_ui  # noqa: E402
+    app.include_router(_marketplace_ui.router)
+    print("[elipsis] marketplace UI routes mounted", flush=True)
+except Exception as _exc:  # noqa: BLE001
+    print(f"[elipsis] marketplace UI not mounted: {_exc}", flush=True)
+
 _static = Path(__file__).resolve().parent.parent / "static"
 if _static.is_dir():
     app.mount("/static", StaticFiles(directory=str(_static)), name="static")
