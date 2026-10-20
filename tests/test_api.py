@@ -125,3 +125,124 @@ def test_bad_login_is_rejected(client):
     r = client.post("/login", data={"email": "admin@elipsis.local", "password": "wrong"},
                     follow_redirects=False)
     assert r.status_code == 401
+
+
+def test_value_workstreams_round_trip(signed_in):
+    client = signed_in
+    created = client.post("/api/v1/assessments", json={
+        "organization": {"name": "Value Logistics", "industry": "Logistics",
+                         "employee_count": 40, "country": "Kenya"},
+        "department": "Operations", "respondent": "Value Tester"})
+    assert created.status_code == 201
+    assessment_id = created.json()["id"]
+    questions = client.get("/api/v1/questionnaire").json()
+    submitted = client.post(f"/api/v1/assessments/{assessment_id}/submit", json={
+        "answers": [{"question_id": q["id"], "score": 3, "evidence": "document"}
+                    for q in questions]})
+    assert submitted.status_code == 200
+
+    for path in ("assumptions", "evidence", "plan", "summary", "report"):
+        assert client.get(f"/assessment/{assessment_id}/{path}").status_code == 200
+    assert client.get(f"/assessment/{assessment_id}/export.xlsx").status_code == 200
+
+    saved = client.post(f"/assessment/{assessment_id}/assumptions", data={
+        "staff": 40, "hourly_rate": 600, "working_hours_per_month": 173.33,
+        "max_savings_share": 12, "annual_revenue": "50000000",
+        "note": "Validated with finance"}, follow_redirects=False)
+    assert saved.status_code == 303
+
+    uploaded = client.post(
+        f"/assessment/{assessment_id}/evidence/{questions[0]['id']}",
+        files={"file": ("proof.pdf", b"%PDF-1.4 test", "application/pdf")},
+        follow_redirects=False)
+    assert uploaded.status_code == 303
+
+    shared = client.post(f"/assessment/{assessment_id}/share?days=7",
+                         follow_redirects=False)
+    assert shared.status_code == 303
+    token = shared.headers["location"].split("shared=")[-1]
+    assert client.get(f"/share/{token}").status_code == 200
+
+    for path in ("/privacy", "/terms", "/security", "/partners", "/case-study"):
+        assert client.get(path).status_code == 200
+
+
+def test_workspace_intelligence_round_trip(signed_in):
+    import re
+
+    client = signed_in
+    created = client.post("/api/v1/assessments", json={
+        "organization": {"name": "Workspace Logistics", "industry": "Logistics",
+                         "employee_count": 65, "country": "Kenya"},
+        "department": "Operations", "respondent": "Workspace Tester"})
+    assert created.status_code == 201
+    assessment_id = created.json()["id"]
+    org_id = created.json()["organization_id"]
+    questions = client.get("/api/v1/questionnaire").json()
+    submitted = client.post(f"/api/v1/assessments/{assessment_id}/submit", json={
+        "answers": [{"question_id": q["id"], "score": 2, "evidence": "document"}
+                    for q in questions]})
+    assert submitted.status_code == 200
+
+    assert client.get("/actions").status_code == 200
+    assert client.get("/trends").status_code == 200
+    assert client.get("/audit").status_code == 200
+    assert client.get(f"/company/{org_id}/team").status_code == 200
+
+    from fastapi.testclient import TestClient
+
+    from elipsis_api.main import app
+    with TestClient(app) as teammate:
+        registered = teammate.post("/api/v1/auth/register", json={
+            "email": "teammate@example.com", "password": "StrongPass123!",
+            "name": "Team Mate"})
+        assert registered.status_code in (200, 201)
+    added = client.post(f"/company/{org_id}/team", data={
+        "email": "teammate@example.com"}, follow_redirects=False)
+    assert added.status_code == 303
+    assert "teammate@example.com" in client.get(f"/company/{org_id}/team").text
+    teammate_id = registered.json().get("user", {}).get("id") or registered.json().get("id")
+    if teammate_id:
+        removed = client.post(f"/company/{org_id}/team/{teammate_id}/remove",
+                              follow_redirects=False)
+        assert removed.status_code == 303
+
+    scenario = client.post(f"/assessment/{assessment_id}/scenario", json={
+        "staff": 80, "hourly_rate": 650, "working_hours_per_month": 170,
+        "max_savings_share": 15, "annual_revenue": "60000000"})
+    assert scenario.status_code == 200
+    assert scenario.json()["financial"]["annual_savings"] > 0
+
+    review = client.post(f"/assessment/{assessment_id}/review", data={
+        "review_due_at": "2026-12-01", "review_note": "Dispatch cycle time"},
+        follow_redirects=False)
+    assert review.status_code == 303
+    results = client.get(f"/assessment/{assessment_id}/results")
+    assert "2026-12-01" in results.text
+
+    plan = client.get(f"/assessment/{assessment_id}/plan").text
+    item_ids = [int(x) for x in re.findall(rf"/assessment/{assessment_id}/plan/(\d+)", plan)]
+    assert item_ids
+    updated = client.post(f"/actions/{item_ids[0]}", data={
+        "owner": "Ops lead", "due_date": "2026-11-15",
+        "status": "in_progress", "notes": "Kickoff booked", "next": "/actions"},
+        follow_redirects=False)
+    assert updated.status_code == 303
+
+    shared = client.post(f"/assessment/{assessment_id}/share?days=7&label=Board",
+                         follow_redirects=False)
+    assert shared.status_code == 303
+    token = shared.headers["location"].split("shared=")[-1]
+    assert client.get(f"/share/{token}").status_code == 200
+    assert client.get(f"/share/{token}").status_code == 200
+    results = client.get(f"/assessment/{assessment_id}/results")
+    assert "Board" in results.text
+    revoked = client.post(f"/assessment/{assessment_id}/shares/{token}/revoke",
+                          follow_redirects=False)
+    assert revoked.status_code == 303
+    assert client.get(f"/share/{token}").status_code == 404
+
+    audit = client.get("/audit")
+    assert audit.status_code == 200
+    assert "plan.update" in audit.text
+    assert "share.create" in audit.text

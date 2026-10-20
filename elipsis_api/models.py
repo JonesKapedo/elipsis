@@ -2,7 +2,7 @@
 
 from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, Float, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, Float, ForeignKey, Index, Integer, LargeBinary, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from elipsis_api.database import Base
@@ -91,6 +91,8 @@ class Assessment(Base):
     maturity_band: Mapped[str | None] = mapped_column(String)
     # New field for scope selection
     scope: Mapped[str | None] = mapped_column(String, default="whole_organization")
+    review_due_at: Mapped[str | None] = mapped_column(String)
+    review_note: Mapped[str | None] = mapped_column(Text)
 
     organization: Mapped["Organization"] = relationship()
     department: Mapped["Department"] = relationship()
@@ -181,6 +183,7 @@ class FinancialModel(Base):
     investment: Mapped[float | None] = mapped_column(Float)
     roi: Mapped[float | None] = mapped_column(Float)
     payback_months: Mapped[float | None] = mapped_column(Float)
+    assumptions_json: Mapped[str | None] = mapped_column(Text)
 
 
 class Report(Base):
@@ -241,6 +244,9 @@ class ShareLink(Base):
         Integer, ForeignKey("assessments.id"), nullable=False)
     created_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
     label: Mapped[str | None] = mapped_column(String)
+    expires_at: Mapped[str | None] = mapped_column(String)
+    last_viewed_at: Mapped[str | None] = mapped_column(String)
+    view_count: Mapped[int | None] = mapped_column(Integer, default=0)
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
 
 
@@ -270,6 +276,12 @@ class RoadmapItem(Base):
     horizon: Mapped[str | None] = mapped_column(String)
     roi: Mapped[float | None] = mapped_column(Float)
     kpi: Mapped[str | None] = mapped_column(String)
+    owner: Mapped[str | None] = mapped_column(String)
+    due_date: Mapped[str | None] = mapped_column(String)
+    status: Mapped[str | None] = mapped_column(String, default="not_started")
+    notes: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+    updated_at: Mapped[str | None] = mapped_column(String, default=_now)
 
 
 class RoadmapPhase(Base):
@@ -552,4 +564,79 @@ class Message(Base):
     receiver_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     is_read: Mapped[bool | None] = mapped_column(Boolean, default=False)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class AssessmentAssumption(Base):
+    """Client-editable financial assumptions for one assessment."""
+    __tablename__ = "assessment_assumptions"
+    assessment_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("assessments.id"), primary_key=True)
+    staff: Mapped[int | None] = mapped_column(Integer)
+    hourly_rate: Mapped[float | None] = mapped_column(Float)
+    working_hours_per_month: Mapped[float | None] = mapped_column(Float)
+    max_savings_share: Mapped[float | None] = mapped_column(Float)
+    annual_revenue: Mapped[float | None] = mapped_column(Float)
+    note: Mapped[str | None] = mapped_column(Text)
+    updated_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    updated_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class EvidenceAttachment(Base):
+    """A file attached as proof for one assessment answer."""
+    __tablename__ = "evidence_attachments"
+    __table_args__ = (Index("ix_evidence_attachments_assessment", "assessment_id"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    assessment_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("assessments.id"), nullable=False)
+    question_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("questions.id"), nullable=False)
+    filename: Mapped[str] = mapped_column(String, nullable=False)
+    content_type: Mapped[str | None] = mapped_column(String)
+    size_bytes: Mapped[int | None] = mapped_column(Integer)
+    data: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    uploaded_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class CampaignComment(Base):
+    """Facilitator/participant notes on a collection campaign."""
+    __tablename__ = "campaign_comments"
+    __table_args__ = (Index("ix_campaign_comments_token", "campaign_token"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    campaign_token: Mapped[str] = mapped_column(
+        String, ForeignKey("collect_campaigns.token"), nullable=False)
+    user_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class CampaignApproval(Base):
+    """Sign-off on a completed collection campaign."""
+    __tablename__ = "campaign_approvals"
+    __table_args__ = (Index("ix_campaign_approvals_token", "campaign_token"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    campaign_token: Mapped[str] = mapped_column(
+        String, ForeignKey("collect_campaigns.token"), nullable=False)
+    user_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    decision: Mapped[str] = mapped_column(String, nullable=False)
+    note: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class AuditEvent(Base):
+    """Immutable, organisation-scoped record of consequential actions."""
+    __tablename__ = "audit_events"
+    __table_args__ = (
+        Index("ix_audit_events_org", "organization_id"),
+        Index("ix_audit_events_created", "created_at"),
+    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    organization_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("organizations.id"))
+    assessment_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("assessments.id"))
+    user_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    action: Mapped[str] = mapped_column(String, nullable=False)
+    detail: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[str | None] = mapped_column(String, default=_now)

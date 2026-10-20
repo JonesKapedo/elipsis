@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from elipsis_api import models, schemas, services
+from elipsis_api import benchmarks, models, schemas, services, services_ops
 from elipsis_api.config import SESSION_COOKIE
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
@@ -62,7 +62,9 @@ def landing(request: Request, user=Depends(get_current_user),
         return RedirectResponse("/dashboard", status_code=303)
     return templates.TemplateResponse(
         request, "landing.html",
-        {"user": user, "total_questions": _question_count(db)})
+        {"user": user, "total_questions": _question_count(db),
+         "reference_points": benchmarks.REFERENCE_POINTS,
+         "icp": benchmarks.ICP_LABEL})
 
 
 @router.get("/sample")
@@ -83,7 +85,9 @@ def methodology(request: Request, user=Depends(get_current_user),
                 db: Session = Depends(get_db)):
     return templates.TemplateResponse(
         request, "methodology.html",
-        {"user": user, "total_questions": _question_count(db) or 63})
+        {"user": user, "total_questions": _question_count(db) or 63,
+         "reference_points": benchmarks.REFERENCE_POINTS,
+         "sources": benchmarks.SOURCES, "method_note": benchmarks.METHOD_NOTE})
 
 
 @router.get("/faq")
@@ -91,7 +95,9 @@ def faq(request: Request, user=Depends(get_current_user),
         db: Session = Depends(get_db)):
     return templates.TemplateResponse(
         request, "faq.html",
-        {"user": user, "total_questions": _question_count(db) or 63})
+        {"user": user, "total_questions": _question_count(db) or 63,
+         "reference_points": benchmarks.REFERENCE_POINTS,
+         "sources": benchmarks.SOURCES, "method_note": benchmarks.METHOD_NOTE})
 
 
 @router.get("/use-cases")
@@ -221,30 +227,44 @@ def compare_org(organization_id: int, request: Request,
 
 @router.get("/share/{token}")
 def share_view(token: str, request: Request, db: Session = Depends(get_db)):
-    link = services.resolve_share_token(db, token)
-    if link is None:
-        return _not_found(request, None)
-    assessment, result = services.compute(db, link.assessment_id)
-    if assessment is None or result is None:
+    link, assessment, result = services.resolve_share_token(db, token)
+    if link is None or assessment is None or result is None:
         return _not_found(request, None)
     org = db.get(models.Organization, assessment.organization_id)
+    dept = db.get(models.Department, assessment.department_id) if assessment.department_id else None
+    services_ops.touch_share_link(db, link)
     return templates.TemplateResponse(
         request, "share.html",
         {"user": None, "result": result, "assessment": assessment, "org": org,
-         "token": token})
+         "organization": org, "department": dept, "link": link, "token": token})
 
 
 @router.post("/assessment/{assessment_id}/share")
 def share_create(assessment_id: int, request: Request,
+                 label: str = Form(""), days: str = Form(""),
                  user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
     if _owned_assessment(db, user, assessment_id) is None:
         return _not_found(request, user)
     try:
-        link = services.create_share_link(db, assessment_id, user_id=user.id)
+        days = int(days or request.query_params.get("days") or 30)
+    except ValueError:
+        days = 30
+    try:
+        link = services.create_share_link(
+            db, assessment_id, user_id=user.id,
+            label=(label or request.query_params.get("label") or None),
+            expires_days=max(1, min(365, days)))
     except ValueError:
         return RedirectResponse(f"/assessment/{assessment_id}/results", status_code=303)
+    assessment = db.get(models.Assessment, assessment_id)
+    services_ops.record_audit(
+        db, action="share.create",
+        organization_id=assessment.organization_id if assessment else None,
+        assessment_id=assessment_id, user_id=user.id,
+        detail=f"{link.label or 'share'} · {days} days")
+    db.commit()
     return RedirectResponse(f"/assessment/{assessment_id}/results?shared={link.token}",
                             status_code=303)
 
@@ -434,7 +454,10 @@ def dashboard(request: Request, user=Depends(get_current_user),
     return templates.TemplateResponse(
         request, "dashboard.html",
         {"user": user, **data,
-         "organizations": services.list_organizations(db, visible)})
+         "organizations": services.list_organizations(db, visible),
+         "action_summary": services_ops.action_summary(db, visible),
+         "notifications": services_ops.notifications(db, user),
+         "trends": services_ops.org_trends(db, visible)})
 
 
 @router.post("/assessment/{assessment_id}/submit")
@@ -478,12 +501,24 @@ def assessment_results(assessment_id: int, request: Request,
         services.save(db, assessment_id, result)
     org = db.get(models.Organization, assessment.organization_id)
     dept = db.get(models.Department, assessment.department_id) if assessment.department_id else None
+    token = request.query_params.get("shared")
+    share_url = (str(request.base_url).rstrip("/") + f"/share/{token}") if token else None
+    previous = services.previous_assessment(db, assessment)
+    delta = None
+    if previous is not None and previous.readiness_index is not None:
+        delta = round((result.get("readiness_index") or 0) - previous.readiness_index, 1)
     return templates.TemplateResponse(
         request, "results.html",
         {"user": user, "assessment": assessment, "result": result, "org": org,
          "organization": org, "department": dept,
-         "share_url": str(request.base_url).rstrip("/") + f"/assessment/{assessment_id}/results",
-         "shared": request.query_params.get("shared")})
+         "share_url": share_url, "shared": token,
+         "benchmark": benchmarks.cohort_benchmark(
+             db, org, score=result.get("readiness_index")),
+         "reference_points": benchmarks.REFERENCE_POINTS,
+         "sources": benchmarks.SOURCES, "method_note": benchmarks.METHOD_NOTE,
+         "previous": previous, "delta": delta,
+         "share_links": services_ops.share_links(db, assessment_id),
+         "notifications": services_ops.notifications(db, user)})
 
 
 @router.get("/assessment/{assessment_id}/pillar/{code}")
@@ -503,6 +538,7 @@ def assessment_pillar(assessment_id: int, code: str, request: Request,
         request, "results.html",
         {"user": user, "assessment": assessment, "result": result,
          "organization": org, "department": dept,
+         "benchmark": benchmarks.cohort_benchmark(db, org),
          "focus_pillar": code.upper()})
 
 

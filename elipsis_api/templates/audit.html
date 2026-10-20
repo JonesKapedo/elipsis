@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Audit trail{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Trust and accountability</p>
+  <h1>Audit trail</h1>
+  <p class="lede">A timestamped record of assumptions, evidence, plans, shares, reviews, and team changes across your organisations.</p>
+</section>
+
+<section class="block">
+  {% if events %}
+  <table class="table">
+    <thead><tr><th>When</th><th>Action</th><th>Organisation</th><th>Actor</th><th>Detail</th></tr></thead>
+    <tbody>
+      {% for e in events %}
+      <tr>
+        <td class="muted">{{ e.event.created_at or '' }}</td>
+        <td><strong>{{ e.event.action }}</strong></td>
+        <td>{{ e.organization.name if e.organization else '—' }}</td>
+        <td>{{ e.user.email if e.user else 'system' }}</td>
+        <td class="muted">{{ e.event.detail or '' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No recorded events yet. Actions will appear here as your team works.</p>
+  {% endif %}
+</section>
+{% endblock %}

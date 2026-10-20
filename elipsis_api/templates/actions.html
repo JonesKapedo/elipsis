@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Action board{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Execution workspace</p>
+  <h1>Action board</h1>
+  <p class="lede">Every 90-day action across your organisations, ordered by due date. Update owners, dates, and status without opening each report.</p>
+  <div class="hero-actions">
+    <a class="btn ghost" href="/trends">View trends</a>
+    <a class="btn ghost" href="/audit">Audit trail</a>
+  </div>
+</section>
+
+{% if updated %}<div class="flash ok">Action updated.</div>{% endif %}
+
+<section class="stat-grid">
+  <div class="stat-card"><span>Open actions</span><b>{{ summary.open }}</b></div>
+  <div class="stat-card ok"><span>Completion</span><b>{{ '%.0f'|format(summary.completion_pct) }}%</b></div>
+  <div class="stat-card danger"><span>Overdue</span><b>{{ summary.overdue }}</b></div>
+  <div class="stat-card warn"><span>Due in 14 days</span><b>{{ summary.due_soon }}</b></div>
+  <div class="stat-card"><span>Blocked</span><b>{{ summary.blocked }}</b></div>
+</section>
+
+<section class="block">
+  <div class="progress" style="margin-bottom:.4rem"><i style="width:{{ summary.completion_pct }}%"></i></div>
+  <p class="muted small">{{ summary.done }} of {{ summary.total }} actions complete.</p>
+</section>
+
+{% if notifications %}
+<section class="block">
+  <h3>Needs attention</h3>
+  <div class="attention">
+    {% for n in notifications %}
+    <a href="{{ n.url }}">
+      <span class="dot {{ n.severity }}"></span>
+      <span><strong>{{ n.title }}</strong><small>{{ n.detail }}</small></span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="block">
+  <div class="block-head">
+    <h3>All actions</h3>
+    <form method="get" action="/actions" class="filter-bar" style="margin:0">
+      <select name="status" onchange="this.form.submit()">
+        {% for key, label in [('open','Open'),('all','All'),('not_started','Not started'),('in_progress','In progress'),('blocked','Blocked'),('done','Done')] %}
+        <option value="{{ key }}" {% if status == key %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <input type="search" name="owner" value="{{ owner }}" placeholder="Filter by owner">
+      <label class="muted small"><input type="checkbox" name="overdue" value="1" {% if overdue %}checked{% endif %}> Overdue only</label>
+      <button class="btn sm ghost" type="submit">Filter</button>
+    </form>
+  </div>
+
+  {% for item in items %}
+  <form method="post" action="/actions/{{ item.id }}" class="plan-row">
+    <input type="hidden" name="next" value="/actions?status={{ status }}{% if owner %}&owner={{ owner|urlencode }}{% endif %}{% if overdue %}&overdue=1{% endif %}">
+    <div>
+      <div class="pr-title">{{ item.title }}</div>
+      <div class="pr-meta">{{ item.organization }} · {{ item.department }}{% if item.overdue %} · <strong style="color:var(--bad)">overdue</strong>{% elif item.due_soon %} · due soon{% endif %}</div>
+    </div>
+    <input name="owner" value="{{ item.owner or '' }}" placeholder="Owner" maxlength="120" aria-label="Owner">
+    <input type="date" name="due_date" value="{{ item.due_date or '' }}" aria-label="Due date">
+    <select name="status" aria-label="Status">
+      {% for key, label in [('not_started','Not started'),('in_progress','In progress'),('blocked','Blocked'),('done','Done')] %}
+      <option value="{{ key }}" {% if item.status == key %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <div style="display:flex;gap:.35rem">
+      <input name="notes" value="{{ item.notes or '' }}" placeholder="Note" maxlength="2000" aria-label="Notes">
+      <button class="btn sm" type="submit">Save</button>
+    </div>
+  </form>
+  {% else %}
+  <p class="muted">No actions match this filter. Complete an assessment to generate a 90-day plan.</p>
+  {% endfor %}
+</section>
+{% endblock %}

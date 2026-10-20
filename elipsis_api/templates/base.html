@@ -23,13 +23,18 @@
     <nav class="sidebar-nav" aria-label="Workspace">
       <p class="nav-group-label">Platform</p>
       <a href="/dashboard" class="nav-item"><span class="nav-icon">◉</span> Overview</a>
-      <a href="/marketplace" class="nav-item"><span class="nav-icon">◈</span> Marketplace</a>
+      {% if (user.role or '') == 'admin' or user.is_admin %}
+      <a href="/marketplace" class="nav-item"><span class="nav-icon">◈</span> Marketplace (admin)</a>
+      {% endif %}
       <a href="/company" class="nav-item"><span class="nav-icon">▣</span> Organisation</a>
+      <a href="/actions" class="nav-item"><span class="nav-icon">✓</span> Action board{% if notifications %}<span class="nav-badge">{{ notifications|length }}</span>{% endif %}</a>
 
       <p class="nav-group-label">Intelligence</p>
       <a href="/assessments" class="nav-item"><span class="nav-icon">☰</span> Assessments</a>
       <a href="/start" class="nav-item"><span class="nav-icon">＋</span> New assessment</a>
       <a href="/compare" class="nav-item"><span class="nav-icon">⇄</span> Compare</a>
+      <a href="/trends" class="nav-item"><span class="nav-icon">↗</span> Trends</a>
+      <a href="/audit" class="nav-item"><span class="nav-icon">≡</span> Audit trail</a>
 
       {% if (user.role or '') == 'admin' or user.is_admin %}
       <p class="nav-group-label">Operations</p>
@@ -54,7 +59,6 @@
         <span></span><span></span><span></span>
       </button>
       <div class="topbar-actions">
-        <a class="btn sm" href="/marketplace">Marketplace</a>
         <a class="btn sm ghost" href="/start">New assessment</a>
       </div>
     </header>
@@ -65,7 +69,7 @@
   <nav class="pub-nav" aria-label="Primary">
     <a href="/methodology">Method</a>
     <a href="/pricing">Engagements</a>
-    <a href="/marketplace">Marketplace</a>
+    <a href="/partners">Partners</a>
     <a href="/sample">Sample</a>
     <a class="pill" href="/login">Sign in</a>
   </nav>
@@ -83,6 +87,12 @@
 <footer class="pub-footer no-print">
   <div class="foot-inner">
     <span>{{ BRAND_NAME }}</span>
+    <nav class="foot-links" aria-label="Trust">
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="/security">Security</a>
+      <a href="/case-study">Evidence</a>
+    </nav>
     <span class="muted">{{ BRAND_TAGLINE }}</span>
   </div>
 </footer>

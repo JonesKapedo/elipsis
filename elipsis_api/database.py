@@ -11,7 +11,7 @@ from elipsis_api.config import DATABASE_URL
 
 
 def _build_engine(url: str):
-    """Create an engine. Production never falls back to SQLite."""
+    """Create an engine, with a visible degraded fallback in production."""
     is_sqlite = url.startswith("sqlite")
     connect_args: dict = {}
     engine_kwargs: dict = {"future": True, "pool_pre_ping": True}
@@ -35,12 +35,9 @@ def _build_engine(url: str):
                 conn.execute(text("SELECT 1"))
         return eng, url
     except Exception as exc:  # noqa: BLE001
-        from elipsis_api.config import is_production
-        if is_production():
-            raise RuntimeError(
-                f"database engine init failed ({exc.__class__.__name__}: {exc}); "
-                "production does not fall back to SQLite"
-            ) from exc
+        from elipsis_api.config import CONFIG_ERRORS
+        CONFIG_ERRORS.append(
+            f"database engine init failed ({exc.__class__.__name__}: {exc})")
         print(
             f"[elipsis] engine init failed ({exc.__class__.__name__}: {exc}) "
             "-> falling back to ephemeral SQLite",

@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Edit assumptions — {{ organization.name }}{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Defensible numbers</p>
+  <h1>Change the assumptions, not the arithmetic</h1>
+  <p class="lede">Every figure is recalculated from these inputs. They are printed in the board pack so a finance lead can challenge them in the room.</p>
+</section>
+
+<article class="block">
+  <form method="post" action="/assessment/{{ assessment.id }}/assumptions" class="form-grid">
+    <label>Staff in scope
+      <input type="number" id="sc-staff" name="staff" min="1" max="100000" value="{{ assumptions.staff if assumptions and assumptions.staff else (organization.employee_count or 50) }}" required>
+    </label>
+    <label>Blended hourly rate ({{ CURRENCY }})
+      <input type="number" id="sc-rate" name="hourly_rate" min="50" max="20000" step="1" value="{{ assumptions.hourly_rate if assumptions and assumptions.hourly_rate else 500 }}" required>
+    </label>
+    <label>Working hours per month
+      <input type="number" id="sc-hours" name="working_hours_per_month" min="20" max="400" step="0.5" value="{{ assumptions.working_hours_per_month if assumptions and assumptions.working_hours_per_month else 173.33 }}" required>
+    </label>
+    <label>Savings cap (% of labour line)
+      <input type="number" id="sc-cap" name="max_savings_share" min="1" max="30" step="0.5" value="{{ '%.1f'|format((assumptions.max_savings_share if assumptions and assumptions.max_savings_share else 0.12) * 100) }}" required>
+    </label>
+    <label>Annual revenue (optional, {{ CURRENCY }})
+      <input type="number" id="sc-revenue" name="annual_revenue" min="0" step="1000" value="{{ assumptions.annual_revenue if assumptions and assumptions.annual_revenue else '' }}">
+    </label>
+    <label class="full">Note for the board
+      <textarea name="note" rows="3" maxlength="2000">{{ assumptions.note if assumptions else '' }}</textarea>
+    </label>
+    <div class="hero-actions full">
+      <button class="btn" type="submit">Recalculate report</button>
+      <a class="btn ghost" href="/assessment/{{ assessment.id }}/results">Cancel</a>
+    </div>
+  </form>
+  <p class="muted">Hard limits prevent accidental nonsense: rate {{ CURRENCY }} 50–20,000, 20–400 hours/month, cap 1–30%. The cap exists so the model cannot promise more than a credible share of payroll.</p>
+
+  <div class="block soft" style="margin-top:1rem">
+    <div class="block-head"><h3>Live scenario preview</h3><span class="muted small">Not saved until you recalculate</span></div>
+    <div class="scenario-preview" id="scenario-preview" aria-live="polite">
+      <div class="sp"><span>Annual savings</span><b id="sc-savings">—</b></div>
+      <div class="sp"><span>Investment</span><b id="sc-investment">—</b></div>
+      <div class="sp"><span>ROI</span><b id="sc-roi">—</b></div>
+      <div class="sp"><span>Payback</span><b id="sc-payback">—</b></div>
+    </div>
+  </div>
+</article>
+
+<article class="block">
+  <h3>Why these are defensible</h3>
+  <p>{{ method_note }}</p>
+  <table class="table">
+    <thead><tr><th>Reference point</th><th>Value</th><th>Source</th></tr></thead>
+    <tbody>
+      {% for p in reference_points %}
+      <tr><td>{{ p.label }}<br><span class="muted">{{ p.note }}</span></td><td>{{ p.value }}</td><td class="muted">{{ p.source }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if benchmark and benchmark.available %}
+  <p class="tag ok">Peer cohort: median {{ benchmark.median }} from {{ benchmark.sample }} {{ benchmark.industry }} assessments.</p>
+  {% elif benchmark %}
+  <p class="muted">Peer cohort suppressed: only {{ benchmark.sample }} comparable assessments; minimum is {{ benchmark.minimum }}.</p>
+  {% endif %}
+</article>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  const ids = ["sc-staff", "sc-rate", "sc-hours", "sc-cap", "sc-revenue"];
+  const els = ids.map((id) => document.getElementById(id));
+  const out = {
+    savings: document.getElementById("sc-savings"),
+    investment: document.getElementById("sc-investment"),
+    roi: document.getElementById("sc-roi"),
+    payback: document.getElementById("sc-payback"),
+  };
+  if (els.some((el) => !el) || !out.savings) return;
+  const fmt = new Intl.NumberFormat("en-KE", { maximumFractionDigits: 0 });
+  let timer = null;
+  async function refresh() {
+    const body = {
+      staff: Number(els[0].value || 0),
+      hourly_rate: Number(els[1].value || 0),
+      working_hours_per_month: Number(els[2].value || 0),
+      max_savings_share: Number(els[3].value || 0),
+      annual_revenue: els[4].value || "",
+    };
+    try {
+      const res = await fetch("/assessment/{{ assessment.id }}/scenario", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const f = data.financial || {};
+      out.savings.textContent = "{{ CURRENCY }} " + fmt.format(f.annual_savings || 0);
+      out.investment.textContent = "{{ CURRENCY }} " + fmt.format(f.investment || 0);
+      out.roi.textContent = Math.round(f.roi || 0) + "%";
+      out.payback.textContent = (f.payback_months || 0).toFixed(1) + " mo";
+    } catch (err) { /* keep last preview */ }
+  }
+  els.forEach((el) => el.addEventListener("input", () => {
+    clearTimeout(timer);
+    timer = setTimeout(refresh, 250);
+  }));
+  refresh();
+})();
+</script>
+{% endblock %}

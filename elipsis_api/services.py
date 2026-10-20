@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from elipsis_api import models
+from elipsis_api import services_ext as _services_ext
 from elipsis_api.services_auth import (  # noqa: F401
     authenticate,
     build_segments,
@@ -28,12 +29,18 @@ from elipsis_api.services_core import (  # noqa: F401
     _seed_admin,
     answers_map,
     compute,
+    compute_scenario,
     create_assessment,
+    ensure_plan_items,
+    get_assumptions,
     get_bank,
     get_questions,
+    previous_assessment,
     save,
+    save_assumptions,
     seed,
     submit,
+    update_plan_item,
 )
 from elipsis_api.services_ext import (  # noqa: F401
     dashboard_data as _dashboard_data_raw,
@@ -178,3 +185,8 @@ def company_overview(db: Session, org: models.Organization) -> dict[str, Any]:
         "trend": trend,
         "comparison": department_comparison(db, org.id) if completed else None,
     }
+
+
+# Explicit re-exports for the server-rendered share routes.
+create_share_link = _services_ext.create_share_link
+resolve_share_token = _services_ext.resolve_share_token

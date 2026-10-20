@@ -32,3 +32,6 @@ sendgrid>=6.11.0
 
 # Schema migrations (run `alembic upgrade head` before a production deploy)
 alembic==1.20.0
+
+# Excel board-pack export
+openpyxl==3.1.5

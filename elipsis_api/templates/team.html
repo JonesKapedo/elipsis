@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Team — {{ org.name }}{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Organisation access</p>
+  <h1>Team · {{ org.name }}</h1>
+  <p class="lede">Invite registered teammates to manage assessments, evidence, and action plans. Everyone listed can access this organisation.</p>
+  <div class="hero-actions"><a class="btn ghost" href="/company">Back to organisation</a></div>
+</section>
+
+{% if message %}<div class="flash ok">{{ message }}</div>{% endif %}
+{% if error %}<div class="flash err">{{ error }}</div>{% endif %}
+
+<section class="block">
+  <h3>Members</h3>
+  {% for m in members %}
+  <div class="team-row">
+    <div>
+      <strong>{{ m.user.name or m.user.email }}</strong>
+      <div class="muted small">{{ m.user.email }}</div>
+    </div>
+    <form method="post" action="/company/{{ org.id }}/team/{{ m.user.id }}/remove" onsubmit="return confirm('Remove this teammate?')">
+      <button class="btn ghost sm" type="submit">Remove</button>
+    </form>
+  </div>
+  {% else %}
+  <p class="muted">No members yet.</p>
+  {% endfor %}
+</section>
+
+<section class="block">
+  <h3>Add a teammate</h3>
+  <p class="muted small">They need an existing Elipsis account. Add the email they signed up with.</p>
+  <form method="post" action="/company/{{ org.id }}/team" class="filter-bar">
+    <input type="email" name="email" placeholder="teammate@company.co.ke" required style="flex:1 1 260px">
+    <button class="btn" type="submit">Add member</button>
+  </form>
+</section>
+{% endblock %}

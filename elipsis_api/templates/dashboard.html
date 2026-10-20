@@ -37,6 +37,67 @@
   </div>
 </section>
 
+{% if notifications or action_summary.total %}
+<section class="two-col">
+  <article class="block">
+    <div class="block-head">
+      <h3>Execution pulse</h3>
+      <a class="btn ghost sm" href="/actions">Action board →</a>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card"><span>Open</span><b>{{ action_summary.open }}</b></div>
+      <div class="stat-card ok"><span>Complete</span><b>{{ '%.0f'|format(action_summary.completion_pct) }}%</b></div>
+      <div class="stat-card danger"><span>Overdue</span><b>{{ action_summary.overdue }}</b></div>
+      <div class="stat-card warn"><span>Due soon</span><b>{{ action_summary.due_soon }}</b></div>
+    </div>
+    <div class="progress" style="margin-top:.9rem"><i style="width:{{ action_summary.completion_pct }}%"></i></div>
+    {% if action_summary.next %}
+    <ul class="action-list" style="margin-top:1rem">
+      {% for item in action_summary.next[:4] %}
+      <li><span><strong>{{ item.title }}</strong><br><span class="muted small">{{ item.organization }} · {{ item.owner or 'Unassigned' }} · due {{ item.due_date or '—' }}</span></span></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </article>
+  <article class="block">
+    <div class="block-head">
+      <h3>Needs attention</h3>
+      <a class="btn ghost sm" href="/trends">Trends →</a>
+    </div>
+    {% if notifications %}
+    <div class="attention">
+      {% for n in notifications[:6] %}
+      <a href="{{ n.url }}"><span class="dot {{ n.severity }}"></span><span><strong>{{ n.title }}</strong><small>{{ n.detail }}</small></span></a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="muted">No overdue actions or reviews. Keep the cadence.</p>
+    {% endif %}
+  </article>
+</section>
+{% endif %}
+
+{% if trends %}
+<section class="block">
+  <div class="block-head">
+    <h3>Readiness movement</h3>
+    <a class="btn ghost sm" href="/trends">Open trends →</a>
+  </div>
+  <div class="two-col">
+    {% for t in trends[:3] %}
+    {% if t.points %}
+    <div>
+      <p class="small"><strong>{{ t.org.name }}</strong> · latest {{ t.latest.value }}{% if t.movement is not none %} · <span class="{{ 'muted' if t.movement >= 0 else '' }}" style="{{ 'color:var(--bad)' if t.movement < 0 else 'color:var(--good)' }}">{{ '%+.1f'|format(t.movement) }}</span>{% endif %}</p>
+      <div class="trend-bars" style="height:72px">
+        {% for p in t.points %}<div class="tb" title="{{ p.label }}: {{ p.value }}"><i style="height:{{ p.value }}%"></i></div>{% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
 {# Core measurement model — investor-facing clarity #}
 <section class="model-panel">
   <h3>Elipsis Transformation Framework</h3>

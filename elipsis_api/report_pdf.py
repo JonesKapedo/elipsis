@@ -96,6 +96,8 @@ def build_pdf(
     result: dict[str, Any],
     pillar_labels: dict[str, str] | None = None,
     comparison_rows: list[dict] | None = None,
+    insight: Any = None,
+    footer_note: str | None = None,
 ) -> bytes:
     """Return a complete board-pack PDF as bytes."""
     styles = _styles()
@@ -259,7 +261,7 @@ def build_pdf(
     story.append(Spacer(1, 16))
     story.append(HRFlowable(width="100%", thickness=0.5, color=LINE, spaceAfter=6))
     story.append(Paragraph(
-        f"<b>{brand_name}</b> — {brand_tagline}. Management decision-support only; "
+        f"<b>{brand_name}</b> — {footer_note or brand_tagline}. Management decision-support only; "
         f"figures are estimates, not audited results. Confidential.",
         styles["footer"]))
 

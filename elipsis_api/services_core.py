@@ -1,5 +1,6 @@
 """Service layer: seeding and the assessment lifecycle (SQLAlchemy + shared engine)."""
 
+import json
 import os
 from datetime import UTC, datetime
 from typing import Any
@@ -33,9 +34,9 @@ def _seed_admin(db: Session):
     if password == DEFAULT_ADMIN_PASSWORD:
         from elipsis_api.config import is_production
         if is_production():
-            raise RuntimeError(
-                "ELIPSIS_ADMIN_PASSWORD must be set in production; refusing to "
-                "seed an administrator with the default password.")
+            print("[elipsis] ERROR: ELIPSIS_ADMIN_PASSWORD is not set; skipping "
+                  "administrator seed. Sign-up remains available.", flush=True)
+            return
         print("[elipsis] WARNING: no ELIPSIS_ADMIN_PASSWORD set, so the first "
               "administrator uses the default password. Set ELIPSIS_ADMIN_EMAIL "
               "and ELIPSIS_ADMIN_PASSWORD before exposing this instance.",
@@ -148,7 +149,9 @@ def answers_map(db: Session, assessment_id: int):
     return {a.question_id: {"score": a.score, "evidence": a.evidence} for a in rows}
 
 
-def compute(db: Session, assessment_id: int) -> tuple[models.Assessment | None, dict[str, Any] | None]:
+def _compute_for(db: Session, assessment_id: int,
+                 overrides: dict[str, Any] | None = None
+                 ) -> tuple[models.Assessment | None, dict[str, Any] | None]:
     assessment = db.get(models.Assessment, assessment_id)
     if assessment is None:
         return None, None
@@ -159,8 +162,42 @@ def compute(db: Session, assessment_id: int) -> tuple[models.Assessment | None, 
     answers = answers_map(db, assessment_id)
     org = db.get(models.Organization, assessment.organization_id)
     staff = (org.employee_count if org and org.employee_count else 50)
-    result = _compute(q_dicts, answers, staff=staff)
+    assumptions = db.get(models.AssessmentAssumption, assessment_id)
+    # A verified attachment is stronger evidence than a self-declared label.
+    attached = {row.question_id for row in db.scalars(
+        select(models.EvidenceAttachment).where(
+            models.EvidenceAttachment.assessment_id == assessment_id))}
+    for qid in attached:
+        if qid in answers:
+            answers[qid]["evidence"] = "verified"
+    kwargs = {}
+    if assumptions is not None:
+        kwargs = dict(
+            hourly_rate=assumptions.hourly_rate,
+            working_hours_per_month=assumptions.working_hours_per_month,
+            max_savings_share=assumptions.max_savings_share,
+            annual_revenue=assumptions.annual_revenue,
+        )
+        if assumptions.staff:
+            staff = assumptions.staff
+    if overrides:
+        staff = overrides.get("staff") or staff
+        for key in ("hourly_rate", "working_hours_per_month",
+                    "max_savings_share", "annual_revenue"):
+            if overrides.get(key) is not None:
+                kwargs[key] = overrides[key]
+    result = _compute(q_dicts, answers, staff=staff, **kwargs)
     return assessment, result
+
+
+def compute(db: Session, assessment_id: int) -> tuple[models.Assessment | None, dict[str, Any] | None]:
+    return _compute_for(db, assessment_id)
+
+
+def compute_scenario(db: Session, assessment_id: int, overrides: dict[str, Any]
+                     ) -> tuple[models.Assessment | None, dict[str, Any] | None]:
+    """Compute a what-if result without persisting assumptions or scores."""
+    return _compute_for(db, assessment_id, overrides)
 
 
 def save(db: Session, assessment_id: int, result):
@@ -215,6 +252,7 @@ def save(db: Session, assessment_id: int, result):
         investment=fin.get("investment"),
         roi=fin.get("roi"),
         payback_months=fin.get("payback_months"),
+        assumptions_json=json.dumps(fin.get("assumptions") or {}, sort_keys=True),
     ))
     db.commit()
 
@@ -262,3 +300,105 @@ def list_assessments(db: Session) -> list[dict[str, Any]]:
             started_at=a.started_at,
         ))
     return out
+
+
+def get_assumptions(db: Session, assessment_id: int):
+    return db.get(models.AssessmentAssumption, assessment_id)
+
+
+def save_assumptions(db: Session, assessment_id: int, *, staff, hourly_rate,
+                     working_hours_per_month, max_savings_share,
+                     annual_revenue, note, user_id):
+    """Upsert client-editable assumptions with hard safety clamps."""
+    def _num(value, default=None):
+        try:
+            return float(value) if value not in (None, "") else default
+        except (TypeError, ValueError):
+            return default
+
+    row = db.get(models.AssessmentAssumption, assessment_id)
+    if row is None:
+        row = models.AssessmentAssumption(assessment_id=assessment_id)
+        db.add(row)
+    row.staff = max(1, min(100_000, int(_num(staff, 50) or 50)))
+    row.hourly_rate = max(50.0, min(20_000.0, _num(hourly_rate, 500.0) or 500.0))
+    row.working_hours_per_month = max(
+        20.0, min(400.0, _num(working_hours_per_month, 173.33) or 173.33))
+    row.max_savings_share = max(
+        0.01, min(0.30, _num(max_savings_share, 0.12) or 0.12))
+    revenue = _num(annual_revenue, None)
+    row.annual_revenue = max(0.0, revenue) if revenue is not None else None
+    row.note = (note or "").strip()[:2000] or None
+    row.updated_by = user_id
+    row.updated_at = _now()
+    db.commit()
+    return row
+
+
+def previous_assessment(db: Session, assessment: models.Assessment):
+    if assessment is None:
+        return None
+    query = select(models.Assessment).where(
+        models.Assessment.organization_id == assessment.organization_id,
+        models.Assessment.status == "completed",
+        models.Assessment.id != assessment.id,
+        models.Assessment.readiness_index.is_not(None),
+    )
+    if assessment.department_id:
+        query = query.where(models.Assessment.department_id == assessment.department_id)
+    else:
+        query = query.where(models.Assessment.department_id.is_(None))
+    return db.scalar(query.order_by(models.Assessment.id.desc()))
+
+
+def ensure_plan_items(db: Session, assessment_id: int, result: dict) -> list:
+    """Create a 90-day action plan once, preserving later edits."""
+    existing = list(db.scalars(select(models.RoadmapItem).where(
+        models.RoadmapItem.assessment_id == assessment_id
+    ).order_by(models.RoadmapItem.id)))
+    if existing:
+        return existing
+    from datetime import date, timedelta
+    today = date.today()
+    recommendations = []
+    for phase in result.get("roadmap") or []:
+        for item in phase.get("items") or []:
+            recommendations.append((phase.get("number") or item.get("phase") or 1, item))
+    recommendations.sort(key=lambda pair: -float(pair[1].get("priority") or 0))
+    for index, (phase, item) in enumerate(recommendations[:9]):
+        days = 30 if index < 3 else 60 if index < 6 else 90
+        db.add(models.RoadmapItem(
+            assessment_id=assessment_id,
+            phase=phase,
+            title=item.get("title") or "Improvement action",
+            solution=item.get("solution"),
+            technology=item.get("technology"),
+            complexity=item.get("complexity"),
+            priority=item.get("priority"),
+            horizon=item.get("horizon"),
+            owner=None,
+            due_date=(today + timedelta(days=days)).isoformat(),
+            status="not_started",
+            notes=None,
+            created_at=_now(),
+            updated_at=_now(),
+        ))
+    db.commit()
+    return list(db.scalars(select(models.RoadmapItem).where(
+        models.RoadmapItem.assessment_id == assessment_id
+    ).order_by(models.RoadmapItem.due_date, models.RoadmapItem.id)))
+
+
+def update_plan_item(db: Session, assessment_id: int, item_id: int, *,
+                     owner, due_date, status, notes):
+    item = db.get(models.RoadmapItem, item_id)
+    if item is None or item.assessment_id != assessment_id:
+        return None
+    allowed = {"not_started", "in_progress", "blocked", "done"}
+    item.owner = (owner or "").strip()[:120] or None
+    item.due_date = (due_date or "").strip()[:10] or None
+    item.status = status if status in allowed else "not_started"
+    item.notes = (notes or "").strip()[:2000] or None
+    item.updated_at = _now()
+    db.commit()
+    return item

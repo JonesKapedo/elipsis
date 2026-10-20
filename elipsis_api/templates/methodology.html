@@ -44,6 +44,35 @@
 </section>
 
 <section class="block">
+  <h3 style="margin:0 0 .75rem;border:0;padding:0;font-size:1.05rem;">2b. Financial assumptions and limits</h3>
+  <p>{{ method_note }}</p>
+  <table class="table">
+    <thead><tr><th>Input</th><th>Default</th><th>Allowed range</th><th>Why it matters</th></tr></thead>
+    <tbody>
+      <tr><td>Staff in scope</td><td>Organisation headcount or 50</td><td>1–100,000</td><td>Scales the labour exposure.</td></tr>
+      <tr><td>Blended hourly rate</td><td>Size-banded default</td><td>{{ CURRENCY }} 50–20,000</td><td>Turns hours into money.</td></tr>
+      <tr><td>Working hours / month</td><td>173.33</td><td>20–400</td><td>Prevents full-time assumptions for part-time teams.</td></tr>
+      <tr><td>Savings cap</td><td>12% of labour line</td><td>1–30%</td><td>Stops the model promising implausible savings.</td></tr>
+      <tr><td>Annual revenue</td><td>Optional</td><td>≥ 0</td><td>Context only; never used to inflate savings.</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">Clients can edit these after completing the assessment. The report prints the values used, so a finance lead can challenge them.</p>
+</section>
+
+<section class="block">
+  <h3 style="margin:0 0 .75rem;border:0;padding:0;font-size:1.05rem;">2c. Market reference points</h3>
+  <table class="table">
+    <thead><tr><th>Reference</th><th>Value</th><th>Publisher</th></tr></thead>
+    <tbody>
+      {% for s in sources %}
+      <tr><td>{{ s.label }}<br><span class="muted">{{ s.detail }}</span></td><td>{{ s.value }}</td><td class="muted">{{ s.publisher }} ({{ s.year }})</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="muted">Peer medians are computed from completed Elipsis assessments and suppressed below five comparable organisations. Public figures describe the market; they are not customer outcomes.</p>
+</section>
+
+<section class="block">
   <h3 style="margin:0 0 1rem;border:0;padding:0;font-size:1.05rem;">3. Scoring pipeline</h3>
   <div class="pillar-grid">
     <div class="pcard">

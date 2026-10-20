@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from elipsis_api import models, schemas, services
+from elipsis_api.config import MARKETPLACE_ENABLED
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user
 from elipsis_api.query_utils import count_rows, isoformat
@@ -15,12 +16,20 @@ from elipsis_api.services_marketplace import get_bidder_company, is_bidder_subsc
 router = APIRouter(prefix="/marketplace", tags=["marketplace"])
 
 
+def _require_marketplace():
+    if not MARKETPLACE_ENABLED:
+        raise HTTPException(
+            status_code=503,
+            detail="Marketplace is coming soon. Join the partner list at /partners.")
+
+
 @router.get("/requests")
 def list_marketplace_requests(
     status_filter: str | None = None,
     db: Session = Depends(get_db),
     current_user: models.User | None = Depends(get_current_user),
 ):
+    _require_marketplace()
     """
     List published physical assessment requests in the marketplace.
     
@@ -82,6 +91,7 @@ def create_marketplace_request(
     current_user: models.User = Depends(get_current_user),
 ):
     """Submit a client engagement request for admin verification."""
+    _require_marketplace()
     if current_user is None:
         raise HTTPException(status_code=401, detail="unauthorized")
     if current_user.user_type == "bidder":
@@ -123,6 +133,7 @@ def get_marketplace_request(
     - **request_id**: Request ID
     - Returns request details including documents and bids (if authorized)
     """
+    _require_marketplace()
     req = db.get(models.PhysicalAssessmentRequest, request_id)
     
     if not req:
@@ -217,6 +228,7 @@ def submit_bid(
     - **estimated_cost**: Your estimated cost in USD
     - **timeline**: Estimated timeline (e.g., "2-3 weeks")
     """
+    _require_marketplace()
     # Check user is a bidder
     if current_user.user_type != "bidder":
         raise HTTPException(

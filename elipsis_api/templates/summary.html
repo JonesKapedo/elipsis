@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}One-page summary — {{ organization.name }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/report.css">{% endblock %}
+{% block content %}
+<div class="report-toolbar noprint">
+  <a class="btn ghost sm" href="/assessment/{{ assessment.id }}/results">← Results</a>
+  <a class="btn sm" href="/assessment/{{ assessment.id }}/plan">90-day plan</a>
+  <button class="btn ghost sm" type="button" onclick="window.print()">Print / Save PDF</button>
+</div>
+<article class="report-shell">
+  <header class="report-cover">
+    <div class="report-brand-row">
+      <div class="report-brand"><span class="mark">{{ BRAND_MARK }}</span> {{ BRAND_NAME }}</div>
+      <p class="report-meta-line">One-page executive summary</p>
+    </div>
+    <h1>{{ INDEX_NAME }}</h1>
+    <p class="report-org">{{ organization.name }}{% if department %} · {{ department.name }}{% endif %}</p>
+    <p class="report-meta-line">Completed {{ assessment.completed_at or '—' }}{% if previous %} · Previous {{ '%.1f'|format(previous.readiness_index) }} · Movement {{ '%+.1f'|format(delta or 0) }}{% endif %}</p>
+    <div class="report-score-block">
+      <div><div class="report-score-label">{{ INDEX_SHORT }}</div>
+      <div class="report-score-num">{{ '%.1f'|format(result.readiness_index) }}<span>/100</span></div>
+      <span class="report-band">{{ result.maturity_band }}</span></div>
+      <div class="report-kpis">
+        <div class="report-kpi"><span>Annual savings</span><b>{{ result.financial.annual_savings|money }}</b><em>Management estimate</em></div>
+        <div class="report-kpi"><span>Payback</span><b>{{ '%.1f'|format(result.financial.payback_months) }} mo</b><em>ROI {{ '%.0f'|format(result.financial.roi) }}%</em></div>
+        <div class="report-kpi"><span>Confidence</span><b>{{ '%.1f'|format(result.confidence_index) }}</b><em>{{ result.confidence_band }}</em></div>
+      </div>
+    </div>
+  </header>
+  <section class="report-section">
+    <h2>What the board needs to decide</h2>
+    <p class="report-lead">{{ organization.name }} scores <strong>{{ '%.1f'|format(result.readiness_index) }}</strong>, in the <strong>{{ result.maturity_band }}</strong> band. The three highest-return moves are below. Fund the 30-day items first; hold the rest until owners validate the assumptions.</p>
+    <table class="report-table">
+      <thead><tr><th>#</th><th>Action</th><th>Owner</th><th>Due</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for item in items %}
+        <tr><td>{{ loop.index }}</td><td>{{ item.title }}</td><td>{{ item.owner or 'Unassigned' }}</td><td>{{ item.due_date or '—' }}</td><td>{{ item.status|replace('_',' ')|title }}</td></tr>
+        {% else %}<tr><td colspan="5">No actions generated.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </section>
+  <section class="report-section">
+    <h2>Financial assumptions to challenge</h2>
+    {% set a = result.financial.assumptions %}
+    <table class="report-table"><tbody>
+      <tr><td>Staff in scope</td><td class="num">{{ a.staff }}</td></tr>
+      <tr><td>Blended hourly rate</td><td class="num">{{ CURRENCY }} {{ '%.0f'|format(a.hourly_rate) }}</td></tr>
+      <tr><td>Working hours / month</td><td class="num">{{ a.working_hours_per_month }}</td></tr>
+      <tr><td>Labour line</td><td class="num">{{ a.labour_line|money }}</td></tr>
+      <tr><td>Savings cap</td><td class="num">{{ '%.0f'|format(a.max_savings_share * 100) }}%</td></tr>
+    </tbody></table>
+    <p class="muted">{{ method_note }}</p>
+    {% if benchmark and benchmark.available %}<p class="muted">Peer median: {{ benchmark.median }} from {{ benchmark.sample }} comparable assessments.</p>{% endif %}
+  </section>
+</article>
+{% endblock %}

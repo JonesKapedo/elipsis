@@ -73,7 +73,9 @@ def reset_demo_data(db: Session, org_ids: list[int] | None = None):
         for model in (models.Answer, models.MetricScore, models.PillarScore,
                       models.SubdomainScore, models.PainPoint,
                       models.Recommendation, models.FinancialModel, models.Report,
-                      models.ShareLink):
+                      models.ShareLink, models.AssessmentAssumption,
+                      models.EvidenceAttachment, models.RoadmapItem,
+                      models.AuditEvent):
             try:
                 if hasattr(model, "assessment_id"):
                     db.execute(delete(model).where(model.assessment_id.in_(assessment_ids)))
@@ -88,18 +90,23 @@ def reset_demo_data(db: Session, org_ids: list[int] | None = None):
 
 
 def create_share_link(db: Session, assessment_id: int, user_id: int | None = None,
-                      label: str | None = None) -> models.ShareLink:
+                      label: str | None = None, expires_days: int | None = 30) -> models.ShareLink:
     assessment = db.get(models.Assessment, assessment_id)
     if assessment is None:
         raise ValueError("assessment not found")
     if assessment.status != "completed":
         raise ValueError("only completed assessments can be shared")
     token = security.new_token()
+    expires_at = None
+    if expires_days:
+        from datetime import UTC, datetime, timedelta
+        expires_at = (datetime.now(UTC) + timedelta(days=max(1, min(365, int(expires_days))))).strftime("%Y-%m-%d %H:%M:%S")
     link = models.ShareLink(
         token=token,
         assessment_id=assessment_id,
         created_by=user_id,
         label=label or "Board pack",
+        expires_at=expires_at,
         created_at=_now(),
     )
     db.add(link)
@@ -111,6 +118,13 @@ def resolve_share_token(db: Session, token: str):
     link = db.get(models.ShareLink, token)
     if link is None:
         return None, None, None
+    if link.expires_at:
+        from datetime import UTC, datetime
+        try:
+            if datetime.strptime(link.expires_at, "%Y-%m-%d %H:%M:%S").replace(tzinfo=UTC) < datetime.now(UTC):
+                return None, None, None
+        except ValueError:
+            pass
     assessment, result = compute(db, link.assessment_id)
     return link, assessment, result
 

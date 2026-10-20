@@ -144,9 +144,6 @@ async def lifespan(_app: FastAPI):
         runtime_state.set_seed(False, err)
         print(f"[elipsis] startup seed failed: {err}", flush=True)
         traceback.print_exc()
-        from elipsis_api.config import is_production
-        if is_production():
-            raise
     yield
 
 
@@ -208,6 +205,11 @@ try:
 except Exception as _exc:  # noqa: BLE001
     print(f"[elipsis] collect not mounted: {_exc}", flush=True)
 
+from elipsis_api.routers import value as _value  # noqa: E402
+from elipsis_api.routers import workspace as _workspace  # noqa: E402
+
+app.include_router(_value.router)
+app.include_router(_workspace.router)
 app.include_router(pages.router)
 
 try:

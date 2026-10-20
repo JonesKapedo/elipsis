@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Security and data handling — {{ BRAND_NAME }}{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Trust centre</p>
+  <h1>Security and data handling</h1>
+  <p class="lede">What we protect, how, and what we will tell you if something goes wrong.</p>
+</section>
+<article class="block prose">
+  <h3>Access control</h3>
+  <ul>
+    <li>Passwords are hashed with a memory-hard algorithm; plaintext passwords are never stored.</li>
+    <li>Sessions are signed, HttpOnly, SameSite cookies backed by a server-side session record that can be revoked.</li>
+    <li>Organisation data is scoped by tenant. Every assessment, report, evidence file and plan item is checked against the signed-in user’s organisation.</li>
+    <li>Share links are unguessable, expire after a chosen period (30 days by default), and can be revoked.</li>
+  </ul>
+  <h3>Transport and storage</h3>
+  <ul>
+    <li>TLS in transit. PostgreSQL in production; SQLite is used only for local development or an explicitly degraded demo mode.</li>
+    <li>Evidence files are stored in the database with type and size limits (5 MB; PDF, image, Office, CSV or text).</li>
+    <li>Backups are encrypted at rest by the hosting provider and expire on a rolling basis.</li>
+  </ul>
+  <h3>Application protections</h3>
+  <ul>
+    <li>CSRF tokens on state-changing forms, rate limits on authentication and expensive endpoints, and parameterised database access through SQLAlchemy.</li>
+    <li>Uploaded files are served as attachments with a safe filename; they are never executed.</li>
+    <li>Security headers include a content security policy, frame denial, referrer policy and nosniff.</li>
+  </ul>
+  <h3>Payment data</h3>
+  <p>Card details go directly to Paystack. We store only the plan, status and Paystack reference. Webhook signatures are verified before entitlements change.</p>
+  <h3>Data location and processors</h3>
+  <p>Production infrastructure is hosted by Vercel and Neon. Email is sent through SendGrid when configured. A current processor list is available to customers on request.</p>
+  <h3>Incident response</h3>
+  <p>We triage suspected incidents, contain access, preserve logs, and notify the ODPC and affected customers where the law requires. Our internal notification target is 72 hours after confirmation. We will not hide a breach behind marketing language.</p>
+  <h3>Report a vulnerability</h3>
+  <p>Email <a href="mailto:security@elipsis.co.ke">security@elipsis.co.ke</a> with steps to reproduce. Please do not access other customers’ data, disrupt the service, or publish details before we have had a reasonable chance to fix the issue. We will acknowledge within two working days.</p>
+  <h3>What we do not claim</h3>
+  <p>We are not yet ISO 27001 certified or SOC 2 audited. This page describes controls, not a certification. Procurement questionnaires are welcome.</p>
+</article>
+{% endblock %}
