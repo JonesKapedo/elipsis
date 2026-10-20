@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="t">
+  <title id="t">Elipsis mark</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a1628"/><stop offset="1" stop-color="#1a2f52"/>
+    </linearGradient>
+    <linearGradient id="gold" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="64" y2="64">
+      <stop offset="0" stop-color="#fbbf24"/><stop offset="1" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".28"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#bg)"/>
+  <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="15.25" fill="none" stroke="#fbbf24" stroke-opacity=".38"/>
+  <path d="M16 18.5h28" stroke="url(#gold)" stroke-width="5.5" stroke-linecap="round"/>
+  <path d="M16 32h20" stroke="url(#gold)" stroke-width="5.5" stroke-linecap="round"/>
+  <path d="M16 45.5h12" stroke="url(#gold)" stroke-width="5.5" stroke-linecap="round"/>
+  <circle cx="46.5" cy="45.5" r="4.2" fill="#2dd4bf"/>
+  <circle cx="46.5" cy="45.5" r="7.2" fill="none" stroke="#2dd4bf" stroke-opacity=".28"/>
+  <rect x="2" y="2" width="60" height="30" rx="16" fill="url(#shine)"/>
+</svg>

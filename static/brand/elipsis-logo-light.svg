@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 150" role="img" aria-labelledby="t">
+  <title id="t">Elipsis</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0a1628"/><stop offset="1" stop-color="#1a2f52"/></linearGradient>
+    <linearGradient id="gold" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="96" y2="96"><stop offset="0" stop-color="#fbbf24"/><stop offset="1" stop-color="#d97706"/></linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+  </defs>
+  <g transform="translate(8 25)">
+    <rect width="96" height="96" rx="24" fill="url(#bg)"/>
+    <rect x="1" y="1" width="94" height="94" rx="23" fill="none" stroke="#fbbf24" stroke-opacity=".38" stroke-width="1.5"/>
+    <path d="M25 29h42" stroke="url(#gold)" stroke-width="8.5" stroke-linecap="round"/>
+    <path d="M25 48h30" stroke="url(#gold)" stroke-width="8.5" stroke-linecap="round"/>
+    <path d="M25 67h18" stroke="url(#gold)" stroke-width="8.5" stroke-linecap="round"/>
+    <circle cx="69.5" cy="67" r="6.3" fill="#2dd4bf"/>
+    <circle cx="69.5" cy="67" r="10.8" fill="none" stroke="#2dd4bf" stroke-opacity=".28" stroke-width="1.5"/>
+    <rect width="96" height="48" rx="24" fill="url(#shine)"/>
+  </g>
+  <text x="126" y="80" font-family="'Source Serif 4', Georgia, 'Times New Roman', serif" font-size="58" font-weight="600" letter-spacing="-1.6" fill="#ffffff">Elipsis</text>
+  <text x="128" y="109" font-family="Inter, Arial, sans-serif" font-size="11" font-weight="700" letter-spacing="3.6" fill="#d4c9b4">OPERATIONAL INTELLIGENCE</text>
+</svg>

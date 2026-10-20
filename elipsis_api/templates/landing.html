@@ -2,19 +2,51 @@
 {% block title %}See what friction is costing you{% endblock %}
 {% block content %}
 <section class="hero hero-pro">
-  <div class="hero-badge">Built for Kenyan logistics SMEs · 10–199 staff</div>
-  <h1>Find the time and money leaking out of your dispatch, warehouse and back office — then fix the first three things in 30 days.</h1>
-  <p class="lede">{{ BRAND_NAME }} turns {{ total_questions }} plain-English answers into a scored readiness index, a checkable {{ CURRENCY }} cost model, and a 90-day action plan with owners and dates. Designed for freight forwarders, transporters, warehouses and distributors — not enterprises with a consulting budget.</p>
-  <div class="hero-actions">
-    <a class="btn big" href="/signup">Start your free assessment →</a>
-    <a class="btn ghost big" href="/sample">See a full sample report</a>
+  <div class="hero-grid">
+    <div class="hero-copy">
+      <div class="hero-badge">Built for Kenyan logistics SMEs · 10–199 staff</div>
+      <h1>Find the money hidden in your operations.</h1>
+      <p class="lede">{{ BRAND_NAME }} turns {{ total_questions }} plain-English answers into a scored readiness index, a checkable {{ CURRENCY }} cost model, and a 90-day action plan with owners and dates. Designed for freight forwarders, transporters, warehouses and distributors — not enterprises with a consulting budget.</p>
+      <div class="hero-actions">
+        <a class="btn big" href="/signup">Start your free assessment →</a>
+        <a class="btn ghost big" href="/sample">See a full sample report</a>
+      </div>
+      <ul class="hero-trust">
+        <li>No consultants required</li>
+        <li>~25 minutes end-to-end</li>
+        <li>Assumptions printed and editable</li>
+        <li>Board pack (PDF + Excel) and 90-day plan</li>
+      </ul>
+    </div>
+    <aside class="hero-visual" aria-label="Illustrative readiness scorecard">
+      <div class="hv-top">
+        <span class="hv-live"><i></i> Live readiness</span>
+        <span class="hv-chip">Sample</span>
+      </div>
+      <div class="hv-score">
+        <div class="hv-ring" style="--pct:62.4%"><span>62.4<small>/ 100</small></span></div>
+        <div class="hv-summary">
+          <span class="hv-band">Emerging</span>
+          <p>Strong intent, uneven process ownership. Three fixes in dispatch and order-to-cash carry most of the upside.</p>
+        </div>
+      </div>
+      <div class="hv-metrics">
+        <div><span>Annual savings</span><b>{{ CURRENCY }} 4.2M</b></div>
+        <div><span>Payback</span><b>7.4 mo</b></div>
+        <div><span>ROI</span><b>148%</b></div>
+      </div>
+      <div class="hv-pillars">
+        <div class="hv-pillar"><span>Operations</span><div class="hv-track"><i style="width:74%"></i></div></div>
+        <div class="hv-pillar"><span>Data</span><div class="hv-track"><i style="width:58%"></i></div></div>
+        <div class="hv-pillar"><span>People</span><div class="hv-track"><i style="width:66%"></i></div></div>
+        <div class="hv-pillar"><span>Finance</span><div class="hv-track"><i style="width:49%"></i></div></div>
+      </div>
+      <div class="hv-foot">
+        <span>Illustrative output — not a customer claim</span>
+        <a href="/sample" style="color:#f5b301;font-weight:700">Open sample →</a>
+      </div>
+    </aside>
   </div>
-  <ul class="hero-trust">
-    <li>No consultants required</li>
-    <li>~25 minutes end-to-end</li>
-    <li>Assumptions printed and editable</li>
-    <li>Board pack (PDF + Excel) and 90-day plan</li>
-  </ul>
 </section>
 
 <section class="stats">

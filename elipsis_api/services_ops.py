@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from elipsis_api import models
@@ -220,6 +220,82 @@ def audit_events(db: Session, org_ids: list[int] | None = None,
         org = db.get(models.Organization, row.organization_id) if row.organization_id else None
         user = db.get(models.User, row.user_id) if row.user_id else None
         out.append({"event": row, "organization": org, "user": user})
+    return out
+
+
+def search_workspace(db: Session, org_ids: list[int] | None, query: str,
+                     limit: int = 8) -> dict[str, Any]:
+    """Search the parts of the workspace a user can actually open."""
+    q = (query or "").strip()
+    out: dict[str, Any] = {
+        "query": q, "organizations": [], "assessments": [], "actions": [],
+        "total": 0,
+    }
+    if len(q) < 2:
+        return out
+    like = f"%{q}%"
+
+    org_query = (
+        select(models.Organization)
+        .where(models.Organization.name.ilike(like))
+        .order_by(models.Organization.name)
+        .limit(limit)
+    )
+    if org_ids is not None:
+        if not org_ids:
+            return out
+        org_query = org_query.where(models.Organization.id.in_(org_ids))
+    out["organizations"] = [
+        {"org": org, "url": f"/company/{org.id}"} for org in db.scalars(org_query)
+    ]
+
+    assessment_query = (
+        select(models.Assessment, models.Organization, models.Department)
+        .join(models.Organization, models.Organization.id == models.Assessment.organization_id)
+        .outerjoin(models.Department, models.Department.id == models.Assessment.department_id)
+        .where(or_(
+            models.Organization.name.ilike(like),
+            models.Department.name.ilike(like),
+            models.Assessment.respondent.ilike(like),
+            models.Assessment.status.ilike(like),
+        ))
+        .order_by(models.Assessment.id.desc())
+        .limit(limit)
+    )
+    if org_ids is not None:
+        assessment_query = assessment_query.where(
+            models.Assessment.organization_id.in_(org_ids))
+    out["assessments"] = [
+        {"assessment": assessment, "organization": org, "department": dept,
+         "url": f"/assessment/{assessment.id}/results"}
+        for assessment, org, dept in db.execute(assessment_query).all()
+    ]
+
+    action_query = (
+        select(models.RoadmapItem, models.Assessment, models.Organization.name,
+               models.Department.name)
+        .join(models.Assessment, models.Assessment.id == models.RoadmapItem.assessment_id)
+        .join(models.Organization, models.Organization.id == models.Assessment.organization_id)
+        .outerjoin(models.Department, models.Department.id == models.Assessment.department_id)
+        .where(or_(
+            models.RoadmapItem.title.ilike(like),
+            models.RoadmapItem.owner.ilike(like),
+            models.RoadmapItem.notes.ilike(like),
+        ))
+        .order_by(models.RoadmapItem.due_date, models.RoadmapItem.id)
+        .limit(limit)
+    )
+    if org_ids is not None:
+        action_query = action_query.where(
+            models.Assessment.organization_id.in_(org_ids))
+    out["actions"] = [
+        {"item": item, "assessment_id": assessment.id, "organization": org_name,
+         "department": dept_name,
+         "url": f"/assessment/{assessment.id}/plan"}
+        for item, assessment, org_name, dept_name in db.execute(action_query).all()
+    ]
+    out["total"] = (len(out["organizations"]) + len(out["assessments"])
+                    + len(out["actions"]))
     return out
 
 

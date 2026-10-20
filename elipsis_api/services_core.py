@@ -280,6 +280,7 @@ def submit(db: Session, assessment_id: int, answers):
     assessment, result = compute(db, assessment_id)
     if result is not None:
         save(db, assessment_id, result)
+        ensure_plan_items(db, assessment_id, result)
     return assessment, result
 
 

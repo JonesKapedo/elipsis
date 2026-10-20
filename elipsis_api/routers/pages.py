@@ -3,7 +3,7 @@
 import os
 
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -53,6 +53,44 @@ def _set_session_cookie(response, token: str) -> None:
         SESSION_COOKIE, token, httponly=True, samesite="lax",
         secure=_SECURE_COOKIE, max_age=_COOKIE_MAX_AGE, path="/",
     )
+
+
+@router.get("/robots.txt", include_in_schema=False)
+def robots(request: Request):
+    base = str(request.base_url).rstrip("/")
+    body = (
+        "User-agent: *\n"
+        "Allow: /$\n"
+        "Allow: /methodology\n"
+        "Allow: /pricing\n"
+        "Allow: /partners\n"
+        "Allow: /sample\n"
+        "Allow: /privacy\n"
+        "Allow: /terms\n"
+        "Allow: /security\n"
+        "Allow: /case-study\n"
+        "Disallow: /dashboard\n"
+        "Disallow: /assessment/\n"
+        "Disallow: /api/\n"
+        f"Sitemap: {base}/sitemap.xml\n"
+    )
+    return PlainTextResponse(body, media_type="text/plain")
+
+
+@router.get("/sitemap.xml", include_in_schema=False)
+def sitemap(request: Request):
+    base = str(request.base_url).rstrip("/")
+    paths = ("/", "/methodology", "/pricing", "/partners", "/sample",
+             "/privacy", "/terms", "/security", "/case-study", "/login", "/signup")
+    urls = "".join(
+        f"<url><loc>{base}{path}</loc><changefreq>monthly</changefreq>"
+        f"<priority>{'1.0' if path == '/' else '0.7'}</priority></url>"
+        for path in paths
+    )
+    body = ('<?xml version="1.0" encoding="UTF-8"?>'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+            f'{urls}</urlset>')
+    return PlainTextResponse(body, media_type="application/xml")
 
 
 @router.get("/")

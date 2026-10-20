@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="600" viewBox="0 0 1600 600" role="img" aria-labelledby="t">
+  <title id="t">Elipsis — from friction to flow</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0a1628"/><stop offset="1" stop-color="#172d4f"/></linearGradient>
+    <radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#d97706" stop-opacity=".35"/><stop offset="1" stop-color="#d97706" stop-opacity="0"/></radialGradient>
+    <radialGradient id="teal" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#2dd4bf" stop-opacity=".2"/><stop offset="1" stop-color="#2dd4bf" stop-opacity="0"/></radialGradient>
+    <linearGradient id="gold" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1600" y2="600"><stop offset="0" stop-color="#fbbf24"/><stop offset="1" stop-color="#d97706"/></linearGradient>
+    <pattern id="grid" width="56" height="56" patternUnits="userSpaceOnUse"><path d="M56 0H0v56" fill="none" stroke="#fff" stroke-opacity=".04"/></pattern>
+  </defs>
+  <rect width="1600" height="600" fill="url(#bg)"/>
+  <rect width="1600" height="600" fill="url(#grid)"/>
+  <circle cx="1380" cy="80" r="420" fill="url(#glow)"/>
+  <circle cx="180" cy="560" r="360" fill="url(#teal)"/>
+  <text x="100" y="150" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="800" letter-spacing="4" fill="#fbbf24">THE OPERATING SYSTEM FOR OPERATIONAL CLARITY</text>
+  <text x="96" y="260" font-family="'Source Serif 4', Georgia, serif" font-size="78" font-weight="600" fill="#fffcf7" letter-spacing="-2">From friction to flow.</text>
+  <text x="100" y="320" font-family="Inter, Arial, sans-serif" font-size="24" fill="#cbd5e1">Measure what slows the business down. Price it. Fix it. Prove the movement.</text>
+  <g transform="translate(100 390)" font-family="Inter, Arial, sans-serif">
+    <rect width="250" height="58" rx="29" fill="url(#gold)"/><text x="125" y="36" text-anchor="middle" font-size="16" font-weight="800" fill="#1c1206">Run the diagnostic →</text>
+    <text x="286" y="26" font-size="13" fill="#94a3b8">Readiness index · cost model</text>
+    <text x="286" y="48" font-size="13" fill="#94a3b8">90-day plan · board pack</text>
+  </g>
+  <g transform="translate(1040 150)" opacity=".95">
+    <rect width="460" height="320" rx="26" fill="#0f1e35" stroke="#fff" stroke-opacity=".12"/>
+    <path d="M40 240 L110 190 L180 210 L250 140 L320 160 L390 90" fill="none" stroke="url(#gold)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M40 240 L110 190 L180 210 L250 140 L320 160 L390 90 L390 270 L40 270Z" fill="#d97706" fill-opacity=".08"/>
+    <circle cx="390" cy="90" r="9" fill="#2dd4bf"/>
+    <text x="40" y="50" font-family="Inter, Arial, sans-serif" font-size="11" font-weight="700" letter-spacing="2" fill="#94a3b8">READINESS MOVEMENT</text>
+    <text x="40" y="88" font-family="'Source Serif 4', Georgia, serif" font-size="38" font-weight="600" fill="#fffcf7">+18.6</text>
+    <text x="150" y="87" font-family="Inter, Arial, sans-serif" font-size="13" fill="#2dd4bf">in 12 months</text>
+  </g>
+</svg>

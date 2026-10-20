@@ -17,14 +17,21 @@
   <article class="block">
     <div class="block-head">
       <h3>{{ t.org.name }}</h3>
-      {% if t.latest %}<span class="tag {{ 'ok' if (t.movement or 0) >= 0 else 'warn' }}">{{ '%+.1f'|format(t.movement or 0) }} over {{ t.points|length }} reviews</span>{% endif %}
+      {% if t.latest and t.points|length > 1 %}<span class="tag {{ 'ok' if (t.movement or 0) >= 0 else 'warn' }}">{{ '%+.1f'|format(t.movement or 0) }} over {{ t.points|length }} assessments</span>{% elif t.latest %}<span class="tag ok">Baseline recorded</span>{% endif %}
     </div>
     {% if t.points %}
+    {% if t.points|length > 1 %}
     <div class="trend-bars" aria-label="Readiness history">
       {% for p in t.points %}
       <div class="tb" title="{{ p.label }}: {{ p.value }}"><i style="height:{{ p.value }}%"></i><span>{{ p.label[5:] if p.label|length > 5 else p.label }}</span></div>
       {% endfor %}
     </div>
+    {% else %}
+    <div class="trend-baseline">
+      <div class="gauge-num">{{ '%.1f'|format(t.latest.value) }}<span>/100</span></div>
+      <p class="muted small">This is the baseline. Run the same assessment again after the first 90-day cycle to measure movement.</p>
+    </div>
+    {% endif %}
     <div class="trend-legend">
       <span>Latest <strong>{{ t.latest.value }}</strong></span>
       <span>{{ t.latest.label }}</span>

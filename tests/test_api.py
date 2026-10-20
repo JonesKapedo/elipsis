@@ -246,3 +246,35 @@ def test_workspace_intelligence_round_trip(signed_in):
     assert audit.status_code == 200
     assert "plan.update" in audit.text
     assert "share.create" in audit.text
+
+
+def test_workspace_search_and_brand_surface(signed_in):
+    client = signed_in
+    page = client.get("/search?q=Workspace")
+    assert page.status_code == 200
+    assert "Workspace Logistics" in page.text
+    assert "90-day actions" in page.text
+
+    short = client.get("/search?q=a")
+    assert short.status_code == 200
+    assert "at least two characters" in short.text
+
+    missing = client.get("/search?q=zzzz-no-such-record")
+    assert missing.status_code == 200
+    assert "No matches" in missing.text
+
+    landing = client.get("/")
+    assert landing.status_code == 200
+    assert 'property="og:image"' in landing.text
+    assert "/static/brand/elipsis-logo" in landing.text
+    assert "/static/premium.css" in landing.text
+    assert "/static/app.js" in landing.text
+
+    robots = client.get("/robots.txt")
+    assert robots.status_code == 200
+    assert "Sitemap:" in robots.text
+    assert "Disallow: /dashboard" in robots.text
+    sitemap = client.get("/sitemap.xml")
+    assert sitemap.status_code == 200
+    assert "<urlset" in sitemap.text
+    assert "/methodology" in sitemap.text

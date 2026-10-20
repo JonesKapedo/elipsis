@@ -13,25 +13,24 @@
 </section>
 
 <article class="block">
+  {% for item in items %}<form id="plan-{{ item.id }}" method="post" action="/assessment/{{ assessment.id }}/plan/{{ item.id }}"></form>{% endfor %}
   <table class="table plan-table">
     <thead><tr><th>Action</th><th>Owner</th><th>Due</th><th>Status</th><th>Notes</th><th></th></tr></thead>
     <tbody>
       {% for item in items %}
       <tr>
-        <form method="post" action="/assessment/{{ assessment.id }}/plan/{{ item.id }}">
         <td><strong>{{ item.title }}</strong><br><span class="muted">{{ item.technology or '' }} · {{ item.horizon or '' }}</span></td>
-        <td><input name="owner" value="{{ item.owner or '' }}" placeholder="Name" maxlength="120"></td>
-        <td><input type="date" name="due_date" value="{{ item.due_date or '' }}"></td>
+        <td><input form="plan-{{ item.id }}" name="owner" value="{{ item.owner or '' }}" placeholder="Name" maxlength="120"></td>
+        <td><input form="plan-{{ item.id }}" type="date" name="due_date" value="{{ item.due_date or '' }}"></td>
         <td>
-          <select name="status">
+          <select form="plan-{{ item.id }}" name="status">
             {% for key, label in [('not_started','Not started'),('in_progress','In progress'),('blocked','Blocked'),('done','Done')] %}
             <option value="{{ key }}" {% if item.status == key %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
           </select>
         </td>
-        <td><input name="notes" value="{{ item.notes or '' }}" placeholder="Blocker or next step" maxlength="2000"></td>
-        <td><button class="btn sm" type="submit">Save</button></td>
-        </form>
+        <td><input form="plan-{{ item.id }}" name="notes" value="{{ item.notes or '' }}" placeholder="Blocker or next step" maxlength="2000"></td>
+        <td><button form="plan-{{ item.id }}" class="btn sm" type="submit">Save</button></td>
       </tr>
       {% else %}
       <tr><td colspan="6" class="muted">No actions generated yet. Run a completed assessment first.</td></tr>

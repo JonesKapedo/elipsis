@@ -105,6 +105,20 @@ def audit_log(request: Request, user=Depends(get_current_user),
          "notifications": services_ops.notifications(db, user)})
 
 
+@router.get("/search")
+def search(request: Request, user=Depends(get_current_user),
+           db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    visible = services.visible_org_ids(db, user)
+    q = (request.query_params.get("q") or "").strip()[:120]
+    results = services_ops.search_workspace(db, visible, q)
+    return templates.TemplateResponse(
+        request, "search.html",
+        {"user": user, "q": q, "results": results,
+         "notifications": services_ops.notifications(db, user)})
+
+
 @router.get("/company/{organization_id}/team")
 def team_page(organization_id: int, request: Request,
               user=Depends(get_current_user), db: Session = Depends(get_db)):
