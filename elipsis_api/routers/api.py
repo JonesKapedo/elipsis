@@ -4,15 +4,18 @@ import os
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from constants import BRAND_NAME, INDEX_NAME, scale_options
 from elipsis_api import models, schemas, services
 from elipsis_api.config import DATABASE_URL, SESSION_COOKIE
 from elipsis_api.database import get_db, ping_db
+from elipsis_api.services_marketplace import (
+    get_organization_departments,
+    get_user_organizations,
+    update_organization_size,
+)
 from elipsis_api.state import seed_status
-from elipsis_api.services_marketplace import get_user_organizations, get_organization_departments, update_organization_size
 
 router = APIRouter(prefix="/api/v1", tags=["api"])
 
@@ -96,9 +99,22 @@ def create_assessment(payload: schemas.AssessmentIn, request: Request,
     return _assessment_out(assessment)
 
 
+def _authorized_assessment(db: Session, request: Request, assessment_id: int):
+    user = _api_user(request, db)
+    if user is None:
+        raise HTTPException(status_code=401, detail="unauthorized")
+    assessment = db.get(models.Assessment, assessment_id)
+    if assessment is None or not services.can_access_org(
+            db, user, assessment.organization_id):
+        raise HTTPException(status_code=404, detail="assessment not found")
+    return assessment
+
+
 @router.get("/assessments/{assessment_id}/analytics")
-def assessment_analytics(assessment_id: int, db: Session = Depends(get_db)):
+def assessment_analytics(assessment_id: int, request: Request,
+                         db: Session = Depends(get_db)):
     from elipsis_api import analytics
+    _authorized_assessment(db, request, assessment_id)
     _, result = services.compute(db, assessment_id)
     if result is None:
         raise HTTPException(status_code=404, detail="assessment not found")
@@ -122,7 +138,9 @@ def organization_overview(organization_id: int, request: Request,
 
 
 @router.get("/assessments/{assessment_id}")
-def assessment_result(assessment_id: int, db: Session = Depends(get_db)):
+def assessment_result(assessment_id: int, request: Request,
+                      db: Session = Depends(get_db)):
+    _authorized_assessment(db, request, assessment_id)
     assessment, result = services.compute(db, assessment_id)
     if assessment is None or result is None:
         raise HTTPException(status_code=404, detail="assessment not found")
@@ -130,18 +148,21 @@ def assessment_result(assessment_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/assessments/{assessment_id}/results")
-def assessment_results(assessment_id: int, db: Session = Depends(get_db)):
-    return assessment_result(assessment_id, db)
+def assessment_results(assessment_id: int, request: Request,
+                       db: Session = Depends(get_db)):
+    return assessment_result(assessment_id, request, db)
 
 
 @router.get("/assessments/{assessment_id}/report")
-def assessment_report(assessment_id: int, db: Session = Depends(get_db)):
-    return assessment_result(assessment_id, db)
+def assessment_report(assessment_id: int, request: Request,
+                      db: Session = Depends(get_db)):
+    return assessment_result(assessment_id, request, db)
 
 
 @router.post("/assessments/{assessment_id}/submit")
 def assessment_submit(assessment_id: int, payload: schemas.SubmitIn,
-                      db: Session = Depends(get_db)):
+                      request: Request, db: Session = Depends(get_db)):
+    _authorized_assessment(db, request, assessment_id)
     try:
         _, result = services.submit(db, assessment_id, payload.answers)
     except Exception as exc:  # noqa: BLE001
@@ -156,18 +177,28 @@ def assessment_submit(assessment_id: int, payload: schemas.SubmitIn,
 # ============================================================================
 
 @router.post("/auth/register")
-def register(request: Request, response: Response, db: Session = Depends(get_db)):
+async def register(request: Request, response: Response, db: Session = Depends(get_db)):
     """Register new user with user_type support (client or bidder)."""
+    from elipsis_api import ratelimit
+    ratelimit.enforce(request, "register", limit=5, window=60)
     try:
-        data = request.json() if hasattr(request, 'json') else {}
+        try:
+            data = await request.json()
+        except Exception:  # noqa: BLE001
+            data = {}
+        if not isinstance(data, dict):
+            data = {}
         email = data.get("email", "")
         password = data.get("password", "")
         name = data.get("name")
         user_type = data.get("user_type", "client")
         
         user = services.register_user(db, email, password, name, user_type)
+        old = request.cookies.get(SESSION_COOKIE)
+        if old:
+            services.delete_session(db, old)
         token = services.create_session(db, user.id)
-        
+
         response.set_cookie(
             SESSION_COOKIE,
             token,
@@ -195,10 +226,16 @@ def register(request: Request, response: Response, db: Session = Depends(get_db)
 
 
 @router.post("/auth/login", response_model=schemas.LoginOut)
-def login(payload: schemas.LoginIn, response: Response, db: Session = Depends(get_db)):
+def login(payload: schemas.LoginIn, request: Request, response: Response,
+          db: Session = Depends(get_db)):
+    from elipsis_api import ratelimit
+    ratelimit.enforce(request, "login", limit=10, window=60)
     user = services.authenticate(db, payload.email, payload.password)
     if user is None:
         raise HTTPException(status_code=401, detail="Incorrect email or password")
+    old = request.cookies.get(SESSION_COOKIE)
+    if old:
+        services.delete_session(db, old)
     token = services.create_session(db, user.id)
     response.set_cookie(
         SESSION_COOKIE,

@@ -6,12 +6,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from elipsis_api import models
+from elipsis_api import models, services
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user
+from elipsis_api.query_utils import isoformat
 from elipsis_api.services_marketplace import (
-    get_user_organizations,
     get_organization_departments,
+    get_user_organizations,
     update_organization_size,
 )
 
@@ -56,7 +57,7 @@ def get_organization(
         )
     
     # Check if user has access to this organization
-    if org.user_id != current_user.id and not current_user.is_admin:
+    if not services.can_access_org(db, current_user, org_id):
         # Check if user is linked through OrgOwner
         org_owner = db.scalar(
             select(models.OrgOwner).where(
@@ -84,7 +85,7 @@ def get_organization(
         "contact_email": org.contact_email,
         "contact_phone": org.contact_phone,
         "website": org.website,
-        "created_at": org.created_at.isoformat(),
+        "created_at": isoformat(org.created_at),
     }
 
 
@@ -108,7 +109,7 @@ def list_organization_departments(
         )
     
     # Check access
-    if org.user_id != current_user.id and not current_user.is_admin:
+    if not services.can_access_org(db, current_user, org_id):
         org_owner = db.scalar(
             select(models.OrgOwner).where(
                 models.OrgOwner.organization_id == org_id,
@@ -222,7 +223,7 @@ def update_organization(
         )
     
     # Check ownership
-    if org.user_id != current_user.id and not current_user.is_admin:
+    if not services.can_access_org(db, current_user, org_id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to update this organization"
@@ -291,7 +292,7 @@ def create_department(
         )
     
     # Check ownership
-    if org.user_id != current_user.id and not current_user.is_admin:
+    if not services.can_access_org(db, current_user, org_id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to add departments to this organization"
@@ -332,7 +333,7 @@ def delete_department(
         )
     
     # Check ownership
-    if org.user_id != current_user.id and not current_user.is_admin:
+    if not services.can_access_org(db, current_user, org_id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Permission denied"

@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from sqlalchemy import select, func, and_
+
+from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session
 
 from elipsis_api import models

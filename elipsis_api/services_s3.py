@@ -5,11 +5,17 @@ from __future__ import annotations
 import os
 import uuid
 from datetime import datetime
-from typing import BinaryIO
 
-import boto3
-from botocore.exceptions import ClientError
 from fastapi import UploadFile
+
+try:
+    import boto3
+    from botocore.exceptions import ClientError
+except ModuleNotFoundError:  # optional dependency for local development
+    boto3 = None
+
+    class ClientError(Exception):
+        pass
 
 # S3 Configuration
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
@@ -19,7 +25,7 @@ AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 
 # Initialize S3 client
 s3_client = None
-if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
+if boto3 is not None and AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
     s3_client = boto3.client(
         's3',
         aws_access_key_id=AWS_ACCESS_KEY_ID,
@@ -89,7 +95,7 @@ async def upload_file_to_s3(
         }
         
     except ClientError as e:
-        raise Exception(f"Failed to upload to S3: {str(e)}")
+        raise Exception(f"Failed to upload to S3: {str(e)}") from e
 
 
 async def delete_file_from_s3(s3_key: str) -> bool:

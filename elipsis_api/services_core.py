@@ -1,21 +1,20 @@
 """Service layer: seeding and the assessment lifecycle (SQLAlchemy + shared engine)."""
 
 import os
-from datetime import datetime, timezone
-from typing import Any, Dict
+from datetime import UTC, datetime
+from typing import Any
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from constants import PILLAR_WEIGHTS, SUBDOMAIN_PILLAR
-from elipsis_questions import QUESTIONS, QUESTIONNAIRE
-from readiness import compute as _compute
-from readiness import compute_live as _compute_live
+from constants import SUBDOMAIN_PILLAR
 from elipsis_api import models, security
+from elipsis_questions import QUESTIONNAIRE, QUESTIONS
+from readiness import compute as _compute
 
 
 def _now():
-    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    return datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
 
 
 DEFAULT_ADMIN_EMAIL = "admin@elipsis.local"
@@ -32,11 +31,17 @@ def _seed_admin(db: Session):
     email = os.getenv("ELIPSIS_ADMIN_EMAIL") or DEFAULT_ADMIN_EMAIL
     password = os.getenv("ELIPSIS_ADMIN_PASSWORD") or DEFAULT_ADMIN_PASSWORD
     if password == DEFAULT_ADMIN_PASSWORD:
+        from elipsis_api.config import is_production
+        if is_production():
+            raise RuntimeError(
+                "ELIPSIS_ADMIN_PASSWORD must be set in production; refusing to "
+                "seed an administrator with the default password.")
         print("[elipsis] WARNING: no ELIPSIS_ADMIN_PASSWORD set, so the first "
               "administrator uses the default password. Set ELIPSIS_ADMIN_EMAIL "
               "and ELIPSIS_ADMIN_PASSWORD before exposing this instance.",
               flush=True)
     db.add(models.User(email=email, name="Elipsis Admin", role="admin",
+                       user_type="admin", is_admin=True, email_verified=True,
                        password_hash=security.hash_password(password)))
 
 
@@ -186,17 +191,20 @@ def save(db: Session, assessment_id: int, result):
 
     for p in (result.get("pain_points") or []):
         db.add(models.PainPoint(
-            assessment_id=assessment_id, severity=p.get("severity"),
+            assessment_id=assessment_id,
+            trigger_code=p.get("trigger") or p.get("trigger_code"),
+            severity=p.get("severity"),
             title=p.get("title"), detail=p.get("detail"),
-            impact=p.get("impact")))
+            impact_score=p.get("impact")))
 
     for phase in (result.get("roadmap") or []):
         for r in phase.get("items") or []:
             db.add(models.Recommendation(
-                assessment_id=assessment_id, phase=phase.get("label"),
+                assessment_id=assessment_id, phase=r.get("phase") or phase.get("number"),
                 title=r.get("title"), solution=r.get("solution"),
                 technology=r.get("technology"), complexity=r.get("complexity"),
-                roi=r.get("roi"), priority=r.get("priority")))
+                expected_roi=r.get("roi"), priority_score=r.get("priority"),
+                horizon=r.get("horizon")))
 
     fin = result.get("financial") or {}
     db.add(models.FinancialModel(

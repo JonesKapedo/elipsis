@@ -7,11 +7,10 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from elipsis_api import analytics, models, schemas, services
+from elipsis_api import models, schemas, services
 from elipsis_api.config import SESSION_COOKIE
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
-from constants import SUBDOMAIN_PILLAR
 from elipsis_api.sample import SAMPLE_ORG, sample_result
 
 router = APIRouter()
@@ -279,6 +278,9 @@ def login(request: Request, email: str = Form(...), password: str = Form(...),
                                     "next": nxt,
                                     "total_questions": _question_count(db)},
             status_code=401)
+    old = request.cookies.get(SESSION_COOKIE)
+    if old:
+        services.delete_session(db, old)
     token = services.create_session(db, account.id)
     response = RedirectResponse(nxt or "/dashboard", status_code=303)
     _set_session_cookie(response, token)
@@ -475,9 +477,12 @@ def assessment_results(assessment_id: int, request: Request,
     if assessment.status != "completed":
         services.save(db, assessment_id, result)
     org = db.get(models.Organization, assessment.organization_id)
+    dept = db.get(models.Department, assessment.department_id) if assessment.department_id else None
     return templates.TemplateResponse(
         request, "results.html",
         {"user": user, "assessment": assessment, "result": result, "org": org,
+         "organization": org, "department": dept,
+         "share_url": str(request.base_url).rstrip("/") + f"/assessment/{assessment_id}/results",
          "shared": request.query_params.get("shared")})
 
 
@@ -492,9 +497,12 @@ def assessment_pillar(assessment_id: int, code: str, request: Request,
     _, result = services.compute(db, assessment_id)
     if result is None:
         return _not_found(request, user)
+    org = db.get(models.Organization, assessment.organization_id)
+    dept = db.get(models.Department, assessment.department_id) if assessment.department_id else None
     return templates.TemplateResponse(
         request, "results.html",
         {"user": user, "assessment": assessment, "result": result,
+         "organization": org, "department": dept,
          "focus_pillar": code.upper()})
 
 

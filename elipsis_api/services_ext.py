@@ -61,8 +61,13 @@ def _band_counts(completed: list[dict[str, Any]]) -> dict[str, int]:
     return counts
 
 
-def reset_demo_data(db: Session):
-    assessment_ids = list(db.scalars(select(models.Assessment.id)))
+def reset_demo_data(db: Session, org_ids: list[int] | None = None):
+    stmt = select(models.Assessment.id)
+    if org_ids is not None:
+        if not org_ids:
+            return 0
+        stmt = stmt.where(models.Assessment.organization_id.in_(org_ids))
+    assessment_ids = list(db.scalars(stmt))
     removed = 0
     if assessment_ids:
         for model in (models.Answer, models.MetricScore, models.PillarScore,

@@ -22,8 +22,21 @@ SECRET = os.getenv("PAYSTACK_SECRET_KEY", DUMMY_SECRET)
 PUBLIC = os.getenv("PAYSTACK_PUBLIC_KEY", DUMMY_PUBLIC)
 
 
+def is_production() -> bool:
+    return bool(os.getenv("VERCEL")) or os.getenv("ELIPSIS_ENV", "").lower() == "production"
+
+
 def is_dummy() -> bool:
     return not SECRET or SECRET == DUMMY_SECRET or os.getenv("PAYSTACK_MODE") == "dummy"
+
+
+def ensure_configured() -> None:
+    """Production must never accept the in-app dummy checkout."""
+    if is_production() and (is_dummy() or not PUBLIC or PUBLIC == DUMMY_PUBLIC):
+        raise RuntimeError(
+            "PAYSTACK_SECRET_KEY and PAYSTACK_PUBLIC_KEY must be real in production; "
+            "dummy checkout is disabled."
+        )
 
 
 def new_reference(prefix: str = "ELP") -> str:
@@ -32,6 +45,7 @@ def new_reference(prefix: str = "ELP") -> str:
 
 def initialize(email: str, amount_kes: int, reference: str, callback_url: str, metadata: dict | None = None) -> dict:
     """Return {authorization_url, reference, access_code, dummy}."""
+    ensure_configured()
     payload = {
         "email": email,
         "amount": int(amount_kes) * 100,
@@ -74,6 +88,7 @@ def initialize(email: str, amount_kes: int, reference: str, callback_url: str, m
 
 
 def verify(reference: str) -> dict:
+    ensure_configured()
     if is_dummy():
         return {"status": "success", "reference": reference, "dummy": True}
     req = urllib.request.Request(
@@ -88,4 +103,5 @@ def verify(reference: str) -> dict:
         "reference": reference,
         "dummy": False,
         "amount": data.get("amount"),
+        "currency": data.get("currency"),
     }

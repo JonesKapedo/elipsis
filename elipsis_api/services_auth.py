@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from constants import SUBDOMAIN_PILLAR
-from readiness import compute_live as _compute_live
 from elipsis_api import models, security
 from elipsis_api.services_core import answers_map, get_questions
+from readiness import compute_live as _compute_live
 
 
 def authenticate(db: Session, email: str, password: str):

@@ -18,6 +18,7 @@ import elipsis_questions as EQ  # noqa: E402
 @pytest.fixture(scope="module")
 def client():
     from fastapi.testclient import TestClient
+
     from elipsis_api.main import app
     with TestClient(app) as c:
         yield c

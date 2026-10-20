@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
@@ -9,7 +11,7 @@ from elipsis_api.config import DATABASE_URL
 
 
 def _build_engine(url: str):
-    """Create an engine; never raise — fall back to ephemeral SQLite."""
+    """Create an engine. Production never falls back to SQLite."""
     is_sqlite = url.startswith("sqlite")
     connect_args: dict = {}
     engine_kwargs: dict = {"future": True, "pool_pre_ping": True}
@@ -21,9 +23,9 @@ def _build_engine(url: str):
         # Fail fast on serverless — never hang cold start waiting for Neon.
         connect_args["connect_timeout"] = 5
         engine_kwargs["pool_recycle"] = 280
-        engine_kwargs["pool_size"] = 1
-        engine_kwargs["max_overflow"] = 0
-        engine_kwargs["pool_timeout"] = 5
+        engine_kwargs["pool_size"] = int(os.getenv("ELIPSIS_DB_POOL_SIZE", "5"))
+        engine_kwargs["max_overflow"] = int(os.getenv("ELIPSIS_DB_MAX_OVERFLOW", "10"))
+        engine_kwargs["pool_timeout"] = 10
 
     try:
         eng = create_engine(url, connect_args=connect_args, **engine_kwargs)
@@ -33,6 +35,12 @@ def _build_engine(url: str):
                 conn.execute(text("SELECT 1"))
         return eng, url
     except Exception as exc:  # noqa: BLE001
+        from elipsis_api.config import is_production
+        if is_production():
+            raise RuntimeError(
+                f"database engine init failed ({exc.__class__.__name__}: {exc}); "
+                "production does not fall back to SQLite"
+            ) from exc
         print(
             f"[elipsis] engine init failed ({exc.__class__.__name__}: {exc}) "
             "-> falling back to ephemeral SQLite",

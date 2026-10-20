@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -131,7 +133,11 @@ def is_bidder_subscribed(db: Session, user_id: int) -> bool:
     if not bidder:
         return False
     
-    return bidder.subscription_status == "active"
+    if bidder.subscription_status != "active":
+        return False
+    if bidder.subscription_expires and bidder.subscription_expires < datetime.now():
+        return False
+    return True
 
 
 def get_bidder_company(db: Session, user_id: int):

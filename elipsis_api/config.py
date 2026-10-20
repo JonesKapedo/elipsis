@@ -81,13 +81,30 @@ def _postgres_usable(url: str) -> bool:
         return False
 
 
+def is_production() -> bool:
+    return bool(os.getenv("VERCEL")) or os.getenv("ELIPSIS_ENV", "").lower() == "production"
+
+
 def resolve_database_url() -> str:
-    """Prefer PostgreSQL when configured and reachable; else SQLite."""
+    """Require durable Postgres in production; allow SQLite only in development."""
     url = os.getenv("ELIPSIS_DATABASE_URL") or os.getenv("TURBINEZ_DATABASE_URL")
+    if is_production():
+        if not url or not url.strip().startswith(("postgres://", "postgresql://")):
+            raise RuntimeError(
+                "ELIPSIS_DATABASE_URL must point at PostgreSQL in production. "
+                "SQLite fallback is disabled so data is never silently lost."
+            )
+        if not _postgres_usable(url):
+            raise RuntimeError(
+                "ELIPSIS_DATABASE_URL is set but PostgreSQL is unreachable. "
+                "Refusing to start with an ephemeral SQLite database."
+            )
     if not url:
         return _sqlite_url()
     url = url.strip().strip('"').strip("'")
     if url.startswith("postgres") and not _postgres_usable(url):
+        print("[elipsis] development fallback: PostgreSQL unreachable -> SQLite",
+              flush=True)
         return _sqlite_url()
     return url
 

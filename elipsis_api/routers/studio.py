@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import os
+from datetime import UTC
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
@@ -236,12 +236,25 @@ def pay_return(reference: str, request: Request, user=Depends(get_current_user),
     payment = db.scalar(select(models.Payment).where(models.Payment.reference == reference))
     if payment is None or payment.user_id != user.id:
         return RedirectResponse("/pro", status_code=303)
-    verified = paystack.verify(reference)
-    if verified.get("status") == "success":
+    try:
+        verified = paystack.verify(reference)
+    except Exception:  # noqa: BLE001
+        verified = {}
+    amount_ok = (
+        verified.get("amount") is None
+        or int(verified.get("amount") or 0) == int(round(payment.amount_kes * 100))
+    )
+    if (verified.get("status") == "success"
+            and verified.get("reference") == reference
+            and amount_ok):
         payment.status = "success"
+        from elipsis_api.models import _now
+        payment.paid_at = _now()
         if payment.purpose == "pro":
             prefs = _prefs(db, user)
-            prefs.pro_until = "active"
+            from datetime import datetime, timedelta
+            prefs.pro_until = (datetime.now(UTC).replace(tzinfo=None)
+                               + timedelta(days=365)).isoformat(timespec="seconds")
         if payment.purpose == "physical" and payment.related_id:
             req = db.get(models.PhysicalRequest, payment.related_id)
             if req:

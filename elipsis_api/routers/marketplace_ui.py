@@ -59,6 +59,68 @@ def marketplace_list(request: Request, user=Depends(get_current_user),
         {"user": user, "requests": requests, "count": len(requests)})
 
 
+@router.get("/marketplace/requests/new")
+def marketplace_new(request: Request, user=Depends(get_current_user),
+                    db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    orgs = services.owned_orgs(db, user)
+    return templates.TemplateResponse(
+        request, "marketplace_new.html",
+        {"user": user, "orgs": orgs, "error": None, "form": {}})
+
+
+@router.post("/marketplace/requests/new")
+def marketplace_create(request: Request,
+                       title: str = Form(...),
+                       description: str = Form(""),
+                       budget_range: str = Form(""),
+                       deadline: str = Form(""),
+                       location: str = Form(""),
+                       organization_id: str = Form(""),
+                       user=Depends(get_current_user),
+                       db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    orgs = services.owned_orgs(db, user)
+    if user.user_type == "bidder":
+        return templates.TemplateResponse(
+            request, "marketplace_new.html",
+            {"user": user, "orgs": orgs, "error": "Only client accounts can post requests.",
+             "form": {"title": title, "description": description}},
+            status_code=403)
+    org_id = int(organization_id) if organization_id.strip().isdigit() else None
+    if org_id is None and orgs:
+        org_id = orgs[0].id
+    if org_id is None or not services.can_access_org(db, user, org_id):
+        return templates.TemplateResponse(
+            request, "marketplace_new.html",
+            {"user": user, "orgs": orgs,
+             "error": "Choose an organisation you own before posting.",
+             "form": {"title": title, "description": description}},
+            status_code=400)
+    if len((title or "").strip()) < 3:
+        return templates.TemplateResponse(
+            request, "marketplace_new.html",
+            {"user": user, "orgs": orgs, "error": "Give the request a short title.",
+             "form": {"title": title, "description": description}},
+            status_code=400)
+    row = models.PhysicalAssessmentRequest(
+        organization_id=org_id,
+        title=title.strip()[:160],
+        description=description.strip() or None,
+        message=description.strip() or None,
+        budget_range=budget_range.strip() or None,
+        deadline=deadline.strip() or None,
+        location=location.strip() or None,
+        status="pending",
+        verified_by_admin=False,
+    )
+    db.add(row)
+    db.commit()
+    return RedirectResponse("/marketplace?submitted=1", status_code=303)
+
+
 @router.get("/marketplace/{request_id}")
 def marketplace_detail(request_id: int, request: Request,
                        user=Depends(get_current_user), db: Session = Depends(get_db)):

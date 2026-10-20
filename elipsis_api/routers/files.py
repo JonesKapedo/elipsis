@@ -6,16 +6,17 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from elipsis_api import models
+from elipsis_api import models, services
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user
+from elipsis_api.query_utils import isoformat
 from elipsis_api.services_s3 import (
-    upload_file_to_s3,
-    upload_multiple_files,
+    MAX_FILE_SIZE,
     delete_file_from_s3,
     is_s3_configured,
+    upload_file_to_s3,
+    upload_multiple_files,
     validate_file,
-    MAX_FILE_SIZE
 )
 
 router = APIRouter(prefix="/files", tags=["files"])
@@ -57,8 +58,7 @@ async def upload_request_document(
         )
     
     # Check if user owns the organization
-    org = db.get(models.Organization, req.organization_id)
-    if not org or (org.user_id != current_user.id and not current_user.is_admin):
+    if not services.can_access_org(db, current_user, req.organization_id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to upload documents for this request"
@@ -87,7 +87,7 @@ async def upload_request_document(
             "file_url": document.file_url,
             "file_type": document.file_type,
             "file_size": document.file_size,
-            "uploaded_at": document.uploaded_at.isoformat(),
+            "uploaded_at": isoformat(document.uploaded_at),
             "message": "Document uploaded successfully"
         }
         
@@ -95,7 +95,7 @@ async def upload_request_document(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to upload document: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/upload/documents/batch")
@@ -132,7 +132,7 @@ async def upload_multiple_documents(
         )
     
     org = db.get(models.Organization, req.organization_id)
-    if not org or (org.user_id != current_user.id and not current_user.is_admin):
+    if not org or not services.can_access_org(db, current_user, org.id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Permission denied"
@@ -198,8 +198,7 @@ def delete_document(
     # Check permission
     req = db.get(models.PhysicalAssessmentRequest, document.request_id)
     if req:
-        org = db.get(models.Organization, req.organization_id)
-        if not org or (org.user_id != current_user.id and not current_user.is_admin):
+        if not services.can_access_org(db, current_user, req.organization_id):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Permission denied"
@@ -294,7 +293,7 @@ async def upload_portfolio_image(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to upload image: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/limits")

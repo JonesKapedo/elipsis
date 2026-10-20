@@ -9,41 +9,43 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from elipsis_api import models
+from elipsis_api.services_auth import (  # noqa: F401
+    authenticate,
+    build_segments,
+    create_session,
+    delete_session,
+    live_scores,
+    question_dicts,
+    register_user,
+    save_answers,
+    user_for_token,
+)
 from elipsis_api.services_core import (  # noqa: F401
     DEFAULT_ADMIN_EMAIL,
     DEFAULT_ADMIN_PASSWORD,
     DEMO_DEPARTMENTS,
     _now,
     _seed_admin,
-    seed,
-    get_bank,
-    get_questions,
-    create_assessment,
     answers_map,
     compute,
+    create_assessment,
+    get_bank,
+    get_questions,
     save,
+    seed,
     submit,
-    list_assessments as _list_assessments_raw,
 )
 from elipsis_api.services_ext import (  # noqa: F401
     dashboard_data as _dashboard_data_raw,
-    reset_demo_data as _reset_demo_data_raw,
-    create_share_link,
-    resolve_share_token,
-    list_organizations as _list_organizations_raw,
-    department_comparison,
-    run_guided_demo,
 )
-from elipsis_api.services_auth import (  # noqa: F401
-    authenticate,
-    register_user,
-    create_session,
-    user_for_token,
-    delete_session,
-    question_dicts,
-    build_segments,
-    live_scores,
-    save_answers,
+from elipsis_api.services_ext import (
+    department_comparison,
+)
+from elipsis_api.services_ext import (
+    list_organizations as _list_organizations_raw,
+)
+from elipsis_api.services_ext import (
+    reset_demo_data as _reset_demo_data_raw,
 )
 
 
@@ -122,7 +124,7 @@ def dashboard_data(db: Session, limit: int = 8, org_ids: list[int] | None = None
 
 
 def reset_demo_data(db: Session, org_ids: list[int] | None = None):
-    return _reset_demo_data_raw(db)
+    return _reset_demo_data_raw(db, org_ids)
 
 
 def owned_org_ids(db: Session, user) -> list[int]:

@@ -5,12 +5,17 @@ from fastapi.responses import RedirectResponse, Response
 from sqlalchemy.orm import Session
 
 from constants import (
-    BRAND_NAME, BRAND_TAGLINE, CURRENCY, INDEX_NAME, INDEX_SHORT, PILLAR_LABELS,
+    BRAND_NAME,
+    BRAND_TAGLINE,
+    CURRENCY,
+    INDEX_NAME,
+    INDEX_SHORT,
+    PILLAR_LABELS,
 )
 from elipsis_api import analytics, models, services
-from elipsis_api.narrative import company_portrait
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
+from elipsis_api.narrative import company_portrait
 
 router = APIRouter()
 

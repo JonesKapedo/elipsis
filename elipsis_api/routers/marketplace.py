@@ -6,10 +6,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from elipsis_api import models, schemas
+from elipsis_api import models, schemas, services
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user
-from elipsis_api.services_marketplace import is_bidder_subscribed, get_bidder_company
+from elipsis_api.query_utils import count_rows, isoformat
+from elipsis_api.services_marketplace import get_bidder_company, is_bidder_subscribed
 
 router = APIRouter(prefix="/marketplace", tags=["marketplace"])
 
@@ -41,28 +42,24 @@ def list_marketplace_requests(
         org = db.get(models.Organization, req.organization_id)
         
         # Count documents
-        doc_count = db.scalar(
-            select(models.RequestDocument)
-            .where(models.RequestDocument.request_id == req.id)
-            .count()
-        ) or 0
+        doc_count = count_rows(
+            db, models.RequestDocument,
+            models.RequestDocument.request_id == req.id)
         
         # Count bids
-        bid_count = db.scalar(
-            select(models.BidSubmission)
-            .where(models.BidSubmission.request_id == req.id)
-            .count()
-        ) or 0
+        bid_count = count_rows(
+            db, models.BidSubmission,
+            models.BidSubmission.request_id == req.id)
         
         results.append({
             "id": req.id,
             "title": req.title,
             "description": req.description,
             "budget_range": req.budget_range,
-            "deadline": req.deadline.isoformat() if req.deadline else None,
+            "deadline": isoformat(req.deadline),
             "location": req.location,
             "status": req.status,
-            "created_at": req.created_at.isoformat(),
+            "created_at": isoformat(req.created_at),
             "organization": {
                 "id": org.id,
                 "name": org.name,
@@ -76,6 +73,42 @@ def list_marketplace_requests(
         })
     
     return {"requests": results, "count": len(results)}
+
+
+@router.post("/requests", status_code=status.HTTP_201_CREATED)
+def create_marketplace_request(
+    payload: schemas.MarketplaceRequestIn,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Submit a client engagement request for admin verification."""
+    if current_user is None:
+        raise HTTPException(status_code=401, detail="unauthorized")
+    if current_user.user_type == "bidder":
+        raise HTTPException(status_code=403, detail="Only client accounts can post requests")
+
+    org_id = payload.organization_id
+    if org_id is None:
+        orgs = services.owned_org_ids(db, current_user)
+        org_id = orgs[0] if orgs else None
+    if org_id is None or not services.can_access_org(db, current_user, org_id):
+        raise HTTPException(status_code=404, detail="organization not found")
+
+    row = models.PhysicalAssessmentRequest(
+        organization_id=org_id,
+        title=payload.title.strip(),
+        description=(payload.description or "").strip() or None,
+        message=(payload.description or "").strip() or None,
+        budget_range=(payload.budget_range or "").strip() or None,
+        deadline=(payload.deadline or "").strip() or None,
+        location=(payload.location or "").strip() or None,
+        status="pending",
+        verified_by_admin=False,
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return {"id": row.id, "status": row.status, "message": "Request submitted for review"}
 
 
 @router.get("/requests/{request_id}")
@@ -115,7 +148,7 @@ def get_marketplace_request(
     
     # Get bids (only if user is admin or request owner)
     bids = []
-    if current_user and (current_user.is_admin or (org and org.user_id == current_user.id)):
+    if current_user and services.can_access_org(db, current_user, org.id if org else None):
         bid_records = db.scalars(
             select(models.BidSubmission).where(
                 models.BidSubmission.request_id == request_id
@@ -127,11 +160,11 @@ def get_marketplace_request(
             bids.append({
                 "id": bid.id,
                 "bidder_name": bidder.company_name if bidder else "Unknown",
-                "proposal": bid.proposal,
-                "estimated_cost": bid.estimated_cost,
-                "timeline": bid.timeline,
+                "proposal": bid.proposal or bid.message,
+                "estimated_cost": bid.estimated_cost or bid.proposed_cost,
+                "timeline": bid.timeline or bid.proposed_timeline,
                 "status": bid.status,
-                "submitted_at": bid.created_at.isoformat(),
+                "submitted_at": isoformat(bid.created_at),
             })
     
     return {
@@ -139,10 +172,10 @@ def get_marketplace_request(
         "title": req.title,
         "description": req.description,
         "budget_range": req.budget_range,
-        "deadline": req.deadline.isoformat() if req.deadline else None,
+        "deadline": isoformat(req.deadline),
         "location": req.location,
         "status": req.status,
-        "created_at": req.created_at.isoformat(),
+        "created_at": isoformat(req.created_at),
         "organization": {
             "id": org.id,
             "name": org.name,
@@ -159,7 +192,7 @@ def get_marketplace_request(
                 "filename": doc.filename,
                 "file_url": doc.file_url,
                 "file_type": doc.file_type,
-                "uploaded_at": doc.uploaded_at.isoformat(),
+                "uploaded_at": isoformat(doc.uploaded_at),
             }
             for doc in documents
         ],
@@ -252,6 +285,6 @@ def submit_bid(
         "id": bid.id,
         "request_id": request_id,
         "status": bid.status,
-        "submitted_at": bid.created_at.isoformat(),
+        "submitted_at": isoformat(bid.created_at),
         "message": "Bid submitted successfully"
     }
