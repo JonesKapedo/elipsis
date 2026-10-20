@@ -2,21 +2,21 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from elipsis_api import models
+from elipsis_api import models, services
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user
+from elipsis_api.query_utils import count_rows, isoformat
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 
 def require_admin(current_user: models.User = Depends(get_current_user)):
     """Dependency to check if user is admin."""
-    if not current_user.is_admin:
+    if current_user is None or not (current_user.is_admin or services.is_admin(current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required"
@@ -32,49 +32,45 @@ def list_all_requests(
 ):
     """
     List all physical assessment requests (admin only).
-    
+
     - **status_filter**: Optional filter (pending, verified, published, rejected, completed)
     - Returns all requests with full details
     """
     query = select(models.PhysicalAssessmentRequest)
-    
+
     if status_filter:
         query = query.where(models.PhysicalAssessmentRequest.status == status_filter)
-    
+
     requests = db.scalars(query.order_by(models.PhysicalAssessmentRequest.created_at.desc())).all()
-    
+
     results = []
     for req in requests:
         # Get organization
         org = db.get(models.Organization, req.organization_id)
-        
+
         # Get client user
         client = db.get(models.User, org.user_id) if org else None
-        
+
         # Count documents
-        doc_count = db.scalar(
-            select(models.RequestDocument)
-            .where(models.RequestDocument.request_id == req.id)
-            .count()
-        ) or 0
-        
+        doc_count = count_rows(
+            db, models.RequestDocument,
+            models.RequestDocument.request_id == req.id)
+
         # Count bids
-        bid_count = db.scalar(
-            select(models.BidSubmission)
-            .where(models.BidSubmission.request_id == req.id)
-            .count()
-        ) or 0
-        
+        bid_count = count_rows(
+            db, models.BidSubmission,
+            models.BidSubmission.request_id == req.id)
+
         results.append({
             "id": req.id,
             "title": req.title,
             "description": req.description,
             "budget_range": req.budget_range,
-            "deadline": req.deadline.isoformat() if req.deadline else None,
+            "deadline": isoformat(req.deadline),
             "location": req.location,
             "status": req.status,
             "verified_by_admin": req.verified_by_admin,
-            "created_at": req.created_at.isoformat(),
+            "created_at": isoformat(req.created_at),
             "organization": {
                 "id": org.id,
                 "name": org.name,
@@ -93,7 +89,7 @@ def list_all_requests(
             "document_count": doc_count,
             "bid_count": bid_count,
         })
-    
+
     return {"requests": results, "count": len(results)}
 
 
@@ -105,37 +101,37 @@ def get_request_details(
 ):
     """
     Get full details of a request including documents and bids (admin only).
-    
+
     - **request_id**: Request ID
     """
     req = db.get(models.PhysicalAssessmentRequest, request_id)
-    
+
     if not req:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Request not found"
         )
-    
+
     # Get organization
     org = db.get(models.Organization, req.organization_id)
-    
+
     # Get client user
     client = db.get(models.User, org.user_id) if org else None
-    
+
     # Get documents
     documents = db.scalars(
         select(models.RequestDocument).where(
             models.RequestDocument.request_id == request_id
         )
     ).all()
-    
+
     # Get bids
     bids = db.scalars(
         select(models.BidSubmission).where(
             models.BidSubmission.request_id == request_id
         )
     ).all()
-    
+
     bid_list = []
     for bid in bids:
         bidder = db.get(models.BidderCompany, bid.bidder_company_id)
@@ -147,20 +143,20 @@ def get_request_details(
             "estimated_cost": bid.estimated_cost,
             "timeline": bid.timeline,
             "status": bid.status,
-            "submitted_at": bid.created_at.isoformat(),
+            "submitted_at": isoformat(bid.created_at),
         })
-    
+
     return {
         "id": req.id,
         "title": req.title,
         "description": req.description,
         "budget_range": req.budget_range,
-        "deadline": req.deadline.isoformat() if req.deadline else None,
+        "deadline": isoformat(req.deadline),
         "location": req.location,
         "status": req.status,
         "verified_by_admin": req.verified_by_admin,
         "admin_notes": req.admin_notes,
-        "created_at": req.created_at.isoformat(),
+        "created_at": isoformat(req.created_at),
         "organization": {
             "id": org.id,
             "name": org.name,
@@ -183,7 +179,7 @@ def get_request_details(
                 "filename": doc.filename,
                 "file_url": doc.file_url,
                 "file_type": doc.file_type,
-                "uploaded_at": doc.uploaded_at.isoformat(),
+                "uploaded_at": isoformat(doc.uploaded_at),
             }
             for doc in documents
         ],
@@ -200,33 +196,33 @@ def verify_request(
 ):
     """
     Verify a request (admin only).
-    
+
     Marks request as verified but not yet published to marketplace.
-    
+
     - **request_id**: Request ID
     - **notes**: Admin notes/comments
     """
     req = db.get(models.PhysicalAssessmentRequest, request_id)
-    
+
     if not req:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Request not found"
         )
-    
+
     if req.status != "pending":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot verify request with status: {req.status}"
         )
-    
+
     req.status = "verified"
     req.verified_by_admin = admin_user.id
     req.admin_notes = notes
-    
+
     db.commit()
     db.refresh(req)
-    
+
     return {
         "id": req.id,
         "status": req.status,
@@ -242,29 +238,29 @@ def publish_request(
 ):
     """
     Publish a verified request to the marketplace (admin only).
-    
+
     - **request_id**: Request ID
     """
     req = db.get(models.PhysicalAssessmentRequest, request_id)
-    
+
     if not req:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Request not found"
         )
-    
+
     if req.status not in ["pending", "verified"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot publish request with status: {req.status}"
         )
-    
+
     req.status = "published"
     req.verified_by_admin = admin_user.id
-    
+
     db.commit()
     db.refresh(req)
-    
+
     return {
         "id": req.id,
         "status": req.status,
@@ -281,31 +277,31 @@ def reject_request(
 ):
     """
     Reject a request (admin only).
-    
+
     - **request_id**: Request ID
     - **reason**: Rejection reason (required)
     """
     req = db.get(models.PhysicalAssessmentRequest, request_id)
-    
+
     if not req:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Request not found"
         )
-    
+
     if req.status not in ["pending", "verified"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot reject request with status: {req.status}"
         )
-    
+
     req.status = "rejected"
     req.verified_by_admin = admin_user.id
     req.admin_notes = f"Rejected: {reason}"
-    
+
     db.commit()
     db.refresh(req)
-    
+
     return {
         "id": req.id,
         "status": req.status,
@@ -319,45 +315,35 @@ def get_admin_stats(
     admin_user: models.User = Depends(require_admin),
 ):
     """Get marketplace statistics (admin only)."""
-    
+
     # Count requests by status
-    pending_count = db.scalar(
-        select(models.PhysicalAssessmentRequest)
-        .where(models.PhysicalAssessmentRequest.status == "pending")
-        .count()
-    ) or 0
-    
-    verified_count = db.scalar(
-        select(models.PhysicalAssessmentRequest)
-        .where(models.PhysicalAssessmentRequest.status == "verified")
-        .count()
-    ) or 0
-    
-    published_count = db.scalar(
-        select(models.PhysicalAssessmentRequest)
-        .where(models.PhysicalAssessmentRequest.status == "published")
-        .count()
-    ) or 0
-    
+    pending_count = count_rows(
+        db, models.PhysicalAssessmentRequest,
+        models.PhysicalAssessmentRequest.status == "pending")
+
+    verified_count = count_rows(
+        db, models.PhysicalAssessmentRequest,
+        models.PhysicalAssessmentRequest.status == "verified")
+
+    published_count = count_rows(
+        db, models.PhysicalAssessmentRequest,
+        models.PhysicalAssessmentRequest.status == "published")
+
     # Count users by type
-    client_count = db.scalar(
-        select(models.User).where(models.User.user_type == "client").count()
-    ) or 0
-    
-    bidder_count = db.scalar(
-        select(models.User).where(models.User.user_type == "bidder").count()
-    ) or 0
-    
+    client_count = count_rows(
+        db, models.User, models.User.user_type == "client")
+
+    bidder_count = count_rows(
+        db, models.User, models.User.user_type == "bidder")
+
     # Count active subscriptions
-    active_subscriptions = db.scalar(
-        select(models.BidderCompany)
-        .where(models.BidderCompany.subscription_status == "active")
-        .count()
-    ) or 0
-    
+    active_subscriptions = count_rows(
+        db, models.BidderCompany,
+        models.BidderCompany.subscription_status == "active")
+
     # Count total bids
-    total_bids = db.scalar(select(models.BidSubmission).count()) or 0
-    
+    total_bids = count_rows(db, models.BidSubmission)
+
     return {
         "requests": {
             "pending": pending_count,

@@ -38,24 +38,46 @@ def new_token():
     return secrets.token_urlsafe(32)
 
 
+_DEV_SECRET: str | None = None
+
+
+def is_production() -> bool:
+    return bool(os.getenv("VERCEL")) or os.getenv("ELIPSIS_ENV", "").lower() == "production"
+
+
 def _session_secret() -> str:
+    global _DEV_SECRET
     secret = (
         os.getenv("ELIPSIS_SECRET_KEY")
         or os.getenv("TURBINEZ_SECRET_KEY")
         or os.getenv("SECRET_KEY")
         or ""
     ).strip()
-    if not secret:
-        # Deterministic fallback so all Vercel instances share the same key when
-        # the operator has not set ELIPSIS_SECRET_KEY yet. Override in production.
-        secret = "elipsis-dev-session-key-change-me"
-    return secret
+    if secret:
+        return secret
+    if is_production():
+        raise RuntimeError(
+            "ELIPSIS_SECRET_KEY is required in production; refusing to sign "
+            "sessions with a guessable key."
+        )
+    if _DEV_SECRET is None:
+        import sys
+        _DEV_SECRET = secrets.token_urlsafe(48)
+        print(
+            "[elipsis] ELIPSIS_SECRET_KEY not set -> using a per-process random "
+            "development key. Sessions will not survive a restart or a second "
+            "worker. Set ELIPSIS_SECRET_KEY before deploying.",
+            file=sys.stderr,
+            flush=True,
+        )
+    return _DEV_SECRET
 
 
 def sign_session(user_id: int, max_age: int = SESSION_MAX_AGE) -> str:
     """Return a signed cookie value: ``user_id.expiry.signature``."""
     exp = int(time.time()) + int(max_age)
-    payload = f"{int(user_id)}.{exp}"
+    jti = secrets.token_urlsafe(12)
+    payload = f"{int(user_id)}.{exp}.{jti}"
     sig = hmac.new(
         _session_secret().encode("utf-8"),
         payload.encode("utf-8"),
@@ -66,11 +88,11 @@ def sign_session(user_id: int, max_age: int = SESSION_MAX_AGE) -> str:
 
 def verify_signed_session(token: str | None) -> int | None:
     """Return user_id if the signed cookie is valid and not expired."""
-    if not token or token.count(".") != 2:
+    if not token or token.count(".") != 3:
         return None
     try:
-        user_id_s, exp_s, sig = token.split(".", 2)
-        payload = f"{user_id_s}.{exp_s}"
+        user_id_s, exp_s, jti, sig = token.split(".", 3)
+        payload = f"{user_id_s}.{exp_s}.{jti}"
         expected = hmac.new(
             _session_secret().encode("utf-8"),
             payload.encode("utf-8"),

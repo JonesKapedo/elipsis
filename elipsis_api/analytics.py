@@ -7,10 +7,15 @@ numbers from here so the views can never disagree with each other.
 from __future__ import annotations
 
 import math
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 from constants import (
-    MATURITY_BANDS, PILLAR_LABELS, PILLAR_WEIGHTS, SUBDOMAIN_LABELS, SUBDOMAIN_PILLAR,
+    MATURITY_BANDS,
+    PILLAR_LABELS,
+    PILLAR_WEIGHTS,
+    SUBDOMAIN_LABELS,
+    SUBDOMAIN_PILLAR,
 )
 
 TARGET_INDEX = 75.0

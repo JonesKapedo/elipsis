@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -10,9 +11,21 @@ from sqlalchemy.orm import Session
 from elipsis_api import models
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user
+from elipsis_api.query_utils import isoformat
 from elipsis_api.services_marketplace import get_bidder_company, is_bidder_subscribed
 
 router = APIRouter(prefix="/bidder", tags=["bidder"])
+
+
+def _parse_dt(value):
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        return value
+    try:
+        return datetime.fromisoformat(str(value))
+    except ValueError:
+        return None
 
 
 @router.get("/shop")
@@ -64,7 +77,7 @@ def get_bidder_shop(
         "company_name": bidder.company_name,
         "description": bidder.description,
         "services_offered": bidder.services_offered,
-        "rate_card_url": bidder.rate_card_url,
+        "rate_card": bidder.rate_card,
         "website": bidder.website,
         "contact_email": bidder.contact_email,
         "contact_phone": bidder.contact_phone,
@@ -72,7 +85,7 @@ def get_bidder_shop(
         "team_size": bidder.team_size,
         "subscription_status": bidder.subscription_status,
         "subscription_tier": bidder.subscription_tier,
-        "subscription_expires": bidder.subscription_expires.isoformat() if bidder.subscription_expires else None,
+        "subscription_expires": isoformat(bidder.subscription_expires_at),
         "portfolio": [
             {
                 "id": p.id,
@@ -88,7 +101,7 @@ def get_bidder_shop(
                 "id": f.id,
                 "rating": f.rating,
                 "comment": f.comment,
-                "created_at": f.created_at.isoformat(),
+                "created_at": isoformat(f.created_at),
             }
             for f in feedback
         ],
@@ -280,8 +293,9 @@ def get_subscription_status(
     
     # Calculate days remaining
     days_remaining = None
-    if bidder.subscription_expires:
-        delta = bidder.subscription_expires - datetime.now()
+    expires_at = _parse_dt(bidder.subscription_expires_at)
+    if expires_at:
+        delta = expires_at - datetime.now()
         days_remaining = max(0, delta.days)
     
     return {
@@ -289,7 +303,7 @@ def get_subscription_status(
         "is_active": is_active,
         "tier": bidder.subscription_tier,
         "status": bidder.subscription_status,
-        "expires": bidder.subscription_expires.isoformat() if bidder.subscription_expires else None,
+        "expires": isoformat(bidder.subscription_expires_at),
         "days_remaining": days_remaining,
     }
 
@@ -313,6 +327,16 @@ def activate_subscription(
             detail="Only bidder accounts can subscribe"
         )
     
+    if not payment_reference:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="A verified payment reference is required to activate a subscription"
+        )
+    reused = db.scalar(select(models.Subscription).where(
+        models.Subscription.payment_reference == payment_reference))
+    if reused is not None:
+        raise HTTPException(status_code=409, detail="Payment reference already used")
+
     bidder = get_bidder_company(db, current_user.id)
     
     if not bidder:
@@ -320,7 +344,16 @@ def activate_subscription(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Create your shop profile first"
         )
-    
+
+    from elipsis_api import paystack
+    try:
+        verified = paystack.verify(payment_reference)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=502, detail="Could not verify payment") from exc
+    if (verified.get("status") != "success"
+            or verified.get("reference") != payment_reference):
+        raise HTTPException(status_code=402, detail="Payment has not succeeded")
+
     # Calculate expiration based on tier
     now = datetime.now()
     if tier == "monthly":
@@ -338,14 +371,14 @@ def activate_subscription(
     # Update subscription
     bidder.subscription_tier = tier
     bidder.subscription_status = "active"
-    bidder.subscription_expires = expires
+    bidder.subscription_expires_at = expires.isoformat(timespec="seconds")
     
     # Create subscription record
     subscription = models.Subscription(
         bidder_company_id=bidder.id,
         tier=tier,
-        start_date=now,
-        end_date=expires,
+        start_date=now.isoformat(timespec="seconds"),
+        end_date=expires.isoformat(timespec="seconds"),
         payment_reference=payment_reference,
         status="active",
     )

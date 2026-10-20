@@ -1,15 +1,15 @@
 """SQLAlchemy ORM models for Elipsis."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from sqlalchemy import Float, ForeignKey, Integer, String, Text, UniqueConstraint, Boolean
+from sqlalchemy import Boolean, Float, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from elipsis_api.database import Base
 
 
 def _now():
-    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    return datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
 
 
 class Organization(Base):
@@ -204,6 +204,11 @@ class User(Base):
     user_type: Mapped[str | None] = mapped_column(String, default="client")
     is_admin: Mapped[bool | None] = mapped_column(Boolean, default=False)
     last_login: Mapped[str | None] = mapped_column(String)
+    email_verified: Mapped[bool | None] = mapped_column(Boolean, default=True)
+    verification_token: Mapped[str | None] = mapped_column(String)
+    verification_sent_at: Mapped[str | None] = mapped_column(String)
+    reset_token: Mapped[str | None] = mapped_column(String)
+    reset_expires_at: Mapped[str | None] = mapped_column(String)
 
 
 class AuthSession(Base):
@@ -212,6 +217,17 @@ class AuthSession(Base):
     user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id"), nullable=False)
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
+    expires_at: Mapped[str | None] = mapped_column(String)
+
+    @property
+    def is_expired(self) -> bool:
+        if not self.expires_at:
+            return False
+        from datetime import datetime
+        try:
+            return datetime.fromisoformat(self.expires_at) < datetime.now(UTC).replace(tzinfo=None)
+        except ValueError:
+            return True
 
 
 # services.py and services_auth.py both construct models.Session.
@@ -292,12 +308,14 @@ class BidderCompany(Base):
     location: Mapped[str | None] = mapped_column(String)
     services_offered: Mapped[str | None] = mapped_column(Text)
     rate_card: Mapped[str | None] = mapped_column(Text)
-    contact_email: Mapped[str] = mapped_column(String, nullable=False)
+    contact_email: Mapped[str | None] = mapped_column(String)
     contact_phone: Mapped[str | None] = mapped_column(String)
     website: Mapped[str | None] = mapped_column(String)
     description: Mapped[str | None] = mapped_column(Text)
-    experience_years: Mapped[int | None] = mapped_column(Integer)
+    years_in_business: Mapped[int | None] = mapped_column(Integer)
+    team_size: Mapped[int | None] = mapped_column(Integer)
     subscription_status: Mapped[str | None] = mapped_column(String, default="inactive")
+    subscription_tier: Mapped[str | None] = mapped_column(String)
     subscription_expires_at: Mapped[str | None] = mapped_column(String)
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
 
@@ -310,7 +328,10 @@ class BidderPortfolio(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     bidder_company_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("bidder_companies.id"), nullable=False)
-    image_url: Mapped[str] = mapped_column(String, nullable=False)
+    image_url: Mapped[str | None] = mapped_column(String)
+    project_name: Mapped[str | None] = mapped_column(String)
+    project_url: Mapped[str | None] = mapped_column(String)
+    s3_key: Mapped[str | None] = mapped_column(String)
     title: Mapped[str | None] = mapped_column(String)
     description: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
@@ -324,14 +345,19 @@ class PhysicalAssessmentRequest(Base):
         Integer, ForeignKey("organizations.id"), nullable=False)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
     title: Mapped[str] = mapped_column(String, nullable=False)
-    message: Mapped[str] = mapped_column(Text, nullable=False)
+    message: Mapped[str | None] = mapped_column(Text)
+    description: Mapped[str | None] = mapped_column(Text)
     requirements: Mapped[str | None] = mapped_column(Text)
+    budget_range: Mapped[str | None] = mapped_column(String)
+    deadline: Mapped[str | None] = mapped_column(String)
+    location: Mapped[str | None] = mapped_column(String)
     status: Mapped[str | None] = mapped_column(String, default="pending")
     payment_status: Mapped[str | None] = mapped_column(String, default="unpaid")
     payment_amount: Mapped[float | None] = mapped_column(Float)
     admin_notes: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
     verified_at: Mapped[str | None] = mapped_column(String)
+    verified_by_admin: Mapped[bool | None] = mapped_column(Boolean, default=False)
     published_at: Mapped[str | None] = mapped_column(String)
     completed_at: Mapped[str | None] = mapped_column(String)
 
@@ -345,8 +371,11 @@ class RequestDocument(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     request_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("physical_assessment_requests.id"), nullable=False)
-    file_name: Mapped[str] = mapped_column(String, nullable=False)
+    file_name: Mapped[str | None] = mapped_column(String)
+    filename: Mapped[str | None] = mapped_column(String)
     file_url: Mapped[str] = mapped_column(String, nullable=False)
+    file_type: Mapped[str | None] = mapped_column(String)
+    s3_key: Mapped[str | None] = mapped_column(String)
     file_size: Mapped[int | None] = mapped_column(Integer)
     uploaded_at: Mapped[str | None] = mapped_column(String, default=_now)
 
@@ -359,7 +388,10 @@ class BidSubmission(Base):
         Integer, ForeignKey("physical_assessment_requests.id"), nullable=False)
     bidder_company_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("bidder_companies.id"), nullable=False)
-    message: Mapped[str] = mapped_column(Text, nullable=False)
+    message: Mapped[str | None] = mapped_column(Text)
+    proposal: Mapped[str | None] = mapped_column(Text)
+    timeline: Mapped[str | None] = mapped_column(String)
+    estimated_cost: Mapped[float | None] = mapped_column(Float)
     proposed_timeline: Mapped[str | None] = mapped_column(String)
     proposed_cost: Mapped[float | None] = mapped_column(Float)
     status: Mapped[str | None] = mapped_column(String, default="submitted")
@@ -392,9 +424,132 @@ class Subscription(Base):
     bidder_company_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("bidder_companies.id"), nullable=False)
     plan_type: Mapped[str | None] = mapped_column(String, default="monthly")
+    tier: Mapped[str | None] = mapped_column(String, default="monthly")
     amount: Mapped[float | None] = mapped_column(Float)
-    currency: Mapped[str | None] = mapped_column(String, default="USD")
+    currency: Mapped[str | None] = mapped_column(String, default="KES")
     status: Mapped[str | None] = mapped_column(String, default="active")
     started_at: Mapped[str | None] = mapped_column(String, default=_now)
+    start_date: Mapped[str | None] = mapped_column(String)
     expires_at: Mapped[str | None] = mapped_column(String)
+    end_date: Mapped[str | None] = mapped_column(String)
+    payment_reference: Mapped[str | None] = mapped_column(String)
     cancelled_at: Mapped[str | None] = mapped_column(String)
+
+
+# ============================================================================
+# WORKSPACE / BILLING / COLLECT / MESSAGING
+# ============================================================================
+
+class UserPref(Base):
+    """Per-user workspace preferences and Pro entitlement."""
+    __tablename__ = "user_prefs"
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), primary_key=True)
+    symbol: Mapped[str | None] = mapped_column(String, default="E")
+    motion: Mapped[str | None] = mapped_column(String, default="on")
+    density: Mapped[str | None] = mapped_column(String, default="comfortable")
+    pro_until: Mapped[str | None] = mapped_column(String)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class Payment(Base):
+    """Paystack payment attempt for Pro, physical engagements or subscriptions."""
+    __tablename__ = "payments"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    reference: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    purpose: Mapped[str] = mapped_column(String, nullable=False)
+    amount_kes: Mapped[float] = mapped_column(Float, nullable=False)
+    related_id: Mapped[int | None] = mapped_column(Integer)
+    status: Mapped[str | None] = mapped_column(String, default="pending")
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+    paid_at: Mapped[str | None] = mapped_column(String)
+
+
+class PhysicalRequest(Base):
+    """Paid physical assessment request submitted from the Pro page."""
+    __tablename__ = "physical_requests"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    organization_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("organizations.id"))
+    company_name: Mapped[str] = mapped_column(String, nullable=False)
+    package: Mapped[str | None] = mapped_column(String)
+    amount_kes: Mapped[float | None] = mapped_column(Float)
+    sites: Mapped[int | None] = mapped_column(Integer)
+    notes: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str | None] = mapped_column(String, default="awaiting_payment")
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class TeamLetter(Base):
+    """A team invitation / outreach letter captured from the workspace."""
+    __tablename__ = "team_letters"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    email: Mapped[str] = mapped_column(String, nullable=False)
+    organization: Mapped[str | None] = mapped_column(String)
+    role_title: Mapped[str | None] = mapped_column(String)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class CollectCampaign(Base):
+    """Multi-respondent questionnaire campaign for one organisation."""
+    __tablename__ = "collect_campaigns"
+    token: Mapped[str] = mapped_column(String, primary_key=True)
+    organization_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("organizations.id"), nullable=False)
+    department_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("departments.id"))
+    created_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    title: Mapped[str | None] = mapped_column(String)
+    deadline: Mapped[str | None] = mapped_column(String)
+    min_respondents: Mapped[int | None] = mapped_column(Integer, default=1)
+    allow_anonymous: Mapped[int | None] = mapped_column(Integer, default=0)
+    status: Mapped[str | None] = mapped_column(String, default="collecting")
+    note: Mapped[str | None] = mapped_column(Text)
+    master_assessment_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("assessments.id"))
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class CollectResponse(Base):
+    """One respondent's assessment inside a collect campaign."""
+    __tablename__ = "collect_responses"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    campaign_token: Mapped[str] = mapped_column(
+        String, ForeignKey("collect_campaigns.token"), nullable=False)
+    assessment_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("assessments.id"), nullable=False)
+    respondent_name: Mapped[str | None] = mapped_column(String)
+    respondent_email: Mapped[str | None] = mapped_column(String)
+    is_anonymous: Mapped[int | None] = mapped_column(Integer, default=0)
+    status: Mapped[str | None] = mapped_column(String, default="in_progress")
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class Conversation(Base):
+    """Two-party conversation, optionally tied to a marketplace request."""
+    __tablename__ = "conversations"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user1_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    user2_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    request_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("physical_assessment_requests.id"))
+    last_message_at: Mapped[str | None] = mapped_column(String, default=_now)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class Message(Base):
+    """Message inside a conversation."""
+    __tablename__ = "messages"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    conversation_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("conversations.id"), nullable=False)
+    sender_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    receiver_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    is_read: Mapped[bool | None] = mapped_column(Boolean, default=False)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)

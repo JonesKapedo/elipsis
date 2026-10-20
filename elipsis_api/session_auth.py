@@ -1,26 +1,31 @@
-"""Session issue / resolve using signed cookies (Vercel-safe)."""
+"""Session issue / resolve using signed cookies backed by the sessions table."""
 
 from __future__ import annotations
 
-import os
+from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from elipsis_api import models, security
 
-DEFAULT_ADMIN_EMAIL = "admin@elipsis.local"
+SESSION_TTL = timedelta(days=14)
+
+
+def _utcnow() -> datetime:
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 def issue_session(db: Session, user_id: int) -> str:
-    """Return a signed session cookie value; best-effort DB row for audits."""
+    """Create a server-side session row and return its signed cookie value."""
+    expires = (_utcnow() + SESSION_TTL).isoformat(timespec="seconds")
     token = security.sign_session(user_id)
-    try:
-        db.add(models.Session(user_id=user_id, token=token))
-        db.commit()
-    except Exception as exc:  # noqa: BLE001
-        db.rollback()
-        print(f"[elipsis] session row not stored (non-fatal): {exc}", flush=True)
+    db.execute(delete(models.Session).where(
+        models.Session.expires_at.is_not(None),
+        models.Session.expires_at < _utcnow().isoformat(timespec="seconds"),
+    ))
+    db.add(models.Session(user_id=user_id, token=token, expires_at=expires))
+    db.commit()
     return token
 
 
@@ -28,41 +33,31 @@ def resolve_user(db: Session, token: str | None):
     if not token:
         return None
 
-    user_id = security.verify_signed_session(token)
-    if user_id is not None:
-        user = db.get(models.User, user_id)
-        if user is not None:
-            return user
-        # Ephemeral SQLite cold start may have wiped users — reseed admin once.
-        if db.scalar(select(models.User)) is None:
-            try:
-                from elipsis_api.services import _seed_admin
-                _seed_admin(db)
-                db.commit()
-            except Exception as exc:  # noqa: BLE001
-                print(f"[elipsis] session reseed failed: {exc}", flush=True)
-                return None
-            user = db.get(models.User, user_id)
-            if user is not None:
-                return user
-            email = (os.getenv("ELIPSIS_ADMIN_EMAIL") or DEFAULT_ADMIN_EMAIL).lower()
-            return db.scalar(select(models.User).where(models.User.email == email))
+    sess = db.scalar(select(models.Session).where(models.Session.token == token))
+    if sess is None or sess.is_expired:
+        if sess is not None:
+            db.delete(sess)
+            db.commit()
         return None
 
-    # Legacy opaque token stored in sessions table
-    sess = db.scalar(select(models.Session).where(models.Session.token == token))
-    if sess is None:
+    user_id = security.verify_signed_session(token)
+    if user_id is not None and user_id != sess.user_id:
         return None
-    return db.get(models.User, sess.user_id)
+    if user_id is None:
+        user_id = sess.user_id
+    return db.get(models.User, user_id)
 
 
 def revoke_session(db: Session, token: str | None) -> None:
     if not token:
         return
-    try:
-        sess = db.scalar(select(models.Session).where(models.Session.token == token))
-        if sess:
-            db.delete(sess)
-            db.commit()
-    except Exception:  # noqa: BLE001
-        db.rollback()
+    db.execute(delete(models.Session).where(models.Session.token == token))
+    db.commit()
+
+
+def revoke_user_sessions(db: Session, user_id: int, keep: str | None = None) -> None:
+    stmt = delete(models.Session).where(models.Session.user_id == user_id)
+    if keep:
+        stmt = stmt.where(models.Session.token != keep)
+    db.execute(stmt)
+    db.commit()

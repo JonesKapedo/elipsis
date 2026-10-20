@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: [main, production-hardening]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      ELIPSIS_DATABASE_URL: sqlite:////tmp/elipsis-ci.db
+      ELIPSIS_SECRET_KEY: ci-only-secret-key-not-for-production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check elipsis_api tests
+      - run: alembic upgrade head
+      - run: alembic check
+      - run: pytest

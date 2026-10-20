@@ -17,16 +17,26 @@ Do not point Vercel at the Telegram bot or at the incomplete React SPA under `fr
 
 | Variable | Required | Notes |
 | --- | --- | --- |
-| `ELIPSIS_DATABASE_URL` | **Yes** | PostgreSQL URL, e.g. `postgresql://user:pass@host:5432/db?sslmode=require`. Without this, SQLite under `/tmp` is used and **all data is lost on every cold start**. |
+| `ELIPSIS_DATABASE_URL` | **Yes** | PostgreSQL URL, e.g. `postgresql://user:pass@host:5432/db?sslmode=require`. Production refuses to start without a reachable Postgres; SQLite fallback is disabled. |
+| `ELIPSIS_SECRET_KEY` | **Yes** | Long random string used to sign session cookies. Production refuses to start without it. |
 | `ELIPSIS_ADMIN_EMAIL` | Recommended | First admin when the users table is empty. Default: `admin@elipsis.local` |
-| `ELIPSIS_ADMIN_PASSWORD` | **Yes before public** | Change from the default. |
-| `ELIPSIS_ENV` | Optional | Set to `production` |
+| `ELIPSIS_ADMIN_PASSWORD` | **Yes** | Production refuses to seed the default password. |
+| `ELIPSIS_ENV` | **Yes** | Set to `production` (Vercel also sets `VERCEL`). |
+| `PAYSTACK_SECRET_KEY` / `PAYSTACK_PUBLIC_KEY` | **Yes** | Real keys. The in-app dummy checkout is disabled in production. |
+| `ELIPSIS_ALLOWED_ORIGINS` | Optional | Comma-separated extra origins for CORS/CSRF. Same-origin works without it. |
+| `SENDGRID_API_KEY` / `SENDGRID_FROM_EMAIL` | Recommended | Password reset and email verification. Without email transport, reset links are not delivered. |
 
 `psycopg[binary]` is already in `requirements.txt`.
 
 ## 3. Database
 
-Use any managed Postgres (Neon, Supabase, Vercel Postgres, RDS). Create an empty database; the app runs `create_all` and seeds the question bank on cold start.
+Use any managed Postgres (Neon, Supabase, Vercel Postgres, RDS). Apply the baseline migration before the first deploy:
+
+```bash
+ELIPSIS_DATABASE_URL='postgresql://...' alembic upgrade head
+```
+
+The app still seeds the question bank and first administrator on cold start. Future schema changes belong in `alembic/versions/`; do not edit production tables by hand.
 
 ## 4. After deploy
 
@@ -48,4 +58,5 @@ python run_api.py      # http://127.0.0.1:8001
 
 - **Static CSS** is served from `/static/style.css` (repo-root `static/`).
 - **Telegram bot** is separate (`requirements-bot.txt`, `python -m telegram_bot.bot`). It is not part of the Vercel deployment.
-- **React frontend** under `frontend/` is experimental; the board-ready product path is the server-rendered templates.
+- **React frontend** under `frontend/` is experimental; the board-ready product path is the server-rendered templates. `frontend/node_modules` and `frontend/dist` are no longer tracked.
+- **Security**: signed, database-backed sessions with expiry/revocation; same-origin CSRF checks on unsafe methods; rate-limited login, signup, and password reset; per-organisation authorisation on assessment and marketplace APIs.

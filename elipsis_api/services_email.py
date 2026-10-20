@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-from typing import Any
 
 # Email service selection
 EMAIL_SERVICE = os.getenv("EMAIL_SERVICE", "sendgrid")  # sendgrid or ses
@@ -26,7 +25,6 @@ ses_client = None
 if EMAIL_SERVICE == "sendgrid" and SENDGRID_API_KEY:
     try:
         from sendgrid import SendGridAPIClient
-        from sendgrid.helpers.mail import Mail, Email, To, Content
         
         sendgrid_client = SendGridAPIClient(SENDGRID_API_KEY)
     except ImportError:
@@ -125,7 +123,7 @@ async def _send_via_ses(
         if text_content:
             body['Text'] = {'Data': text_content, 'Charset': 'UTF-8'}
         
-        response = ses_client.send_email(
+        ses_client.send_email(
             Source=AWS_SES_FROM_EMAIL,
             Destination={'ToAddresses': [to_email]},
             Message={

@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select, and_, or_
+from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from elipsis_api import models
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user
+from elipsis_api.query_utils import count_rows, isoformat
 
 router = APIRouter(prefix="/messages", tags=["messaging"])
 
@@ -49,16 +51,11 @@ def list_conversations(
         )
         
         # Count unread messages
-        unread_count = db.scalar(
-            select(models.Message)
-            .where(
-                and_(
-                    models.Message.conversation_id == conv.id,
-                    models.Message.receiver_id == current_user.id,
-                    models.Message.is_read == False
-                )
-            ).count()
-        ) or 0
+        unread_count = count_rows(
+            db, models.Message,
+            models.Message.conversation_id == conv.id,
+            models.Message.receiver_id == current_user.id,
+            models.Message.is_read.is_(False))
         
         results.append({
             "id": conv.id,
@@ -70,11 +67,11 @@ def list_conversations(
             } if other_user else None,
             "last_message": {
                 "content": last_message.content,
-                "created_at": last_message.created_at.isoformat(),
+                "created_at": isoformat(last_message.created_at),
                 "is_from_me": last_message.sender_id == current_user.id
             } if last_message else None,
             "unread_count": unread_count,
-            "updated_at": conv.last_message_at.isoformat()
+            "updated_at": isoformat(conv.last_message_at)
         })
     
     return {"conversations": results, "count": len(results)}
@@ -126,7 +123,7 @@ def get_conversation_messages(
             and_(
                 models.Message.conversation_id == conversation_id,
                 models.Message.receiver_id == current_user.id,
-                models.Message.is_read == False
+                models.Message.is_read.is_(False)
             )
         )
     )
@@ -149,7 +146,7 @@ def get_conversation_messages(
             } if sender else None,
             "is_from_me": msg.sender_id == current_user.id,
             "is_read": msg.is_read,
-            "created_at": msg.created_at.isoformat()
+            "created_at": isoformat(msg.created_at)
         })
     
     return {
@@ -210,7 +207,7 @@ def send_message(
     return {
         "id": message.id,
         "content": message.content,
-        "created_at": message.created_at.isoformat(),
+        "created_at": isoformat(message.created_at),
         "message": "Message sent successfully"
     }
 
@@ -301,15 +298,10 @@ def get_unread_count(
 ):
     """Get total unread message count for current user."""
     
-    unread_count = db.scalar(
-        select(models.Message)
-        .where(
-            and_(
-                models.Message.receiver_id == current_user.id,
-                models.Message.is_read == False
-            )
-        ).count()
-    ) or 0
+    unread_count = count_rows(
+        db, models.Message,
+        models.Message.receiver_id == current_user.id,
+        models.Message.is_read.is_(False))
     
     return {"unread_count": unread_count}
 

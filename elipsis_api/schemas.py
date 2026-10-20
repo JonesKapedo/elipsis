@@ -1,6 +1,5 @@
 """Pydantic request/response schemas for the Elipsis API."""
 
-from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -14,12 +13,12 @@ class HealthOut(BaseModel):
 
 class OrganizationIn(BaseModel):
     name: str = Field(..., min_length=1)
-    industry: Optional[str] = None
-    sub_industry: Optional[str] = None
-    employee_count: Optional[int] = Field(None, ge=0)
-    revenue_band: Optional[str] = None
-    country: Optional[str] = None
-    city: Optional[str] = None
+    industry: str | None = None
+    sub_industry: str | None = None
+    employee_count: int | None = Field(None, ge=0)
+    revenue_band: str | None = None
+    country: str | None = None
+    city: str | None = None
 
 
 class OrganizationOut(OrganizationIn):
@@ -27,11 +26,11 @@ class OrganizationOut(OrganizationIn):
 
 
 class AssessmentIn(BaseModel):
-    organization_id: Optional[int] = None
-    organization: Optional[OrganizationIn] = None
+    organization_id: int | None = None
+    organization: OrganizationIn | None = None
     department: str = "Operations"
-    respondent: Optional[str] = None
-    mode: Optional[str] = "pulse"
+    respondent: str | None = None
+    mode: str | None = "pulse"
 
 
 class AnswerIn(BaseModel):
@@ -41,19 +40,19 @@ class AnswerIn(BaseModel):
 
 
 class SubmitIn(BaseModel):
-    answers: List[AnswerIn]
+    answers: list[AnswerIn]
 
 
 class AssessmentOut(BaseModel):
     id: int
     organization_id: int
-    department_id: Optional[int]
+    department_id: int | None
     questionnaire_id: int
-    respondent: Optional[str]
+    respondent: str | None
     status: str
-    readiness_index: Optional[float]
-    maturity_band: Optional[str]
-    confidence_index: Optional[float]
+    readiness_index: float | None
+    maturity_band: str | None
+    confidence_index: float | None
 
 
 class OptionOut(BaseModel):
@@ -67,12 +66,12 @@ class OptionOut(BaseModel):
 class QuestionOut(BaseModel):
     id: int
     code: str
-    scale: Optional[str] = None
-    options: List[OptionOut] = Field(default_factory=list)
+    scale: str | None = None
+    options: list[OptionOut] = Field(default_factory=list)
     subdomain: str
     pillar: str
     text: str
-    why: Optional[str] = None
+    why: str | None = None
     weight: int
     evidence_required: bool
 
@@ -94,8 +93,8 @@ class RecommendationOut(BaseModel):
     priority: float
     horizon: str
     roi: float
-    phase: Optional[int] = None
-    pillar: Optional[str] = None
+    phase: int | None = None
+    pillar: str | None = None
 
 
 class AssumptionsOut(BaseModel):
@@ -115,7 +114,7 @@ class AssumptionsOut(BaseModel):
 
 
 class FinancialOut(BaseModel):
-    assumptions: Optional[AssumptionsOut] = None
+    assumptions: AssumptionsOut | None = None
     current_cost: float
     future_cost: float
     annual_savings: float
@@ -141,7 +140,7 @@ class PhaseOut(BaseModel):
     note: str
     count: int
     value: float
-    items: List[RecommendationOut]
+    items: list[RecommendationOut]
 
 
 class BenchmarkOut(BaseModel):
@@ -154,7 +153,7 @@ class BenchmarkOut(BaseModel):
     automation_avg: float
     ai_avg: float
     percentile: float
-    pillar_bench: List[Dict[str, object]]
+    pillar_bench: list[dict[str, object]]
 
 
 class AuthOut(BaseModel):
@@ -182,21 +181,21 @@ class ResultOut(BaseModel):
     confidence_index: float
     confidence_band: str
     maturity_band: str
-    pillars: Dict[str, float]
-    subdomains: Dict[str, float]
-    metrics: Dict[str, float]
-    metric_rows: List[MetricOut]
-    metrics_by_pillar: Dict[str, List[MetricOut]]
+    pillars: dict[str, float]
+    subdomains: dict[str, float]
+    metrics: dict[str, float]
+    metric_rows: list[MetricOut]
+    metrics_by_pillar: dict[str, list[MetricOut]]
     answered: int
     total: int
-    pain_points: List[PainPointOut]
-    recommendations: List[RecommendationOut]
-    roadmap: List[PhaseOut]
-    top_opportunities: List[str]
+    pain_points: list[PainPointOut]
+    recommendations: list[RecommendationOut]
+    roadmap: list[PhaseOut]
+    top_opportunities: list[str]
     financial: FinancialOut
-    benchmarks: Optional[BenchmarkOut] = None
-    sample_report: Optional[Dict[str, object]] = None
-    report_url: Optional[str] = None
+    benchmarks: BenchmarkOut | None = None
+    sample_report: dict[str, object] | None = None
+    report_url: str | None = None
 
 
 class SampleReportOut(BaseModel):
@@ -205,9 +204,18 @@ class SampleReportOut(BaseModel):
     ready_on: str
     index: int
     maturity: str
-    pillars: Dict[str, float]
-    metrics: Dict[str, float]
-    pain_points: List[Dict[str, object]]
-    recommendations: List[Dict[str, object]]
-    roadmap: List[Dict[str, object]]
-    financial: Dict[str, object]
+    pillars: dict[str, float]
+    metrics: dict[str, float]
+    pain_points: list[dict[str, object]]
+    recommendations: list[dict[str, object]]
+    roadmap: list[dict[str, object]]
+    financial: dict[str, object]
+
+
+class MarketplaceRequestIn(BaseModel):
+    organization_id: int | None = None
+    title: str = Field(..., min_length=3, max_length=160)
+    description: str | None = None
+    budget_range: str | None = None
+    deadline: str | None = None
+    location: str | None = None

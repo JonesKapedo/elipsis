@@ -15,9 +15,9 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -25,10 +25,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from constants import BRAND_NAME, FRAMEWORK_NAME  # noqa: E402
 from elipsis_api import services  # noqa: E402
+from elipsis_api import state as runtime_state  # noqa: E402
 from elipsis_api.config import DATABASE_URL  # noqa: E402
 from elipsis_api.database import Base, SessionLocal, engine  # noqa: E402
-from elipsis_api import state as runtime_state  # noqa: E402
-
 from elipsis_api.routers import api, pages
 
 try:
@@ -92,9 +91,38 @@ except Exception as _exc:  # noqa: BLE001
     print(f"[elipsis] analytics import failed: {_exc}", flush=True)
 
 
-class AdminFullAccessMiddleware(BaseHTTPMiddleware):
+class SecurityMiddleware(BaseHTTPMiddleware):
+    """Same-origin CSRF guard plus conservative security headers."""
+
+    SAFE_METHODS = {"GET", "HEAD", "OPTIONS", "TRACE"}
+    CSRF_EXEMPT = {"/paystack/webhook"}
+
     async def dispatch(self, request: Request, call_next):
+        if request.method not in self.SAFE_METHODS and request.url.path not in self.CSRF_EXEMPT:
+            fetch_site = request.headers.get("sec-fetch-site", "")
+            if fetch_site == "cross-site":
+                return JSONResponse(status_code=403, content={"detail": "csrf_rejected"})
+            origin = request.headers.get("origin") or request.headers.get("referer")
+            if origin:
+                from urllib.parse import urlparse
+                host = request.headers.get("host", "")
+                parsed = urlparse(origin)
+                allowed = {f"https://{host}", f"http://{host}"}
+                allowed.update(
+                    o.strip() for o in os.getenv("ELIPSIS_ALLOWED_ORIGINS", "").split(",")
+                    if o.strip()
+                )
+                if f"{parsed.scheme}://{parsed.netloc}" not in allowed:
+                    return JSONResponse(status_code=403, content={"detail": "csrf_rejected"})
         response = await call_next(request)
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        response.headers.setdefault("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+        response.headers.setdefault("Content-Security-Policy", "frame-ancestors 'none'; object-src 'none'")
+        if os.getenv("VERCEL") or os.getenv("ELIPSIS_ENV", "").lower() == "production":
+            response.headers.setdefault(
+                "Strict-Transport-Security", "max-age=31536000; includeSubDomains")
         return response
 
 
@@ -116,6 +144,9 @@ async def lifespan(_app: FastAPI):
         runtime_state.set_seed(False, err)
         print(f"[elipsis] startup seed failed: {err}", flush=True)
         traceback.print_exc()
+        from elipsis_api.config import is_production
+        if is_production():
+            raise
     yield
 
 
@@ -126,14 +157,18 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-app.add_middleware(AdminFullAccessMiddleware)
+_allowed_origins = [
+    o.strip() for o in os.getenv("ELIPSIS_ALLOWED_ORIGINS", "").split(",") if o.strip()
+]
+if _allowed_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_allowed_origins,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
+    )
+app.add_middleware(SecurityMiddleware)
 
 app.include_router(api.router)
 if auth_pages is not None:
@@ -182,13 +217,7 @@ try:
 except Exception as _exc:  # noqa: BLE001
     print(f"[elipsis] marketplace UI not mounted: {_exc}", flush=True)
 
-try:
-    from elipsis_api.routers import company_ui as _company_ui  # noqa: E402
-    app.include_router(_company_ui.router)
-    print("[elipsis] company UI routes mounted", flush=True)
-except Exception as _exc:  # noqa: BLE001
-    print(f"[elipsis] company UI not mounted: {_exc}", flush=True)
-
+# company_ui is intentionally unmounted: the studio router owns /company.
 _static = Path(__file__).resolve().parent.parent / "static"
 if _static.is_dir():
     app.mount("/static", StaticFiles(directory=str(_static)), name="static")

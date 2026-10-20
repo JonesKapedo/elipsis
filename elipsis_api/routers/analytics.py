@@ -5,30 +5,27 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from elipsis_api import models
+from elipsis_api import models, services
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user
+from elipsis_api.query_utils import count_rows, isoformat
 from elipsis_api.services_analytics import (
+    get_bidder_metrics,
+    get_conversion_metrics,
+    get_engagement_metrics,
     get_marketplace_overview,
     get_request_metrics,
-    get_bidder_metrics,
-    get_time_series_metrics,
     get_revenue_metrics,
-    get_engagement_metrics,
-    get_conversion_metrics
+    get_time_series_metrics,
 )
-from elipsis_api.services_search import (
-    get_available_filters,
-    search_marketplace_requests,
-    get_trending_requests
-)
+from elipsis_api.services_search import get_available_filters, get_trending_requests, search_marketplace_requests
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
 
 def require_admin(current_user: models.User = Depends(get_current_user)):
     """Dependency to check if user is admin."""
-    if not current_user.is_admin:
+    if current_user is None or not (current_user.is_admin or services.is_admin(current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required"
@@ -148,7 +145,7 @@ def get_trending(
                 "budget_range": req.budget_range,
                 "location": req.location,
                 "bid_count": bid_count,
-                "created_at": req.created_at.isoformat()
+                "created_at": isoformat(req.created_at)
             }
             for req, bid_count in results
         ],
@@ -208,29 +205,24 @@ def search_requests(
         org = db.get(models.Organization, req.organization_id)
         
         # Count documents
-        from sqlalchemy import select
-        doc_count = db.scalar(
-            select(models.RequestDocument)
-            .where(models.RequestDocument.request_id == req.id)
-            .count()
-        ) or 0
+        doc_count = count_rows(
+            db, models.RequestDocument,
+            models.RequestDocument.request_id == req.id)
         
         # Count bids
-        bid_count = db.scalar(
-            select(models.BidSubmission)
-            .where(models.BidSubmission.request_id == req.id)
-            .count()
-        ) or 0
+        bid_count = count_rows(
+            db, models.BidSubmission,
+            models.BidSubmission.request_id == req.id)
         
         results.append({
             "id": req.id,
             "title": req.title,
             "description": req.description,
             "budget_range": req.budget_range,
-            "deadline": req.deadline.isoformat() if req.deadline else None,
+            "deadline": isoformat(req.deadline),
             "location": req.location,
             "status": req.status,
-            "created_at": req.created_at.isoformat(),
+            "created_at": isoformat(req.created_at),
             "organization": {
                 "id": org.id,
                 "name": org.name,
