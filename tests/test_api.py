@@ -278,3 +278,8 @@ def test_workspace_search_and_brand_surface(signed_in):
     assert sitemap.status_code == 200
     assert "<urlset" in sitemap.text
     assert "/methodology" in sitemap.text
+
+    dashboard = client.get("/dashboard")
+    assert 'id="cmdk"' in dashboard.text
+    assert 'id="cmd-trigger"' in dashboard.text
+    assert 'data-admin=' in dashboard.text

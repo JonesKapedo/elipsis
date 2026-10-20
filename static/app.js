@@ -51,8 +51,144 @@
     });
   }
 
+  /* Command palette --------------------------------------------------------- */
+  const cmdk = $("#cmdk");
+  const cmdkInput = $("#cmdk-input");
+  const cmdkResults = $("#cmdk-results");
+  const cmdkTrigger = $("#cmd-trigger");
+  let cmdkItems = [];
+  let cmdkActive = 0;
+
+  const commands = [
+    { title: "New assessment", meta: "Start a diagnostic", href: "/start", icon: "＋", keys: "create start diagnose" },
+    { title: "Action board", meta: "Owners, dates, overdue work", href: "/actions", icon: "✓", keys: "tasks plan execution" },
+    { title: "Readiness trends", meta: "Movement over time", href: "/trends", icon: "↗", keys: "history score movement" },
+    { title: "Assessments", meta: "All reports and drafts", href: "/assessments", icon: "☰", keys: "reports results" },
+    { title: "Organisation", meta: "Company profile and team", href: "/company", icon: "▣", keys: "company team people" },
+    { title: "Compare departments", meta: "Side-by-side scores", href: "/compare", icon: "⇄", keys: "benchmark department" },
+    { title: "Audit trail", meta: "Evidence, shares and changes", href: "/audit", icon: "≡", keys: "history trust compliance" },
+    { title: "Workspace search", meta: "Search everything", href: "/search", icon: "⌕", keys: "find look up" },
+    { title: "Sign out", meta: "End this session", href: "/logout", icon: "→", keys: "logout exit" }
+  ];
+  if (cmdk && cmdk.dataset.admin === "true") {
+    commands.splice(commands.length - 1, 0,
+      { title: "Admin pulse", meta: "Platform operations", href: "/admin", icon: "◎", keys: "admin overview" },
+      { title: "Request desk", meta: "Physical assessment requests", href: "/admin/requests", icon: "☑", keys: "admin requests" }
+    );
+  }
+
+  function cmdkRender(query) {
+    if (!cmdkResults) return;
+    const raw = (query || "").trim();
+    const needle = raw.toLowerCase();
+    let list = commands.filter((item) =>
+      !needle || (item.title + " " + item.meta + " " + item.keys).toLowerCase().includes(needle)
+    );
+    if (raw.length > 1) {
+      list = list.concat([{
+        title: "Search workspace for “" + raw + "”",
+        meta: "Find organisations, assessments and actions",
+        href: "/search?q=" + encodeURIComponent(raw),
+        icon: "⌕",
+        dynamic: true
+      }]);
+    }
+    cmdkItems = list;
+    cmdkActive = 0;
+    cmdkResults.replaceChildren();
+    if (!list.length) {
+      const empty = document.createElement("p");
+      empty.className = "cmdk-empty";
+      empty.textContent = "No commands match. Try another phrase.";
+      cmdkResults.appendChild(empty);
+      return;
+    }
+    list.forEach((item, index) => {
+      const link = document.createElement("a");
+      link.className = "cmdk-item" + (index === 0 ? " active" : "");
+      link.href = item.href;
+      link.setAttribute("role", "option");
+      link.setAttribute("aria-selected", index === 0 ? "true" : "false");
+      link.dataset.index = String(index);
+      const icon = document.createElement("span");
+      icon.className = "cmdk-item-icon";
+      icon.setAttribute("aria-hidden", "true");
+      icon.textContent = item.icon || "→";
+      const body = document.createElement("span");
+      body.className = "cmdk-item-body";
+      const title = document.createElement("strong");
+      title.textContent = item.title;
+      const meta = document.createElement("span");
+      meta.textContent = item.meta;
+      body.append(title, meta);
+      const enter = document.createElement("span");
+      enter.className = "cmdk-enter";
+      enter.setAttribute("aria-hidden", "true");
+      enter.textContent = "↵";
+      link.append(icon, body, enter);
+      link.addEventListener("pointerenter", () => cmdkSetActive(index));
+      cmdkResults.appendChild(link);
+    });
+  }
+
+  function cmdkSetActive(index) {
+    if (!cmdkItems.length) return;
+    cmdkActive = (index + cmdkItems.length) % cmdkItems.length;
+    $$(".cmdk-item", cmdkResults).forEach((node, i) => {
+      node.classList.toggle("active", i === cmdkActive);
+      node.setAttribute("aria-selected", i === cmdkActive ? "true" : "false");
+    });
+  }
+
+  function cmdkOpen() {
+    if (!cmdk || !cmdkInput) return;
+    if (typeof cmdk.showModal === "function" && !cmdk.open) cmdk.showModal();
+    else if (!cmdk.open) cmdk.setAttribute("open", "");
+    cmdkInput.value = "";
+    cmdkRender("");
+    window.setTimeout(() => cmdkInput.focus(), 20);
+  }
+
+  function cmdkClose() {
+    if (!cmdk) return;
+    if (typeof cmdk.close === "function" && cmdk.open) cmdk.close();
+    else cmdk.removeAttribute("open");
+  }
+
+  if (cmdkTrigger) cmdkTrigger.addEventListener("click", cmdkOpen);
+  if (cmdk) {
+    cmdk.addEventListener("click", (event) => {
+      if (event.target === cmdk) cmdkClose();
+    });
+    cmdk.addEventListener("close", () => {
+      if (cmdkTrigger) cmdkTrigger.focus();
+    });
+  }
+  if (cmdkInput) {
+    cmdkInput.addEventListener("input", () => cmdkRender(cmdkInput.value));
+    cmdkInput.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        cmdkSetActive(cmdkActive + 1);
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        cmdkSetActive(cmdkActive - 1);
+      } else if (event.key === "Enter") {
+        event.preventDefault();
+        const item = cmdkItems[cmdkActive];
+        if (item) window.location.assign(item.href);
+      }
+    });
+  }
+
   /* Keyboard: escape closes, "/" focuses workspace search ------------------- */
   document.addEventListener("keydown", (event) => {
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+      event.preventDefault();
+      if (cmdk && cmdk.open) cmdkClose();
+      else cmdkOpen();
+      return;
+    }
     if (event.key === "Escape" && layout && layout.classList.contains("sidebar-open")) {
       setSidebar(false);
       if (openBtn) openBtn.focus();

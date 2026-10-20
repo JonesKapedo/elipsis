@@ -91,6 +91,9 @@
         <kbd aria-hidden="true">/</kbd>
       </form>
       <div class="topbar-actions">
+        <button type="button" class="cmd-trigger" id="cmd-trigger" aria-haspopup="dialog" aria-controls="cmdk">
+          <span class="cmd-trigger-label">Commands</span><kbd>⌘K</kbd>
+        </button>
         <a class="btn sm" href="/start">New assessment</a>
       </div>
     </header>
@@ -142,6 +145,24 @@
 </footer>
 {% endif %}
 
+{% if authed %}
+<dialog class="cmdk" id="cmdk" aria-labelledby="cmdk-title" data-admin="{{ 'true' if ((user.role or '') == 'admin' or user.is_admin) else 'false' }}">
+  <div class="cmdk-panel">
+    <h2 id="cmdk-title" class="sr-only">Command palette</h2>
+    <div class="cmdk-head">
+      <span class="cmdk-icon" aria-hidden="true">⌕</span>
+      <input id="cmdk-input" type="search" placeholder="Search or jump to…" aria-label="Search commands" autocomplete="off">
+      <kbd>esc</kbd>
+    </div>
+    <div class="cmdk-results" id="cmdk-results" role="listbox" aria-label="Commands"></div>
+    <div class="cmdk-foot">
+      <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+      <span><kbd>↵</kbd> open</span>
+      <span><kbd>/</kbd> workspace search</span>
+    </div>
+  </div>
+</dialog>
+{% endif %}
 <script src="/static/app.js" defer></script>
 {% block scripts %}{% endblock %}
 </body>
