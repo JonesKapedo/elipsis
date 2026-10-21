@@ -5,6 +5,7 @@
   <p class="eyebrow">Workspace</p>
   <h1>Your organisation workspace</h1>
   <p class="lede">This is where readiness becomes visible. Add the organisations you care about, start an assessment, or invite the team. The numbers will tell the story of where friction lives — and what it costs.</p>
+  <div class="hero-actions"><a class="btn ghost" href="/audit">Open audit trail</a></div>
 </section>
 
 {% for row in rows %}
@@ -84,7 +85,7 @@
     <tr>
       <td>{{ a.department or 'Organisation-wide' }}</td>
       <td>{{ a.status }}</td>
-      <td>{% if a.elipsis_index is not none %}{{ a.elipsis_index }}{% else %}—{% endif %}</td>
+      <td>{% if a.readiness_index is not none %}{{ '%.1f'|format(a.readiness_index) }}{% else %}—{% endif %}</td>
       <td><a href="/assessment/{{ a.id }}/results">Open</a></td>
     </tr>
     {% endfor %}

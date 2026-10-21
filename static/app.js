@@ -61,15 +61,15 @@
 
   const commands = [
     { title: "New assessment", meta: "Start a diagnostic", href: "/start", icon: "＋", keys: "create start diagnose" },
-    { title: "Action board", meta: "Owners, dates, overdue work", href: "/actions", icon: "✓", keys: "tasks plan execution" },
-    { title: "Readiness trends", meta: "Movement over time", href: "/trends", icon: "↗", keys: "history score movement" },
-    { title: "Benchmarks", meta: "Cohort distribution and badges", href: "/benchmarks", icon: "◎", keys: "peer cohort certification" },
-    { title: "Notifications", meta: "Unread work and review dates", href: "/notifications", icon: "◔", keys: "inbox alerts digest" },
-    { title: "Partner console", meta: "Client portfolio and white-label packs", href: "/partner", icon: "◇", keys: "partner clients white label" },
-    { title: "Assessments", meta: "All reports and drafts", href: "/assessments", icon: "☰", keys: "reports results" },
+    { title: "Guided demo", meta: "Generate a complete logistics example", href: "/demo", icon: "▶", keys: "demo example sample" },
+    { title: "Action plan", meta: "Owners, dates, overdue work", href: "/actions", icon: "✓", keys: "tasks board execution" },
+    { title: "Assessments", meta: "Reports, drafts and comparisons", href: "/assessments", icon: "☰", keys: "reports results compare" },
     { title: "Organisation", meta: "Company profile and team", href: "/company", icon: "▣", keys: "company team people" },
-    { title: "Compare departments", meta: "Side-by-side scores", href: "/compare", icon: "⇄", keys: "benchmark department" },
+    { title: "Marketplace", meta: "Private pilot status", href: "/marketplace", icon: "◈", keys: "providers partners services" },
+    { title: "Notifications", meta: "Unread work and review dates", href: "/notifications", icon: "◔", keys: "inbox alerts digest" },
+    { title: "Settings", meta: "Profile, webhooks and display", href: "/settings", icon: "⚙", keys: "preferences configuration" },
     { title: "Audit trail", meta: "Evidence, shares and changes", href: "/audit", icon: "≡", keys: "history trust compliance" },
+    { title: "Partner console", meta: "Client portfolio and white-label packs", href: "/partner", icon: "◇", keys: "partner clients white label" },
     { title: "Workspace search", meta: "Search everything", href: "/search", icon: "⌕", keys: "find look up" },
     { title: "Sign out", meta: "End this session", href: "/logout", icon: "→", keys: "logout exit" }
   ];

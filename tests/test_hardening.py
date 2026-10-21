@@ -114,7 +114,8 @@ def test_marketplace_is_locked_while_coming_soon(app_client):
     assert r.status_code == 503
     page = client.get("/marketplace")
     assert page.status_code == 200
-    assert "coming soon" in page.text.lower()
+    assert "private pilot" in page.text.lower()
+    assert "closed" in page.text.lower()
 
 
 def test_production_degrades_visibly_without_postgres_or_secret(monkeypatch):

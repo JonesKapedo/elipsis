@@ -409,3 +409,60 @@ def test_security_and_cache_headers(signed_in):
     asset = signed_in.get("/static/app.js")
     assert asset.status_code == 200
     assert "max-age=86400" in asset.headers["Cache-Control"]
+
+
+def test_guided_demo_generates_a_readable_result(signed_in):
+    client = signed_in
+    created = client.post("/demo", follow_redirects=False)
+    assert created.status_code == 303
+    location = created.headers["location"]
+    assert location.startswith("/assessment/") and location.endswith("/results")
+    page = client.get(location)
+    assert page.status_code == 200
+    assert "Guided Demo Co" in page.text
+    assert "Logistics reading" in page.text
+
+
+def test_start_persists_logistics_organisation_fields(signed_in):
+    client = signed_in
+    created = client.post("/start", data={
+        "organization_name": "Mombasa Line Haul",
+        "industry": "Logistics",
+        "employee_count": "140",
+        "country": "Kenya",
+        "city": "Mombasa",
+        "department": "Operations",
+        "respondent": "Ops lead",
+    }, follow_redirects=False)
+    assert created.status_code == 303
+    assessment_id = int(created.headers["location"].split("/")[2])
+
+    from elipsis_api import models
+    from elipsis_api.database import SessionLocal
+    with SessionLocal() as db:
+        assessment = db.get(models.Assessment, assessment_id)
+        assert assessment is not None
+        org = db.get(models.Organization, assessment.organization_id)
+        assert org.name == "Mombasa Line Haul"
+        assert org.industry == "Logistics"
+        assert org.employee_count == 140
+        assert org.city == "Mombasa"
+        assert org.country == "Kenya"
+
+
+def test_compare_page_uses_the_selected_organisation(signed_in):
+    client = signed_in
+    created = client.post("/demo", follow_redirects=False)
+    assessment_id = int(created.headers["location"].split("/")[2])
+
+    from elipsis_api import models
+    from elipsis_api.database import SessionLocal
+    with SessionLocal() as db:
+        assessment = db.get(models.Assessment, assessment_id)
+        org_id = assessment.organization_id
+
+    page = client.get(f"/compare/{org_id}")
+    assert page.status_code == 200
+    assert "Guided Demo Co" in page.text
+    assert "Unit rankings" in page.text
+    assert "Choose an organisation" not in page.text

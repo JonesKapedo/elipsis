@@ -1,0 +1,4 @@
+<nav class="tabs workspace-tabs" aria-label="Admin">
+  <a class="tab" href="/admin"{% if path == '/admin' %} aria-current="page"{% endif %}>Pulse</a>
+  <a class="tab" href="/admin/requests"{% if path.startswith('/admin/requests') %} aria-current="page"{% endif %}>Request desk</a>
+</nav>

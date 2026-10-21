@@ -54,6 +54,30 @@
   {% endif %}
 </section>
 
+{% if logistics %}
+<section class="block">
+  <div class="block-head">
+    <div>
+      <h3>Logistics reading</h3>
+      <p class="muted small" style="margin:.25rem 0 0">The same score, read through the operating lanes that matter to a logistics SME.</p>
+    </div>
+    <a class="btn ghost sm" href="/assessment/{{ assessment.id }}/plan">Open 90-day plan →</a>
+  </div>
+  <div class="lane-grid">
+    {% for lane in logistics.lanes %}
+    <article class="lane-card{% if logistics.weakest and lane.key == logistics.weakest.key %} is-weak{% endif %}">
+      <div class="lane-top">
+        <strong>{{ lane.label }}</strong>
+        <span class="lane-score">{{ '%.1f'|format(lane.score) if lane.score is not none else '—' }}</span>
+      </div>
+      <p>{{ lane.question }}</p>
+      <div class="lane-reading">{{ lane.reading }}</div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
 <section class="two-col">
   <article class="block">
     <h3>Re-assessment cadence</h3>

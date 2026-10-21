@@ -1028,3 +1028,84 @@ label.inline {
   font-weight: 500;
 }
 label.inline input { width: auto; margin: 0; }
+
+/* Quiet scrollbars --------------------------------------------------------- */
+* { scrollbar-width: thin; scrollbar-color: rgba(180, 83, 9, .38) rgba(20, 18, 26, .04); }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: rgba(20, 18, 26, .04); border-radius: 999px; }
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(180, 83, 9, .55), rgba(120, 53, 15, .55));
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover { background: rgba(180, 83, 9, .78); }
+.app-sidebar { scrollbar-color: rgba(245, 179, 1, .42) transparent; }
+.app-sidebar::-webkit-scrollbar-track { background: transparent; }
+.app-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(245, 179, 1, .38);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/* Integrated workspace tabs ------------------------------------------------ */
+.workspace-tabs { margin-top: 1.1rem; margin-bottom: 1.25rem; }
+.workspace-tabs .tab { text-decoration: none; }
+.workspace-tabs .tab[aria-current="page"] {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+.workspace-tabs .tab[aria-current="page"]::after { content: ""; }
+
+/* Topbar notifications ----------------------------------------------------- */
+.topbar-bell {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 1rem;
+}
+.topbar-bell:hover { border-color: var(--accent); }
+.topbar-bell-dot {
+  position: absolute;
+  top: -.25rem;
+  right: -.25rem;
+  min-width: 1.05rem;
+  height: 1.05rem;
+  padding: 0 .2rem;
+  border-radius: 999px;
+  background: var(--gold);
+  color: #111827;
+  font-size: .62rem;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+}
+
+/* Logistics operating picture --------------------------------------------- */
+.lane-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+  gap: .75rem;
+}
+.lane-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: .85rem .9rem;
+  background: linear-gradient(180deg, #fffdf8, #fbf8f1);
+}
+.lane-card.is-weak { border-color: rgba(180, 83, 9, .55); box-shadow: inset 0 0 0 1px rgba(180, 83, 9, .12); }
+.lane-top { display: flex; align-items: baseline; justify-content: space-between; gap: .6rem; }
+.lane-top strong { font-size: .9rem; }
+.lane-score { font-family: var(--serif, Georgia, serif); font-size: 1.25rem; font-weight: 700; color: var(--ink); }
+.lane-card p { margin: .35rem 0 0; color: var(--muted); font-size: .78rem; line-height: 1.45; }
+.lane-card .lane-reading { margin-top: .45rem; font-size: .74rem; font-weight: 600; color: var(--accent); }
+
+/* Compact movement strip --------------------------------------------------- */
+.trend-bars.compact { justify-content: flex-start; }
+.trend-bars.compact .tb { flex: 0 1 54px; max-width: 54px; }
+.topbar-bell svg { width: 18px; height: 18px; }
