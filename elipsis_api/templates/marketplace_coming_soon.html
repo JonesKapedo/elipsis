@@ -1,22 +1,50 @@
 {% extends "base.html" %}
-{% block title %}Marketplace — coming soon{% endblock %}
+{% block title %}Marketplace — private pilot{% endblock %}
 {% block content %}
 <section class="head">
-  <p class="eyebrow">Marketplace</p>
-  <h1>Solutions marketplace — coming soon</h1>
-  <p class="lede">We are rebuilding the marketplace so recommendations connect to vetted providers, clear pricing and real implementation evidence. The existing listings are closed while we do that.</p>
+  <p class="eyebrow">Marketplace · private pilot</p>
+  <h1>Vetted help, matched to the gap.</h1>
+  <p class="lede">The marketplace is intentionally closed while we verify providers and connect every listing to a specific assessment gap. No directory noise, no paid rankings, no undisclosed commissions.</p>
   <div class="hero-actions">
-    <a class="btn" href="/assessment/new">Run an assessment</a>
-    <a class="btn ghost" href="/pricing">See plans</a>
+    <a class="btn" href="/start">Run an assessment</a>
+    <a class="btn ghost" href="/sample">See a sample report</a>
+    <a class="btn ghost" href="/contact">Talk to the team</a>
   </div>
 </section>
-<article class="block">
-  <h3>What is changing</h3>
-  <ul>
-    <li>Provider verification and disclosed commercial terms.</li>
-    <li>Recommendations tied to the assessment’s actual gaps, not a generic directory.</li>
-    <li>No paid rankings and no undisclosed endorsements.</li>
-  </ul>
-  <p class="muted">If you are a provider and want to be considered at launch, email <a href="mailto:partners@elipsis.co.ke">partners@elipsis.co.ke</a>.</p>
-</article>
+
+<section class="kpis">
+  <div class="kpi"><span class="kpi-lb">Status</span><b style="font-size:1.1rem">Private pilot</b></div>
+  <div class="kpi"><span class="kpi-lb">Provider checks</span><b style="font-size:1.1rem">Manual</b></div>
+  <div class="kpi accent"><span class="kpi-lb">Ranking</span><b style="font-size:1.1rem">Never paid</b></div>
+</section>
+
+<div class="two-col">
+  <article class="block">
+    <h3>What opens at launch</h3>
+    <ul class="price-list">
+      <li>Providers matched to the exact capability gap in your assessment.</li>
+      <li>Disclosed scope, pricing and delivery evidence before you commit.</li>
+      <li>Shortlists you can share with your finance and operations leads.</li>
+      <li>A clear separation between advice, software and implementation.</li>
+    </ul>
+  </article>
+  <article class="block">
+    <h3>What stays true now</h3>
+    <ul class="price-list">
+      <li>Your assessment, roadmap and financial model remain fully available.</li>
+      <li>You can still share a read-only board pack with anyone.</li>
+      <li>Every recommendation stays traceable to an answer and a score.</li>
+      <li>No provider can pay to appear ahead of another.</li>
+    </ul>
+  </article>
+</div>
+
+<section class="block soft">
+  <h3>Are you a logistics operator or provider?</h3>
+  <p class="muted">Operators: tell us which gaps you want help closing. Providers: ask to be considered for the pilot. We review every request manually.</p>
+  <div class="hero-actions">
+    <a class="btn" href="mailto:partners@elipsis.co.ke?subject=Elipsis%20marketplace%20pilot">Email the pilot team</a>
+    {% if (user.role or '') == 'admin' or user.is_admin %}<a class="btn ghost" href="/admin/requests">Open request desk</a>{% endif %}
+  </div>
+</section>
 {% endblock %}

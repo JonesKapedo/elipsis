@@ -2,9 +2,11 @@
 {% block title %}Assessments{% endblock %}
 {% block content %}
 <section class="head">
+  <p class="eyebrow">Assessment intelligence</p>
   <h1>Assessments</h1>
-  <p class="muted">Every {{ BRAND_NAME }} assessment held on this instance.</p>
+  <p class="lede">Every diagnostic in one place. Open a live draft, review a completed result, then compare units or track movement over time.</p>
 </section>
+{% include "_assessment_tabs.html" %}
 <section class="block">
 <table class="table">
   <thead><tr><th>Organisation</th><th>Department</th><th>Status</th>

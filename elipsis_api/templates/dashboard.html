@@ -5,13 +5,13 @@
 
 <section class="dash-hero">
   <div>
-    <p class="eyebrow">{% if company %}{{ company.industry or 'Organisation' }}{% else %}Workspace{% endif %}</p>
-    <h1>{% if company %}{{ company.name }}{% else %}Welcome back{% endif %}</h1>
+    <p class="eyebrow">{% if summary.total %}Operating picture{% else %}Workspace{% endif %}</p>
+    <h1>Welcome back</h1>
     <p class="lede">
-      {% if company %}
-        {{ user.name or user.email }} · review the latest operating picture or run a new assessment.
+      {% if summary.total %}
+        Here is the latest picture. Start with the first constraint, then check the work already in motion.
       {% else %}
-        Start your first organisation readiness assessment. The digital picture is free.
+        Start your first logistics readiness assessment. The digital picture is free.
       {% endif %}
     </p>
   </div>
@@ -65,6 +65,35 @@
   </div>
 </section>
 
+{% if logistics %}
+<section class="block">
+  <div class="block-head">
+    <div>
+      <h3>Logistics operating picture</h3>
+      <p class="muted small" style="margin:.25rem 0 0">Six lanes that decide whether a logistics operator can grow without adding rework.</p>
+    </div>
+    <a class="btn ghost sm" href="/compare">Compare units →</a>
+  </div>
+  <div class="lane-grid">
+    {% for lane in logistics.lanes %}
+    <article class="lane-card{% if logistics.weakest and lane.key == logistics.weakest.key %} is-weak{% endif %}">
+      <div class="lane-top">
+        <strong>{{ lane.label }}</strong>
+        <span class="lane-score">{{ '%.1f'|format(lane.score) if lane.score is not none else '—' }}</span>
+      </div>
+      <p>{{ lane.question }}</p>
+      <div class="lane-reading">{{ lane.reading }}</div>
+    </article>
+    {% endfor %}
+  </div>
+  {% if logistics.weakest %}
+  <p class="muted small" style="margin-top:.9rem">First constraint: <strong>{{ logistics.weakest.label }}</strong>. Open the action plan to assign the next move.</p>
+  {% else %}
+  <p class="muted small" style="margin-top:.9rem">Run an assessment to turn this framework into a measured operating picture.</p>
+  {% endif %}
+</section>
+{% endif %}
+
 {% if notifications or action_summary.total %}
 <section class="two-col">
   <article class="block">
@@ -116,7 +145,7 @@
     {% if t.points %}
     <div>
       <p class="small"><strong>{{ t.org.name }}</strong> · latest {{ t.latest.value }}{% if t.movement is not none %} · <span class="{{ 'muted' if t.movement >= 0 else '' }}" style="{{ 'color:var(--bad)' if t.movement < 0 else 'color:var(--good)' }}">{{ '%+.1f'|format(t.movement) }}</span>{% endif %}</p>
-      <div class="trend-bars" style="height:72px">
+      <div class="trend-bars compact" style="height:72px">
         {% for p in t.points %}<div class="tb" title="{{ p.label }}: {{ p.value }}"><i style="height:{{ p.value }}%"></i></div>{% endfor %}
       </div>
     </div>

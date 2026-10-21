@@ -158,6 +158,8 @@ def department_comparison(db: Session, organization_id: int) -> dict[str, Any]:
             for p in db.scalars(select(models.PillarScore).where(
                 models.PillarScore.assessment_id == assessment.id))
         }
+        financial = db.scalar(select(models.FinancialModel).where(
+            models.FinancialModel.assessment_id == assessment.id))
         units.append({
             "assessment_id": assessment.id,
             "department": dept_name or "Organisation-wide",
@@ -166,6 +168,8 @@ def department_comparison(db: Session, organization_id: int) -> dict[str, Any]:
             "maturity_band": assessment.maturity_band,
             "confidence_index": assessment.confidence_index,
             "completed_at": assessment.completed_at,
+            "annual_savings": financial.annual_savings if financial else None,
+            "payback_months": financial.payback_months if financial else None,
             "pillars": pillars,
         })
 

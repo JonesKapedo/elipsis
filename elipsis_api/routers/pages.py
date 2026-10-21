@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from elipsis_api import benchmarks, models, schemas, services, services_ops, services_webhooks
+from elipsis_api import benchmarks, logistics, models, schemas, services, services_ops, services_webhooks
 from elipsis_api.config import SESSION_COOKIE
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
@@ -35,6 +35,11 @@ def _owned_assessment(db: Session, user, assessment_id: int):
 def _int_param(request: Request, name: str) -> int | None:
     raw = request.query_params.get(name) or ""
     return int(raw) if raw.isdigit() else None
+
+
+def _optional_int(raw: str | None) -> int | None:
+    value = (raw or "").strip()
+    return int(value) if value.isdigit() else None
 
 
 def _question_count(db: Session) -> int:
@@ -199,37 +204,29 @@ def contact_post(
 
 
 @router.get("/demo")
-def demo_get(request: Request, user=Depends(get_current_user)):
+def demo_get(request: Request, user=Depends(get_current_user),
+             db: Session = Depends(get_db)):
     return templates.TemplateResponse(
         request, "demo.html",
-        {"user": user, "sent": False, "error": None, "form": None})
+        {"user": user, "error": None, "total_questions": _question_count(db)})
 
 
 @router.post("/demo")
-def demo_post(request: Request, name: str = Form(...), email: str = Form(...),
-              organization: str = Form(""), message: str = Form(""),
-              user=Depends(get_current_user), db: Session = Depends(get_db)):
+def demo_post(request: Request, user=Depends(get_current_user),
+              db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
     try:
-        db.add(models.ContactMessage(
-            name=(name or "").strip()[:120],
-            email=(email or "").strip().lower()[:200],
-            organization=(organization or "").strip()[:200] or None,
-            topic="demo",
-            message=(message or "").strip()[:4000] or "Demo request",
-        ))
-        db.commit()
+        assessment = services.run_guided_demo(db)
+        services.claim_org(db, user.id, assessment.organization_id)
     except Exception as exc:  # noqa: BLE001
-        print(f"[elipsis] demo request failed: {exc}", flush=True)
+        print(f"[elipsis] guided demo failed: {exc}", flush=True)
         return templates.TemplateResponse(
             request, "demo.html",
-            {"user": user, "sent": False, "error": "Could not submit. Try again.",
-             "form": {"name": name, "email": email, "organization": organization}},
+            {"user": user, "error": "Could not generate the demo. Try again.",
+             "total_questions": _question_count(db)},
             status_code=500)
-    return templates.TemplateResponse(
-        request, "demo.html",
-        {"user": user, "sent": True, "error": None, "form": None})
+    return RedirectResponse(f"/assessment/{assessment.id}/results", status_code=303)
 
 
 @router.get("/compare")
@@ -238,12 +235,9 @@ def compare(request: Request, user=Depends(get_current_user),
     if user is None:
         return login_redirect()
     visible = services.visible_org_ids(db, user)
-    rows = services.list_assessments(db, visible)
-    completed = [r for r in rows if r.get("status") == "completed"]
     return templates.TemplateResponse(
         request, "compare.html",
-        {"user": user, "rows": completed,
-         "organizations": services.list_organizations(db, visible)})
+        {"user": user, "organizations": services.list_organizations(db, visible)})
 
 
 @router.get("/compare/{organization_id}")
@@ -255,10 +249,13 @@ def compare_org(organization_id: int, request: Request,
         return _not_found(request, user)
     org = db.get(models.Organization, organization_id)
     overview = services.company_overview(db, org)
+    comparison = overview.get("comparison") or {}
     return templates.TemplateResponse(
         request, "compare.html",
-        {"user": user, "org": org, "overview": overview,
-         "rows": overview.get("rows") or [],
+        {"user": user, "org": org, "organization": org, "overview": overview,
+         "rows": comparison.get("rows") or [],
+         "pillars": comparison.get("pillars") or [],
+         "average": comparison.get("average"),
          "organizations": services.list_organizations(
              db, services.visible_org_ids(db, user))})
 
@@ -380,13 +377,17 @@ def start_get(request: Request, user=Depends(get_current_user),
         request, "start.html",
         {"user": user,
          "organizations": services.list_organizations(db, visible),
-         "error": None})
+         "total_questions": _question_count(db), "error": None})
 
 
 @router.post("/start")
 def start_post(request: Request,
                organization_id: str = Form(""),
                organization_name: str = Form(""),
+               industry: str = Form(""),
+               employee_count: str = Form(""),
+               country: str = Form(""),
+               city: str = Form(""),
                department: str = Form("Operations"),
                respondent: str = Form(""),
                user=Depends(get_current_user),
@@ -408,7 +409,13 @@ def start_post(request: Request,
             if not name:
                 raise ValueError("Provide a company name or pick an existing one.")
             payload = schemas.AssessmentIn(
-                organization=schemas.OrganizationIn(name=name),
+                organization=schemas.OrganizationIn(
+                    name=name,
+                    industry=(industry or "").strip()[:120] or None,
+                    employee_count=_optional_int(employee_count),
+                    country=(country or "").strip()[:80] or None,
+                    city=(city or "").strip()[:80] or None,
+                ),
                 department=department.strip() or "Operations",
                 respondent=(respondent or "").strip() or None,
             )
@@ -420,6 +427,7 @@ def start_post(request: Request,
         return templates.TemplateResponse(
             request, "start.html",
             {"user": user, "error": str(exc),
+             "total_questions": _question_count(db),
              "organizations": services.list_organizations(db, visible)},
             status_code=400)
     return RedirectResponse(f"/assessment/{assessment.id}/step/1", status_code=303)
@@ -489,12 +497,15 @@ def dashboard(request: Request, user=Depends(get_current_user),
         return login_redirect()
     visible = services.visible_org_ids(db, user)
     data = services.dashboard_data(db, org_ids=visible)
+    orgs = services.list_organizations(db, visible)
     return templates.TemplateResponse(
         request, "dashboard.html",
         {"user": user, **data,
-         "organizations": services.list_organizations(db, visible),
+         "organizations": orgs,
+         "company": orgs[0] if len(orgs) == 1 else None,
          "action_summary": services_ops.action_summary(db, visible),
          "notifications": services_ops.notifications(db, user),
+         "logistics": logistics.snapshot(db, org_ids=visible),
          "trends": services_ops.org_trends(db, visible)})
 
 
@@ -564,6 +575,7 @@ def assessment_results(assessment_id: int, request: Request,
          "reference_points": benchmarks.REFERENCE_POINTS,
          "sources": benchmarks.SOURCES, "method_note": benchmarks.METHOD_NOTE,
          "previous": previous, "delta": delta,
+         "logistics": logistics.snapshot(db, assessment_ids=[assessment_id]),
          "share_links": services_ops.share_links(db, assessment_id),
          "notifications": services_ops.notifications(db, user)})
 

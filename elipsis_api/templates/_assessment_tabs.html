@@ -1,0 +1,6 @@
+<nav class="tabs workspace-tabs" aria-label="Assessment intelligence">
+  <a class="tab" href="/assessments"{% if path == '/assessments' %} aria-current="page"{% endif %}>Assessments</a>
+  <a class="tab" href="/compare"{% if path.startswith('/compare') %} aria-current="page"{% endif %}>Compare</a>
+  <a class="tab" href="/trends"{% if path.startswith('/trends') %} aria-current="page"{% endif %}>Trends</a>
+  <a class="tab" href="/benchmarks"{% if path.startswith('/benchmarks') %} aria-current="page"{% endif %}>Benchmarks</a>
+</nav>

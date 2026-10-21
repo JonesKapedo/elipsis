@@ -54,6 +54,9 @@ from elipsis_api.services_ext import (
 from elipsis_api.services_ext import (
     reset_demo_data as _reset_demo_data_raw,
 )
+from elipsis_api.services_ext import (
+    run_guided_demo as run_guided_demo,
+)
 
 
 def is_admin(user) -> bool:

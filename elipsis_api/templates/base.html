@@ -26,12 +26,12 @@
   <meta name="twitter:title" content="{{ self.title() }}">
   <meta name="twitter:description" content="{{ self.description() }}">
   <meta name="twitter:image" content="{{ request.url_for('static', path='brand/og-banner.png') }}">
-  <link rel="stylesheet" href="/static/style.css?v=20261021">
-  <link rel="stylesheet" href="/static/app-shell.css?v=20261021">
-  <link rel="stylesheet" href="/static/extras.css?v=20261021">
-  <link rel="stylesheet" href="/static/motion.css?v=20261021">
-  <link rel="stylesheet" href="/static/app.css?v=20261021">
-  <link rel="stylesheet" href="/static/premium.css?v=20261021">
+  <link rel="stylesheet" href="/static/style.css?v=20261021c">
+  <link rel="stylesheet" href="/static/app-shell.css?v=20261021c">
+  <link rel="stylesheet" href="/static/extras.css?v=20261021c">
+  <link rel="stylesheet" href="/static/motion.css?v=20261021c">
+  <link rel="stylesheet" href="/static/app.css?v=20261021c">
+  <link rel="stylesheet" href="/static/premium.css?v=20261021c">
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %} {% if authed %}app-shell{% endif %}">
@@ -47,30 +47,21 @@
       <button type="button" class="sidebar-close" id="sidebar-close" aria-label="Close menu">×</button>
     </div>
     <nav class="sidebar-nav">
-      <p class="nav-group-label">Platform</p>
+      <p class="nav-group-label">Workspace</p>
       <a href="/dashboard" class="nav-item{% if path == '/dashboard' %} active{% endif %}"{% if path == '/dashboard' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◉</span> Overview</a>
-      {% if (user.role or '') == 'admin' or user.is_admin %}
-      <a href="/marketplace" class="nav-item{% if path.startswith('/marketplace') %} active{% endif %}"{% if path.startswith('/marketplace') %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◈</span> Marketplace <span class="nav-note">admin</span></a>
-      {% endif %}
-      <a href="/company" class="nav-item{% if path.startswith('/company') %} active{% endif %}"{% if path.startswith('/company') %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">▣</span> Organisation</a>
-      <a href="/actions" class="nav-item{% if path == '/actions' %} active{% endif %}"{% if path == '/actions' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">✓</span> Action board{% if notifications %}<span class="nav-badge">{{ notifications|length }}</span>{% endif %}</a>
-
-      <p class="nav-group-label">Intelligence</p>
-      <a href="/assessments" class="nav-item{% if path == '/assessments' %} active{% endif %}"{% if path == '/assessments' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">☰</span> Assessments</a>
-      <a href="/start" class="nav-item{% if path == '/start' %} active{% endif %}"{% if path == '/start' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">＋</span> New assessment</a>
-      <a href="/compare" class="nav-item{% if path == '/compare' %} active{% endif %}"{% if path == '/compare' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">⇄</span> Compare</a>
-      <a href="/trends" class="nav-item{% if path == '/trends' %} active{% endif %}"{% if path == '/trends' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">↗</span> Trends</a>
-      <a href="/benchmarks" class="nav-item{% if path == '/benchmarks' %} active{% endif %}"{% if path == '/benchmarks' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◎</span> Benchmarks</a>
-      <a href="/audit" class="nav-item{% if path == '/audit' %} active{% endif %}"{% if path == '/audit' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">≡</span> Audit trail</a>
+      <a href="/assessments" class="nav-item{% if path.startswith('/assessments') or path.startswith('/assessment/') or path.startswith('/compare') or path.startswith('/trends') or path.startswith('/benchmarks') %} active{% endif %}"{% if path.startswith('/assessments') or path.startswith('/assessment/') or path.startswith('/compare') or path.startswith('/trends') or path.startswith('/benchmarks') %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">☰</span> Assessments</a>
+      <a href="/actions" class="nav-item{% if path == '/actions' %} active{% endif %}"{% if path == '/actions' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">✓</span> Action plan{% if notifications %}<span class="nav-badge">{{ notifications|length }}</span>{% endif %}</a>
+      <a href="/company" class="nav-item{% if path.startswith('/company') or path == '/audit' %} active{% endif %}"{% if path.startswith('/company') or path == '/audit' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">▣</span> Organisation</a>
+      <a href="/marketplace" class="nav-item{% if path.startswith('/marketplace') %} active{% endif %}"{% if path.startswith('/marketplace') %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◈</span> Marketplace <span class="nav-note">{% if (user.role or '') == 'admin' or user.is_admin %}admin{% else %}locked{% endif %}</span></a>
 
       {% if (user.role or '') == 'admin' or user.is_admin %}
       <p class="nav-group-label">Operations</p>
-      <a href="/admin" class="nav-item{% if path == '/admin' %} active{% endif %}"{% if path == '/admin' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◎</span> Admin pulse</a>
-      <a href="/admin/requests" class="nav-item{% if path == '/admin/requests' %} active{% endif %}"{% if path == '/admin/requests' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">☑</span> Request desk</a>
+      <a href="/admin" class="nav-item{% if path.startswith('/admin') %} active{% endif %}"{% if path.startswith('/admin') %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◎</span> Admin</a>
       {% endif %}
 
       <p class="nav-group-label">Account</p>
-      <a href="/notifications" class="nav-item{% if path == '/notifications' %} active{% endif %}"{% if path == '/notifications' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◔</span> Notifications</a>
+      <a href="/notifications" class="nav-item{% if path == '/notifications' %} active{% endif %}"{% if path == '/notifications' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◔</span> Notifications{% if notifications %}<span class="nav-badge">{{ notifications|length }}</span>{% endif %}</a>
+      <a href="/settings" class="nav-item{% if path == '/settings' %} active{% endif %}"{% if path == '/settings' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">⚙</span> Settings</a>
       <a href="/partner" class="nav-item{% if path == '/partner' %} active{% endif %}"{% if path == '/partner' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◇</span> Partner console</a>
       <a href="/logout" class="nav-item nav-danger"><span class="nav-icon" aria-hidden="true">→</span> Sign out</a>
     </nav>
@@ -97,6 +88,10 @@
         <button type="button" class="cmd-trigger" id="cmd-trigger" aria-haspopup="dialog" aria-controls="cmdk">
           <span class="cmd-trigger-label">Commands</span><kbd>⌘K</kbd>
         </button>
+        <a class="topbar-bell" href="/notifications" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path></svg>
+          {% if notifications %}<span class="topbar-bell-dot">{{ notifications|length }}</span>{% endif %}
+        </a>
         <a class="btn sm" href="/start">New assessment</a>
       </div>
     </header>
@@ -166,7 +161,7 @@
   </div>
 </dialog>
 {% endif %}
-<script src="/static/app.js?v=20261021" defer></script>
+<script src="/static/app.js?v=20261021c" defer></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>
