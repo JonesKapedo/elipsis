@@ -93,6 +93,9 @@ def create_assessment(payload: schemas.AssessmentIn, request: Request,
     if user and payload.organization_id and not services.can_access_org(
             db, user, payload.organization_id):
         raise HTTPException(status_code=404, detail="organization not found")
+    if (user and not payload.organization_id and payload.organization is not None
+            and services.owned_orgs(db, user) and not services.is_pro_user(db, user)):
+        raise HTTPException(status_code=402, detail="premium required for additional companies")
     try:
         assessment = services.create_assessment(db, payload)
     except ValueError as exc:
@@ -316,6 +319,8 @@ def create_organization(request: Request, db: Session = Depends(get_db)):
     user = _api_user(request, db)
     if user is None:
         raise HTTPException(status_code=401, detail="unauthorized")
+    if services.owned_orgs(db, user) and not services.is_pro_user(db, user):
+        raise HTTPException(status_code=402, detail="premium required for additional companies")
     
     try:
         data = request.json() if hasattr(request, 'json') else {}
