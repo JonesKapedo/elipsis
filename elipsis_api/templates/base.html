@@ -6,7 +6,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ BRAND_NAME }}{% endblock %}</title>
-  <meta name="description" content="{% block description %}{{ BRAND_NAME }} turns plain-English operational answers into a scored readiness index, a checkable cost model and a 90-day action plan for logistics SMEs.{% endblock %}">
+  <meta name="description" content="{% block description %}{{ BRAND_NAME }} turns plain-English operating answers into a scored readiness index, a costed constraint, and a 90-day action plan for logistics and field-operations companies.{% endblock %}">
   <meta name="theme-color" content="#0a1628">
   <meta name="color-scheme" content="light">
   <link rel="icon" type="image/svg+xml" href="/static/brand/elipsis-mark.svg">
@@ -26,12 +26,12 @@
   <meta name="twitter:title" content="{{ self.title() }}">
   <meta name="twitter:description" content="{{ self.description() }}">
   <meta name="twitter:image" content="{{ request.url_for('static', path='brand/og-banner.png') }}">
-  <link rel="stylesheet" href="/static/style.css?v=20261021e">
-  <link rel="stylesheet" href="/static/app-shell.css?v=20261021e">
-  <link rel="stylesheet" href="/static/extras.css?v=20261021e">
-  <link rel="stylesheet" href="/static/motion.css?v=20261021e">
-  <link rel="stylesheet" href="/static/app.css?v=20261021e">
-  <link rel="stylesheet" href="/static/premium.css?v=20261021e">
+  <link rel="stylesheet" href="/static/style.css?v=20261021f">
+  <link rel="stylesheet" href="/static/app-shell.css?v=20261021f">
+  <link rel="stylesheet" href="/static/extras.css?v=20261021f">
+  <link rel="stylesheet" href="/static/motion.css?v=20261021f">
+  <link rel="stylesheet" href="/static/app.css?v=20261021f">
+  <link rel="stylesheet" href="/static/premium.css?v=20261021f">
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %} {% if authed %}app-shell{% endif %}">
@@ -47,12 +47,12 @@
       <button type="button" class="sidebar-close" id="sidebar-close" aria-label="Close menu">×</button>
     </div>
     <nav class="sidebar-nav">
-      <p class="nav-group-label">Workspace</p>
+      <p class="nav-group-label">Your company</p>
       <a href="/dashboard" class="nav-item{% if path == '/dashboard' %} active{% endif %}"{% if path == '/dashboard' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◉</span> Overview</a>
       <a href="/assessments" class="nav-item{% if path.startswith('/assessments') or path.startswith('/assessment/') or path.startswith('/compare') or path.startswith('/trends') or path.startswith('/benchmarks') %} active{% endif %}"{% if path.startswith('/assessments') or path.startswith('/assessment/') or path.startswith('/compare') or path.startswith('/trends') or path.startswith('/benchmarks') %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">☰</span> Assessments</a>
       <a href="/actions" class="nav-item{% if path == '/actions' %} active{% endif %}"{% if path == '/actions' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">✓</span> Action plan{% if notifications %}<span class="nav-badge">{{ notifications|length }}</span>{% endif %}</a>
       <a href="/operations" class="nav-item{% if path.startswith('/operations') %} active{% endif %}"{% if path.startswith('/operations') %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">▤</span> Operations</a>
-      <a href="/company" class="nav-item{% if path.startswith('/company') or path == '/audit' %} active{% endif %}"{% if path.startswith('/company') or path == '/audit' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">▣</span> Organisation</a>
+      <a href="/company" class="nav-item{% if path.startswith('/company') or path == '/audit' %} active{% endif %}"{% if path.startswith('/company') or path == '/audit' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">▣</span> Company</a>
       <a href="/marketplace" class="nav-item{% if path.startswith('/marketplace') %} active{% endif %}"{% if path.startswith('/marketplace') %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◈</span> Marketplace <span class="nav-note">{% if (user.role or '') == 'admin' or user.is_admin %}admin{% else %}locked{% endif %}</span></a>
 
       {% if (user.role or '') == 'admin' or user.is_admin %}
@@ -82,7 +82,7 @@
       </button>
       <form class="topbar-search" action="/search" method="get" role="search">
         <span class="search-icon" aria-hidden="true">⌕</span>
-        <input type="search" name="q" placeholder="Search assessments, actions, teams…" aria-label="Search workspace" value="{{ q if q is defined else '' }}" autocomplete="off">
+        <input type="search" name="q" placeholder="Search assessments, actions, teams…" aria-label="Search your company" value="{{ q if q is defined else '' }}" autocomplete="off">
         <kbd aria-hidden="true">/</kbd>
       </form>
       <div class="topbar-actions">
@@ -105,10 +105,11 @@
   <button type="button" class="pub-menu" id="pub-menu-toggle" aria-expanded="false" aria-controls="pub-nav" aria-label="Open navigation">☰</button>
   <nav class="pub-nav" id="pub-nav" aria-label="Primary">
     <a href="/methodology"{% if path == '/methodology' %} aria-current="page"{% endif %}>Method</a>
-    <a href="/pricing"{% if path == '/pricing' %} aria-current="page"{% endif %}>Engagements</a>
+    <a href="/pricing"{% if path == '/pricing' %} aria-current="page"{% endif %}>Pricing</a>
     <a href="/partners"{% if path == '/partners' %} aria-current="page"{% endif %}>Partners</a>
     <a href="/sample"{% if path == '/sample' %} aria-current="page"{% endif %}>Sample</a>
-    <a class="pill" href="/login">Sign in</a>
+    <a class="pill" href="/signup">Start free</a>
+    <a href="/login">Sign in</a>
   </nav>
 </header>
 <main id="main" class="pub-main">
@@ -126,13 +127,13 @@
   <div class="foot-inner">
     <div class="foot-brand">
       <img src="/static/brand/elipsis-logo.svg" alt="{{ BRAND_NAME }}" class="brand-img">
-      <p>{{ BRAND_TAGLINE }}. Built for Kenyan logistics operators in Nairobi and Mombasa.</p>
+      <p>{{ BRAND_TAGLINE }} Built for logistics and field-operations companies worldwide.</p>
     </div>
     <nav class="foot-links" aria-label="Company">
       <a href="/methodology">Method</a>
-      <a href="/pricing">Engagements</a>
+      <a href="/pricing">Pricing</a>
       <a href="/partners">Partners</a>
-      <a href="/case-study">Evidence</a>
+      <a href="/use-cases">Use cases</a>
     </nav>
     <nav class="foot-links" aria-label="Trust">
       <a href="/privacy">Privacy</a>
@@ -157,12 +158,12 @@
     <div class="cmdk-foot">
       <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
       <span><kbd>↵</kbd> open</span>
-      <span><kbd>/</kbd> workspace search</span>
+      <span><kbd>/</kbd> company search</span>
     </div>
   </div>
 </dialog>
 {% endif %}
-<script src="/static/app.js?v=20261021e" defer></script>
+<script src="/static/app.js?v=20261021f" defer></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

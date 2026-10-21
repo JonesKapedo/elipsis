@@ -9,19 +9,19 @@
     </a>
 
     <div class="auth-story-copy">
-      <p class="eyebrow">FOR KENYAN LOGISTICS OPERATORS</p>
+      <p class="eyebrow">FOR LOGISTICS OPERATORS</p>
       <h1>Every delayed load has a cost. See it.</h1>
-      <p class="lede">Elipsis turns dispatch, fleet, warehouse, cash, and compliance signals into one operating picture — then prices the friction and gives your team a 90-day plan to remove it.</p>
+      <p class="lede">{{ BRAND_NAME }} turns dispatch, fleet, warehouse, cash, and compliance signals into one operating picture — then prices the friction and gives your team a 90-day plan to remove it.</p>
 
       <div class="auth-lane-card" aria-label="Illustrative lane view">
         <div class="auth-lane-head">
-          <span>Mombasa → Nairobi corridor</span>
+          <span>Origin port → distribution centre</span>
           <span class="auth-sample">Illustrative</span>
         </div>
         <div class="auth-route">
-          <div class="auth-stop"><b>Mombasa</b><span>Port · CFS</span></div>
+          <div class="auth-stop"><b>Origin port</b><span>Port · CFS</span></div>
           <div class="auth-route-track" aria-hidden="true"><i></i><span class="auth-truck">▮</span></div>
-          <div class="auth-stop right"><b>Nairobi</b><span>DC · last mile</span></div>
+          <div class="auth-stop right"><b>Distribution centre</b><span>DC · last mile</span></div>
         </div>
         <div class="auth-lane-metrics">
           <div><span>On-time release</span><b>84%</b><em class="watch">watch</em></div>
@@ -34,18 +34,18 @@
       <ul class="auth-outcomes">
         <li><span>01</span><div><strong>One operating score</strong><p>See where dispatch, fleet, cash, and compliance are leaking time and margin.</p></div></li>
         <li><span>02</span><div><strong>Evidence, not opinion</strong><p>Turn delays, rework, idle assets, and expiring documents into a priced action list.</p></div></li>
-        <li><span>03</span><div><strong>Built for your scale</strong><p>Designed for 10–199 staff freight forwarders, transporters, warehouses, and distributors.</p></div></li>
+        <li><span>03</span><div><strong>Built for your scale</strong><p>Designed for 10–1,000 staff freight forwarders, transporters, warehouses, distributors, and field-service operators.</p></div></li>
       </ul>
     </div>
 
-    <p class="auth-story-foot">Nairobi · Mombasa · East Africa trade corridors</p>
+    <p class="auth-story-foot">Global operations · Every trade corridor</p>
   </section>
 
   <section class="auth-panel" aria-labelledby="signin-heading">
     <div class="auth-panel-inner">
       <div class="auth-panel-brand">
         <span class="mark" aria-hidden="true">{{ BRAND_MARK }}</span>
-        <div><strong>{{ BRAND_NAME }}</strong><span>Logistics operations workspace</span></div>
+        <div><strong>{{ BRAND_NAME }}</strong><span>Operating clarity for logistics teams</span></div>
       </div>
 
       <div class="auth-panel-head">
@@ -62,7 +62,7 @@
         {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
         <label for="email">Work email
           <input id="email" type="email" name="email" required
-                 autocomplete="username" placeholder="name@company.co.ke" autofocus
+                 autocomplete="username" placeholder="name@company.com" autofocus
                  spellcheck="false" value="{{ email if email else '' }}">
         </label>
         <label for="password">Password
@@ -73,7 +73,7 @@
           <span class="auth-secure-line"><span aria-hidden="true">◈</span> Encrypted session</span>
           <a href="/forgot-password">Forgot password?</a>
         </div>
-        <button class="btn big full" type="submit">Sign in to workspace →</button>
+        <button class="btn big full" type="submit">Sign in to your company →</button>
       </form>
 
       <div class="auth-divider">New to Elipsis?</div>

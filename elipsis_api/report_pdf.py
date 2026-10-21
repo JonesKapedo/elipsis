@@ -50,7 +50,9 @@ def _styles():
     }
 
 
-def _money(val, currency="KES"):
+def _money(val, currency=None):
+    from constants import CURRENCY
+    currency = currency or CURRENCY
     try:
         n = float(val or 0)
     except (TypeError, ValueError):

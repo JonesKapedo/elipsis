@@ -34,13 +34,13 @@
       <textarea name="description" rows="6" placeholder="Current process, pain points, and what success looks like.">{{ form.description if form else '' }}</textarea>
     </label>
     <label>Budget range
-      <input name="budget_range" value="{{ form.budget_range if form else '' }}" placeholder="KES 500,000 – 1,500,000">
+      <input name="budget_range" value="{{ form.budget_range if form else '' }}" placeholder="USD 25,000 – 100,000">
     </label>
     <label>Deadline
       <input name="deadline" value="{{ form.deadline if form else '' }}" placeholder="Q1 2027">
     </label>
     <label>Location
-      <input name="location" value="{{ form.location if form else '' }}" placeholder="Nairobi / remote">
+      <input name="location" value="{{ form.location if form else '' }}" placeholder="City / remote">
     </label>
     <button class="btn big" type="submit">Submit for review</button>
   </form>

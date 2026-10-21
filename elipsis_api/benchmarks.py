@@ -13,15 +13,15 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 ICP_CODE = "logistics"
-ICP_NAME = "Kenyan logistics SMEs"
-ICP_LABEL = "Logistics SMEs (10–199 staff)"
+ICP_NAME = "Logistics and field-operations companies"
+ICP_LABEL = "Logistics operators (10–1,000 staff)"
 ICP_DESCRIPTION = (
-    "Freight forwarders, transport operators, warehousing and distribution "
-    "businesses with 10–199 staff, mainly in Nairobi and Mombasa."
+    "Freight forwarders, transport operators, warehousing, distribution, and "
+    "field-service businesses — from single-site operators to multi-country groups."
 )
 ICP_WHY = (
-    "Large, reachable base with clear process cost, and a buyer who can act "
-    "without a clinical or public-sector procurement cycle."
+    "Operating friction compounds across every handoff, asset, and invoice. "
+    "The first reference market was Kenya; the framework is not country specific."
 )
 
 SOURCES = [

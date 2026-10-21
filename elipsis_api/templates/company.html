@@ -2,9 +2,11 @@
 {% block title %}My company{% endblock %}
 {% block content %}
 <section class="hero-lite">
-  <p class="eyebrow">Workspace</p>
-  <h1>Your organisation workspace</h1>
-  <p class="lede">This is where readiness becomes visible. Add the organisations you care about, start an assessment, or invite the team. The numbers will tell the story of where friction lives — and what it costs.</p>
+  <p class="eyebrow">COMPANY</p>
+  <h1>Your companies, in one operating view.</h1>
+  <p class="lede">Every diagnostic, plan, and operating reading is tied to a company profile.
+  Keep the profile current — sector, scale, revenue band, and footprint drive the benchmarks
+  and the recommendations you see.</p>
   <div class="hero-actions"><a class="btn ghost" href="/audit">Open audit trail</a></div>
 </section>
 
@@ -13,17 +15,25 @@
   <div class="row-between">
     <div>
       <h2>{{ row.org.name }}</h2>
-      <p class="muted">{{ row.org.industry or 'Industry not set' }}{% if row.org.city %} · {{ row.org.city }}{% endif %}{% if row.org.employee_count %} · {{ row.org.employee_count }} people{% endif %}</p>
+      <p class="muted">{{ row.context.sector }}{% if row.context.location != 'Footprint not set' %} · {{ row.context.location }}{% endif %}{% if row.org.employee_count %} · {{ row.org.employee_count }} people{% endif %}{% if row.org.revenue_band %} · {{ row.org.revenue_band }}{% endif %}</p>
     </div>
     <div class="hero-actions">
+      <a class="btn ghost sm" href="/dashboard?org={{ row.org.id }}">Open dashboard</a>
       <a class="btn ghost sm" href="/company/{{ row.org.id }}/team">Team</a>
-      <a class="btn ghost sm" href="/trends">Trends</a>
+      <a class="btn ghost sm" href="/trends?org={{ row.org.id }}">Trends</a>
     </div>
+  </div>
+
+  <div class="company-strip">
+    <div><span>Sector</span><strong>{{ row.context.sector }}</strong></div>
+    <div><span>Scale</span><strong>{{ row.context.size }}{% if row.org.employee_count %} · {{ row.org.employee_count }} people{% endif %}</strong></div>
+    <div><span>Revenue</span><strong>{{ row.context.revenue }}</strong></div>
+    <div><span>Footprint</span><strong>{{ row.context.location }}</strong></div>
   </div>
 
   {% if row.portrait %}
   <p class="tag ok">{{ row.portrait.posture }}</p>
-  <h3>Company overview</h3>
+  <h3>What the profile says</h3>
   <p>{{ row.portrait.structure }}</p>
   <ul>
     {% for line in row.portrait.pillar_lines %}
@@ -35,34 +45,66 @@
   <p><a class="btn sm" href="/assessment/{{ row.latest.id }}/results">Open latest report</a></p>
   {% endif %}
   {% else %}
-  <p class="muted">No completed assessment yet. Begin one below, or share a short questionnaire with the people who know the work best.</p>
+  <p class="muted">No completed diagnostic yet. Start one below, or send a short questionnaire to the people who know the work best.</p>
   {% endif %}
+
+  <details class="block soft" style="margin-top:1rem">
+    <summary><strong>Edit company profile</strong></summary>
+    <form method="post" action="/company/{{ row.org.id }}/edit" class="stack" style="margin-top:1rem">
+      <div class="form-grid">
+        <label>Company name
+          <input name="name" required maxlength="160" value="{{ row.org.name }}">
+        </label>
+        <label>Industry
+          <input name="industry" maxlength="120" value="{{ row.org.industry or '' }}">
+        </label>
+        <label>Sub-sector
+          <input name="sub_industry" maxlength="120" value="{{ row.org.sub_industry or '' }}" placeholder="e.g. Freight forwarding">
+        </label>
+        <label>Employees
+          <input name="employee_count" type="number" min="1" value="{{ row.org.employee_count or '' }}">
+        </label>
+        <label>Annual revenue
+          <input name="revenue_band" maxlength="80" value="{{ row.org.revenue_band or '' }}" placeholder="e.g. USD 1M–10M">
+        </label>
+        <label>Country
+          <input name="country" maxlength="80" value="{{ row.org.country or '' }}">
+        </label>
+        <label>City
+          <input name="city" maxlength="80" value="{{ row.org.city or '' }}">
+        </label>
+      </div>
+      <button class="btn sm" type="submit">Save profile</button>
+    </form>
+  </details>
 
   <div class="card-grid two" style="margin-top:1.25rem">
     <div class="block soft">
-      <h3>New assessment</h3>
-      <p class="muted">You fill the questionnaire yourself — department or whole company.</p>
+      <h3>New diagnostic</h3>
+      <p class="muted">You answer the questionnaire yourself, for one operating unit or the whole company.</p>
       <form method="post" action="/company/{{ row.org.id }}/assess" class="stack">
         <label>Scope
           <select name="department" required>
             <option value="Organisation-wide">Whole company</option>
             <option value="Operations">Operations</option>
+            <option value="Dispatch">Dispatch</option>
+            <option value="Warehouse">Warehouse</option>
             <option value="Finance">Finance</option>
             <option value="Customer Service">Customer Service</option>
+            <option value="Compliance">Compliance</option>
             <option value="HR">HR</option>
             <option value="IT">IT</option>
-            <option value="Sales">Sales</option>
           </select>
         </label>
         <label>Your name (optional)
           <input name="respondent" placeholder="{{ user.name or user.email }}">
         </label>
-        <button class="btn" type="submit">Begin assessment →</button>
+        <button class="btn" type="submit">Begin diagnostic →</button>
       </form>
     </div>
 
     <div class="block soft">
-      <h3>Share questionnaire</h3>
+      <h3>Share the questionnaire</h3>
       <p class="muted">Employees answer on their own device. You set a deadline and a minimum number of responses.</p>
       <form method="post" action="/company/{{ row.org.id }}/campaign" class="stack">
         <label>Deadline (optional)
@@ -77,13 +119,13 @@
   </div>
 
   {% if row.assessments %}
-  <h3 style="margin-top:1.5rem">Assessments</h3>
+  <h3 style="margin-top:1.5rem">Diagnostics</h3>
   <table class="table">
     <thead><tr><th>Scope</th><th>Status</th><th>Score</th><th></th></tr></thead>
     <tbody>
     {% for a in row.assessments %}
     <tr>
-      <td>{{ a.department or 'Organisation-wide' }}</td>
+      <td>{{ a.department or 'Company-wide' }}</td>
       <td>{{ a.status }}</td>
       <td>{% if a.readiness_index is not none %}{{ '%.1f'|format(a.readiness_index) }}{% else %}—{% endif %}</td>
       <td><a href="/assessment/{{ a.id }}/results">Open</a></td>
@@ -95,26 +137,62 @@
 </article>
 {% else %}
 <section class="block">
-  <h2>Add your first organisation</h2>
-  <p class="muted">Name, industry and headcount let the financial model size the opportunity correctly.</p>
-  <form method="post" action="/company" class="stack" style="max-width:28rem">
-    <label>Organisation name
-      <input name="name" required maxlength="200" placeholder="Acme Holdings">
+  <h2>Add your first company</h2>
+  <p class="muted">Name, sector, and headcount let the financial model and peer comparison size the opportunity correctly.</p>
+  <form method="post" action="/company" class="stack" style="max-width:32rem">
+    <label>Company name
+      <input name="name" required maxlength="160" placeholder="Meridian Freight Group">
     </label>
     <label>Industry
-      <input name="industry" maxlength="120" placeholder="Manufacturing, Financial services…">
+      <input name="industry" maxlength="120" placeholder="Logistics, manufacturing, field services…">
+    </label>
+    <label>Sub-sector
+      <input name="sub_industry" maxlength="120" placeholder="Freight forwarding, warehousing, last mile…">
     </label>
     <label>Employee count
       <input name="employee_count" type="number" min="1" placeholder="120">
     </label>
+    <label>Annual revenue
+      <input name="revenue_band" maxlength="80" placeholder="e.g. USD 1M–10M">
+    </label>
     <label>City
-      <input name="city" maxlength="120">
+      <input name="city" maxlength="80" placeholder="City">
     </label>
     <label>Country
-      <input name="country" maxlength="120">
+      <input name="country" maxlength="80" placeholder="Country">
     </label>
-    <button class="btn" type="submit">Save organisation</button>
+    <button class="btn" type="submit">Save company</button>
   </form>
 </section>
 {% endfor %}
+
+{% if rows %}
+<details class="block" style="margin-top:1rem">
+  <summary><strong>Add another company</strong></summary>
+  <form method="post" action="/company" class="stack" style="max-width:32rem;margin-top:1rem">
+    <label>Company name
+      <input name="name" required maxlength="160" placeholder="Another company">
+    </label>
+    <label>Industry
+      <input name="industry" maxlength="120" placeholder="Logistics, manufacturing, field services…">
+    </label>
+    <label>Sub-sector
+      <input name="sub_industry" maxlength="120" placeholder="Freight forwarding, warehousing, last mile…">
+    </label>
+    <label>Employee count
+      <input name="employee_count" type="number" min="1" placeholder="120">
+    </label>
+    <label>Annual revenue
+      <input name="revenue_band" maxlength="80" placeholder="e.g. USD 1M–10M">
+    </label>
+    <label>City
+      <input name="city" maxlength="80" placeholder="City">
+    </label>
+    <label>Country
+      <input name="country" maxlength="80" placeholder="Country">
+    </label>
+    <button class="btn" type="submit">Add company</button>
+  </form>
+</details>
+{% endif %}
 {% endblock %}

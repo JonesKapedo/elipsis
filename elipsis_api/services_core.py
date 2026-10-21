@@ -108,7 +108,9 @@ def create_assessment(db: Session, payload) -> models.Assessment:
         o = payload.organization
         org = models.Organization(
             name=o.name, industry=getattr(o, "industry", None),
+            sub_industry=getattr(o, "sub_industry", None),
             employee_count=getattr(o, "employee_count", None),
+            revenue_band=getattr(o, "revenue_band", None),
             country=getattr(o, "country", None), city=getattr(o, "city", None))
         db.add(org)
         db.flush()

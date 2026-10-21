@@ -17,7 +17,7 @@
     {% endif %}
     <form method="post" action="/contact" class="stack">
       <label>Full name
-        <input name="name" required maxlength="120" placeholder="Jane Wanjiku" value="{{ form.name if form else '' }}">
+        <input name="name" required maxlength="120" placeholder="Alex Morgan" value="{{ form.name if form else '' }}">
       </label>
       <label>Work email
         <input type="email" name="email" required maxlength="200" placeholder="jane@company.com" value="{{ form.email if form else '' }}">
@@ -27,7 +27,7 @@
       </label>
       <label>Topic
         <select name="topic">
-          <option value="pilot">Pilot / pilot</option>
+          <option value="pilot">Pilot engagement</option>
           <option value="demo">Product demo</option>
           <option value="enterprise">Enterprise programme</option>
           <option value="api">API / integration</option>

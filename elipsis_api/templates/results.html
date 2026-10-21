@@ -9,6 +9,9 @@
 <section class="head">
   <p class="eyebrow">{{ INDEX_NAME }}</p>
   <h1>{{ organization.name }}{% if department %} &mdash; {{ department.name }}{% endif %}</h1>
+  {% if company_context %}
+  <p class="muted">{{ company_context.sector }} · {{ company_context.size }}{% if company_context.employees %} · {{ company_context.employees }} people{% endif %} · {{ company_context.location }} · {{ company_context.revenue }}</p>
+  {% endif %}
   <p class="muted">Completed {{ assessment.completed_at or '' }} &nbsp;&middot;&nbsp;
   {{ result.answered }} of {{ result.total }} questions answered
   {% if previous %}&nbsp;&middot;&nbsp; <span class="tag {{ 'ok' if (delta or 0) >= 0 else 'warn' }}">Movement {{ '%+.1f'|format(delta or 0) }} vs previous</span>{% endif %}

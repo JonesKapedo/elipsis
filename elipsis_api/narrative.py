@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from constants import CURRENCY
+
 
 def _band(score: float) -> str:
     if score >= 75:
@@ -77,7 +79,7 @@ def company_portrait(organization, department, result: dict) -> dict:
     if savings:
         money = (
             f"On the stated assumptions the model places annual savings potential near "
-            f"KES {float(savings):,.0f}. Treat that as a planning range, not a promise: "
+            f"{CURRENCY} {float(savings):,.0f}. Treat that as a planning range, not a promise: "
             f"it sizes the prize so leadership can decide whether a floor sweep is worth commissioning."
         )
 
@@ -147,11 +149,11 @@ def board_narrative(organization, department, assessment, result: dict, *,
     f_refs = []
     if financial.get("annual_savings") is not None:
         f_refs.append(cite("F1", "Annual savings potential",
-                           f"KES {float(financial['annual_savings']):,.0f}",
+                           f"{CURRENCY} {float(financial['annual_savings']):,.0f}",
                            "Management estimate"))
     if financial.get("investment") is not None:
         f_refs.append(cite("F2", "Indicative investment",
-                           f"KES {float(financial['investment']):,.0f}",
+                           f"{CURRENCY} {float(financial['investment']):,.0f}",
                            "Management estimate"))
     if financial.get("roi") is not None:
         f_refs.append(cite("F3", "ROI", f"{float(financial['roi']):.0f}%",
@@ -192,8 +194,8 @@ def board_narrative(organization, department, assessment, result: dict, *,
     if f_refs:
         money_text = (
             f" On the stated assumptions, the model places annual savings potential at "
-            f"KES {float(financial.get('annual_savings') or 0):,.0f} {f_refs[0]}, "
-            f"against an indicative investment of KES {float(financial.get('investment') or 0):,.0f}"
+            f"{CURRENCY} {float(financial.get('annual_savings') or 0):,.0f} {f_refs[0]}, "
+            f"against an indicative investment of {CURRENCY} {float(financial.get('investment') or 0):,.0f}"
             + (f" {f_refs[1]}" if len(f_refs) > 1 else "")
             + (f", a modelled ROI of {float(financial.get('roi') or 0):.0f}% {f_refs[2]}"
                if len(f_refs) > 2 else "")
@@ -237,7 +239,7 @@ def board_narrative(organization, department, assessment, result: dict, *,
     if assumptions:
         assumption_text = (
             f" The financial case rests on {assumptions.get('staff', '—')} staff, a blended "
-            f"hourly rate of KES {float(assumptions.get('hourly_rate') or 0):,.0f}, "
+            f"hourly rate of {CURRENCY} {float(assumptions.get('hourly_rate') or 0):,.0f}, "
             f"{assumptions.get('working_hours_per_month', '—')} hours per month, and a "
             f"{float(assumptions.get('max_savings_share') or 0) * 100:.0f}% savings cap. "
             "Change any of those on the assumptions page and the numbers recompute."
