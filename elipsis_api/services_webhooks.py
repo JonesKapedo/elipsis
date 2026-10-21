@@ -10,7 +10,6 @@ import socket
 from datetime import UTC, datetime
 from urllib.parse import urlparse
 
-import httpx
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -101,6 +100,8 @@ async def deliver_event(endpoint_id: int, event: str, payload: dict) -> None:
         db.commit()
         db.refresh(delivery)
         try:
+            import httpx
+
             async with httpx.AsyncClient(timeout=6.0, follow_redirects=False) as client:
                 response = await client.post(
                     endpoint.url, content=body,
