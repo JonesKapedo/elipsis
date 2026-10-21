@@ -4,9 +4,9 @@
 {% block content %}
 <section class="head ops-head">
   <div>
-    <p class="eyebrow">Operations ecosystem</p>
-    <h1>Run the week, not just the assessment.</h1>
-    <p class="lede">Assessment scores show where the business is exposed. This is where the operating evidence lives: service, cost, cash, capacity, incidents, and the documents that keep you trading.</p>
+    <p class="eyebrow">OPERATIONS LEDGER</p>
+    <h1>Evidence for the operating week.</h1>
+    <p class="lede">The diagnostic identifies the constraint. This ledger proves whether the operating week is improving: service, cost, cash, capacity, incidents, and the documents that keep the business trading.</p>
   </div>
   <div class="ops-head-actions">
     {% if organizations|length > 1 or not selected_org %}
@@ -30,9 +30,9 @@
 
 {% if not organizations %}
 <section class="empty-state">
-  <p><strong>Create an organisation first.</strong></p>
-  <p class="muted">The operations ledger is scoped to an organisation so evidence, incidents, and actions stay together.</p>
-  <a class="btn" href="/company">Create organisation</a>
+  <p><strong>Set up a company first.</strong></p>
+  <p class="muted">The operations ledger is scoped to a company so evidence, incidents, and actions stay together.</p>
+  <a class="btn" href="/setup">Set up company</a>
 </section>
 {% elif ops.measured == 0 %}
 <section class="ops-onboard">
@@ -174,10 +174,10 @@
 <section class="block ops-loop">
   <div class="block-head"><h3>The operating loop</h3><span class="muted small">Assessment → evidence → action → proof</span></div>
   <div class="ops-loop-grid">
-    <a href="/assessments"><span class="ops-loop-num">1</span><strong>Assess</strong><small>Find the constraint across 21 subdomains.</small></a>
+    <a href="/start"><span class="ops-loop-num">1</span><strong>Assess</strong><small>Find the constraint across 21 operating subdomains.</small></a>
     <a href="/operations/metrics{% if selected_org %}?org={{ selected_org.id }}{% endif %}"><span class="ops-loop-num">2</span><strong>Operate</strong><small>Record the service, cost, cash, and capacity numbers.</small></a>
     <a href="/operations/incidents{% if selected_org %}?org={{ selected_org.id }}{% endif %}"><span class="ops-loop-num">3</span><strong>Learn</strong><small>Log the failure, root cause, and corrective action.</small></a>
-    <a href="/actions"><span class="ops-loop-num">4</span><strong>Act</strong><small>Promote the fix to the action board and keep the proof.</small></a>
+    <a href="/actions"><span class="ops-loop-num">4</span><strong>Act</strong><small>Promote the fix to the action plan and keep the proof.</small></a>
   </div>
 </section>
 {% endif %}

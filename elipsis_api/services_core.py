@@ -9,7 +9,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from constants import SUBDOMAIN_PILLAR
-from elipsis_api import models, security
+from elipsis_api import departments, models, security
 from elipsis_questions import QUESTIONNAIRE, QUESTIONS
 from readiness import compute as _compute
 
@@ -102,6 +102,50 @@ def get_questions(db: Session, questionnaire_id: int) -> list[models.Question]:
     ).order_by(models.Question.position)))
 
 
+def questionnaire_for_department(db: Session, department: str | None) -> models.Questionnaire | None:
+    """Return the department-sequenced questionnaire, creating it once from the bank."""
+    base = get_bank(db)
+    if base is None:
+        return None
+    brief = departments.department_brief(department)
+    if brief["key"] in {"whole_company"} or not brief.get("focus"):
+        return base
+    code = f"{base.code}-{brief['key'].upper()}"
+    existing = db.scalar(select(models.Questionnaire).where(
+        models.Questionnaire.code == code))
+    if existing is not None:
+        return existing
+    focus = set(brief["focus"])
+    bank_questions = get_questions(db, base.id)
+    if not bank_questions:
+        return base
+    # Keep the full baseline so every executive metric stays valid, but lead
+    # with this department's operating areas so the questionnaire reads as
+    # theirs rather than as a generic company survey.
+    source = sorted(
+        bank_questions,
+        key=lambda q: (0 if q.subdomain in focus else 1, q.position or 0))
+    focused = models.Questionnaire(
+        code=code,
+        name=f"{base.name} — {brief['label']}",
+        version=base.version,
+        department=brief["label"],
+        estimated_minutes=base.estimated_minutes,
+        active=1,
+    )
+    db.add(focused)
+    db.flush()
+    for pos, item in enumerate(source, start=1):
+        db.add(models.Question(
+            questionnaire_id=focused.id, code=item.code, scale=item.scale,
+            subdomain=item.subdomain, pillar=item.pillar, text=item.text,
+            why=item.why, weight=item.weight,
+            evidence_required=item.evidence_required, position=pos))
+    db.commit()
+    db.refresh(focused)
+    return focused
+
+
 def create_assessment(db: Session, payload) -> models.Assessment:
     org = db.get(models.Organization, payload.organization_id) if getattr(payload, "organization_id", None) else None
     if org is None and getattr(payload, "organization", None) is not None:
@@ -111,7 +155,20 @@ def create_assessment(db: Session, payload) -> models.Assessment:
             sub_industry=getattr(o, "sub_industry", None),
             employee_count=getattr(o, "employee_count", None),
             revenue_band=getattr(o, "revenue_band", None),
-            country=getattr(o, "country", None), city=getattr(o, "city", None))
+            country=getattr(o, "country", None), city=getattr(o, "city", None),
+            legal_name=getattr(o, "legal_name", None),
+            registration_number=getattr(o, "registration_number", None),
+            tax_id=getattr(o, "tax_id", None), address=getattr(o, "address", None),
+            timezone=getattr(o, "timezone", None),
+            fiscal_year_start=getattr(o, "fiscal_year_start", None),
+            operating_sites=getattr(o, "operating_sites", None),
+            primary_services=getattr(o, "primary_services", None),
+            systems_used=getattr(o, "systems_used", None),
+            website=getattr(o, "website", None),
+            contact_name=getattr(o, "contact_name", None),
+            contact_email=getattr(o, "contact_email", None),
+            contact_phone=getattr(o, "contact_phone", None),
+            description=getattr(o, "description", None))
         db.add(org)
         db.flush()
     if org is None:
@@ -136,6 +193,7 @@ def create_assessment(db: Session, payload) -> models.Assessment:
         department_id=dept.id,
         questionnaire_id=bank.id,
         respondent=getattr(payload, "respondent", None),
+        source=getattr(payload, "source", None) or "self",
         status="in_progress",
         started_at=_now(),
     )
@@ -143,6 +201,45 @@ def create_assessment(db: Session, payload) -> models.Assessment:
     db.commit()
     db.refresh(assessment)
     return assessment
+
+
+def create_collect_campaign(db: Session, *, organization_id: int, user_id: int | None,
+                            department: str = "Operations", deadline: str = "",
+                            min_respondents: int = 3, contact_mode: str = "optional",
+                            question_set: str = "", target_roles: str = "",
+                            note: str = "") -> models.CollectCampaign:
+    org = db.get(models.Organization, organization_id)
+    if org is None:
+        raise ValueError("company not found")
+    dept_name = (department or "Operations").strip() or "Operations"
+    dept = db.scalar(select(models.Department).where(
+        models.Department.organization_id == organization_id,
+        models.Department.name == dept_name))
+    if dept is None:
+        dept = models.Department(organization_id=organization_id, name=dept_name)
+        db.add(dept)
+        db.flush()
+    mode = contact_mode if contact_mode in {"anonymous", "optional", "required"} else "optional"
+    token = security.new_token()[:24]
+    camp = models.CollectCampaign(
+        token=token,
+        organization_id=organization_id,
+        department_id=dept.id,
+        created_by=user_id,
+        title=f"{org.name} {dept_name} questionnaire",
+        deadline=(deadline or "").strip()[:40] or None,
+        min_respondents=max(1, min(500, int(min_respondents or 3))),
+        allow_anonymous=1 if mode == "anonymous" else 0,
+        contact_mode=mode,
+        question_set=(question_set or dept_name).strip()[:120] or dept_name,
+        target_roles=(target_roles or "").strip()[:240] or None,
+        status="collecting",
+        note=(note or "").strip()[:2000] or None,
+    )
+    db.add(camp)
+    db.commit()
+    db.refresh(camp)
+    return camp
 
 
 def answers_map(db: Session, assessment_id: int):

@@ -119,7 +119,7 @@ def test_step_pages_render_every_segment(signed_in):
     for number in (1, 5, 11, 21):
         page = client.get(f"/assessment/{assessment_id}/step/{number}")
         assert page.status_code == 200
-        assert "Why we ask" in page.text
+        assert "Why this matters" in page.text
     # Out-of-range steps clamp instead of erroring.
     assert client.get(f"/assessment/{assessment_id}/step/999").status_code == 200
 
@@ -452,53 +452,124 @@ def test_guided_demo_generates_a_readable_result(signed_in):
     assert "Logistics reading" in page.text
 
 
-def test_start_persists_logistics_organisation_fields(signed_in):
+def test_setup_persists_logistics_organisation_fields():
+    import uuid
+
+    from fastapi.testclient import TestClient
+
+    from elipsis_api.main import app
+    client = TestClient(app)
+    with client:
+        signup = client.post("/signup", data={
+            "name": "Setup Tester",
+            "email": f"setup-{uuid.uuid4().hex}@example.com",
+            "password": "testpass123",
+            "password2": "testpass123",
+            "user_type": "client",
+        }, follow_redirects=False)
+        assert signup.status_code == 303
+        saved = client.post("/setup", data={
+            "name": "Mombasa Line Haul",
+            "industry": "Logistics",
+            "sub_industry": "Freight forwarding",
+            "employee_count": "140",
+            "revenue_band": "USD 1M–10M",
+            "country": "Kenya",
+            "city": "Mombasa",
+            "default_department": "Operations",
+            "contact_name": "Ops lead",
+            "primary_services": "Cross-border line haul",
+        }, follow_redirects=False)
+        assert saved.status_code == 303
+        assert saved.headers["location"].startswith("/start?org=")
+        org_id = int(saved.headers["location"].split("org=")[1])
+
+        from elipsis_api import models
+        from elipsis_api.database import SessionLocal
+        with SessionLocal() as db:
+            org = db.get(models.Organization, org_id)
+            assert org is not None
+            assert org.name == "Mombasa Line Haul"
+            assert org.industry == "Logistics"
+            assert org.sub_industry == "Freight forwarding"
+            assert org.employee_count == 140
+            assert org.revenue_band == "USD 1M–10M"
+            assert org.city == "Mombasa"
+            assert org.country == "Kenya"
+            assert org.contact_name == "Ops lead"
+            assert org.primary_services == "Cross-border line haul"
+
+        dashboard = client.get(f"/dashboard?org={org_id}")
+        assert dashboard.status_code == 200
+        assert "Mombasa Line Haul at a glance" in dashboard.text
+        assert "Freight forwarding" in dashboard.text
+        assert "Mid-sized operator" in dashboard.text
+        assert "USD 1M–10M" in dashboard.text
+
+        diagnostics = client.get(f"/assessments?org={org_id}")
+        assert diagnostics.status_code == 200
+        assert "holding Mombasa Line Haul back" in diagnostics.text
+
+        start_page = client.get(f"/start?org={org_id}")
+        assert start_page.status_code == 200
+        assert "Start Mombasa Line Haul's diagnostic" in start_page.text
+        assert "Freight forwarding" in start_page.text
+        assert "I will answer" in start_page.text
+
+        started = client.post("/start", data={
+            "organization_id": str(org_id),
+            "department": "Operations",
+            "respondent": "Ops lead",
+            "method": "self",
+        }, follow_redirects=False)
+        assert started.status_code == 303
+        assert started.headers["location"].startswith("/assessment/")
+
+def test_start_requires_a_saved_company(signed_in):
     client = signed_in
-    created = client.post("/start", data={
-        "organization_name": "Mombasa Line Haul",
-        "industry": "Logistics",
-        "sub_industry": "Freight forwarding",
-        "employee_count": "140",
-        "revenue_band": "USD 1M–10M",
-        "country": "Kenya",
-        "city": "Mombasa",
+    response = client.post("/start", data={
+        "organization_id": "",
         "department": "Operations",
-        "respondent": "Ops lead",
+        "method": "self",
     }, follow_redirects=False)
-    assert created.status_code == 303
-    assessment_id = int(created.headers["location"].split("/")[2])
+    assert response.status_code in (303, 400)
+    if response.status_code == 303:
+        assert response.headers["location"].startswith("/setup")
 
-    from elipsis_api import models
-    from elipsis_api.database import SessionLocal
-    with SessionLocal() as db:
-        assessment = db.get(models.Assessment, assessment_id)
-        assert assessment is not None
-        org = db.get(models.Organization, assessment.organization_id)
-        assert org.name == "Mombasa Line Haul"
-        assert org.industry == "Logistics"
-        assert org.sub_industry == "Freight forwarding"
-        assert org.employee_count == 140
-        assert org.revenue_band == "USD 1M–10M"
-        assert org.city == "Mombasa"
-        assert org.country == "Kenya"
-        org_id = org.id
 
-    dashboard = client.get(f"/dashboard?org={org_id}")
-    assert dashboard.status_code == 200
-    assert "Mombasa Line Haul at a glance" in dashboard.text
-    assert "Freight forwarding" in dashboard.text
-    assert "Mid-sized operator" in dashboard.text
-    assert "USD 1M–10M" in dashboard.text
+def test_provider_signup_is_invitation_only():
+    from fastapi.testclient import TestClient
 
-    diagnostics = client.get(f"/assessments?org={org_id}")
-    assert diagnostics.status_code == 200
-    assert "holding Mombasa Line Haul back" in diagnostics.text
+    from elipsis_api.main import app
+    with TestClient(app) as fresh:
+        page = fresh.post("/signup", data={
+            "name": "Provider Test",
+            "email": "provider-test@example.com",
+            "password": "testpass123",
+            "password2": "testpass123",
+            "user_type": "bidder",
+        })
+    assert page.status_code == 400
+    assert "invitation-only" in page.text
 
-    start = client.get(f"/start?org={org_id}")
-    assert start.status_code == 200
-    assert "Continue Mombasa Line Haul's diagnostic" in start.text
-    assert "Freight forwarding" in start.text
 
+def test_logout_then_login_returns_to_the_app():
+    from fastapi.testclient import TestClient
+
+    from elipsis_api.main import app
+    with TestClient(app) as fresh:
+        signed = fresh.post("/login", data={
+            "email": "admin@elipsis.local",
+            "password": "elipsis",
+        }, follow_redirects=False)
+        assert signed.status_code == 303
+        fresh.get("/logout", follow_redirects=False)
+        again = fresh.post("/login", data={
+            "email": "admin@elipsis.local",
+            "password": "elipsis",
+        }, follow_redirects=False)
+    assert again.status_code == 303
+    assert again.headers["location"].startswith("/dashboard")
 
 def test_compare_page_uses_the_selected_organisation(signed_in):
     client = signed_in
@@ -575,7 +646,7 @@ def test_operations_ecosystem_round_trip(signed_in):
     promoted = client.post(f"/operations/incidents/{incident_id}/promote", data={
         "organization_id": org_id}, follow_redirects=False)
     assert promoted.status_code == 303
-    assert "On action board" in client.get(
+    assert "On action plan" in client.get(
         f"/operations/incidents?org={org_id}&status=open").text
     resolved = client.post(f"/operations/incidents/{incident_id}/resolve", data={
         "organization_id": org_id, "note": "Status update shipped"},
@@ -644,3 +715,100 @@ def test_operations_ecosystem_round_trip(signed_in):
     bundle = client.get(f"/operations/export.json?org={org_id}")
     assert bundle.status_code == 200
     assert bundle.json()["metrics"]
+
+
+def test_department_questionnaires_are_focused(client):
+    from elipsis_api import departments, services
+    from elipsis_api.database import SessionLocal
+
+    with SessionLocal() as db:
+        finance = services.questionnaire_for_department(db, "Finance & commercial")
+        dispatch = services.questionnaire_for_department(db, "Dispatch & fleet")
+        assert finance is not None and dispatch is not None
+        assert finance.id != dispatch.id
+        finance_qs = services.get_questions(db, finance.id)
+        dispatch_qs = services.get_questions(db, dispatch.id)
+        assert len(finance_qs) == len(dispatch_qs) == 63
+        finance_focus = set(departments.DEPARTMENT_BY_KEY["finance"]["focus"])
+        dispatch_focus = set(departments.DEPARTMENT_BY_KEY["dispatch"]["focus"])
+        assert {q.subdomain for q in finance_qs[:9]} == finance_focus
+        assert {q.subdomain for q in dispatch_qs[:9]} == dispatch_focus
+        assert finance_focus != dispatch_focus
+
+
+def test_second_company_requires_premium(client):
+    from fastapi.testclient import TestClient
+
+    from elipsis_api import models, security
+    from elipsis_api.database import SessionLocal
+    from elipsis_api.main import app
+
+    with SessionLocal() as db:
+        db.add(models.User(
+            email="premium-check@example.com", name="Non Pro",
+            role="client", user_type="client",
+            password_hash=security.hash_password("premium-pass")))
+        db.commit()
+
+    with TestClient(app) as fresh:
+        signed = fresh.post("/login", data={
+            "email": "premium-check@example.com", "password": "premium-pass"},
+            follow_redirects=False)
+        assert signed.status_code == 303
+        first = fresh.post("/setup", data={
+            "name": "First Company", "industry": "Logistics",
+            "default_department": "Operations"}, follow_redirects=False)
+        assert first.status_code == 303
+        gate = fresh.get("/setup?new=1", follow_redirects=False)
+        assert gate.status_code == 303
+        assert gate.headers["location"] == "/pro?locked=companies"
+
+
+def test_team_campaign_uses_department_questions_and_builds_master(signed_in):
+    client = signed_in
+    created = client.post("/api/v1/assessments", json={
+        "organization": {"name": "Focused Campaign Co", "industry": "Logistics",
+                         "employee_count": 45, "country": "Kenya"},
+        "department": "Finance & commercial", "respondent": "Owner"})
+    assert created.status_code == 201
+    org_id = created.json()["organization_id"]
+
+    shared = client.post(f"/company/{org_id}/share", data={
+        "department": "Finance & commercial", "min_respondents": "1",
+        "contact_mode": "required", "question_set": "Finance & commercial",
+        "target_roles": "Finance Manager"}, follow_redirects=False)
+    assert shared.status_code == 303
+    token = shared.headers["location"].rstrip("/").split("/")[-1]
+
+    landing = client.get(f"/q/{token}")
+    assert landing.status_code == 200
+    assert "Finance &amp; commercial" in landing.text
+
+    started = client.post(f"/q/{token}/start", data={
+        "name": "Finance Responder", "email": "finance@example.com"},
+        follow_redirects=False)
+    assert started.status_code == 303
+    assessment_id = int(started.headers["location"].split("/a/")[1].split("/")[0])
+
+    from elipsis_api import models, services
+    from elipsis_api.database import SessionLocal
+    with SessionLocal() as db:
+        assessment = db.get(models.Assessment, assessment_id)
+        questions = services.get_questions(db, assessment.questionnaire_id)
+        assert len(questions) == 63
+        assert {q.subdomain for q in questions[:9]} == {"MAN", "COL", "RPM"}
+        qids = [q.id for q in questions]
+
+    answer_data = {f"q{qid}": "4" for qid in qids}
+    submitted = client.post(f"/q/{token}/a/{assessment_id}/submit",
+                             data=answer_data, follow_redirects=False)
+    assert submitted.status_code == 303
+
+    with SessionLocal() as db:
+        camp = db.get(models.CollectCampaign, token)
+        assert camp.status == "reported"
+        assert camp.master_assessment_id
+        master = db.get(models.Assessment, camp.master_assessment_id)
+        assert master.source == "team"
+        master_qids = {q.id for q in services.get_questions(db, master.questionnaire_id)}
+        assert len(master_qids) == len(qids)

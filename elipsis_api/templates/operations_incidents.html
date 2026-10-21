@@ -5,7 +5,7 @@
   <div>
     <p class="eyebrow">Operations · Incident register</p>
     <h1>Log the failure before it becomes normal.</h1>
-    <p class="lede">A delay, claim, stock variance, or missed handoff is evidence. Record the impact, find the root cause, and promote the fix to the action board.</p>
+    <p class="lede">A delay, claim, stock variance, or missed handoff is evidence. Record the impact, find the root cause, and promote the fix to the action plan.</p>
   </div>
   <div class="ops-head-actions">
     <span class="ops-pill ops-state-danger">{{ counts.open }} open</span>
@@ -58,7 +58,7 @@
             </form>
             {% endif %}
             {% if row.action_item_id %}
-            <span class="ops-pill ops-state-good">On action board #{{ row.action_item_id }}</span>
+            <span class="ops-pill ops-state-good">On action plan #{{ row.action_item_id }}</span>
             {% elif row.status != 'resolved' %}
             <form method="post" action="/operations/incidents/{{ row.id }}/promote">
               <input type="hidden" name="organization_id" value="{{ row.organization_id }}">

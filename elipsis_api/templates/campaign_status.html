@@ -1,87 +1,122 @@
 {% extends "base.html" %}
-{% block title %}Shared questionnaire{% endblock %}
+{% block title %}Team questionnaire · {{ org.name }}{% endblock %}
 {% block content %}
-<section class="hero-lite">
-  <p class="eyebrow">Collect</p>
-  <h1>{{ campaign.title or 'Team questionnaire' }}</h1>
-  <p class="lede">For <strong>{{ org.name }}</strong>{% if dept %} · {{ dept.name }}{% endif %}. Employees use the link below. The report unlocks when the minimum responses are in.</p>
+<section class="head campaign-head">
+  <p class="eyebrow">TEAM QUESTIONNAIRE</p>
+  <h1>{{ org.name }} · {{ dept.name if dept else brief.label }}</h1>
+  <p class="lede">Share one link with the people closest to the work. Their answers combine into a department diagnostic, and the report updates as responses arrive.</p>
+  <div class="campaign-status-row">
+    <span class="status-pill {{ 'ok' if completed >= campaign.min_respondents else 'watch' }}">
+      {{ 'Quota met' if completed >= campaign.min_respondents else 'Collecting' }}
+    </span>
+    <span class="muted">{{ completed }} completed · {{ in_progress }} in progress · minimum {{ campaign.min_respondents }}</span>
+  </div>
 </section>
 
-<article class="block">
-  <h2>Share this link</h2>
-  <p class="share-box"><code id="shareUrl">{{ share_url }}</code>
-    <button type="button" class="btn sm" onclick="navigator.clipboard.writeText(document.getElementById('shareUrl').textContent)">Copy</button>
-  </p>
-  <ul class="clean-list">
-    <li>Deadline: <strong id="deadlineLive">{{ campaign.deadline or 'None' }}</strong></li>
-    <li>Minimum respondents: <strong>{{ campaign.min_respondents }}</strong></li>
-    <li>Responses completed: <strong>{{ completed }}</strong> / {{ campaign.min_respondents }}</li>
-    <li>In progress: <strong>{{ in_progress }}</strong></li>
-    <li>Status: <strong>{{ campaign.status }}</strong></li>
-    <li>Anonymous allowed: <strong>{{ 'Yes' if campaign.allow_anonymous else 'No' }}</strong></li>
-  </ul>
-  {% if campaign.note %}<p class="muted">{{ campaign.note }}</p>{% endif %}
+<div class="campaign-layout">
+  <div class="campaign-main">
+    <article class="block">
+      <h2>Share the questionnaire</h2>
+      <p class="muted">Send this link to {{ campaign.target_roles or brief.roles }}. No account is required.</p>
+      <div class="share-box">
+        <code id="shareUrl">{{ share_url }}</code>
+        <button type="button" class="btn sm" onclick="navigator.clipboard.writeText(document.getElementById('shareUrl').textContent)">Copy link</button>
+      </div>
+      <dl class="collect-facts">
+        <div><dt>Question set</dt><dd>{{ campaign.question_set or brief.label }}</dd></div>
+        <div><dt>Contact details</dt><dd>{{ (campaign.contact_mode or 'optional')|title }}</dd></div>
+        <div><dt>Deadline</dt><dd id="deadlineLive">{{ campaign.deadline or 'None set' }}</dd></div>
+        <div><dt>Minimum responses</dt><dd>{{ campaign.min_respondents }}</dd></div>
+      </dl>
+      {% if campaign.note %}<p class="collect-note">{{ campaign.note }}</p>{% endif %}
+    </article>
 
-  {% if campaign.status == 'reported' and campaign.master_assessment_id %}
-  <p><a class="btn" href="/assessment/{{ campaign.master_assessment_id }}/results">Open finished report</a></p>
-  {% elif completed >= campaign.min_respondents %}
-  <p class="tag ok">Quota met — report is being prepared. Refresh if the button is not ready yet.</p>
-  <p><a class="btn" href="/company/campaign/{{ campaign.token }}/finalize">Open report</a></p>
-  {% else %}
-  <p class="muted">Waiting for {{ campaign.min_respondents - completed }} more completed response(s).</p>
-  {% endif %}
-</article>
-
-<article class="block">
-  <h2>Responses</h2>
-  <ul class="clean-list">
-    {% for r in responses %}
-    <li>
-      {% if r.is_anonymous %}Anonymous{% else %}{{ r.respondent_name or r.respondent_email or 'Respondent' }}{% endif %}
-      — {{ r.status }}
-      {% if r.status == 'completed' and r.assessment_id %}
-      · <a href="/assessment/{{ r.assessment_id }}/results">view</a>
+    <article class="block">
+      <h2>Result</h2>
+      {% if master_result %}
+      <div class="campaign-result">
+        <div><span>Readiness index</span><strong>{{ master_result.readiness_index }}<small>/100</small></strong></div>
+        <div><span>Maturity band</span><strong class="text-strong">{{ master_result.maturity_band }}</strong></div>
+        <div><span>Confidence</span><strong>{{ master_result.confidence_index }}<small>%</small></strong></div>
+      </div>
+      <p class="muted small">This aggregate updates as each completed response arrives{% if campaign.status != 'reported' %}, and will be final once the minimum is met{% endif %}.</p>
+      <a class="btn" href="/assessment/{{ campaign.master_assessment_id }}/results">Open live report →</a>
+      {% else %}
+      <p class="muted">The aggregate report appears as soon as the first response is completed.</p>
       {% endif %}
-    </li>
-    {% else %}
-    <li class="muted">No responses yet.</li>
-    {% endfor %}
-  </ul>
-  <p><a href="/company">← Back to company</a></p>
-</article>
-<article class="block" id="team">
-  <h2>Team review</h2>
-  <p class="muted">Use comments to resolve data questions before sign-off. Approval records who signed and when; it does not replace the report.</p>
-  <form method="post" action="/company/campaign/{{ campaign.token }}/comment" class="stack">
-    <label>Comment<textarea name="body" rows="3" maxlength="2000" placeholder="e.g. Dispatch headcount includes casual staff — confirm before board pack." required></textarea></label>
-    <button class="btn sm" type="submit">Add comment</button>
-  </form>
-  {% if comments %}
-  <ul class="clean-list">
-    {% for c in comments %}<li><strong>{{ c.user_id }}</strong> · {{ c.created_at }}<br>{{ c.body }}</li>{% endfor %}
-  </ul>
-  {% endif %}
-  <form method="post" action="/company/campaign/{{ campaign.token }}/approve" class="inline-form">
-    <select name="decision">
-      <option value="approved">Approve for board pack</option>
-      <option value="changes_requested">Request changes</option>
-    </select>
-    <input name="note" placeholder="Optional note" maxlength="2000">
-    <button class="btn sm" type="submit">Record decision</button>
-  </form>
-  {% if approvals %}
-  <ul class="clean-list">
-    {% for a in approvals %}<li><strong>{{ a.decision|replace('_',' ')|title }}</strong> · user {{ a.user_id }} · {{ a.created_at }}{% if a.note %}<br>{{ a.note }}{% endif %}</li>{% endfor %}
-  </ul>
-  {% endif %}
-</article>
+    </article>
+
+    <article class="block">
+      <h2>Responses</h2>
+      <ul class="response-list">
+        {% for r in responses %}
+        <li>
+          <div>
+            <strong>{% if r.is_anonymous %}Anonymous{% else %}{{ r.respondent_name or r.respondent_email or 'Respondent' }}{% endif %}</strong>
+            <span class="status-pill {{ 'ok' if r.status == 'completed' else 'watch' }}">{{ r.status }}</span>
+          </div>
+          {% if r.status == 'completed' and r.assessment_id %}
+          <a class="text-link" href="/assessment/{{ r.assessment_id }}/results">View response</a>
+          {% endif %}
+        </li>
+        {% else %}
+        <li class="muted">No responses yet. Share the link above to begin.</li>
+        {% endfor %}
+      </ul>
+      <p><a class="text-link" href="/company">← Back to company</a></p>
+    </article>
+
+    <article class="block" id="team">
+      <h2>Team review</h2>
+      <p class="muted">Use comments to resolve data questions before sign-off. An approval records who signed and when; it does not replace the report.</p>
+      <form method="post" action="/company/campaign/{{ campaign.token }}/comment" class="stack">
+        <label>Comment<textarea name="body" rows="3" maxlength="2000" placeholder="e.g. Dispatch headcount includes casual staff — confirm before the board pack." required></textarea></label>
+        <button class="btn sm" type="submit">Add comment</button>
+      </form>
+      {% if comments %}
+      <ul class="clean-list">
+        {% for c in comments %}<li><strong>{{ c.user_id }}</strong> · {{ c.created_at }}<br>{{ c.body }}</li>{% endfor %}
+      </ul>
+      {% endif %}
+      <form method="post" action="/company/campaign/{{ campaign.token }}/approve" class="inline-form">
+        <select name="decision">
+          <option value="approved">Approve for board pack</option>
+          <option value="changes_requested">Request changes</option>
+        </select>
+        <input name="note" placeholder="Optional note" maxlength="2000">
+        <button class="btn sm" type="submit">Record decision</button>
+      </form>
+      {% if approvals %}
+      <ul class="clean-list">
+        {% for a in approvals %}<li><strong>{{ a.decision|replace('_',' ')|title }}</strong> · user {{ a.user_id }} · {{ a.created_at }}{% if a.note %}<br>{{ a.note }}{% endif %}</li>{% endfor %}
+      </ul>
+      {% endif %}
+    </article>
+  </div>
+
+  <aside class="campaign-side">
+    <section class="block side-card">
+      <h3>What leadership receives</h3>
+      <p class="muted small">{{ brief.promise }}</p>
+      <ol class="opp">
+        <li>An aggregate readiness score.</li>
+        <li>The department's costed constraint.</li>
+        <li>A 90-day action plan with owners.</li>
+      </ol>
+    </section>
+    <section class="block side-card">
+      <h3>Response integrity</h3>
+      <p class="muted small">Individual answers are visible to authorised company users. Anonymous responses never store names or email addresses.</p>
+    </section>
+  </aside>
+</div>
 
 <script>
 (function(){
   var el = document.getElementById('deadlineLive');
   if (!el) return;
   var raw = el.textContent.trim();
-  if (!raw || raw === 'None') return;
+  if (!raw || raw === 'None set') return;
   function tick(){
     var end = Date.parse(raw);
     if (isNaN(end)) return;

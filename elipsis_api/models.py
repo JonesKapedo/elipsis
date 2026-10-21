@@ -28,10 +28,20 @@ class Organization(Base):
     annual_revenue_min: Mapped[float | None] = mapped_column(Float)
     annual_revenue_max: Mapped[float | None] = mapped_column(Float)
     company_size: Mapped[str | None] = mapped_column(String)
+    contact_name: Mapped[str | None] = mapped_column(String)
     contact_email: Mapped[str | None] = mapped_column(String)
     contact_phone: Mapped[str | None] = mapped_column(String)
     website: Mapped[str | None] = mapped_column(String)
     description: Mapped[str | None] = mapped_column(Text)
+    legal_name: Mapped[str | None] = mapped_column(String)
+    registration_number: Mapped[str | None] = mapped_column(String)
+    tax_id: Mapped[str | None] = mapped_column(String)
+    address: Mapped[str | None] = mapped_column(String)
+    timezone: Mapped[str | None] = mapped_column(String)
+    fiscal_year_start: Mapped[str | None] = mapped_column(String)
+    operating_sites: Mapped[str | None] = mapped_column(String)
+    primary_services: Mapped[str | None] = mapped_column(Text)
+    systems_used: Mapped[str | None] = mapped_column(Text)
 
 
 class Department(Base):
@@ -91,6 +101,7 @@ class Assessment(Base):
     maturity_band: Mapped[str | None] = mapped_column(String)
     # New field for scope selection
     scope: Mapped[str | None] = mapped_column(String, default="whole_organization")
+    source: Mapped[str | None] = mapped_column(String, default="self")
     review_due_at: Mapped[str | None] = mapped_column(String)
     review_note: Mapped[str | None] = mapped_column(Text)
 
@@ -467,6 +478,11 @@ class UserPref(Base):
     partner_name: Mapped[str | None] = mapped_column(String)
     partner_footer: Mapped[str | None] = mapped_column(String)
     partner_accent: Mapped[str | None] = mapped_column(String)
+    job_title: Mapped[str | None] = mapped_column(String)
+    default_organization_id: Mapped[int | None] = mapped_column(Integer)
+    default_department: Mapped[str | None] = mapped_column(String)
+    notify_email: Mapped[int | None] = mapped_column(Integer, default=1)
+    onboarding_complete: Mapped[int | None] = mapped_column(Integer, default=0)
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
 
 
@@ -526,6 +542,9 @@ class CollectCampaign(Base):
     deadline: Mapped[str | None] = mapped_column(String)
     min_respondents: Mapped[int | None] = mapped_column(Integer, default=1)
     allow_anonymous: Mapped[int | None] = mapped_column(Integer, default=0)
+    contact_mode: Mapped[str | None] = mapped_column(String, default="optional")
+    question_set: Mapped[str | None] = mapped_column(String)
+    target_roles: Mapped[str | None] = mapped_column(String)
     status: Mapped[str | None] = mapped_column(String, default="collecting")
     note: Mapped[str | None] = mapped_column(Text)
     master_assessment_id: Mapped[int | None] = mapped_column(
@@ -545,6 +564,7 @@ class CollectResponse(Base):
     respondent_email: Mapped[str | None] = mapped_column(String)
     is_anonymous: Mapped[int | None] = mapped_column(Integer, default=0)
     status: Mapped[str | None] = mapped_column(String, default="in_progress")
+    submitted_at: Mapped[str | None] = mapped_column(String)
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
 
 

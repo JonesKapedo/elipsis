@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from elipsis_api import (
     benchmarks,
+    departments,
     logistics,
     models,
     schemas,
@@ -346,7 +347,8 @@ def login(request: Request, email: str = Form(...), password: str = Form(...),
     if old:
         services.delete_session(db, old)
     token = services.create_session(db, account.id)
-    response = RedirectResponse(nxt or "/dashboard", status_code=303)
+    dest = nxt or ("/dashboard" if services.owned_org_ids(db, account) else "/setup")
+    response = RedirectResponse(dest, status_code=303)
     _set_session_cookie(response, token)
     return response
 
@@ -355,7 +357,10 @@ def login(request: Request, email: str = Form(...), password: str = Form(...),
 def logout(request: Request, db: Session = Depends(get_db)):
     services.delete_session(db, request.cookies.get(SESSION_COOKIE))
     response = RedirectResponse("/", status_code=303)
-    response.delete_cookie(SESSION_COOKIE, path="/")
+    response.delete_cookie(
+        SESSION_COOKIE, path="/", secure=_SECURE_COOKIE,
+        httponly=True, samesite="lax",
+    )
     return response
 
 
@@ -395,78 +400,111 @@ def assessments(request: Request, user=Depends(get_current_user), db: Session = 
          "focus": company.id if company is not None else None})
 
 
+def _start_context(db: Session, user) -> dict:
+    orgs = services.list_organizations(db, services.visible_org_ids(db, user))
+    prefs = services.user_prefs(db, user)
+    return {
+        "organizations": orgs,
+        "prefs": prefs,
+        "is_pro": services.is_pro_user(db, user),
+        "departments": departments.DEPARTMENTS,
+        "department_labels": departments.DEPARTMENT_LABELS,
+        "brief": departments.department_brief(prefs.default_department),
+        "total_questions": _question_count(db),
+    }
+
+
 @router.get("/start")
 def start_get(request: Request, user=Depends(get_current_user),
               db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
-    visible = services.visible_org_ids(db, user)
-    orgs = services.list_organizations(db, visible)
+    context = _start_context(db, user)
+    orgs = context["organizations"]
+    if not orgs:
+        return RedirectResponse("/setup?next=assessment", status_code=303)
     focus = _int_param(request, "org")
     selected = next((org for org in orgs if org.id == focus), None)
+    if selected is None:
+        preferred = context["prefs"].default_organization_id
+        selected = next((org for org in orgs if org.id == preferred), None)
+    if selected is None:
+        selected = orgs[0]
+    department = context["prefs"].default_department or "Operations"
+    if department not in departments.DEPARTMENT_LABELS:
+        department = "Operations"
     return templates.TemplateResponse(
         request, "start.html",
-        {"user": user,
-         "organizations": orgs,
-         "company": selected,
+        {"user": user, **context, "company": selected,
          "company_context": services.company_context(selected),
-         "total_questions": _question_count(db), "error": None})
+         "department": department,
+         "brief": departments.department_brief(department),
+         "method": request.query_params.get("method") or "self",
+         "error": None})
 
 
 @router.post("/start")
 def start_post(request: Request,
                organization_id: str = Form(""),
-               organization_name: str = Form(""),
-               industry: str = Form(""),
-               sub_industry: str = Form(""),
-               employee_count: str = Form(""),
-               revenue_band: str = Form(""),
-               country: str = Form(""),
-               city: str = Form(""),
                department: str = Form("Operations"),
                respondent: str = Form(""),
+               method: str = Form("self"),
+               deadline_date: str = Form(""),
+               deadline_time: str = Form("17:00"),
+               min_respondents: int = Form(3),
+               contact_mode: str = Form("optional"),
+               target_roles: str = Form(""),
+               note: str = Form(""),
                user=Depends(get_current_user),
                db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
+    context = _start_context(db, user)
+    orgs = context["organizations"]
+    if not orgs:
+        return RedirectResponse("/setup?next=assessment", status_code=303)
     try:
-        if organization_id.strip().isdigit():
-            org_id = int(organization_id)
-            if not services.can_access_org(db, user, org_id):
-                raise ValueError("organization not found")
-            payload = schemas.AssessmentIn(
-                organization_id=org_id,
-                department=department.strip() or "Operations",
-                respondent=(respondent or "").strip() or None,
+        org_id = int(organization_id) if organization_id.strip().isdigit() else 0
+        if not org_id or not services.can_access_org(db, user, org_id):
+            raise ValueError("Select one of your saved companies.")
+        dept = department.strip() or "Operations"
+        if method == "team":
+            deadline = ""
+            if deadline_date.strip():
+                deadline = f"{deadline_date.strip()}T{(deadline_time or '17:00').strip()}"
+            camp = services.create_collect_campaign(
+                db, organization_id=org_id, user_id=user.id, department=dept,
+                deadline=deadline, min_respondents=min_respondents,
+                contact_mode=contact_mode, question_set=dept,
+                target_roles=target_roles, note=note,
             )
-        else:
-            name = (organization_name or "").strip()
-            if not name:
-                raise ValueError("Provide a company name or pick an existing one.")
-            payload = schemas.AssessmentIn(
-                organization=schemas.OrganizationIn(
-                    name=name,
-                    industry=(industry or "").strip()[:120] or None,
-                    sub_industry=(sub_industry or "").strip()[:120] or None,
-                    employee_count=_optional_int(employee_count),
-                    revenue_band=(revenue_band or "").strip()[:80] or None,
-                    country=(country or "").strip()[:80] or None,
-                    city=(city or "").strip()[:80] or None,
-                ),
-                department=department.strip() or "Operations",
-                respondent=(respondent or "").strip() or None,
-            )
+            prefs = context["prefs"]
+            prefs.default_organization_id = org_id
+            prefs.default_department = dept
+            db.commit()
+            return RedirectResponse(f"/company/campaign/{camp.token}", status_code=303)
+        payload = schemas.AssessmentIn(
+            organization_id=org_id,
+            department=dept,
+            respondent=(respondent or "").strip() or None,
+            source="self",
+        )
         assessment = services.create_assessment(db, payload)
-        services.claim_org(db, user.id, assessment.organization_id)
+        prefs = context["prefs"]
+        prefs.default_organization_id = org_id
+        prefs.default_department = dept
+        db.commit()
     except Exception as exc:  # noqa: BLE001
         print(f"[elipsis] start assessment failed: {exc}", flush=True)
-        visible = services.visible_org_ids(db, user)
+        selected = next((org for org in orgs if str(org.id) == organization_id), orgs[0])
         return templates.TemplateResponse(
             request, "start.html",
-            {"user": user, "error": str(exc),
-             "total_questions": _question_count(db),
-             "company": None, "company_context": None,
-             "organizations": services.list_organizations(db, visible)},
+            {"user": user, **context, "error": str(exc),
+             "company": selected,
+             "company_context": services.company_context(selected),
+             "department": department,
+             "brief": departments.department_brief(department),
+             "method": method},
             status_code=400)
     return RedirectResponse(f"/assessment/{assessment.id}/step/1", status_code=303)
 

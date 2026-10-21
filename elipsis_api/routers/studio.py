@@ -9,7 +9,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from elipsis_api import models, paystack, services, services_webhooks
+from elipsis_api import departments, models, paystack, security, services, services_webhooks
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
 from elipsis_api.narrative import company_portrait
@@ -54,6 +54,107 @@ def _parse_staff(raw: str):
     return int(raw) if raw.isdigit() and int(raw) > 0 else None
 
 
+@router.get("/setup")
+def company_setup(request: Request, user=Depends(get_current_user),
+                  db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    orgs = _owned_orgs(db, user)
+    new_mode = request.query_params.get("new") == "1"
+    if new_mode and orgs and not services.is_pro_user(db, user):
+        return RedirectResponse("/pro?locked=companies", status_code=303)
+    focus = request.query_params.get("org")
+    selected = next((org for org in orgs if str(org.id) == focus), None)
+    if selected is None and orgs and not new_mode:
+        selected = orgs[0]
+    return templates.TemplateResponse(request, "company_setup.html", {
+        "user": user, "company": selected, "organizations": orgs,
+        "context": services.company_context(selected),
+        "prefs": _prefs(db, user),
+        "departments": departments.DEPARTMENTS,
+        "next": request.query_params.get("next") or "",
+        "is_new": new_mode or not orgs,
+        "is_pro": services.is_pro_user(db, user),
+    })
+
+
+@router.post("/setup")
+def company_setup_save(request: Request,
+                       organization_id: str = Form(""),
+                       name: str = Form(...),
+                       legal_name: str = Form(""),
+                       industry: str = Form("Logistics"),
+                       sub_industry: str = Form(""),
+                       employee_count: str = Form(""),
+                       revenue_band: str = Form(""),
+                       country: str = Form(""),
+                       city: str = Form(""),
+                       address: str = Form(""),
+                       timezone: str = Form(""),
+                       fiscal_year_start: str = Form(""),
+                       operating_sites: str = Form(""),
+                       primary_services: str = Form(""),
+                       systems_used: str = Form(""),
+                       website: str = Form(""),
+                       registration_number: str = Form(""),
+                       tax_id: str = Form(""),
+                       contact_name: str = Form(""),
+                       contact_email: str = Form(""),
+                       contact_phone: str = Form(""),
+                       default_department: str = Form("Operations"),
+                       description: str = Form(""),
+                       next: str = Form(""),
+                       new: str = Form(""),
+                       user=Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    orgs = _owned_orgs(db, user)
+    org = None
+    if organization_id.strip().isdigit():
+        org = next((row for row in orgs if row.id == int(organization_id)), None)
+    creating = org is None and (not orgs or new == "1")
+    if creating:
+        if orgs and not services.is_pro_user(db, user):
+            return RedirectResponse("/pro?locked=companies", status_code=303)
+        org = models.Organization(name=name.strip()[:160])
+        db.add(org)
+        db.flush()
+    if org is None:
+        return RedirectResponse("/company", status_code=303)
+    org.name = name.strip()[:160]
+    org.legal_name = legal_name.strip()[:160] or None
+    org.industry = industry.strip()[:120] or None
+    org.sub_industry = sub_industry.strip()[:120] or None
+    org.employee_count = _parse_staff(employee_count)
+    org.revenue_band = revenue_band.strip()[:80] or None
+    org.country = country.strip()[:80] or None
+    org.city = city.strip()[:80] or None
+    org.address = address.strip()[:240] or None
+    org.timezone = timezone.strip()[:80] or None
+    org.fiscal_year_start = fiscal_year_start.strip()[:80] or None
+    org.operating_sites = operating_sites.strip()[:240] or None
+    org.primary_services = primary_services.strip()[:2000] or None
+    org.systems_used = systems_used.strip()[:2000] or None
+    org.website = website.strip()[:240] or None
+    org.registration_number = registration_number.strip()[:120] or None
+    org.tax_id = tax_id.strip()[:120] or None
+    org.contact_name = contact_name.strip()[:120] or None
+    org.contact_email = contact_email.strip()[:160] or None
+    org.contact_phone = contact_phone.strip()[:80] or None
+    org.description = description.strip()[:4000] or None
+    _claim(db, user.id, org.id)
+    prefs = _prefs(db, user)
+    prefs.default_organization_id = org.id
+    prefs.default_department = (
+        default_department if default_department in departments.DEPARTMENT_LABELS
+        else "Operations")
+    prefs.onboarding_complete = 1
+    db.commit()
+    if next == "assessment" or creating:
+        return RedirectResponse(f"/start?org={org.id}", status_code=303)
+    return RedirectResponse(f"/dashboard?org={org.id}", status_code=303)
+
+
 @router.get("/company")
 def my_company(request: Request, user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
@@ -81,7 +182,9 @@ def my_company(request: Request, user=Depends(get_current_user), db: Session = D
                 camps.append({
                     "token": c.token, "title": c.title, "status": c.status,
                     "deadline": c.deadline, "min_respondents": c.min_respondents,
-                    "completed": int(completed),
+                    "completed": int(completed), "question_set": c.question_set,
+                    "contact_mode": c.contact_mode, "target_roles": c.target_roles,
+                    "master_assessment_id": c.master_assessment_id,
                 })
         except Exception:
             camps = []
@@ -95,6 +198,9 @@ def my_company(request: Request, user=Depends(get_current_user), db: Session = D
         })
     return templates.TemplateResponse(request, "company.html", {
         "user": user, "rows": rows, "prefs": _prefs(db, user),
+        "is_pro": services.is_pro_user(db, user),
+        "departments": departments.DEPARTMENTS,
+        "limited": request.query_params.get("limit") == "1",
     })
 
 
@@ -108,6 +214,8 @@ def create_company(request: Request, name: str = Form(...), industry: str = Form
         return login_redirect()
     if not name.strip():
         return RedirectResponse("/company", status_code=303)
+    if _owned_orgs(db, user) and not services.is_pro_user(db, user):
+        return RedirectResponse("/company?limit=1", status_code=303)
     org = models.Organization(
         name=name.strip()[:160],
         industry=industry.strip()[:120] or None,
@@ -299,25 +407,58 @@ def settings(request: Request, user=Depends(get_current_user), db: Session = Dep
         "user": user, "prefs": _prefs(db, user), "webhooks": hooks,
         "deliveries": deliveries, "events": sorted(services_webhooks.ALLOWED_EVENTS),
         "organizations": services.list_organizations(db, org_ids),
+        "departments": departments.DEPARTMENTS,
         "webhook_message": request.query_params.get("webhook"),
+        "saved": request.query_params.get("saved") == "1",
+        "password_message": request.query_params.get("password"),
     })
 
 
 @router.post("/settings")
 def settings_save(symbol: str = Form("E"), motion: str = Form("on"), density: str = Form("comfortable"),
+                  name: str = Form(""), job_title: str = Form(""),
+                  default_organization_id: str = Form(""),
+                  default_department: str = Form(""),
+                  notify_email: str = Form(""),
                   user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
+    if (name or "").strip():
+        user.name = name.strip()[:120]
     prefs = _prefs(db, user)
     prefs.symbol = (symbol or "E").strip()[:2] or "E"
     prefs.motion = "off" if motion == "off" else "on"
     prefs.density = density if density in {"comfortable", "compact"} else "comfortable"
+    prefs.job_title = (job_title or "").strip()[:120] or None
+    prefs.notify_email = 1 if notify_email else 0
+    prefs.default_department = (
+        default_department if default_department in departments.DEPARTMENT_LABELS else None)
+    org_id = int(default_organization_id) if default_organization_id.strip().isdigit() else None
+    if org_id and services.can_access_org(db, user, org_id):
+        prefs.default_organization_id = org_id
     db.commit()
-    response = RedirectResponse("/settings", status_code=303)
+    response = RedirectResponse("/settings?saved=1", status_code=303)
     response.set_cookie("elipsis_motion", prefs.motion, max_age=60 * 60 * 24 * 365, samesite="lax")
     response.set_cookie("elipsis_density", prefs.density, max_age=60 * 60 * 24 * 365, samesite="lax")
     response.set_cookie("elipsis_symbol", prefs.symbol, max_age=60 * 60 * 24 * 365, samesite="lax")
     return response
+
+
+@router.post("/settings/password")
+def settings_password(current_password: str = Form(""), new_password: str = Form(""),
+                      confirm_password: str = Form(""),
+                      user=Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    if not security.verify_password(current_password, user.password_hash):
+        return RedirectResponse("/settings?password=current", status_code=303)
+    if len(new_password or "") < 8:
+        return RedirectResponse("/settings?password=short", status_code=303)
+    if new_password != confirm_password:
+        return RedirectResponse("/settings?password=mismatch", status_code=303)
+    user.password_hash = security.hash_password(new_password)
+    db.commit()
+    return RedirectResponse("/settings?password=changed", status_code=303)
 
 
 @router.post("/settings/webhooks")

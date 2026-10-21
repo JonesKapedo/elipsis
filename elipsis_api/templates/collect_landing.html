@@ -1,28 +1,44 @@
 {% extends "base.html" %}
 {% block title %}Questionnaire · {{ org.name }}{% endblock %}
 {% block content %}
-<section class="hero-lite">
-  <p class="eyebrow">{{ org.name }}</p>
-  <h1>{{ campaign.title or 'Readiness questionnaire' }}</h1>
-  <p class="lede">This short survey is tailored for <strong>{{ org.name }}</strong>{% if dept %} ({{ dept.name }}){% endif %}. Answer honestly — results feed a company readiness report.</p>
-  {% if campaign.note %}<p class="muted">{{ campaign.note }}</p>{% endif %}
-  {% if campaign.deadline %}<p>Please submit before <strong>{{ campaign.deadline }}</strong>.</p>{% endif %}
-  {% if closed %}
-  <p class="tag">This questionnaire is closed.</p>
-  {% else %}
-  <form method="post" action="/q/{{ campaign.token }}/start" class="stack block">
-    {% if campaign.allow_anonymous %}
-    <label class="check"><input type="checkbox" name="anonymous" value="1"> Answer anonymously</label>
+<section class="collect-landing">
+  <div class="collect-intro">
+    <p class="eyebrow">{{ org.name }} · {{ brief.label }}</p>
+    <h1>Your view of how the work runs</h1>
+    <p class="lede">{{ brief.intro }}</p>
+    <p class="muted">{{ brief.promise }}</p>
+    {% if campaign.note %}<div class="collect-note">{{ campaign.note }}</div>{% endif %}
+    <dl class="collect-facts">
+      <div><dt>Time needed</dt><dd>About 15 minutes</dd></div>
+      <div><dt>Responses combine</dt><dd>Minimum {{ campaign.min_respondents }}</dd></div>
+      {% if campaign.target_roles %}<div><dt>Invited</dt><dd>{{ campaign.target_roles }}</dd></div>{% endif %}
+      {% if campaign.deadline %}<div><dt>Deadline</dt><dd>{{ campaign.deadline.replace('T', ' · ') }}</dd></div>{% endif %}
+    </dl>
+    {% if closed %}<p class="flash">This questionnaire is no longer accepting responses.</p>{% endif %}
+  </div>
+
+  {% if not closed %}
+  <form method="post" action="/q/{{ campaign.token }}/start" class="block collect-form">
+    <h2>Before you begin</h2>
+    <p class="muted">Answer for the normal operating week and from your own experience. There are no right answers, and no documents are required.</p>
+    {% if request.query_params.get('missing') == 'contact' %}
+    <p class="error" role="alert">This questionnaire requires your name and work email.</p>
     {% endif %}
-    <div id="identityFields">
-      <label>Your name {% if not campaign.allow_anonymous %}<span class="req">*</span>{% endif %}
-        <input name="name" {% if not campaign.allow_anonymous %}required{% endif %} placeholder="Optional if anonymous">
-      </label>
-      <label>Work email {% if not campaign.allow_anonymous %}<span class="req">*</span>{% endif %}
-        <input type="email" name="email" {% if not campaign.allow_anonymous %}required{% endif %} placeholder="Optional if anonymous">
-      </label>
-    </div>
-    <button class="btn" type="submit">Start questionnaire →</button>
+    {% if campaign.contact_mode == 'anonymous' %}
+    <p class="collect-anon">Responses are anonymous. Your name and email will not be collected.</p>
+    {% else %}
+    <label>Full name{% if campaign.contact_mode == 'required' %} <em>required</em>{% endif %}
+      <input name="name" autocomplete="name" {% if campaign.contact_mode == 'required' %}required{% endif %} placeholder="Your name">
+    </label>
+    <label>Work email{% if campaign.contact_mode == 'required' %} <em>required</em>{% endif %}
+      <input type="email" name="email" autocomplete="email" {% if campaign.contact_mode == 'required' %}required{% endif %} placeholder="name@company.com">
+    </label>
+    {% if campaign.contact_mode == 'optional' %}
+    <p class="muted small">Contact details are optional. If you provide them, leadership can follow up on your answers.</p>
+    {% endif %}
+    {% endif %}
+    <button class="btn big full" type="submit">Begin questionnaire →</button>
+    <p class="muted small">Your answers save automatically as you move through each section.</p>
   </form>
   {% endif %}
 </section>
