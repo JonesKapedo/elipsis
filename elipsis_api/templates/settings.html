@@ -1,82 +1,166 @@
 {% extends "base.html" %}
 {% block title %}Settings{% endblock %}
 {% block content %}
-<section class="head">
+<section class="head settings-head">
   <p class="eyebrow">SETTINGS</p>
-  <h1>How Elipsis sits on your screen.</h1>
+  <h1>Account, defaults, and integrations.</h1>
+  <p class="lede">Keep your professional details current, choose what a new diagnostic should default to, and manage the systems that receive operating events.</p>
+  {% if saved %}<div class="flash ok">Settings saved.</div>{% endif %}
+  {% if password_message == 'changed' %}<div class="flash ok">Password changed. Use the new password the next time you sign in.</div>{% endif %}
+  {% if password_message == 'current' %}<div class="flash err">The current password is incorrect.</div>{% endif %}
+  {% if password_message == 'short' %}<div class="flash err">Use at least eight characters for the new password.</div>{% endif %}
+  {% if password_message == 'mismatch' %}<div class="flash err">The new passwords do not match.</div>{% endif %}
 </section>
-<form method="post" action="/settings" class="block stack">
-  <label>Mark in the diamond
-    <input name="symbol" maxlength="2" value="{{ prefs.symbol or 'E' }}">
-  </label>
-  <label>Motion
-    <select name="motion">
-      <option value="on" {% if prefs.motion != 'off' %}selected{% endif %}>On — quiet movement</option>
-      <option value="off" {% if prefs.motion == 'off' %}selected{% endif %}>Off — reduce motion</option>
-    </select>
-  </label>
-  <label>Density
-    <select name="density">
-      <option value="comfortable" {% if prefs.density != 'compact' %}selected{% endif %}>Comfortable</option>
-      <option value="compact" {% if prefs.density == 'compact' %}selected{% endif %}>Compact</option>
-    </select>
-  </label>
-  <button class="btn" type="submit">Save</button>
-</form>
 
-<section class="block" style="margin-top:1.2rem">
-  <div class="block-head"><h3>Webhooks</h3><span class="muted small">Signed event delivery for ERP/WMS workflows.</span></div>
-  {% if webhook_message %}
-  <div class="flash {{ 'err' if webhook_message in ['invalid','denied'] else 'ok' }}">{{ webhook_message|replace('_',' ') }}</div>
-  {% endif %}
-  {% if webhooks %}
-  <div class="table-wrap">
-    <table class="table">
-      <thead><tr><th>Endpoint</th><th>Events</th><th>Secret</th><th></th></tr></thead>
-      <tbody>
-        {% for hook in webhooks %}
-        <tr>
-          <td><code style="word-break:break-all">{{ hook.url }}</code></td>
-          <td class="small">{{ hook.events }}</td>
-          <td><code>{{ hook.secret }}</code></td>
-          <td>
-            <form method="post" action="/settings/webhooks/{{ hook.id }}/test" style="display:inline"><button class="btn ghost sm" type="submit">Test</button></form>
-            <form method="post" action="/settings/webhooks/{{ hook.id }}/delete" style="display:inline"><button class="btn ghost sm" type="submit">Delete</button></form>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+<div class="settings-layout">
+  <nav class="settings-nav block" aria-label="Settings sections">
+    <a href="#profile">Profile</a>
+    <a href="#defaults">Operating defaults</a>
+    <a href="#appearance">Appearance</a>
+    <a href="#security">Security</a>
+    <a href="#integrations">Integrations</a>
+  </nav>
+
+  <div class="settings-main">
+    <form method="post" action="/settings" class="block settings-block" id="profile">
+      <div class="section-label"><span>01</span><div><h2>Profile</h2><p>Used on reports, team questionnaires, and board packs.</p></div></div>
+      <div class="form-grid">
+        <label class="field">Full name
+          <input name="name" maxlength="120" value="{{ user.name or '' }}" autocomplete="name">
+        </label>
+        <label class="field">Work email
+          <input value="{{ user.email }}" disabled>
+        </label>
+        <label class="field">Role
+          <input name="job_title" maxlength="120" value="{{ prefs.job_title or '' }}" placeholder="e.g. Operations Director" autocomplete="organization-title">
+        </label>
+        <label class="field">Default department
+          <select name="default_department">
+            <option value="">No default</option>
+            {% for d in departments %}
+            <option value="{{ d.label }}" {% if prefs.default_department == d.label %}selected{% endif %}>{{ d.label }}</option>
+            {% endfor %}
+            <option value="Whole company" {% if prefs.default_department == 'Whole company' %}selected{% endif %}>Whole company</option>
+          </select>
+        </label>
+        <label class="field">Default company
+          <select name="default_organization_id">
+            <option value="">No default</option>
+            {% for org in organizations %}
+            <option value="{{ org.id }}" {% if prefs.default_organization_id == org.id %}selected{% endif %}>{{ org.name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label class="field field-check">
+          <input type="checkbox" name="notify_email" value="1" {% if prefs.notify_email %}checked{% endif %}>
+          <span>Email me when a team questionnaire reaches its minimum or an action becomes overdue.</span>
+        </label>
+      </div>
+
+      <div class="section-label" id="appearance"><span>02</span><div><h2>Appearance</h2><p>Small adjustments for legibility and motion sensitivity.</p></div></div>
+      <div class="form-grid">
+        <label class="field">Diamond mark
+          <input name="symbol" maxlength="2" value="{{ prefs.symbol or 'E' }}">
+        </label>
+        <label class="field">Motion
+          <select name="motion">
+            <option value="on" {% if prefs.motion != 'off' %}selected{% endif %}>On — subtle transitions</option>
+            <option value="off" {% if prefs.motion == 'off' %}selected{% endif %}>Off — reduce motion</option>
+          </select>
+        </label>
+        <label class="field">Density
+          <select name="density">
+            <option value="comfortable" {% if prefs.density != 'compact' %}selected{% endif %}>Comfortable</option>
+            <option value="compact" {% if prefs.density == 'compact' %}selected{% endif %}>Compact</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="settings-submit">
+        <p class="muted small">These preferences apply to this account on every device.</p>
+        <button class="btn" type="submit">Save settings</button>
+      </div>
+    </form>
+
+    <section class="block settings-block" id="security">
+      <div class="section-label"><span>03</span><div><h2>Security</h2><p>Change the password used for this account.</p></div></div>
+      <form method="post" action="/settings/password" class="stack">
+        <div class="form-grid">
+          <label class="field">Current password
+            <input type="password" name="current_password" autocomplete="current-password" required>
+          </label>
+          <label class="field">New password
+            <input type="password" name="new_password" minlength="8" autocomplete="new-password" required>
+          </label>
+          <label class="field">Confirm new password
+            <input type="password" name="confirm_password" minlength="8" autocomplete="new-password" required>
+          </label>
+        </div>
+        <button class="btn" type="submit">Change password</button>
+      </form>
+    </section>
+
+    <section class="block settings-block" id="integrations">
+      <div class="section-label"><span>04</span><div><h2>Integrations</h2><p>Signed webhooks for ERP, WMS, and operations workflows.</p></div></div>
+      {% if webhook_message %}
+      <div class="flash {{ 'err' if webhook_message in ['invalid','denied'] else 'ok' }}">{{ webhook_message|replace('_',' ') }}</div>
+      {% endif %}
+      {% if webhooks %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Endpoint</th><th>Events</th><th>Secret</th><th></th></tr></thead>
+          <tbody>
+            {% for hook in webhooks %}
+            <tr>
+              <td><code class="break">{{ hook.url }}</code></td>
+              <td class="small">{{ hook.events }}</td>
+              <td><code>{{ hook.secret }}</code></td>
+              <td class="row-actions">
+                <form method="post" action="/settings/webhooks/{{ hook.id }}/test"><button class="btn ghost sm" type="submit">Test</button></form>
+                <form method="post" action="/settings/webhooks/{{ hook.id }}/delete"><button class="btn ghost sm" type="submit">Delete</button></form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="muted small">No endpoints yet. Add one to receive action and questionnaire events.</p>
+      {% endif %}
+      {% if organizations %}
+      <details class="settings-details" {% if not webhooks %}open{% endif %}>
+        <summary>Add an endpoint</summary>
+        <form method="post" action="/settings/webhooks" class="stack">
+          <label class="field">Company
+            <select name="organization_id">
+              {% for org in organizations %}<option value="{{ org.id }}">{{ org.name }}</option>{% endfor %}
+            </select>
+          </label>
+          <label class="field">Endpoint URL
+            <input name="url" type="url" placeholder="https://ops.example.com/hooks/elipsis" required>
+          </label>
+          <fieldset class="check-grid">
+            <legend>Events</legend>
+            {% for event in events %}
+            <label class="check"><input type="checkbox" name="events" value="{{ event }}" {% if event == 'action.updated' %}checked{% endif %}> {{ event }}</label>
+            {% endfor %}
+          </fieldset>
+          <button class="btn" type="submit">Add endpoint</button>
+        </form>
+      </details>
+      {% endif %}
+      {% if deliveries %}
+      <h3>Recent deliveries</h3>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Event</th><th>Status</th><th>Code</th><th>When</th></tr></thead>
+          <tbody>
+            {% for d in deliveries %}<tr><td>{{ d.event }}</td><td><span class="tag {{ 'ok' if d.status == 'delivered' else 'warn' }}">{{ d.status }}</span></td><td>{{ d.response_code or '—' }}</td><td class="small">{{ d.created_at }}</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+    </section>
   </div>
-  {% else %}
-  <p class="muted small">No endpoints yet. Add one to receive action updates.</p>
-  {% endif %}
-  {% if organizations %}
-  <form method="post" action="/settings/webhooks" class="stack" style="margin-top:1rem">
-    <label>Organisation
-      <select name="organization_id">
-        {% for org in organizations %}<option value="{{ org.id }}">{{ org.name }}</option>{% endfor %}
-      </select>
-    </label>
-    <label>Endpoint URL <input name="url" type="url" placeholder="https://ops.example.com/hooks/elipsis" required></label>
-    <fieldset>
-      <legend>Events</legend>
-      {% for event in events %}
-      <label class="inline"><input type="checkbox" name="events" value="{{ event }}" {% if event == 'action.updated' %}checked{% endif %}> {{ event }}</label>
-      {% endfor %}
-    </fieldset>
-    <button class="btn" type="submit">Add endpoint</button>
-  </form>
-  {% endif %}
-  {% if deliveries %}
-  <div class="table-wrap" style="margin-top:1rem">
-    <table class="table">
-      <thead><tr><th>Event</th><th>Status</th><th>Code</th><th>When</th></tr></thead>
-      <tbody>
-        {% for d in deliveries %}<tr><td>{{ d.event }}</td><td><span class="tag {{ 'ok' if d.status == 'delivered' else 'warn' }}">{{ d.status }}</span></td><td>{{ d.response_code or '—' }}</td><td class="small">{{ d.created_at }}</td></tr>{% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% endif %}
-</section>
+</div>
 {% endblock %}

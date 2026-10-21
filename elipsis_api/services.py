@@ -31,11 +31,13 @@ from elipsis_api.services_core import (  # noqa: F401
     compute,
     compute_scenario,
     create_assessment,
+    create_collect_campaign,
     ensure_plan_items,
     get_assumptions,
     get_bank,
     get_questions,
     previous_assessment,
+    questionnaire_for_department,
     save,
     save_assumptions,
     seed,
@@ -66,6 +68,35 @@ def is_admin(user) -> bool:
         return True
     admin_email = (os.getenv("ELIPSIS_ADMIN_EMAIL") or DEFAULT_ADMIN_EMAIL).lower()
     return (getattr(user, "email", "") or "").lower() == admin_email
+
+
+def user_prefs(db: Session, user) -> models.UserPref:
+    if user is None:
+        raise ValueError("user required")
+    row = db.get(models.UserPref, user.id)
+    if row is None:
+        row = models.UserPref(user_id=user.id, symbol=(user.name or user.email or "E")[:1].upper())
+        db.add(row)
+        db.commit()
+        db.refresh(row)
+    return row
+
+
+def is_pro_user(db: Session, user) -> bool:
+    if user is None:
+        return False
+    if is_admin(user):
+        return True
+    prefs = db.get(models.UserPref, user.id)
+    if prefs is None or not prefs.pro_until:
+        return False
+    if prefs.pro_until == "active":
+        return True
+    from datetime import datetime
+    try:
+        return datetime.fromisoformat(prefs.pro_until) >= datetime.utcnow()
+    except ValueError:
+        return False
 
 
 def list_assessments(db: Session, org_ids: list[int] | None = None) -> list[dict[str, Any]]:
@@ -172,6 +203,26 @@ def can_access_org(db: Session, user, organization_id: int | None) -> bool:
     return organization_id in owned_org_ids(db, user)
 
 
+def company_completeness(org: models.Organization | None) -> dict[str, Any]:
+    fields = (
+        "name", "industry", "sub_industry", "employee_count", "revenue_band",
+        "country", "city", "legal_name", "registration_number", "website",
+        "contact_name", "contact_email", "contact_phone", "address",
+        "operating_sites", "primary_services", "systems_used",
+    )
+    if org is None:
+        return {"percent": 0, "complete": 0, "total": len(fields), "missing": list(fields)}
+    missing = [name for name in fields if not getattr(org, name, None)]
+    complete = len(fields) - len(missing)
+    return {
+        "percent": round(complete / len(fields) * 100),
+        "complete": complete,
+        "total": len(fields),
+        "missing": missing,
+        "is_complete": not missing,
+    }
+
+
 def company_context(org: models.Organization | None) -> dict[str, Any] | None:
     """Human-readable company profile used to tailor every operating page."""
     if org is None:
@@ -201,6 +252,15 @@ def company_context(org: models.Organization | None) -> dict[str, Any] | None:
         "location": location,
         "country": org.country or "",
         "city": org.city or "",
+        "legal_name": org.legal_name or "",
+        "website": org.website or "",
+        "contact_name": org.contact_name or "",
+        "contact_email": org.contact_email or "",
+        "contact_phone": org.contact_phone or "",
+        "operating_sites": org.operating_sites or "",
+        "primary_services": org.primary_services or "",
+        "systems_used": org.systems_used or "",
+        "completeness": company_completeness(org),
     }
 
 

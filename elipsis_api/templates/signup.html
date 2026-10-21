@@ -1,35 +1,39 @@
 {% extends "base.html" %}
-{% block title %}Create account{% endblock %}
+{% block title %}Create a company account{% endblock %}
 {% block body_class %}page-auth{% endblock %}
 {% block content %}
 <div class="auth auth-pro">
   <section class="auth-pitch">
-    <p class="eyebrow">JOIN ELIPSIS</p>
-    <h1>Give your company a baseline.</h1>
-    <p class="lede">Create a free account, describe your operation, and see where performance is leaking. No card. No implementation project. About 25 minutes.</p>
+    <p class="eyebrow">COMPANY ACCOUNTS</p>
+    <h1>Measure the operation before you change it.</h1>
+    <p class="lede">Create a company account, set up your operating profile, and turn one informed view into a scored baseline, a costed constraint, and a sequenced action plan.</p>
     <ul class="auth-points">
       <li>
         <span class="auth-icon">1</span>
         <div>
-          <strong>Tell us who you are</strong>
-          <p class="muted">A company seeking clarity, or an automation partner ready to deliver.</p>
+          <strong>Set the company context</strong>
+          <p class="muted">Sector, scale, geography, sites, services, and systems. This is what makes the output specific.</p>
         </div>
       </li>
       <li>
         <span class="auth-icon">2</span>
         <div>
-          <strong>Set up in under a minute</strong>
-          <p class="muted">Work email and a password. Your company profile takes it from there.</p>
+          <strong>Choose how to assess</strong>
+          <p class="muted">Answer directly, or send a department questionnaire to the people closest to the work.</p>
         </div>
       </li>
       <li>
         <span class="auth-icon">3</span>
         <div>
-          <strong>Act on real numbers</strong>
-          <p class="muted">{{ total_questions or 63 }} questions, live scoring, and a board-ready pack when you are ready.</p>
+          <strong>Leave with a decision</strong>
+          <p class="muted">A readiness index, peer context, the operating constraint, and a 90-day plan.</p>
         </div>
       </li>
     </ul>
+    <div class="auth-pilot-note">
+      <strong>Closed pilot</strong>
+      <p>Company accounts are open. Automation and assessment partners join by invitation while the marketplace is in pilot.</p>
+    </div>
   </section>
 
   <section class="auth-card auth-card-pro" aria-labelledby="signup-heading">
@@ -37,64 +41,40 @@
       <span class="mark" aria-hidden="true">{{ BRAND_MARK }}</span>
       <div>
         <strong>{{ BRAND_NAME }}</strong>
-        <span class="muted">New company</span>
+        <span class="muted">New company account</span>
       </div>
     </div>
 
     <div class="auth-card-head">
-      <h2 id="signup-heading">Create account</h2>
+      <h2 id="signup-heading">Create your account</h2>
       <p class="muted">Already registered? <a href="/login">Sign in</a></p>
     </div>
 
-    {% if error %}
-    <p class="error" role="alert">{{ error }}</p>
-    {% endif %}
+    {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
 
     <form method="post" action="/signup" class="stack" novalidate>
-      <fieldset style="border:none;padding:0;margin:0 0 1rem;">
-        <legend class="muted" style="margin-bottom:0.5rem;font-size:0.9rem;">I am registering as</legend>
-        <div style="display:flex;flex-direction:column;gap:0.6rem;">
-          <label style="display:flex;align-items:flex-start;gap:0.6rem;cursor:pointer;padding:0.75rem;border:1px solid var(--border, #e5e7eb);border-radius:8px;">
-            <input type="radio" name="user_type" value="client" {% if not form or form.user_type != 'bidder' %}checked{% endif %} required style="margin-top:0.2rem;">
-            <div>
-              <strong>Company</strong>
-              <p class="muted small" style="margin:0.15rem 0 0;">I want to measure operating readiness, run diagnostics, and request support.</p>
-            </div>
-          </label>
-          <label style="display:flex;align-items:flex-start;gap:0.6rem;cursor:pointer;padding:0.75rem;border:1px solid var(--border, #e5e7eb);border-radius:8px;">
-            <input type="radio" name="user_type" value="bidder" {% if form and form.user_type == 'bidder' %}checked{% endif %} style="margin-top:0.2rem;">
-            <div>
-              <strong>Automation partner</strong>
-              <p class="muted small" style="margin:0.15rem 0 0;">I deliver automation and physical assessments. I want to bid on open requests.</p>
-            </div>
-          </label>
-        </div>
-      </fieldset>
-
+      <input type="hidden" name="user_type" value="client">
       <label for="name">Full name
-        <input id="name" name="name" required maxlength="120"
-               placeholder="Alex Morgan" value="{{ form.name if form else '' }}" autofocus>
+        <input id="name" name="name" required maxlength="120" placeholder="Alex Morgan"
+               value="{{ form.name if form else '' }}" autocomplete="name" autofocus>
       </label>
       <label for="email">Work email
         <input id="email" type="email" name="email" required maxlength="200"
-               autocomplete="email" placeholder="jane@company.com"
+               autocomplete="email" placeholder="name@company.com"
                value="{{ form.email if form else '' }}" spellcheck="false">
       </label>
       <label for="password">Password
-        <input id="password" type="password" name="password" required
-               autocomplete="new-password" placeholder="At least 8 characters" minlength="8">
+        <input id="password" type="password" name="password" required minlength="8"
+               autocomplete="new-password" placeholder="At least 8 characters">
       </label>
       <label for="password2">Confirm password
-        <input id="password2" type="password" name="password2" required
-               autocomplete="new-password" placeholder="Repeat password" minlength="8">
+        <input id="password2" type="password" name="password2" required minlength="8"
+               autocomplete="new-password" placeholder="Repeat password">
       </label>
-      <button class="btn big full" type="submit">Create account & continue →</button>
+      <button class="btn big full" type="submit">Create account and set up company →</button>
     </form>
 
-    <p class="auth-secure muted">
-      By continuing you agree to use {{ BRAND_NAME }} for legitimate business assessment.
-      Your account and company data are private to your organisation.
-    </p>
+    <p class="auth-secure muted">By continuing you agree to use {{ BRAND_NAME }} for legitimate business assessment. Your company data stays private to your organisation.</p>
   </section>
 </div>
 {% endblock %}

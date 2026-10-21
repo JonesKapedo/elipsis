@@ -19,11 +19,16 @@ def register_user(db: Session, email: str, password: str, name: str | None = Non
         raise ValueError("An account with this email already exists. Sign in instead.")
     if user_type not in ("client", "bidder"):
         user_type = "client"
+    if user_type == "bidder":
+        raise ValueError(
+            "Provider accounts are invitation-only while the marketplace is in closed pilot. "
+            "Create a company account or contact us for an invitation."
+        )
     user = models.User(
         email=email,
         name=name,
-        role="bidder" if user_type == "bidder" else "client",
-        user_type=user_type,
+        role="client",
+        user_type="client",
         password_hash=security.hash_password(password),
         is_admin=False,
     )

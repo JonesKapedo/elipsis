@@ -118,7 +118,7 @@
 <section class="two-col">
   <article class="block">
     <h3>Re-assessment cadence</h3>
-    <p class="muted small">Set the next review date. It appears on the dashboard and action board when it approaches.</p>
+    <p class="muted small">Set the next review date. It appears on the dashboard and action plan when it approaches.</p>
     <form method="post" action="/assessment/{{ assessment.id }}/review" class="stack">
       <label>Review date <input type="date" name="review_due_at" value="{{ assessment.review_due_at or '' }}"></label>
       <label>Focus for next review <input name="review_note" value="{{ assessment.review_note or '' }}" placeholder="e.g. dispatch cycle time" maxlength="2000"></label>

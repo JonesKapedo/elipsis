@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% block title %}Section {{ step.number }} · {{ org.name }}{% endblock %}
+{% block title %}{{ org.name }} questionnaire · Section {{ step.number }}{% endblock %}
 {% block content %}
-<div class="assess-layout collect-mode step-layout"
+<div class="assess-layout collect-mode step-layout step-layout-full"
      data-live-url="/q/{{ campaign.token }}/a/{{ assessment.id }}/live"
      data-segment="{{ step.subdomain }}"
      data-step="{{ step.number }}"
@@ -10,43 +10,46 @@
   <div class="progress-sticky no-print" role="progressbar"
        aria-valuenow="{{ ((step.number-1)/total_steps*100)|round|int }}" aria-valuemin="0" aria-valuemax="100">
     <div class="progress-sticky-inner">
-      <div class="progress-sticky-bar">
-        <span id="stickyFill" style="width:{{ ((step.number-1)/total_steps*100)|round }}%"></span>
-      </div>
+      <div class="progress-sticky-bar"><span id="stickyFill" style="width:{{ ((step.number-1)/total_steps*100)|round }}%"></span></div>
       <div class="progress-sticky-meta">
         <span id="stickySection">Section {{ step.number }} of {{ total_steps }}</span>
         <span class="sep">·</span>
         <span>{{ org.name }}</span>
         <span class="sep">·</span>
-        <span id="stickySave" class="save-pill idle">Auto-save on</span>
+        <span id="stickySave" class="save-pill idle">Answers save automatically</span>
       </div>
     </div>
   </div>
 
   <div class="assess-main">
-    <header class="step-head">
-      <p class="eyebrow">{{ org.name }} · section {{ step.number }} of {{ total_steps }}</p>
+    <header class="step-head assess-head">
+      <p class="eyebrow">{{ org.name }} · {{ brief.label }} · section {{ step.number }} of {{ total_steps }}</p>
       <h1>{{ SUBDOMAIN_LABELS.get(step.subdomain, step.subdomain) }}</h1>
+      <p class="lede">{{ brief.intro }}</p>
+      <div class="answer-guidance">
+        <strong>Answer from your own experience of the work.</strong>
+        <span>Use the normal week, not the best week. Your response is combined with colleagues' answers to give leadership a reliable picture.</span>
+      </div>
       <div class="stepper-track"><span id="trackFill" style="width:{{ ((step.number-1)/total_steps*100)|round }}%"></span></div>
     </header>
 
     <form id="answerForm" method="post" action="/q/{{ campaign.token }}/a/{{ assessment.id }}/submit" class="stack">
       {% for q in step.questions %}
       {% set a = answers.get(q.id) or {} %}
-      <article class="qcard" data-qid="{{ q.id }}">
+      <article class="qcard qcard-full" data-qid="{{ q.id }}" style="--i:{{ loop.index0 }}">
         <div class="qmeta">
           <span class="qcode">{{ q.code }}</span>
           <span class="qnum">Question {{ loop.index }} of {{ step.total }}</span>
         </div>
         <p class="qtext">{{ q.text }}</p>
+        {% if q.why %}<p class="why"><strong>Why this matters:</strong> {{ q.why }}</p>{% endif %}
         <div class="choices">
           {% for score, emoji, label, help_text in SCALES.get(q.scale) or SCALES.get('coverage_more') or [] %}
           <label class="choice">
-            <input type="radio" name="q{{ q.id }}" value="{{ score }}"
-                   {% if a.get('score') == score %}checked{% endif %}>
+            <input type="radio" name="q{{ q.id }}" value="{{ score }}" {% if a.get('score') == score %}checked{% endif %} required>
             <span class="choice-face">
-              <span class="choice-emoji">{{ emoji }}</span>
               <span class="choice-label">{{ label }}</span>
+              <span class="choice-help">{{ help_text }}</span>
             </span>
           </label>
           {% endfor %}
@@ -59,11 +62,11 @@
         {% if step.number > 1 %}
         <a class="btn ghost" href="/q/{{ campaign.token }}/a/{{ assessment.id }}/step/{{ step.number - 1 }}">← Back</a>
         {% else %}<span></span>{% endif %}
-        <span class="muted save-status" id="saveState"><span class="save-dot"></span> Answers auto-save</span>
+        <span class="muted save-status" id="saveState"><span class="save-dot"></span> Answers save automatically</span>
         {% if is_last %}
-        <button class="btn" type="submit">Submit questionnaire</button>
+        <button class="btn" type="submit">Submit questionnaire →</button>
         {% else %}
-        <a class="btn" id="nextBtn" href="/q/{{ campaign.token }}/a/{{ assessment.id }}/step/{{ step.number + 1 }}">Next section →</a>
+        <a class="btn" id="nextBtn" href="/q/{{ campaign.token }}/a/{{ assessment.id }}/step/{{ step.number + 1 }}">Save and continue →</a>
         {% endif %}
       </nav>
     </form>
@@ -89,7 +92,7 @@
     var sticky = document.getElementById('stickySave');
     if (el) { el.innerHTML = '<span class="save-dot"></span> ' + msg; el.className = 'muted save-status ' + (state || ''); }
     if (sticky) {
-      sticky.textContent = state === 'ok' ? 'Saved' : state === 'busy' ? 'Saving…' : state === 'err' ? 'Save failed' : 'Auto-save on';
+      sticky.textContent = state === 'ok' ? 'Saved' : state === 'busy' ? 'Saving…' : state === 'err' ? 'Save failed' : 'Answers save automatically';
       sticky.className = 'save-pill ' + (state || 'idle');
     }
   }
@@ -98,19 +101,34 @@
     fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'same-origin',
       body: JSON.stringify({ answers: collect(), segment: segment }) })
       .then(function(r){ return r.ok ? r.json() : Promise.reject(); })
-      .then(function(){ setSave('Saved ✓', 'ok'); if (cb) cb(); })
-      .catch(function(){ setSave('Could not save', 'err'); if (cb) cb(); });
+      .then(function(){ setSave('Saved', 'ok'); if (cb) cb(); })
+      .catch(function(){ setSave('Could not save — retrying', 'err'); if (cb) cb(); });
+  }
+  function validate() {
+    var ok = true;
+    form.querySelectorAll('.qcard').forEach(function(card){
+      if (!card.querySelector('input[type=radio]:checked')) {
+        card.classList.add('needs-answer');
+        if (ok) card.scrollIntoView({behavior:'smooth', block:'center'});
+        ok = false;
+      } else card.classList.remove('needs-answer');
+    });
+    if (!ok) setSave('Answer every question in this section before continuing', 'err');
+    return ok;
   }
   var timer = null;
   form.addEventListener('change', function(event){
     form.querySelectorAll('.choice').forEach(function(c){ c.classList.remove('picked'); });
     var lbl = event.target.closest('.choice');
     if (lbl) lbl.classList.add('picked');
+    var card = event.target.closest('.qcard');
+    if (card) card.classList.remove('needs-answer');
     clearTimeout(timer); timer = setTimeout(function(){ push(); }, 300);
   });
   var next = document.getElementById('nextBtn');
   if (next) {
     next.addEventListener('click', function(ev){
+      if (!validate()) { ev.preventDefault(); return; }
       ev.preventDefault();
       push(function(){ window.location.href = next.href; });
     });

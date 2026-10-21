@@ -1,128 +1,172 @@
 {% extends "base.html" %}
-{% block title %}New assessment{% endblock %}
+{% block title %}Start a diagnostic{% endblock %}
 {% block content %}
-<section class="head">
+<section class="head assess-head">
   <p class="eyebrow">NEW DIAGNOSTIC</p>
-  {% if company %}
-  <h1>Continue {{ company.name }}'s diagnostic</h1>
-  <p class="lede">{{ QUESTIONNAIRE_NAME }} ({{ QUESTIONNAIRE_CODE }}) ·
-  {{ total_questions }} questions · about 25 minutes · autosave on every answer.</p>
+  <h1>Start {{ company.name }}'s diagnostic</h1>
+  <p class="lede">{{ QUESTIONNAIRE_NAME }} · {{ total_questions }} questions · answers save as you go. Choose who is answering, then the part of the business to examine.</p>
   <div class="company-strip">
     <div><span>Company</span><strong>{{ company.name }}</strong></div>
     <div><span>Sector</span><strong>{{ company_context.sector }}</strong></div>
     <div><span>Scale</span><strong>{{ company_context.size }}{% if company_context.employees %} · {{ company_context.employees }} people{% endif %}</strong></div>
     <div><span>Footprint</span><strong>{{ company_context.location }}</strong></div>
   </div>
-  {% else %}
-  <h1>Set up a company diagnostic</h1>
-  <p class="lede">{{ QUESTIONNAIRE_NAME }} ({{ QUESTIONNAIRE_CODE }}) ·
-  {{ total_questions }} questions · about 25 minutes · autosave on every answer.</p>
-  {% endif %}
   {% if error %}<div class="flash err">{{ error }}</div>{% endif %}
 </section>
 
-<div class="split-layout">
-  <section class="block">
-    <form method="post" action="/start" class="stack">
-      <h3>Company</h3>
-      <label>Existing company
-        <select name="organization_id">
-          <option value="">— Create a new company —</option>
+<div class="start-layout">
+  <form method="post" action="/start" class="block start-form" id="start-form">
+    <div class="start-section">
+      <div class="section-label"><span>01</span><div><h3>Company</h3><p>Assessments are tied to a company profile so every result compounds.</p></div></div>
+      {% if organizations|length > 1 %}
+      <label class="field">Company
+        <select name="organization_id" id="company-select">
           {% for o in organizations %}
-          <option value="{{ o.id }}" {% if company and company.id == o.id %}selected{% endif %}>{{ o.name }}{% if o.industry %} · {{ o.industry }}{% endif %}</option>
+          <option value="{{ o.id }}" {% if company.id == o.id %}selected{% endif %}>{{ o.name }}{% if o.city %} · {{ o.city }}{% endif %}</option>
           {% endfor %}
         </select>
       </label>
+      {% else %}
+      <input type="hidden" name="organization_id" value="{{ company.id }}">
+      <div class="selected-company"><strong>{{ company.name }}</strong><span>{{ company_context.location }} · {{ company_context.size }}</span></div>
+      {% endif %}
+      <div class="company-actions">
+        <a href="/setup?org={{ company.id }}" class="text-link">Update company profile</a>
+        {% if is_pro %}
+        <a href="/setup" class="text-link">Add another company <span class="crown" title="Premium">{% include "partials/crown.svg" %}</span></a>
+        {% else %}
+        <a href="/pro" class="text-link">Add another company <span class="crown" title="Premium feature">{% include "partials/crown.svg" %}</span> <span class="premium-tag">Premium</span></a>
+        {% endif %}
+      </div>
+    </div>
 
-      <p class="muted small" style="margin:0">Only fill the fields below when creating a new company. Your profile tailors the dashboard, benchmarks, and plan.</p>
+    <div class="start-section">
+      <div class="section-label"><span>02</span><div><h3>Department</h3><p>A team questionnaire leads with this department's operating questions, then keeps the shared baseline so scores stay comparable.</p></div></div>
+      <label class="field">Operating unit
+        <select name="department" id="department-select">
+          {% for d in departments %}
+          <option value="{{ d.label }}" data-roles="{{ d.roles }}" data-intro="{{ d.intro }}" data-promise="{{ d.promise }}" {% if department == d.label %}selected{% endif %}>{{ d.label }}</option>
+          {% endfor %}
+          <option value="Whole company" data-roles="Executive team, functional leads" data-intro="Review the operating model across functions, handoffs, systems, and decision rights." data-promise="See the constraint holding the whole company back and the first moves that release it." {% if department == 'Whole company' %}selected{% endif %}>Whole company</option>
+        </select>
+      </label>
+      <div class="dept-note" id="dept-note">
+        <p class="dept-intro">{{ brief.intro }}</p>
+        <p class="dept-roles">Typical respondents: <span>{{ brief.roles }}</span></p>
+      </div>
+    </div>
 
-      <div class="form-grid">
-        <label>Company name
-          <input name="organization_name" placeholder="e.g. Meridian Freight Group" autocomplete="organization">
+    <div class="start-section">
+      <div class="section-label"><span>03</span><div><h3>Who is answering?</h3><p>Use one informed view or collect several perspectives from the same team.</p></div></div>
+      <div class="method-toggle" role="radiogroup" aria-label="Assessment method">
+        <label class="method-option">
+          <input type="radio" name="method" value="self" {% if method != 'team' %}checked{% endif %}>
+          <span><strong>I will answer</strong><small>One respondent. About 20–25 minutes.</small></span>
         </label>
-        <label>Industry
-          <input name="industry" value="Logistics" list="industry-list">
-        </label>
-        <label>Sub-sector
-          <input name="sub_industry" list="sub-industry-list" placeholder="e.g. Freight forwarding">
-        </label>
-        <label>Employees
-          <input name="employee_count" type="number" min="0" placeholder="120">
-        </label>
-        <label>Annual revenue
-          <input name="revenue_band" list="revenue-list" placeholder="Select a band">
-        </label>
-        <label>Country
-          <input name="country" placeholder="Country" autocomplete="country-name">
-        </label>
-        <label>City
-          <input name="city" placeholder="City" autocomplete="address-level2">
+        <label class="method-option">
+          <input type="radio" name="method" value="team" {% if method == 'team' %}checked{% endif %}>
+          <span><strong>Ask the team</strong><small>Share a link. Responses combine into one diagnostic.</small></span>
         </label>
       </div>
 
-      <h3>Scope</h3>
-      <div class="form-grid">
-        <label>Operating unit
-          <input name="department" value="Operations" list="dept-list">
-        </label>
-        <label>Respondent title
-          <input name="respondent" placeholder="e.g. Operations Manager">
+      <div class="method-panel" id="panel-self">
+        <label class="field">Your role
+          <input name="respondent" placeholder="e.g. Operations Director" autocomplete="organization-title" value="{{ user.name or '' }}">
         </label>
       </div>
 
-      <datalist id="industry-list">
-        <option value="Logistics"></option>
-        <option value="Manufacturing"></option>
-        <option value="Retail and distribution"></option>
-        <option value="Field services"></option>
-        <option value="Construction and infrastructure"></option>
-        <option value="Financial services"></option>
-        <option value="Healthcare"></option>
-        <option value="Public sector"></option>
-      </datalist>
-      <datalist id="sub-industry-list">
-        <option value="Freight forwarding"></option>
-        <option value="Road transport"></option>
-        <option value="Warehousing"></option>
-        <option value="Distribution"></option>
-        <option value="Courier and last mile"></option>
-        <option value="Port and terminal operations"></option>
-        <option value="Fleet management"></option>
-      </datalist>
-      <datalist id="revenue-list">
-        <option value="Under USD 1M"></option>
-        <option value="USD 1M–10M"></option>
-        <option value="USD 10M–50M"></option>
-        <option value="USD 50M–250M"></option>
-        <option value="USD 250M+"></option>
-      </datalist>
-      <datalist id="dept-list">
-        <option value="Operations"></option>
-        <option value="Dispatch"></option>
-        <option value="Warehouse"></option>
-        <option value="Finance"></option>
-        <option value="Customer Service"></option>
-        <option value="Compliance"></option>
-        <option value="IT"></option>
-        <option value="HR"></option>
-      </datalist>
-
-      <div class="hero-actions">
-        <button class="btn big" type="submit">Begin diagnostic →</button>
-        <a class="btn ghost" href="/demo">Or run the guided demo</a>
+      <div class="method-panel" id="panel-team" hidden>
+        <div class="form-grid">
+          <label class="field">Target respondents
+            <input name="target_roles" placeholder="e.g. Shift supervisors, dispatch leads" value="{{ brief.roles }}">
+          </label>
+          <label class="field">Minimum responses
+            <input name="min_respondents" type="number" min="1" max="500" value="3">
+          </label>
+          <label class="field">Response deadline
+            <input name="deadline_date" type="date">
+          </label>
+          <label class="field">Time
+            <input name="deadline_time" type="time" value="17:00">
+          </label>
+        </div>
+        <label class="field">Contact details
+          <select name="contact_mode">
+            <option value="optional">Optional — respondents may identify themselves</option>
+            <option value="required">Required — name and email</option>
+            <option value="anonymous">Anonymous — no names collected</option>
+          </select>
+        </label>
+        <label class="field">Context for the team <span class="optional">optional</span>
+          <textarea name="note" rows="3" placeholder="Why this review matters, or what changed recently."></textarea>
+        </label>
       </div>
-    </form>
-  </section>
+    </div>
 
-  <aside class="block side-card">
-    <h3>What happens next</h3>
-    <ol class="opp">
-      <li>Answer short segments (about three questions each).</li>
-      <li>Scores update live as you progress.</li>
-      <li>Submit for the full index, costed constraint, and roadmap.</li>
-      <li>Share a read-only board pack with your team or lender.</li>
-    </ol>
-    <p class="muted small">Tip: a realistic headcount and revenue band make the financial model and peer comparison credible.</p>
+    <div class="start-submit">
+      <button class="btn big" type="submit" id="start-submit">Begin diagnostic →</button>
+      <p class="muted small">Your progress and results stay private to your account.</p>
+    </div>
+  </form>
+
+  <aside class="side-stack">
+    <section class="block side-card">
+      <h3>Before you start</h3>
+      <div class="completeness">
+        <div class="completeness-head"><span>Company profile</span><strong>{{ company_context.completeness.percent }}%</strong></div>
+        <div class="meter"><span style="width:{{ company_context.completeness.percent }}%"></span></div>
+        <p class="muted small">A fuller profile sharpens benchmarks, cost estimates, and the action plan.</p>
+        <a class="btn ghost small" href="/setup?org={{ company.id }}">Complete profile</a>
+      </div>
+    </section>
+    <section class="block side-card">
+      <h3>What you receive</h3>
+      <ol class="opp">
+        <li>A readiness index with peer context.</li>
+        <li>The costed operating constraint.</li>
+        <li>A sequenced 90-day action plan.</li>
+        <li>A board-ready summary you can share.</li>
+      </ol>
+    </section>
+    <section class="block side-card">
+      <h3 id="dept-side-title">{{ brief.label }}</h3>
+      <p class="muted small" id="dept-side-copy">{{ brief.promise }}</p>
+    </section>
   </aside>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+  const dept = document.getElementById('department-select');
+  const note = document.getElementById('dept-note');
+  const sideTitle = document.getElementById('dept-side-title');
+  const sideCopy = document.getElementById('dept-side-copy');
+  const rolesInput = document.querySelector('input[name="target_roles"]');
+  const syncDept = () => {
+    const opt = dept.selectedOptions[0];
+    if (!opt) return;
+    note.querySelector('.dept-intro').textContent = opt.dataset.intro || '';
+    note.querySelector('.dept-roles span').textContent = opt.dataset.roles || '';
+    sideTitle.textContent = opt.value;
+    sideCopy.textContent = opt.dataset.promise || '';
+    if (rolesInput && !rolesInput.dataset.touched) rolesInput.value = opt.dataset.roles || '';
+  };
+  dept.addEventListener('change', syncDept);
+  if (rolesInput) rolesInput.addEventListener('input', () => { rolesInput.dataset.touched = '1'; });
+
+  const panelSelf = document.getElementById('panel-self');
+  const panelTeam = document.getElementById('panel-team');
+  const submit = document.getElementById('start-submit');
+  const syncMethod = () => {
+    const team = document.querySelector('input[name="method"]:checked').value === 'team';
+    panelSelf.hidden = team;
+    panelTeam.hidden = !team;
+    submit.textContent = team ? 'Create team questionnaire →' : 'Begin diagnostic →';
+  };
+  document.querySelectorAll('input[name="method"]').forEach(el => el.addEventListener('change', syncMethod));
+  syncMethod();
+})();
+</script>
 {% endblock %}

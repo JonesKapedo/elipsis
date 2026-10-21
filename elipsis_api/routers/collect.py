@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from elipsis_api import models, services, services_ops
+from elipsis_api import departments, models, services, services_ops
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
 
@@ -40,10 +40,8 @@ def _count_completed(db: Session, token: str) -> int:
 
 
 def _maybe_finalize_campaign(db: Session, campaign: models.CollectCampaign):
-    if campaign.status == "reported" and campaign.master_assessment_id:
-        return campaign.master_assessment_id
     completed = _count_completed(db, campaign.token)
-    if completed < (campaign.min_respondents or 1):
+    if completed == 0:
         return None
     rows = list(db.scalars(select(models.CollectResponse).where(
         models.CollectResponse.campaign_token == campaign.token,
@@ -59,20 +57,25 @@ def _maybe_finalize_campaign(db: Session, campaign: models.CollectCampaign):
             if ans.score is not None:
                 score_sum[ans.question_id].append(int(ans.score))
                 evidence_pick.setdefault(ans.question_id, ans.evidence or "none")
-    bank = services.get_bank(db)
+    dept = db.get(models.Department, campaign.department_id) if campaign.department_id else None
+    bank = services.questionnaire_for_department(db, dept.name if dept else None)
     if bank is None:
         return None
-    from elipsis_api.services_core import _now
-    master = models.Assessment(
-        organization_id=campaign.organization_id,
-        department_id=campaign.department_id,
-        questionnaire_id=bank.id,
-        respondent=f"Team aggregate ({completed} responses)",
-        status="in_progress",
-        started_at=_now(),
-    )
-    db.add(master)
-    db.flush()
+    master = db.get(models.Assessment, campaign.master_assessment_id) if campaign.master_assessment_id else None
+    if master is None:
+        from elipsis_api.services_core import _now
+        master = models.Assessment(
+            organization_id=campaign.organization_id,
+            department_id=campaign.department_id,
+            questionnaire_id=bank.id,
+            source="team",
+            status="in_progress",
+            started_at=_now(),
+        )
+        db.add(master)
+        db.flush()
+    master.respondent = f"Team aggregate ({completed} responses)"
+    master.source = "team"
     from elipsis_api import schemas as _schemas
     answers = []
     for qid, scores in score_sum.items():
@@ -82,7 +85,7 @@ def _maybe_finalize_campaign(db: Session, campaign: models.CollectCampaign):
             question_id=qid, score=avg, evidence=evidence_pick.get(qid, "none")))
     services.submit(db, master.id, answers)
     campaign.master_assessment_id = master.id
-    campaign.status = "reported"
+    campaign.status = "reported" if completed >= (campaign.min_respondents or 1) else "collecting"
     db.commit()
     return master.id
 
@@ -110,43 +113,35 @@ def company_assess(organization_id: int, request: Request,
 
 @router.post("/company/{organization_id}/share")
 def company_share(organization_id: int, request: Request,
-                  department: str = Form("Organisation-wide"),
-                  deadline_date: str = Form(...),
+                  department: str = Form("Operations"),
+                  deadline_date: str = Form(""),
                   deadline_time: str = Form("17:00"),
-                  min_respondents: int = Form(5),
-                  allow_anonymous: str = Form(""),
+                  min_respondents: int = Form(3),
+                  contact_mode: str = Form("optional"),
+                  question_set: str = Form(""),
+                  target_roles: str = Form(""),
                   note: str = Form(""),
                   user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
     if not services.can_access_org(db, user, organization_id):
         return RedirectResponse("/company", status_code=303)
-    org = db.get(models.Organization, organization_id)
-    dept_name = (department or "Organisation-wide").strip()
-    dept = db.scalar(select(models.Department).where(
-        models.Department.organization_id == organization_id,
-        models.Department.name == dept_name))
-    if dept is None and dept_name:
-        dept = models.Department(organization_id=organization_id, name=dept_name)
-        db.add(dept)
-        db.flush()
-    deadline = f"{deadline_date.strip()}T{(deadline_time or '17:00').strip()}"
-    token = _new_token()[:24]
-    camp = models.CollectCampaign(
-        token=token,
+    deadline = ""
+    if deadline_date.strip():
+        deadline = f"{deadline_date.strip()}T{(deadline_time or '17:00').strip()}"
+    camp = services.create_collect_campaign(
+        db,
         organization_id=organization_id,
-        department_id=dept.id if dept else None,
-        created_by=user.id,
-        title=f"{org.name} readiness questionnaire",
+        user_id=user.id,
+        department=department,
         deadline=deadline,
-        min_respondents=max(1, min(500, int(min_respondents or 5))),
-        allow_anonymous=1 if allow_anonymous else 0,
-        status="collecting",
-        note=(note or "").strip()[:2000] or None,
+        min_respondents=min_respondents,
+        contact_mode=contact_mode,
+        question_set=question_set,
+        target_roles=target_roles,
+        note=note,
     )
-    db.add(camp)
-    db.commit()
-    return RedirectResponse(f"/company/campaign/{token}", status_code=303)
+    return RedirectResponse(f"/company/campaign/{camp.token}", status_code=303)
 
 
 @router.get("/company/campaign/{token}")
@@ -163,10 +158,15 @@ def campaign_status(token: str, request: Request,
         models.CollectResponse.campaign_token == token).order_by(models.CollectResponse.id.desc())))
     completed = sum(1 for r in responses if r.status == "completed")
     in_progress = sum(1 for r in responses if r.status == "in_progress")
-    if completed >= (camp.min_respondents or 1) and camp.status == "collecting":
+    if completed and camp.status == "collecting":
         _maybe_finalize_campaign(db, camp)
         db.refresh(camp)
+    elif completed and camp.master_assessment_id:
+        db.refresh(camp)
     share_url = str(request.base_url).rstrip("/") + f"/q/{token}"
+    master_result = None
+    if camp.master_assessment_id:
+        _, master_result = services.compute(db, camp.master_assessment_id)
     comments = list(db.scalars(select(models.CampaignComment).where(
         models.CampaignComment.campaign_token == token
     ).order_by(models.CampaignComment.id.desc())))
@@ -175,8 +175,10 @@ def campaign_status(token: str, request: Request,
     ).order_by(models.CampaignApproval.id.desc())))
     return templates.TemplateResponse(request, "campaign_status.html", {
         "user": user, "campaign": camp, "org": org, "dept": dept,
+        "brief": departments.department_brief(dept.name if dept else None),
         "responses": responses, "completed": completed, "in_progress": in_progress,
         "share_url": share_url, "comments": comments, "approvals": approvals,
+        "master_result": master_result,
     })
 
 
@@ -243,6 +245,7 @@ def collect_landing(token: str, request: Request, db: Session = Depends(get_db))
     closed = not _campaign_open(camp)
     return templates.TemplateResponse(request, "collect_landing.html", {
         "user": None, "campaign": camp, "org": org, "dept": dept, "closed": closed,
+        "brief": departments.department_brief(dept.name if dept else None),
     })
 
 
@@ -254,10 +257,11 @@ def collect_start(token: str, request: Request,
     camp = db.get(models.CollectCampaign, token)
     if camp is None or not _campaign_open(camp):
         return RedirectResponse(f"/q/{token}", status_code=303)
-    is_anon = bool(anonymous) and bool(camp.allow_anonymous)
-    if not is_anon and not camp.allow_anonymous:
-        if not (name or "").strip() and not (email or "").strip():
-            return RedirectResponse(f"/q/{token}", status_code=303)
+    mode = camp.contact_mode or ("anonymous" if camp.allow_anonymous else "optional")
+    is_anon = bool(anonymous) and mode == "anonymous"
+    if not is_anon and mode == "required":
+        if not (name or "").strip() or not (email or "").strip():
+            return RedirectResponse(f"/q/{token}?missing=contact", status_code=303)
     from elipsis_api import schemas
     dept = db.get(models.Department, camp.department_id) if camp.department_id else None
     dept_name = dept.name if dept else "Organisation-wide"
@@ -268,6 +272,10 @@ def collect_start(token: str, request: Request,
         respondent=respondent,
     )
     assessment = services.create_assessment(db, payload)
+    focused = services.questionnaire_for_department(db, dept_name)
+    if focused is not None:
+        assessment.questionnaire_id = focused.id
+        db.flush()
     resp = models.CollectResponse(
         campaign_token=token,
         assessment_id=assessment.id,
@@ -309,10 +317,12 @@ def collect_step(token: str, assessment_id: int, number: int, request: Request,
     number = max(1, min(number, len(steps)))
     step = steps[number - 1]
     answers = services.answers_map(db, assessment_id)
+    dept = db.get(models.Department, assessment.department_id) if assessment.department_id else None
     return templates.TemplateResponse(request, "collect_step.html", {
         "user": None, "campaign": camp, "org": org, "assessment": assessment,
         "step": step, "steps": steps, "total_steps": len(steps),
         "answers": answers, "is_last": number >= len(steps),
+        "brief": departments.department_brief(dept.name if dept else None),
     })
 
 
@@ -368,9 +378,9 @@ async def collect_submit(token: str, assessment_id: int, request: Request,
                 question_id=qid, score=int(data["score"]),
                 evidence=data.get("evidence") or "none"))
     services.submit(db, assessment_id, answers)
-    from datetime import datetime
+    from datetime import UTC, datetime
     row.status = "completed"
-    row.submitted_at = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    row.submitted_at = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
     db.commit()
     _maybe_finalize_campaign(db, camp)
     return RedirectResponse(f"/q/{token}/done", status_code=303)

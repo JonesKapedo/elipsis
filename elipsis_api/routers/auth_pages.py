@@ -71,8 +71,7 @@ async def signup(request: Request,
             f'<p>Confirm your email: <a href="{base}/verify-email?token={account.verification_token}">Verify email</a></p>',
         )
     token = services.create_session(db, account.id)
-    dest = "/marketplace" if form.get("user_type") == "bidder" else "/company"
-    response = RedirectResponse(dest, status_code=303)
+    response = RedirectResponse("/setup", status_code=303)
     _set_session_cookie(response, token)
     return response
 
@@ -97,7 +96,8 @@ def login_resilient(request: Request, email: str = Form(...), password: str = Fo
     if old:
         services.delete_session(db, old)
     token = services.create_session(db, account.id)
-    response = RedirectResponse(nxt or "/dashboard", status_code=303)
+    dest = nxt or ("/dashboard" if services.owned_org_ids(db, account) else "/setup")
+    response = RedirectResponse(dest, status_code=303)
     _set_session_cookie(response, token)
     return response
 

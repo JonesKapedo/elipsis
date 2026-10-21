@@ -26,12 +26,12 @@
   <meta name="twitter:title" content="{{ self.title() }}">
   <meta name="twitter:description" content="{{ self.description() }}">
   <meta name="twitter:image" content="{{ request.url_for('static', path='brand/og-banner.png') }}">
-  <link rel="stylesheet" href="/static/style.css?v=20261021f">
-  <link rel="stylesheet" href="/static/app-shell.css?v=20261021f">
-  <link rel="stylesheet" href="/static/extras.css?v=20261021f">
-  <link rel="stylesheet" href="/static/motion.css?v=20261021f">
-  <link rel="stylesheet" href="/static/app.css?v=20261021f">
-  <link rel="stylesheet" href="/static/premium.css?v=20261021f">
+  <link rel="stylesheet" href="/static/style.css?v=20261022a">
+  <link rel="stylesheet" href="/static/app-shell.css?v=20261022a">
+  <link rel="stylesheet" href="/static/extras.css?v=20261022a">
+  <link rel="stylesheet" href="/static/motion.css?v=20261022a">
+  <link rel="stylesheet" href="/static/app.css?v=20261022a">
+  <link rel="stylesheet" href="/static/premium.css?v=20261022a">
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %} {% if authed %}app-shell{% endif %}">
@@ -61,9 +61,7 @@
       {% endif %}
 
       <p class="nav-group-label">Account</p>
-      <a href="/notifications" class="nav-item{% if path == '/notifications' %} active{% endif %}"{% if path == '/notifications' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◔</span> Notifications{% if notifications %}<span class="nav-badge">{{ notifications|length }}</span>{% endif %}</a>
       <a href="/settings" class="nav-item{% if path == '/settings' %} active{% endif %}"{% if path == '/settings' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">⚙</span> Settings</a>
-      <a href="/partner" class="nav-item{% if path == '/partner' %} active{% endif %}"{% if path == '/partner' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◇</span> Partner console</a>
       <a href="/logout" class="nav-item nav-danger"><span class="nav-icon" aria-hidden="true">→</span> Sign out</a>
     </nav>
     <div class="sidebar-user">
@@ -163,7 +161,7 @@
   </div>
 </dialog>
 {% endif %}
-<script src="/static/app.js?v=20261021f" defer></script>
+<script src="/static/app.js?v=20261022a" defer></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

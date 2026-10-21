@@ -19,6 +19,20 @@ class OrganizationIn(BaseModel):
     revenue_band: str | None = None
     country: str | None = None
     city: str | None = None
+    legal_name: str | None = None
+    registration_number: str | None = None
+    tax_id: str | None = None
+    address: str | None = None
+    timezone: str | None = None
+    fiscal_year_start: str | None = None
+    operating_sites: str | None = None
+    primary_services: str | None = None
+    systems_used: str | None = None
+    website: str | None = None
+    contact_name: str | None = None
+    contact_email: str | None = None
+    contact_phone: str | None = None
+    description: str | None = None
 
 
 class OrganizationOut(OrganizationIn):
@@ -31,6 +45,7 @@ class AssessmentIn(BaseModel):
     department: str = "Operations"
     respondent: str | None = None
     mode: str | None = "pulse"
+    source: str | None = "self"
 
 
 class AnswerIn(BaseModel):
