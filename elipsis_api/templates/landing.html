@@ -2,19 +2,51 @@
 {% block title %}See what friction is costing you{% endblock %}
 {% block content %}
 <section class="hero hero-pro">
-  <div class="hero-badge">Board-ready intelligence in ~25 minutes</div>
-  <h1>Know exactly where your operation is leaking time and money — and what it will take to stop it.</h1>
-  <p class="lede">{{ BRAND_NAME }} converts {{ total_questions }} plain-English answers into a scored readiness index, a quantified {{ CURRENCY }} friction model, and a prioritised three-horizon roadmap your leadership team can act on immediately.</p>
-  <div class="hero-actions">
-    <a class="btn big" href="/signup">Start your free assessment →</a>
-    <a class="btn ghost big" href="/sample">See a full sample report</a>
+  <div class="hero-grid">
+    <div class="hero-copy">
+      <div class="hero-badge">Built for Kenyan logistics SMEs · 10–199 staff</div>
+      <h1>Find the money hidden in your operations.</h1>
+      <p class="lede">{{ BRAND_NAME }} turns {{ total_questions }} plain-English answers into a scored readiness index, a checkable {{ CURRENCY }} cost model, and a 90-day action plan with owners and dates. Designed for freight forwarders, transporters, warehouses and distributors — not enterprises with a consulting budget.</p>
+      <div class="hero-actions">
+        <a class="btn big" href="/signup">Start your free assessment →</a>
+        <a class="btn ghost big" href="/sample">See a full sample report</a>
+      </div>
+      <ul class="hero-trust">
+        <li>No consultants required</li>
+        <li>~25 minutes end-to-end</li>
+        <li>Assumptions printed and editable</li>
+        <li>Board pack (PDF + Excel) and 90-day plan</li>
+      </ul>
+    </div>
+    <aside class="hero-visual" aria-label="Illustrative readiness scorecard">
+      <div class="hv-top">
+        <span class="hv-live"><i></i> Live readiness</span>
+        <span class="hv-chip">Sample</span>
+      </div>
+      <div class="hv-score">
+        <div class="hv-ring" style="--pct:62.4%"><span>62.4<small>/ 100</small></span></div>
+        <div class="hv-summary">
+          <span class="hv-band">Emerging</span>
+          <p>Strong intent, uneven process ownership. Three fixes in dispatch and order-to-cash carry most of the upside.</p>
+        </div>
+      </div>
+      <div class="hv-metrics">
+        <div><span>Annual savings</span><b>{{ CURRENCY }} 4.2M</b></div>
+        <div><span>Payback</span><b>7.4 mo</b></div>
+        <div><span>ROI</span><b>148%</b></div>
+      </div>
+      <div class="hv-pillars">
+        <div class="hv-pillar"><span>Operations</span><div class="hv-track"><i style="width:74%"></i></div></div>
+        <div class="hv-pillar"><span>Data</span><div class="hv-track"><i style="width:58%"></i></div></div>
+        <div class="hv-pillar"><span>People</span><div class="hv-track"><i style="width:66%"></i></div></div>
+        <div class="hv-pillar"><span>Finance</span><div class="hv-track"><i style="width:49%"></i></div></div>
+      </div>
+      <div class="hv-foot">
+        <span>Illustrative output — not a customer claim</span>
+        <a href="/sample" style="color:#f5b301;font-weight:700">Open sample →</a>
+      </div>
+    </aside>
   </div>
-  <ul class="hero-trust">
-    <li>No consultants required</li>
-    <li>~25 minutes end-to-end</li>
-    <li>Exportable board pack (PDF)</li>
-    <li>Department comparison built in</li>
-  </ul>
 </section>
 
 <section class="stats">
@@ -55,6 +87,31 @@
   </div>
 </section>
 
+<section class="block">
+  <p class="eyebrow">WHO IT IS FOR</p>
+  <h2 style="border:0;padding:0;margin:.3rem 0 .8rem">Made for the operator, not the head office deck.</h2>
+  <div class="pillars">
+    <article class="pillar-card"><h4>Freight forwarders</h4><p class="muted">Clearance handoffs, document chasing, customer updates and exception handling.</p></article>
+    <article class="pillar-card"><h4>Transport operators</h4><p class="muted">Dispatch, proof of delivery, fuel and maintenance visibility, driver communication.</p></article>
+    <article class="pillar-card"><h4>Warehouses & distributors</h4><p class="muted">Stock accuracy, receiving, picking, returns and order-to-cash follow-up.</p></article>
+  </div>
+  <p class="muted">Typical starting point: 10–199 staff, USD 100K–1M revenue, Nairobi or Mombasa. If you are smaller, the free assessment still works; if you are much larger, talk to us about a multi-site setup.</p>
+</section>
+
+<section class="block">
+  <p class="eyebrow">WHY LOGISTICS</p>
+  <h2 style="border:0;padding:0;margin:.3rem 0 .8rem">A large, reachable market with visible process cost.</h2>
+  <table class="table">
+    <thead><tr><th>Reference point</th><th>Value</th><th>Source</th></tr></thead>
+    <tbody>
+      {% for p in reference_points %}
+      <tr><td>{{ p.label }}<br><span class="muted">{{ p.note }}</span></td><td><strong>{{ p.value }}</strong></td><td class="muted">{{ p.source }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="muted">These are market reference points, not claims about Elipsis customers. Savings in your report are estimates and must be validated against your payroll.</p>
+</section>
+
 <section id="what">
   <h2>Seven pillars, one score</h2>
   <p class="lede">Every answer feeds at least one pillar. Weights reflect how much each area typically drives automation ROI — so the index is useful, not decorative.</p>
@@ -86,7 +143,7 @@
     <article class="step-card">
       <span class="step-n">3</span>
       <h4>Share and act</h4>
-      <p class="muted">Email a read-only link, export JSON or PDF, compare departments, prioritise the first 90 days.</p>
+      <p class="muted">Email a tracked read-only link, export the board pack, assign the first 90 days, and watch movement over time.</p>
     </article>
   </div>
 </section>
@@ -108,6 +165,27 @@
       <span class="step-n">FD</span>
       <h4>Finance &amp; strategy</h4>
       <p class="muted">KES-denominated savings, payback, and ROI with assumptions printed — challengeable in the room, not hidden in a model.</p>
+    </article>
+  </div>
+</section>
+
+<section>
+  <h2>From diagnosis to an operating rhythm</h2>
+  <div class="steps">
+    <article class="step-card">
+      <span class="step-n">AB</span>
+      <h4>Action board</h4>
+      <p class="muted">Every 90-day action in one place: owners, due dates, blockers, completion rate, and overdue alerts.</p>
+    </article>
+    <article class="step-card">
+      <span class="step-n">TR</span>
+      <h4>Trends and reviews</h4>
+      <p class="muted">Schedule re-assessments, see movement against the previous score, and compare departments over time.</p>
+    </article>
+    <article class="step-card">
+      <span class="step-n">AT</span>
+      <h4>Team and audit trail</h4>
+      <p class="muted">Invite teammates, control organisation access, and keep a timestamped record of evidence, shares, and plan changes.</p>
     </article>
   </div>
 </section>

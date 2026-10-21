@@ -8,6 +8,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from elipsis_api import models, services
+from elipsis_api.config import MARKETPLACE_ENABLED
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
 
@@ -32,6 +33,9 @@ def _admin_ok(user) -> bool:
 def marketplace_list(request: Request, user=Depends(get_current_user),
                      db: Session = Depends(get_db)):
     """Public marketplace of published engagement requests."""
+    if not MARKETPLACE_ENABLED and not _admin_ok(user):
+        return templates.TemplateResponse(
+            request, "marketplace_coming_soon.html", {"user": user})
     rows = db.scalars(
         select(models.PhysicalAssessmentRequest)
         .where(models.PhysicalAssessmentRequest.status == "published")
@@ -64,6 +68,9 @@ def marketplace_new(request: Request, user=Depends(get_current_user),
                     db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
+    if not MARKETPLACE_ENABLED and not _admin_ok(user):
+        return templates.TemplateResponse(
+            request, "marketplace_coming_soon.html", {"user": user})
     orgs = services.owned_orgs(db, user)
     return templates.TemplateResponse(
         request, "marketplace_new.html",
@@ -82,6 +89,9 @@ def marketplace_create(request: Request,
                        db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
+    if not MARKETPLACE_ENABLED and not _admin_ok(user):
+        return templates.TemplateResponse(
+            request, "marketplace_coming_soon.html", {"user": user}, status_code=403)
     orgs = services.owned_orgs(db, user)
     if user.user_type == "bidder":
         return templates.TemplateResponse(
@@ -124,6 +134,9 @@ def marketplace_create(request: Request,
 @router.get("/marketplace/{request_id}")
 def marketplace_detail(request_id: int, request: Request,
                        user=Depends(get_current_user), db: Session = Depends(get_db)):
+    if not MARKETPLACE_ENABLED and not _admin_ok(user):
+        return templates.TemplateResponse(
+            request, "marketplace_coming_soon.html", {"user": user})
     req = db.get(models.PhysicalAssessmentRequest, request_id)
     if req is None:
         return _not_found(request, user)

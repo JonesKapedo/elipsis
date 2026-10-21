@@ -55,18 +55,17 @@ def _session_secret() -> str:
     ).strip()
     if secret:
         return secret
-    if is_production():
-        raise RuntimeError(
-            "ELIPSIS_SECRET_KEY is required in production; refusing to sign "
-            "sessions with a guessable key."
-        )
     if _DEV_SECRET is None:
         import sys
         _DEV_SECRET = secrets.token_urlsafe(48)
+        from elipsis_api.config import CONFIG_ERRORS
+        message = (
+            "ELIPSIS_SECRET_KEY is not set; using a per-process random key. "
+            "Sessions will not survive a restart or a second worker.")
+        if message not in CONFIG_ERRORS:
+            CONFIG_ERRORS.append(message)
         print(
-            "[elipsis] ELIPSIS_SECRET_KEY not set -> using a per-process random "
-            "development key. Sessions will not survive a restart or a second "
-            "worker. Set ELIPSIS_SECRET_KEY before deploying.",
+            f"[elipsis] DEGRADED: {message}",
             file=sys.stderr,
             flush=True,
         )

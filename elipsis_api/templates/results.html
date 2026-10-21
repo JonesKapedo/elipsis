@@ -10,27 +10,94 @@
   <p class="eyebrow">{{ INDEX_NAME }}</p>
   <h1>{{ organization.name }}{% if department %} &mdash; {{ department.name }}{% endif %}</h1>
   <p class="muted">Completed {{ assessment.completed_at or '' }} &nbsp;&middot;&nbsp;
-  {{ result.answered }} of {{ result.total }} questions answered</p>
+  {{ result.answered }} of {{ result.total }} questions answered
+  {% if previous %}&nbsp;&middot;&nbsp; <span class="tag {{ 'ok' if (delta or 0) >= 0 else 'warn' }}">Movement {{ '%+.1f'|format(delta or 0) }} vs previous</span>{% endif %}
+  {% if assessment.review_due_at %}&nbsp;&middot;&nbsp; <span class="tag">Review due {{ assessment.review_due_at }}</span>{% endif %}</p>
   <div class="hero-actions" style="margin-top:0.75rem">
     <a class="btn" href="/assessment/{{ assessment.id }}/report.pdf">Download PDF</a>
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/plan">90-day plan</a>
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/summary">One-page summary</a>
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/narrative">Board narrative</a>
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/export.xlsx">Excel</a>
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/evidence">Evidence</a>
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/badge">Readiness badge</a>
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/invite">Invite respondents</a>
     <a class="btn ghost" href="/assessment/{{ assessment.id }}/report">View board pack</a>
-    <a class="btn ghost" href="/assessment/{{ assessment.id }}/export.json">Export JSON</a>
-    <form method="post" action="/assessment/{{ assessment.id }}/share" style="display:inline">
-      <button class="btn ghost" type="submit">Create share link</button>
-    </form>
+    <a class="btn ghost" href="#share-links">Share links</a>
     {% if organization %}
     <a class="btn ghost" href="/compare/{{ organization.id }}">Compare departments</a>
     {% endif %}
     <a class="btn ghost" href="/start">New assessment</a>
   </div>
+  {% if request.query_params.get('import') %}
+  <div class="flash {{ 'err' if request.query_params.get('import') in ['invalid','empty'] else 'ok' }}" style="margin-top:1rem">
+    {% if request.query_params.get('import') == 'invalid' %}Import failed. Upload a CSV or XLSX under 2 MB.
+    {% elif request.query_params.get('import') == 'empty' %}No valid question codes and scores were found.
+    {% else %}{{ request.query_params.get('import') }} answers imported and rescored.{% endif %}
+  </div>
+  {% endif %}
+  <details class="block" style="margin-top:1rem">
+    <summary><strong>Import answers from CSV or XLSX</strong></summary>
+    <p class="muted small">Columns: <code>code</code>, <code>score</code> (0–4), optional <code>evidence</code>. <a href="/assessment/{{ assessment.id }}/import/template.csv">Download template</a>.</p>
+    <form method="post" action="/assessment/{{ assessment.id }}/import" enctype="multipart/form-data" class="filter-bar">
+      <input type="file" name="file" accept=".csv,.xlsx" required>
+      <button class="btn sm" type="submit">Import and rescore</button>
+    </form>
+  </details>
   {% if share_url %}
   <div class="block" style="margin-top:1rem">
     <h3>Emailable link ready</h3>
-    <p class="muted">Anyone with this URL can view a read-only board pack (no login).</p>
+    <p class="muted">Anyone with this URL can view a read-only board pack (no login). It expires in 30 days.</p>
     <p><code style="word-break:break-all">{{ share_url }}</code></p>
     <p><a href="{{ share_url }}" target="_blank" rel="noopener">Open shared report →</a></p>
   </div>
   {% endif %}
+</section>
+
+<section class="two-col">
+  <article class="block">
+    <h3>Re-assessment cadence</h3>
+    <p class="muted small">Set the next review date. It appears on the dashboard and action board when it approaches.</p>
+    <form method="post" action="/assessment/{{ assessment.id }}/review" class="stack">
+      <label>Review date <input type="date" name="review_due_at" value="{{ assessment.review_due_at or '' }}"></label>
+      <label>Focus for next review <input name="review_note" value="{{ assessment.review_note or '' }}" placeholder="e.g. dispatch cycle time" maxlength="2000"></label>
+      <button class="btn sm" type="submit">Save review date</button>
+    </form>
+  </article>
+  <article class="block" id="share-links">
+    <h3>Shared links</h3>
+    <form method="post" action="/assessment/{{ assessment.id }}/share" class="filter-bar">
+      <input name="label" placeholder="Label (e.g. Board pack)" maxlength="120" style="flex:1 1 160px">
+      <select name="days" aria-label="Expiry">
+        <option value="7">7 days</option>
+        <option value="30" selected>30 days</option>
+        <option value="90">90 days</option>
+        <option value="365">1 year</option>
+      </select>
+      <button class="btn sm" type="submit">Create link</button>
+    </form>
+    {% if share_links %}
+    <table class="table">
+      <thead><tr><th>Label</th><th>Views</th><th>Expires</th><th></th></tr></thead>
+      <tbody>
+        {% for link in share_links %}
+        <tr>
+          <td><a href="/share/{{ link.token }}" target="_blank" rel="noopener">{{ link.label or 'Share' }}</a></td>
+          <td>{{ link.view_count or 0 }}{% if link.last_viewed_at %}<br><span class="muted small">{{ link.last_viewed_at }}</span>{% endif %}</td>
+          <td class="muted">{{ (link.expires_at or 'Never')[:10] }}</td>
+          <td>
+            <form method="post" action="/assessment/{{ assessment.id }}/shares/{{ link.token }}/revoke">
+              <button class="btn ghost sm" type="submit">Revoke</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted small">No active links. Create one above to share a read-only board pack.</p>
+    {% endif %}
+  </article>
 </section>
 
 <section class="headline">
@@ -171,7 +238,7 @@
   </div>
   {% if result.financial.assumptions %}
   {% set a = result.financial.assumptions %}
-  <h4 style="margin-top:1.25rem">Assumptions (checkable)</h4>
+  <h4 style="margin-top:1.25rem">Assumptions (checkable) <a class="btn ghost sm" href="/assessment/{{ assessment.id }}/assumptions">Edit</a></h4>
   <table class="table">
     <tbody>
       <tr><td>Staff in scope</td><td class="num">{{ a.staff }}</td></tr>
@@ -184,6 +251,25 @@
     </tbody>
   </table>
   {% endif %}
-  <p class="muted">Financial figures are management estimates, not audited results.</p>
+  <p class="muted">Financial figures are management estimates, not audited results. {{ method_note }}</p>
 </section>
+
+{% if benchmark or reference_points %}
+<section class="block">
+  <h3>Benchmark and reference points</h3>
+  {% if benchmark and benchmark.available %}
+  <p>Peer median for {{ benchmark.industry }}{% if benchmark.band %} · {{ benchmark.band }}{% endif %}: <strong>{{ benchmark.median }}</strong> across {{ benchmark.sample }} completed assessments. Your score: <strong>{{ '%.1f'|format(result.readiness_index) }}</strong>{% if benchmark.percentile is not none %} · <strong>{{ benchmark.percentile }}th percentile</strong>{% endif %}.</p>
+  {% elif benchmark %}
+  <p class="muted">Peer comparison is suppressed until {{ benchmark.minimum }} comparable assessments exist (currently {{ benchmark.sample }}). This avoids identifying a single organisation.</p>
+  {% endif %}
+  <table class="table">
+    <thead><tr><th>Reference point</th><th>Value</th><th>Source</th></tr></thead>
+    <tbody>
+      {% for p in reference_points %}
+      <tr><td>{{ p.label }}<br><span class="muted">{{ p.note }}</span></td><td>{{ p.value }}</td><td class="muted">{{ p.source }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
 {% endblock %}

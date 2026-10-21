@@ -20,6 +20,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.gzip import GZipMiddleware
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -119,7 +120,19 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         response.headers.setdefault("X-Frame-Options", "DENY")
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         response.headers.setdefault("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
-        response.headers.setdefault("Content-Security-Policy", "frame-ancestors 'none'; object-src 'none'")
+        response.headers.setdefault(
+            "Content-Security-Policy",
+            "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'")
+        response.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin")
+        response.headers.setdefault("X-Permitted-Cross-Domain-Policies", "none")
+        response.headers.setdefault("X-DNS-Prefetch-Control", "off")
+        path = request.url.path
+        content_type = response.headers.get("content-type", "")
+        if path.startswith("/static/"):
+            response.headers.setdefault("Cache-Control", "public, max-age=86400")
+        elif "text/html" in content_type:
+            response.headers.setdefault("Cache-Control", "no-store")
+            response.headers.setdefault("Vary", "Cookie")
         if os.getenv("VERCEL") or os.getenv("ELIPSIS_ENV", "").lower() == "production":
             response.headers.setdefault(
                 "Strict-Transport-Security", "max-age=31536000; includeSubDomains")
@@ -144,9 +157,6 @@ async def lifespan(_app: FastAPI):
         runtime_state.set_seed(False, err)
         print(f"[elipsis] startup seed failed: {err}", flush=True)
         traceback.print_exc()
-        from elipsis_api.config import is_production
-        if is_production():
-            raise
     yield
 
 
@@ -169,6 +179,7 @@ if _allowed_origins:
         allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
     )
 app.add_middleware(SecurityMiddleware)
+app.add_middleware(GZipMiddleware, minimum_size=600)
 
 app.include_router(api.router)
 if auth_pages is not None:
@@ -208,6 +219,13 @@ try:
 except Exception as _exc:  # noqa: BLE001
     print(f"[elipsis] collect not mounted: {_exc}", flush=True)
 
+from elipsis_api.routers import growth as _growth  # noqa: E402
+from elipsis_api.routers import value as _value  # noqa: E402
+from elipsis_api.routers import workspace as _workspace  # noqa: E402
+
+app.include_router(_value.router)
+app.include_router(_workspace.router)
+app.include_router(_growth.router)
 app.include_router(pages.router)
 
 try:

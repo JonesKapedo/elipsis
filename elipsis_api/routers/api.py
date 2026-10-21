@@ -49,12 +49,15 @@ def health_detail():
     """Richer health for operators (not for public load balancers)."""
     db_ok = ping_db()
     seed = seed_status()
+    from elipsis_api import config
+    errors = list(getattr(config, "CONFIG_ERRORS", []))
     return {
-        "status": "ok" if db_ok and seed.get("seed_ok") else "degraded",
+        "status": "ok" if db_ok and seed.get("seed_ok") and not errors else "degraded",
         "database": DATABASE_URL.split("://", 1)[0],
         "database_reachable": db_ok,
         "seed_ok": seed.get("seed_ok"),
         "seed_error": seed.get("seed_error"),
+        "configuration_errors": errors,
     }
 
 

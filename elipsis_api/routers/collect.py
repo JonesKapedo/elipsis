@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from elipsis_api import models, services
+from elipsis_api import models, services, services_ops
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
 
@@ -167,11 +167,56 @@ def campaign_status(token: str, request: Request,
         _maybe_finalize_campaign(db, camp)
         db.refresh(camp)
     share_url = str(request.base_url).rstrip("/") + f"/q/{token}"
+    comments = list(db.scalars(select(models.CampaignComment).where(
+        models.CampaignComment.campaign_token == token
+    ).order_by(models.CampaignComment.id.desc())))
+    approvals = list(db.scalars(select(models.CampaignApproval).where(
+        models.CampaignApproval.campaign_token == token
+    ).order_by(models.CampaignApproval.id.desc())))
     return templates.TemplateResponse(request, "campaign_status.html", {
         "user": user, "campaign": camp, "org": org, "dept": dept,
         "responses": responses, "completed": completed, "in_progress": in_progress,
-        "share_url": share_url,
+        "share_url": share_url, "comments": comments, "approvals": approvals,
     })
+
+
+@router.post("/company/campaign/{token}/comment")
+def campaign_comment(token: str, request: Request, body: str = Form(...),
+                     user=Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    camp = db.get(models.CollectCampaign, token)
+    if camp is None or not services.can_access_org(db, user, camp.organization_id):
+        return RedirectResponse("/company", status_code=303)
+    text = (body or "").strip()[:2000]
+    if text:
+        db.add(models.CampaignComment(
+            campaign_token=token, user_id=user.id, body=text))
+        services_ops.record_audit(
+            db, action="campaign.comment", organization_id=camp.organization_id,
+            user_id=user.id, detail=text[:200])
+        db.commit()
+    return RedirectResponse(f"/company/campaign/{token}#team", status_code=303)
+
+
+@router.post("/company/campaign/{token}/approve")
+def campaign_approve(token: str, request: Request,
+                     decision: str = Form("approved"), note: str = Form(""),
+                     user=Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    camp = db.get(models.CollectCampaign, token)
+    if camp is None or not services.can_access_org(db, user, camp.organization_id):
+        return RedirectResponse("/company", status_code=303)
+    choice = decision if decision in ("approved", "changes_requested") else "approved"
+    db.add(models.CampaignApproval(
+        campaign_token=token, user_id=user.id, decision=choice,
+        note=(note or "").strip()[:2000] or None))
+    services_ops.record_audit(
+        db, action="campaign.approve", organization_id=camp.organization_id,
+        user_id=user.id, detail=choice)
+    db.commit()
+    return RedirectResponse(f"/company/campaign/{token}#team", status_code=303)
 
 
 @router.get("/company/campaign/{token}/finalize")

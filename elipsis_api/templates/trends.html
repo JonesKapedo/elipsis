@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Trends{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Longitudinal intelligence</p>
+  <h1>Readiness trends</h1>
+  <p class="lede">Movement across completed assessments. Use re-assessment dates to turn a one-off diagnosis into an operating rhythm.</p>
+  <div class="hero-actions">
+    <a class="btn ghost" href="/actions">Action board</a>
+    <a class="btn ghost" href="/compare">Compare departments</a>
+  </div>
+</section>
+
+{% if trends %}
+<div class="two-col">
+  {% for t in trends %}
+  <article class="block">
+    <div class="block-head">
+      <h3>{{ t.org.name }}</h3>
+      {% if t.latest and t.points|length > 1 %}<span class="tag {{ 'ok' if (t.movement or 0) >= 0 else 'warn' }}">{{ '%+.1f'|format(t.movement or 0) }} over {{ t.points|length }} assessments</span>{% elif t.latest %}<span class="tag ok">Baseline recorded</span>{% endif %}
+    </div>
+    {% if t.points %}
+    {% if t.points|length > 1 %}
+    <div class="trend-bars" aria-label="Readiness history">
+      {% for p in t.points %}
+      <div class="tb" title="{{ p.label }}: {{ p.value }}"><i style="height:{{ p.value }}%"></i><span>{{ p.label[5:] if p.label|length > 5 else p.label }}</span></div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="trend-baseline">
+      <div class="gauge-num">{{ '%.1f'|format(t.latest.value) }}<span>/100</span></div>
+      <p class="muted small">This is the baseline. Run the same assessment again after the first 90-day cycle to measure movement.</p>
+    </div>
+    {% endif %}
+    <div class="trend-legend">
+      <span>Latest <strong>{{ t.latest.value }}</strong></span>
+      <span>{{ t.latest.label }}</span>
+    </div>
+    <p style="margin-top:1rem"><a class="btn ghost sm" href="/assessment/{{ t.latest.id }}/results">Open latest report →</a></p>
+    {% else %}
+    <p class="muted">No completed assessments yet.</p>
+    {% endif %}
+  </article>
+  {% endfor %}
+</div>
+{% else %}
+<section class="block"><p class="muted">Complete an assessment to start a trend line.</p></section>
+{% endif %}
+{% endblock %}

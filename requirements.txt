@@ -10,6 +10,9 @@ jinja2==3.1.6
 python-multipart==0.0.32
 pydantic==2.13.5
 
+# Webhook delivery (services_webhooks.py)
+httpx==0.28.1
+
 # Reads .env when the process has not exported the variables itself.
 python-dotenv==1.2.4
 
@@ -32,3 +35,6 @@ sendgrid>=6.11.0
 
 # Schema migrations (run `alembic upgrade head` before a production deploy)
 alembic==1.20.0
+
+# Excel board-pack export
+openpyxl==3.1.5

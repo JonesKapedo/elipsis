@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}90-day plan — {{ organization.name }}{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Execution, not another deck</p>
+  <h1>90-day action plan</h1>
+  <p class="lede">Three quick wins in 30 days, three in 60, three in 90. Assign an owner, set a date, and update status as the work moves.</p>
+  <div class="hero-actions">
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/results">Back to results</a>
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/summary">One-page summary</a>
+    {% if previous %}<span class="tag {{ 'ok' if (delta or 0) >= 0 else 'warn' }}">Movement {{ '%+.1f'|format(delta or 0) }} vs previous</span>{% endif %}
+  </div>
+</section>
+
+<article class="block">
+  {% for item in items %}<form id="plan-{{ item.id }}" method="post" action="/assessment/{{ assessment.id }}/plan/{{ item.id }}"></form>{% endfor %}
+  <table class="table plan-table">
+    <thead><tr><th>Action</th><th>Owner</th><th>Due</th><th>Status</th><th>Notes</th><th></th></tr></thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td><strong>{{ item.title }}</strong><br><span class="muted">{{ item.technology or '' }} · {{ item.horizon or '' }}</span></td>
+        <td><input form="plan-{{ item.id }}" name="owner" value="{{ item.owner or '' }}" placeholder="Name" maxlength="120"></td>
+        <td><input form="plan-{{ item.id }}" type="date" name="due_date" value="{{ item.due_date or '' }}"></td>
+        <td>
+          <select form="plan-{{ item.id }}" name="status">
+            {% for key, label in [('not_started','Not started'),('in_progress','In progress'),('blocked','Blocked'),('done','Done')] %}
+            <option value="{{ key }}" {% if item.status == key %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </td>
+        <td><input form="plan-{{ item.id }}" name="notes" value="{{ item.notes or '' }}" placeholder="Blocker or next step" maxlength="2000"></td>
+        <td><div style="display:flex;gap:.3rem;flex-wrap:wrap"><button form="plan-{{ item.id }}" class="btn sm" type="submit">Save</button><a class="btn ghost sm" href="/actions/{{ item.id }}/nudge">Nudge</a></div></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="muted">No actions generated yet. Run a completed assessment first.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</article>
+{% endblock %}

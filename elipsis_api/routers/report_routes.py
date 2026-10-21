@@ -81,13 +81,15 @@ def assessment_report_pdf(assessment_id: int, request: Request,
             comparison_rows = (services.department_comparison(db, org.id).get("rows") or [])
         except Exception:  # noqa: BLE001
             pass
+    brand = (request.query_params.get("brand") or "").strip()[:80] or BRAND_NAME
+    footer_note = (request.query_params.get("footer") or "").strip()[:160] or None
     try:
         pdf_bytes = build_pdf(
-            brand_name=BRAND_NAME, brand_tagline=BRAND_TAGLINE,
+            brand_name=brand, brand_tagline=BRAND_TAGLINE,
             index_name=INDEX_NAME, index_short=INDEX_SHORT, currency=CURRENCY,
             organization=org, department=dept, assessment=assessment, result=result,
             pillar_labels=PILLAR_LABELS, comparison_rows=comparison_rows or None,
-            insight=analytics.build(result),
+            insight=analytics.build(result), footer_note=footer_note,
         )
     except Exception as exc:  # noqa: BLE001
         print(f"[elipsis] PDF build failed: {exc}", flush=True)

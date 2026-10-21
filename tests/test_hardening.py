@@ -104,30 +104,35 @@ def test_password_reset_revokes_sessions(app_client):
     assert _login(TestClient(app_client.app), email, "new-password-456").status_code == 303
 
 
-def test_marketplace_request_create_requires_org(app_client):
+def test_marketplace_is_locked_while_coming_soon(app_client):
     email = f"poster-{uuid.uuid4().hex[:10]}@example.com"
     client = TestClient(app_client.app)
     assert client.post("/api/v1/auth/register", json={
         "email": email, "password": "poster-password", "name": "Poster"}).status_code == 200
     r = client.post("/api/v1/marketplace/requests", json={
         "title": "Automate finance close"})
-    assert r.status_code == 404
+    assert r.status_code == 503
+    page = client.get("/marketplace")
+    assert page.status_code == 200
+    assert "coming soon" in page.text.lower()
 
 
-def test_production_requires_postgres_and_secret(monkeypatch):
+def test_production_degrades_visibly_without_postgres_or_secret(monkeypatch):
     from elipsis_api import config, security
 
     monkeypatch.setenv("VERCEL", "1")
     monkeypatch.delenv("ELIPSIS_DATABASE_URL", raising=False)
     monkeypatch.delenv("TURBINEZ_DATABASE_URL", raising=False)
-    with pytest.raises(RuntimeError):
-        config.resolve_database_url()
+    monkeypatch.setattr(config, "CONFIG_ERRORS", [])
+    assert config.resolve_database_url().startswith("sqlite")
+    assert config.CONFIG_ERRORS
 
     monkeypatch.delenv("ELIPSIS_SECRET_KEY", raising=False)
     monkeypatch.delenv("TURBINEZ_SECRET_KEY", raising=False)
     monkeypatch.delenv("SECRET_KEY", raising=False)
-    with pytest.raises(RuntimeError):
-        security._session_secret()
+    monkeypatch.setattr(security, "_DEV_SECRET", None)
+    assert len(security._session_secret()) >= 32
+    assert any("SECRET_KEY" in e for e in config.CONFIG_ERRORS)
 
 
 def test_production_rejects_dummy_paystack(monkeypatch):

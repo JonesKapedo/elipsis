@@ -49,6 +49,33 @@
   </ul>
   <p><a href="/company">← Back to company</a></p>
 </article>
+<article class="block" id="team">
+  <h2>Team review</h2>
+  <p class="muted">Use comments to resolve data questions before sign-off. Approval records who signed and when; it does not replace the report.</p>
+  <form method="post" action="/company/campaign/{{ campaign.token }}/comment" class="stack">
+    <label>Comment<textarea name="body" rows="3" maxlength="2000" placeholder="e.g. Dispatch headcount includes casual staff — confirm before board pack." required></textarea></label>
+    <button class="btn sm" type="submit">Add comment</button>
+  </form>
+  {% if comments %}
+  <ul class="clean-list">
+    {% for c in comments %}<li><strong>{{ c.user_id }}</strong> · {{ c.created_at }}<br>{{ c.body }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+  <form method="post" action="/company/campaign/{{ campaign.token }}/approve" class="inline-form">
+    <select name="decision">
+      <option value="approved">Approve for board pack</option>
+      <option value="changes_requested">Request changes</option>
+    </select>
+    <input name="note" placeholder="Optional note" maxlength="2000">
+    <button class="btn sm" type="submit">Record decision</button>
+  </form>
+  {% if approvals %}
+  <ul class="clean-list">
+    {% for a in approvals %}<li><strong>{{ a.decision|replace('_',' ')|title }}</strong> · user {{ a.user_id }} · {{ a.created_at }}{% if a.note %}<br>{{ a.note }}{% endif %}</li>{% endfor %}
+  </ul>
+  {% endif %}
+</article>
+
 <script>
 (function(){
   var el = document.getElementById('deadlineLive');

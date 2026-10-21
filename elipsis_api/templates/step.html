@@ -123,6 +123,7 @@
           </label>
           {% endfor %}
         </div>
+        <p class="muted"><a href="/assessment/{{ assessment.id }}/evidence#{{ q.code }}" target="_blank" rel="noopener">Upload or manage proof for {{ q.code }} →</a></p>
         {% if q.evidence_required %}
         <label class="evidence">Do you have proof for this answer?
           <select name="e{{ q.id }}" id="e{{ q.id }}">

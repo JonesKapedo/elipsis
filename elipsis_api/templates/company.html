@@ -14,6 +14,10 @@
       <h2>{{ row.org.name }}</h2>
       <p class="muted">{{ row.org.industry or 'Industry not set' }}{% if row.org.city %} · {{ row.org.city }}{% endif %}{% if row.org.employee_count %} · {{ row.org.employee_count }} people{% endif %}</p>
     </div>
+    <div class="hero-actions">
+      <a class="btn ghost sm" href="/company/{{ row.org.id }}/team">Team</a>
+      <a class="btn ghost sm" href="/trends">Trends</a>
+    </div>
   </div>
 
   {% if row.portrait %}

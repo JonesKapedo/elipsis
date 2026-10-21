@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}{% if q %}Search: {{ q }}{% else %}Search{% endif %}{% endblock %}
+{% block description %}Search organisations, assessments and 90-day actions across your Elipsis workspace.{% endblock %}
+{% block content %}
+<section class="search-hero">
+  <p class="eyebrow">Workspace search</p>
+  <h1 style="font-size:clamp(2rem,4vw,2.8rem)">Find anything you can act on.</h1>
+  <p class="lede">Search organisations, assessments, departments, respondents and 90-day actions. Results are limited to organisations you can access.</p>
+  <form class="search-form" action="/search" method="get" role="search">
+    <input type="search" name="q" value="{{ q }}" placeholder="Try an organisation, department, owner or action…" aria-label="Search workspace" autofocus>
+    <button class="btn" type="submit">Search</button>
+  </form>
+</section>
+
+{% if not q %}
+  <div class="empty-state">
+    <p><strong>Start with a name or a phrase.</strong></p>
+    <p class="muted">For example: “Mombasa”, “dispatch”, “finance”, or the name of an action owner.</p>
+  </div>
+{% elif q|length < 2 %}
+  <div class="empty-state"><p>Enter at least two characters to search.</p></div>
+{% elif results.total == 0 %}
+  <div class="empty-state">
+    <p><strong>No matches for “{{ q }}”.</strong></p>
+    <p class="muted">Try a shorter phrase, an organisation name, or an action owner.</p>
+  </div>
+{% else %}
+  <p class="muted">{{ results.total }} result{% if results.total != 1 %}s{% endif %} for “{{ q }}”.</p>
+
+  {% if results.organizations %}
+  <section class="search-group">
+    <h2>Organisations</h2>
+    {% for row in results.organizations %}
+    <a class="search-result" href="{{ row.url }}">
+      <span><strong>{{ row.org.name }}</strong><span>Open organisation workspace</span></span>
+      <span class="arrow" aria-hidden="true">→</span>
+    </a>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if results.assessments %}
+  <section class="search-group">
+    <h2>Assessments</h2>
+    {% for row in results.assessments %}
+    <a class="search-result" href="{{ row.url }}">
+      <span>
+        <strong>{{ row.organization.name }}{% if row.department %} · {{ row.department.name }}{% endif %}</strong>
+        <span>
+          {{ row.assessment.status|replace('_', ' ')|title }}
+          {% if row.assessment.respondent %} · {{ row.assessment.respondent }}{% endif %}
+          {% if row.assessment.readiness_index is not none %} · index {{ '%.1f'|format(row.assessment.readiness_index) }}{% endif %}
+          {% if row.assessment.completed_at %} · {{ row.assessment.completed_at[:10] }}{% endif %}
+        </span>
+      </span>
+      <span class="arrow" aria-hidden="true">→</span>
+    </a>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if results.actions %}
+  <section class="search-group">
+    <h2>90-day actions</h2>
+    {% for row in results.actions %}
+    <a class="search-result" href="{{ row.url }}">
+      <span>
+        <strong>{{ row.item.title }}</strong>
+        <span>
+          {{ row.organization }}{% if row.department %} · {{ row.department }}{% endif %}
+          {% if row.item.owner %} · {{ row.item.owner }}{% endif %}
+          {% if row.item.due_date %} · due {{ row.item.due_date }}{% endif %}
+          · {{ (row.item.status or 'not started')|replace('_', ' ')|title }}
+        </span>
+      </span>
+      <span class="arrow" aria-hidden="true">→</span>
+    </a>
+    {% endfor %}
+  </section>
+  {% endif %}
+{% endif %}
+{% endblock %}

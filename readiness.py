@@ -30,9 +30,9 @@ from constants import (
     METRIC_PILLAR,
     METRIC_READINGS,
     METRICS,
+    PHASES,
     PILLAR_LABELS,
     PILLAR_WEIGHTS,
-    PHASES,
     SUBDOMAIN_LABELS,
     SUBDOMAIN_PILLAR,
     maturity_band,
@@ -399,7 +399,8 @@ def _horizon(complexity, priority):
 
 
 def compute(questions, answers, respondent_coverage=1 / 3.0, consistency=1.0,
-            staff=None) -> dict[str, Any]:
+            staff=None, hourly_rate=None, working_hours_per_month=None,
+            max_savings_share=None, annual_revenue=None) -> dict[str, Any]:
     """Compute the full Elipsis result.
 
     questions : iterable of mappings with keys
@@ -475,10 +476,25 @@ def compute(questions, answers, respondent_coverage=1 / 3.0, consistency=1.0,
     ]
 
     # --- Pain points, recommendations, financial model --------------------
-    staff_count = max(1, int(staff or DEFAULT_STAFF))
-    hourly_rate = blended_hourly_rate(staff_count)
-    payroll = labour_line(staff_count, hourly_rate)
-    savings_cap = payroll * MAX_SAVINGS_SHARE
+    staff_count = max(1, min(100_000, int(staff or DEFAULT_STAFF)))
+    rate = blended_hourly_rate(staff_count)
+    try:
+        rate = float(hourly_rate) if hourly_rate not in (None, "") else rate
+    except (TypeError, ValueError):
+        pass
+    rate = max(50.0, min(20_000.0, rate))
+    try:
+        hours = float(working_hours_per_month) if working_hours_per_month not in (None, "") else WORKING_HOURS_PER_MONTH
+    except (TypeError, ValueError):
+        hours = WORKING_HOURS_PER_MONTH
+    hours = max(20.0, min(400.0, hours))
+    try:
+        cap_share = float(max_savings_share) if max_savings_share not in (None, "") else MAX_SAVINGS_SHARE
+    except (TypeError, ValueError):
+        cap_share = MAX_SAVINGS_SHARE
+    cap_share = max(0.01, min(0.30, cap_share))
+    payroll = staff_count * hours * 12 * rate
+    savings_cap = payroll * cap_share
 
     pain_points, recommendations = [], []
     current_total = future_total = investment_total = 0.0
@@ -494,7 +510,7 @@ def compute(questions, answers, respondent_coverage=1 / 3.0, consistency=1.0,
         share = spec.get("share", 0.05)
         affected = staff_count * share
         annual_hours = affected * spec["base_hours"] * sev
-        current = annual_hours * hourly_rate
+        current = annual_hours * rate
         future = current * (1 - EFFICIENCY[spec["complexity"]])
         savings = current - future
         investment = float(spec["investment"])
@@ -527,17 +543,20 @@ def compute(questions, answers, respondent_coverage=1 / 3.0, consistency=1.0,
 
     assumptions = dict(
         staff=staff_count,
-        hourly_rate=hourly_rate,
-        working_hours_per_month=WORKING_HOURS_PER_MONTH,
+        hourly_rate=round(rate, 2),
+        working_hours_per_month=round(hours, 1),
         labour_line=round(payroll),
         savings_cap=round(savings_cap),
-        max_savings_share=MAX_SAVINGS_SHARE,
+        max_savings_share=round(cap_share, 4),
         capped=scaling < 1.0,
         cap_applied=round(savings_cap),
         raw_savings=round(total_savings / scaling),
         scale_factor=round(scaling, 4),
         friction_cost=round(current_total),
-        hours_freed=round(total_savings / hourly_rate) if hourly_rate else 0,
+        hours_freed=round(total_savings / rate) if rate else 0,
+        annual_revenue=round(float(annual_revenue), 2) if annual_revenue not in (None, "") else None,
+        editable=True,
+        method="Labour exposure x process-drag severity, capped at a share of the annual labour line.",
     )
 
     # --- Three-phase roadmap ---------------------------------------------

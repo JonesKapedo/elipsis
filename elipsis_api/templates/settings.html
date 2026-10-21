@@ -23,4 +23,60 @@
   </label>
   <button class="btn" type="submit">Save</button>
 </form>
+
+<section class="block" style="margin-top:1.2rem">
+  <div class="block-head"><h3>Webhooks</h3><span class="muted small">Signed event delivery for ERP/WMS workflows.</span></div>
+  {% if webhook_message %}
+  <div class="flash {{ 'err' if webhook_message in ['invalid','denied'] else 'ok' }}">{{ webhook_message|replace('_',' ') }}</div>
+  {% endif %}
+  {% if webhooks %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Endpoint</th><th>Events</th><th>Secret</th><th></th></tr></thead>
+      <tbody>
+        {% for hook in webhooks %}
+        <tr>
+          <td><code style="word-break:break-all">{{ hook.url }}</code></td>
+          <td class="small">{{ hook.events }}</td>
+          <td><code>{{ hook.secret }}</code></td>
+          <td>
+            <form method="post" action="/settings/webhooks/{{ hook.id }}/test" style="display:inline"><button class="btn ghost sm" type="submit">Test</button></form>
+            <form method="post" action="/settings/webhooks/{{ hook.id }}/delete" style="display:inline"><button class="btn ghost sm" type="submit">Delete</button></form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted small">No endpoints yet. Add one to receive action updates.</p>
+  {% endif %}
+  {% if organizations %}
+  <form method="post" action="/settings/webhooks" class="stack" style="margin-top:1rem">
+    <label>Organisation
+      <select name="organization_id">
+        {% for org in organizations %}<option value="{{ org.id }}">{{ org.name }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Endpoint URL <input name="url" type="url" placeholder="https://ops.example.com/hooks/elipsis" required></label>
+    <fieldset>
+      <legend>Events</legend>
+      {% for event in events %}
+      <label class="inline"><input type="checkbox" name="events" value="{{ event }}" {% if event == 'action.updated' %}checked{% endif %}> {{ event }}</label>
+      {% endfor %}
+    </fieldset>
+    <button class="btn" type="submit">Add endpoint</button>
+  </form>
+  {% endif %}
+  {% if deliveries %}
+  <div class="table-wrap" style="margin-top:1rem">
+    <table class="table">
+      <thead><tr><th>Event</th><th>Status</th><th>Code</th><th>When</th></tr></thead>
+      <tbody>
+        {% for d in deliveries %}<tr><td>{{ d.event }}</td><td><span class="tag {{ 'ok' if d.status == 'delivered' else 'warn' }}">{{ d.status }}</span></td><td>{{ d.response_code or '—' }}</td><td class="small">{{ d.created_at }}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</section>
 {% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Attention ledger</p>
+  <h1>Notifications</h1>
+  <p class="lede">Overdue actions, due-soon work, and review dates in one place. Mark items read without losing the record.</p>
+</section>
+
+{% if request.query_params.get('read') %}<div class="flash ok">Marked read.</div>{% endif %}
+{% if request.query_params.get('digest') == 'saved' %}<div class="flash ok">Digest preference saved.</div>{% endif %}
+{% if request.query_params.get('digest') == 'sent' %}<div class="flash ok">Digest sent.</div>{% endif %}
+{% if request.query_params.get('digest') in ['email_not_configured', 'not_due'] %}<div class="flash err">Digest not sent: {{ request.query_params.get('digest')|replace('_',' ') }}.</div>{% endif %}
+
+<section class="two-col">
+  <article class="block">
+    <div class="block-head"><h3>Inbox</h3><span class="tag">{{ unread }} unread</span></div>
+    {% if notifications %}
+    <form method="post" action="/notifications/read">
+      <div class="attention">
+        {% for n in notifications %}
+        <label class="notification-row{% if n.read %} is-read{% endif %}">
+          <input type="checkbox" name="fingerprint" value="{{ n.fingerprint }}" {% if n.read %}checked disabled{% endif %}>
+          <span class="dot {{ n.severity }}"></span>
+          <span><strong>{{ n.title }}</strong><small>{{ n.detail }}</small></span>
+          <a href="{{ n.url }}">Open</a>
+        </label>
+        {% endfor %}
+      </div>
+      <button class="btn sm" type="submit" style="margin-top:.8rem">Mark selected read</button>
+    </form>
+    {% else %}
+    <p class="muted">No overdue actions or review dates. Keep the cadence.</p>
+    {% endif %}
+  </article>
+  <article class="block">
+    <h3>Email digest</h3>
+    <p class="muted small">A short weekly pulse with the same items. Send one now to test delivery.</p>
+    <form method="post" action="/notifications/digest" class="stack">
+      <label>Frequency
+        <select name="frequency">
+          <option value="weekly" {% if prefs.digest_frequency != 'daily' and prefs.digest_frequency != 'off' %}selected{% endif %}>Weekly</option>
+          <option value="daily" {% if prefs.digest_frequency == 'daily' %}selected{% endif %}>Daily</option>
+          <option value="off" {% if prefs.digest_frequency == 'off' %}selected{% endif %}>Off</option>
+        </select>
+      </label>
+      <button class="btn sm" type="submit">Save preference</button>
+    </form>
+    <form method="post" action="/notifications/digest/send" style="margin-top:.6rem">
+      <button class="btn ghost sm" type="submit">Send digest now</button>
+    </form>
+    {% if prefs.digest_last_sent %}<p class="muted small">Last attempt: {{ prefs.digest_last_sent }}</p>{% endif %}
+  </article>
+</section>
+{% endblock %}
