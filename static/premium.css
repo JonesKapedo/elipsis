@@ -1815,3 +1815,16 @@ body.page-login::before { display: none; }
   .qcard-full .choices { grid-template-columns: 1fr; }
   .setup-submit { position: static; }
 }
+
+.premium-note {
+  display: flex;
+  align-items: flex-start;
+  gap: .8rem;
+  margin-top: 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid #f0d38a;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fffaf0, #fff6df);
+}
+.premium-note p { margin: 0; }
+.premium-note .btn { margin-top: .65rem; }

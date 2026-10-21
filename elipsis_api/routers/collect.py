@@ -126,6 +126,8 @@ def company_share(organization_id: int, request: Request,
         return login_redirect()
     if not services.can_access_org(db, user, organization_id):
         return RedirectResponse("/company", status_code=303)
+    if not services.is_pro_user(db, user):
+        return RedirectResponse("/pro?locked=team", status_code=303)
     deadline = ""
     if deadline_date.strip():
         deadline = f"{deadline_date.strip()}T{(deadline_time or '17:00').strip()}"

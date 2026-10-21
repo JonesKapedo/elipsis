@@ -9,6 +9,8 @@ GET /transaction/verify/{reference}.
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
 import os
 import secrets
@@ -43,13 +45,14 @@ def new_reference(prefix: str = "ELP") -> str:
     return f"{prefix}_{secrets.token_hex(8)}"
 
 
-def initialize(email: str, amount_kes: int, reference: str, callback_url: str, metadata: dict | None = None) -> dict:
-    """Return {authorization_url, reference, access_code, dummy}."""
+def initialize(email: str, amount_minor: int, reference: str, callback_url: str,
+               metadata: dict | None = None, currency: str = "USD") -> dict:
+    """Initialize a checkout. Amount is already in the currency subunit (cents)."""
     ensure_configured()
     payload = {
         "email": email,
-        "amount": int(amount_kes) * 100,
-        "currency": "KES",
+        "amount": int(amount_minor),
+        "currency": currency.upper(),
         "reference": reference,
         "callback_url": callback_url,
         "metadata": metadata or {},
@@ -105,3 +108,11 @@ def verify(reference: str) -> dict:
         "amount": data.get("amount"),
         "currency": data.get("currency"),
     }
+
+
+def verify_webhook(payload: bytes, signature: str | None) -> bool:
+    """Validate Paystack's x-paystack-signature HMAC before trusting an event."""
+    if not signature or not SECRET:
+        return False
+    expected = hmac.new(SECRET.encode(), payload, hashlib.sha512).hexdigest()
+    return hmac.compare_digest(expected, signature)

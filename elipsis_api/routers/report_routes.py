@@ -39,6 +39,8 @@ def assessment_report(assessment_id: int, request: Request,
     assessment, result = _guarded(db, user, assessment_id)
     if assessment is None or result is None:
         return _not_found(request, user)
+    if not services.is_pro_user(db, user):
+        return RedirectResponse("/pro?locked=reports", status_code=303)
     org = db.get(models.Organization, assessment.organization_id)
     dept = db.get(models.Department, assessment.department_id) if assessment.department_id else None
     comparison_rows, comparison_average = [], None
@@ -72,6 +74,8 @@ def assessment_report_pdf(assessment_id: int, request: Request,
     assessment, result = _guarded(db, user, assessment_id)
     if assessment is None or result is None:
         return _not_found(request, user)
+    if not services.is_pro_user(db, user):
+        return RedirectResponse("/pro?locked=reports", status_code=303)
     org = db.get(models.Organization, assessment.organization_id)
     dept = (db.get(models.Department, assessment.department_id)
             if assessment.department_id else None)

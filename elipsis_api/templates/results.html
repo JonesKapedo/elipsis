@@ -17,21 +17,33 @@
   {% if previous %}&nbsp;&middot;&nbsp; <span class="tag {{ 'ok' if (delta or 0) >= 0 else 'warn' }}">Movement {{ '%+.1f'|format(delta or 0) }} vs previous</span>{% endif %}
   {% if assessment.review_due_at %}&nbsp;&middot;&nbsp; <span class="tag">Review due {{ assessment.review_due_at }}</span>{% endif %}</p>
   <div class="hero-actions" style="margin-top:0.75rem">
-    <a class="btn" href="/assessment/{{ assessment.id }}/report.pdf">Download PDF</a>
+    {% if is_pro %}
+    <a class="btn" href="/assessment/{{ assessment.id }}/report.pdf">Download PDF <span class="premium-tag">Premium</span></a>
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/report">Print / board pack</a>
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/export.xlsx">Excel</a>
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/export.json">JSON</a>
+    <a class="btn ghost" href="#share-links">Share links</a>
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/invite">Ask the team</a>
+    {% else %}
+    <a class="btn" href="/pro?locked=reports">Unlock report pack <span class="crown" title="Premium">{% include "partials/crown.svg" %}</span></a>
+    <a class="btn ghost" href="/pro?locked=team">Ask the team <span class="crown" title="Premium">{% include "partials/crown.svg" %}</span></a>
+    {% endif %}
     <a class="btn ghost" href="/assessment/{{ assessment.id }}/plan">90-day plan</a>
     <a class="btn ghost" href="/assessment/{{ assessment.id }}/summary">One-page summary</a>
     <a class="btn ghost" href="/assessment/{{ assessment.id }}/narrative">Board narrative</a>
-    <a class="btn ghost" href="/assessment/{{ assessment.id }}/export.xlsx">Excel</a>
     <a class="btn ghost" href="/assessment/{{ assessment.id }}/evidence">Evidence</a>
     <a class="btn ghost" href="/assessment/{{ assessment.id }}/badge">Readiness badge</a>
-    <a class="btn ghost" href="/assessment/{{ assessment.id }}/invite">Invite respondents</a>
-    <a class="btn ghost" href="/assessment/{{ assessment.id }}/report">View board pack</a>
-    <a class="btn ghost" href="#share-links">Share links</a>
     {% if organization %}
     <a class="btn ghost" href="/compare/{{ organization.id }}">Compare departments</a>
     {% endif %}
     <a class="btn ghost" href="/start">New assessment</a>
   </div>
+  {% if not is_pro %}
+  <div class="premium-note">
+    <span class="crown" title="Premium">{% include "partials/crown.svg" %}</span>
+    <p><strong>Premium turns this result into a board pack.</strong> Download PDF, Excel, or JSON, print a clean report, share a read-only link, and send the questionnaire to your team.</p>
+  </div>
+  {% endif %}
   {% if request.query_params.get('import') %}
   <div class="flash {{ 'err' if request.query_params.get('import') in ['invalid','empty'] else 'ok' }}" style="margin-top:1rem">
     {% if request.query_params.get('import') == 'invalid' %}Import failed. Upload a CSV or XLSX under 2 MB.
@@ -127,6 +139,7 @@
   </article>
   <article class="block" id="share-links">
     <h3>Shared links</h3>
+    {% if is_pro %}
     <form method="post" action="/assessment/{{ assessment.id }}/share" class="filter-bar">
       <input name="label" placeholder="Label (e.g. Board pack)" maxlength="120" style="flex:1 1 160px">
       <select name="days" aria-label="Expiry">
@@ -137,6 +150,9 @@
       </select>
       <button class="btn sm" type="submit">Create link</button>
     </form>
+    {% else %}
+    <p class="muted">Read-only board links are part of Premium. <a href="/pro?locked=reports">Unlock report sharing →</a></p>
+    {% endif %}
     {% if share_links %}
     <table class="table">
       <thead><tr><th>Label</th><th>Views</th><th>Expires</th><th></th></tr></thead>

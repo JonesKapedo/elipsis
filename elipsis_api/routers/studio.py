@@ -2,14 +2,23 @@
 
 from __future__ import annotations
 
-from datetime import UTC
+import json
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Form, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from elipsis_api import departments, models, paystack, security, services, services_webhooks
+from elipsis_api import (
+    departments,
+    models,
+    paystack,
+    premium,
+    security,
+    services,
+    services_webhooks,
+)
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
 from elipsis_api.narrative import company_portrait
@@ -24,7 +33,6 @@ PACKAGES = {
     "programme": ("Transformation programme", 950_000,
                   "Six to eight weeks. Full sweep plus a sequenced build plan, control design, and a board pack tied to the Elipsis Index."),
 }
-PRO_PRICE = 45_000
 
 
 def _prefs(db: Session, user) -> models.UserPref:
@@ -261,22 +269,32 @@ def pro_page(request: Request, user=Depends(get_current_user), db: Session = Dep
         return login_redirect()
     prefs = _prefs(db, user)
     return templates.TemplateResponse(request, "pro.html", {
-        "user": user, "prefs": prefs, "packages": PACKAGES, "pro_price": PRO_PRICE,
-        "orgs": _owned_orgs(db, user),
+        "user": user, "prefs": prefs, "orgs": _owned_orgs(db, user),
+        "plans": premium.PLANS, "features": premium.FEATURES,
+        "currency": premium.CURRENCY, "is_pro": services.is_pro_user(db, user),
+        "upgraded": request.query_params.get("upgraded") == "1",
+        "locked": request.query_params.get("locked") or "",
     })
 
 
 @router.post("/pro/checkout")
-def pro_checkout(request: Request, user=Depends(get_current_user), db: Session = Depends(get_db)):
+def pro_checkout(request: Request, billing: str = Form("annual"),
+                 user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
-    ref = paystack.new_reference("PRO")
-    db.add(models.Payment(user_id=user.id, reference=ref, purpose="pro",
-                          amount_kes=PRO_PRICE, status="pending"))
+    cycle = "annual" if billing == "annual" else "monthly"
+    amount = premium.amount_minor(cycle)
+    ref = paystack.new_reference("PRE")
+    db.add(models.Payment(
+        user_id=user.id, reference=ref, purpose="premium", amount_kes=0,
+        currency=premium.CURRENCY, amount_minor=amount, billing_cycle=cycle,
+        status="pending"))
     db.commit()
     base = str(request.base_url).rstrip("/")
-    data = paystack.initialize(user.email, PRO_PRICE, ref, f"{base}/pay/return/{ref}",
-                               {"purpose": "pro"})
+    data = paystack.initialize(
+        user.email, amount, ref, f"{base}/pay/return/{ref}",
+        {"purpose": "premium", "billing": cycle, "price_usd": premium.plan(cycle)["price"]},
+        currency=premium.CURRENCY)
     return RedirectResponse(data["authorization_url"], status_code=303)
 
 
@@ -315,11 +333,13 @@ def physical_request(request: Request, company_name: str = Form(...), package: s
     db.refresh(row)
     ref = paystack.new_reference("PHY")
     db.add(models.Payment(user_id=user.id, reference=ref, purpose="physical",
-                          amount_kes=amount, related_id=row.id, status="pending"))
+                          amount_kes=amount, currency="KES", amount_minor=amount * 100,
+                          related_id=row.id, status="pending"))
     db.commit()
     base = str(request.base_url).rstrip("/")
-    data = paystack.initialize(user.email, amount, ref, f"{base}/pay/return/{ref}",
-                               {"purpose": "physical", "request_id": row.id, "package": label})
+    data = paystack.initialize(user.email, amount * 100, ref, f"{base}/pay/return/{ref}",
+                               {"purpose": "physical", "request_id": row.id, "package": label},
+                               currency="KES")
     return RedirectResponse(data["authorization_url"], status_code=303)
 
 
@@ -343,6 +363,59 @@ def dummy_confirm(reference: str, user=Depends(get_current_user), db: Session = 
     return RedirectResponse(f"/pay/return/{reference}?simulate=success", status_code=303)
 
 
+def _payment_matches(payment: models.Payment, verified: dict) -> bool:
+    if verified.get("status") != "success" or verified.get("reference") != payment.reference:
+        return False
+    expected = (payment.amount_minor if payment.amount_minor is not None
+                else int(round(payment.amount_kes * 100)))
+    paid = verified.get("amount")
+    if paid is not None and int(paid) != int(expected):
+        return False
+    expected_currency = (payment.currency or "KES").upper()
+    paid_currency = verified.get("currency")
+    if paid_currency and str(paid_currency).upper() != expected_currency:
+        return False
+    return True
+
+
+def _apply_payment(db: Session, payment: models.Payment, verified: dict) -> bool:
+    """Idempotently mark a payment paid and grant the matching entitlement."""
+    if payment.status == "success":
+        return True
+    if not _payment_matches(payment, verified):
+        return False
+    from elipsis_api.models import _now
+    payment.status = "success"
+    payment.paid_at = _now()
+    if payment.purpose in {"pro", "premium"} and payment.user_id:
+        user = db.get(models.User, payment.user_id)
+        if user is not None:
+            prefs = _prefs(db, user)
+            if prefs.pro_until != "active":
+                days = (365 if payment.purpose == "pro" or payment.billing_cycle == "annual"
+                        else premium.MONTHLY_DAYS)
+                now = datetime.now(UTC).replace(tzinfo=None)
+                start = now
+                if prefs.pro_until:
+                    try:
+                        start = max(start, datetime.fromisoformat(prefs.pro_until))
+                    except ValueError:
+                        pass
+                prefs.pro_until = (start + timedelta(days=days)).isoformat(timespec="seconds")
+    if payment.purpose == "physical" and payment.related_id:
+        req = db.get(models.PhysicalRequest, payment.related_id)
+        if req:
+            req.status = "open_bid"
+    db.commit()
+    return True
+
+
+def _payment_destination(payment: models.Payment) -> str:
+    if payment.purpose in {"pro", "premium"}:
+        return "/pro?upgraded=1"
+    return "/company"
+
+
 @router.get("/pay/return/{reference}")
 def pay_return(reference: str, request: Request, user=Depends(get_current_user),
                db: Session = Depends(get_db)):
@@ -355,36 +428,48 @@ def pay_return(reference: str, request: Request, user=Depends(get_current_user),
         verified = paystack.verify(reference)
     except Exception:  # noqa: BLE001
         verified = {}
-    amount_ok = (
-        verified.get("amount") is None
-        or int(verified.get("amount") or 0) == int(round(payment.amount_kes * 100))
-    )
-    if (verified.get("status") == "success"
-            and verified.get("reference") == reference
-            and amount_ok):
-        payment.status = "success"
-        from elipsis_api.models import _now
-        payment.paid_at = _now()
-        if payment.purpose == "pro":
-            prefs = _prefs(db, user)
-            from datetime import datetime, timedelta
-            prefs.pro_until = (datetime.now(UTC).replace(tzinfo=None)
-                               + timedelta(days=365)).isoformat(timespec="seconds")
-        if payment.purpose == "physical" and payment.related_id:
-            req = db.get(models.PhysicalRequest, payment.related_id)
-            if req:
-                req.status = "open_bid"
-        db.commit()
-    dest = "/bids" if payment.purpose == "pro" else "/company"
-    return RedirectResponse(dest, status_code=303)
+    _apply_payment(db, payment, verified)
+    return RedirectResponse(_payment_destination(payment), status_code=303)
+
+
+@router.post("/paystack/webhook")
+async def paystack_webhook(request: Request, db: Session = Depends(get_db)):
+    try:
+        paystack.ensure_configured()
+    except RuntimeError:
+        return JSONResponse({"detail": "payment provider not configured"}, status_code=503)
+    raw = await request.body()
+    signature = request.headers.get("x-paystack-signature")
+    if not paystack.verify_webhook(raw, signature):
+        return JSONResponse({"detail": "invalid signature"}, status_code=401)
+    try:
+        event = json.loads(raw.decode())
+    except (ValueError, UnicodeDecodeError):
+        return JSONResponse({"detail": "invalid payload"}, status_code=400)
+    if event.get("event") != "charge.success":
+        return JSONResponse({"status": "ignored"})
+    data = event.get("data") or {}
+    reference = data.get("reference") or ""
+    payment = db.scalar(select(models.Payment).where(
+        models.Payment.reference == reference))
+    if payment is None:
+        return JSONResponse({"status": "ignored"})
+    verified = {
+        "status": "success",
+        "reference": reference,
+        "amount": data.get("amount"),
+        "currency": data.get("currency"),
+    }
+    if not _apply_payment(db, payment, verified):
+        return JSONResponse({"detail": "payment mismatch"}, status_code=400)
+    return JSONResponse({"status": "ok"})
 
 
 @router.get("/bids")
 def bids(request: Request, user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
-    prefs = _prefs(db, user)
-    if prefs.pro_until != "active" and not _is_admin(user):
+    if not services.is_pro_user(db, user):
         return RedirectResponse("/pro?locked=bids", status_code=303)
     rows = list(db.scalars(select(models.PhysicalRequest).where(
         models.PhysicalRequest.status == "open_bid").order_by(models.PhysicalRequest.id.desc())))

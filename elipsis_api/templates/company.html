@@ -44,7 +44,7 @@
 
   <div class="hero-actions company-actions">
     <a class="btn" href="/start?org={{ row.org.id }}">Start a diagnostic</a>
-    <a class="btn ghost" href="/start?org={{ row.org.id }}&amp;method=team">Ask the team</a>
+    <a class="btn ghost" href="{% if is_pro %}/start?org={{ row.org.id }}&amp;method=team{% else %}/pro?locked=team{% endif %}">Ask the team{% if not is_pro %} <span class="crown" title="Premium">{% include "partials/crown.svg" %}</span>{% endif %}</a>
     <a class="btn ghost" href="/setup?org={{ row.org.id }}">Update profile</a>
     <a class="btn ghost" href="/dashboard?org={{ row.org.id }}">Dashboard</a>
     <a class="btn ghost" href="/trends?org={{ row.org.id }}">Trends</a>

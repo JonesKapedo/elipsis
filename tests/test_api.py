@@ -812,3 +812,160 @@ def test_team_campaign_uses_department_questions_and_builds_master(signed_in):
         assert master.source == "team"
         master_qids = {q.id for q in services.get_questions(db, master.questionnaire_id)}
         assert len(master_qids) == len(qids)
+
+
+def test_premium_checkout_and_dummy_return_grant_access():
+    from fastapi.testclient import TestClient
+
+    from elipsis_api import models, premium, security
+    from elipsis_api.database import SessionLocal
+    from elipsis_api.main import app
+
+    with SessionLocal() as db:
+        db.add(models.User(
+            email="premium-buyer@example.com", name="Premium Buyer",
+            role="client", user_type="client",
+            password_hash=security.hash_password("premium-buyer-pass")))
+        db.commit()
+
+    with TestClient(app) as fresh:
+        signed = fresh.post("/login", data={
+            "email": "premium-buyer@example.com", "password": "premium-buyer-pass"},
+            headers={"x-forwarded-for": "203.0.113.41"}, follow_redirects=False)
+        assert signed.status_code == 303
+        fresh.post("/setup", data={
+            "name": "Buyer Co", "industry": "Logistics",
+            "default_department": "Operations"}, follow_redirects=False)
+        page = fresh.get("/pro")
+        assert page.status_code == 200
+        assert "$39" in page.text and "$390" in page.text
+        checkout = fresh.post("/pro/checkout", data={"billing": "monthly"},
+                              follow_redirects=False)
+        assert checkout.status_code == 303
+        location = checkout.headers["location"]
+        assert "/pay/dummy/PRE_" in location
+        reference = location.rsplit("/", 1)[-1]
+
+        with SessionLocal() as db:
+            payment = db.query(models.Payment).filter_by(reference=reference).one()
+            assert payment.purpose == "premium"
+            assert payment.currency == premium.CURRENCY
+            assert payment.amount_minor == premium.amount_minor("monthly")
+            assert payment.billing_cycle == "monthly"
+
+        paid = fresh.get(f"/pay/return/{reference}", follow_redirects=False)
+        assert paid.status_code == 303
+        assert paid.headers["location"] == "/pro?upgraded=1"
+        assert fresh.get("/setup?new=1", follow_redirects=False).status_code == 200
+
+
+def test_paystack_webhook_requires_signature_and_grants_annual_access():
+    import hashlib
+    import hmac
+    import json as jsonlib
+
+    from fastapi.testclient import TestClient
+
+    from elipsis_api import models, paystack, premium, security
+    from elipsis_api.database import SessionLocal
+    from elipsis_api.main import app
+
+    with SessionLocal() as db:
+        user = models.User(
+            email="webhook-buyer@example.com", name="Webhook Buyer",
+            role="client", user_type="client",
+            password_hash=security.hash_password("webhook-buyer-pass"))
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        payment = models.Payment(
+            user_id=user.id, reference="PRE_webhook_test", purpose="premium",
+            amount_kes=0, currency=premium.CURRENCY,
+            amount_minor=premium.amount_minor("annual"), billing_cycle="annual",
+            status="pending")
+        db.add(payment)
+        db.commit()
+
+    payload = jsonlib.dumps({
+        "event": "charge.success",
+        "data": {"reference": "PRE_webhook_test", "status": "success",
+                 "amount": premium.amount_minor("annual"), "currency": premium.CURRENCY},
+    }).encode()
+
+    with TestClient(app) as fresh:
+        assert fresh.post("/paystack/webhook", content=payload,
+                          headers={"x-paystack-signature": "bad"}).status_code == 401
+        signature = hmac.new(
+            paystack.SECRET.encode(), payload, hashlib.sha512).hexdigest()
+        ok = fresh.post("/paystack/webhook", content=payload,
+                        headers={"x-paystack-signature": signature})
+        assert ok.status_code == 200
+        assert ok.json()["status"] == "ok"
+
+    with SessionLocal() as db:
+        user = db.query(models.User).filter_by(email="webhook-buyer@example.com").one()
+        payment = db.query(models.Payment).filter_by(reference="PRE_webhook_test").one()
+        prefs = db.get(models.UserPref, user.id)
+        assert payment.status == "success"
+        assert prefs is not None and prefs.pro_until not in (None, "", "active")
+
+
+def test_free_user_is_gated_from_team_reports_and_sharing():
+    from fastapi.testclient import TestClient
+
+    from elipsis_api import models, security, services
+    from elipsis_api.database import SessionLocal
+    from elipsis_api.main import app
+
+    with SessionLocal() as db:
+        db.add(models.User(
+            email="free-gates@example.com", name="Free Gates",
+            role="client", user_type="client",
+            password_hash=security.hash_password("free-gates-pass")))
+        db.commit()
+
+    with TestClient(app) as fresh:
+        signed = fresh.post("/login", data={
+            "email": "free-gates@example.com", "password": "free-gates-pass"},
+            headers={"x-forwarded-for": "203.0.113.42"}, follow_redirects=False)
+        assert signed.status_code == 303
+        fresh.post("/setup", data={
+            "name": "Free Gates Co", "industry": "Logistics",
+            "default_department": "Operations"}, follow_redirects=False)
+        with SessionLocal() as db:
+            user = db.query(models.User).filter_by(email="free-gates@example.com").one()
+            org_id = services.owned_orgs(db, user)[0].id
+        created = fresh.post("/api/v1/assessments", json={
+            "organization_id": org_id,
+            "department": "Operations", "respondent": "Owner"})
+        assert created.status_code == 201
+        assessment_id = created.json()["id"]
+        extra_company = fresh.post("/api/v1/organizations",
+                                   json={"name": "Second Free Co"})
+        assert extra_company.status_code == 402
+
+        team = fresh.post("/start", data={
+            "organization_id": str(org_id), "department": "Operations",
+            "method": "team"}, follow_redirects=False)
+        assert team.status_code == 303
+        assert team.headers["location"] == "/pro?locked=team"
+
+        campaign = fresh.post(f"/company/{org_id}/share", data={
+            "department": "Operations"}, follow_redirects=False)
+        assert campaign.status_code == 303
+        assert campaign.headers["location"] == "/pro?locked=team"
+
+        report = fresh.get(f"/assessment/{assessment_id}/report.pdf",
+                           follow_redirects=False)
+        assert report.status_code == 303
+        assert report.headers["location"] == "/pro?locked=reports"
+
+        export = fresh.get(f"/assessment/{assessment_id}/export.json",
+                           follow_redirects=False)
+        assert export.status_code == 303
+        assert export.headers["location"] == "/pro?locked=reports"
+
+        share = fresh.post(f"/assessment/{assessment_id}/share", data={"days": "30"},
+                           follow_redirects=False)
+        assert share.status_code == 303
+        assert share.headers["location"] == "/pro?locked=reports"

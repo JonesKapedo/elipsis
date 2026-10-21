@@ -92,9 +92,10 @@ def is_pro_user(db: Session, user) -> bool:
         return False
     if prefs.pro_until == "active":
         return True
-    from datetime import datetime
+    from datetime import UTC, datetime
     try:
-        return datetime.fromisoformat(prefs.pro_until) >= datetime.utcnow()
+        return (datetime.fromisoformat(prefs.pro_until)
+                >= datetime.now(UTC).replace(tzinfo=None))
     except ValueError:
         return False
 

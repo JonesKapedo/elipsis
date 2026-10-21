@@ -65,7 +65,7 @@
         </label>
         <label class="method-option">
           <input type="radio" name="method" value="team" {% if method == 'team' %}checked{% endif %}>
-          <span><strong>Ask the team</strong><small>Share a link. Responses combine into one diagnostic.</small></span>
+          <span><strong>Ask the team{% if not is_pro %} <span class="premium-tag">Premium</span>{% endif %}</strong><small>Share a link. Responses combine into one diagnostic.{% if not is_pro %} Upgrade to unlock.{% endif %}</small></span>
         </label>
       </div>
 

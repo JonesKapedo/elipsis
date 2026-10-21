@@ -55,6 +55,8 @@ def company_create(
     name = (name or "").strip()[:200]
     if not name:
         return RedirectResponse("/company", status_code=303)
+    if services.owned_orgs(db, user) and not services.is_pro_user(db, user):
+        return RedirectResponse("/pro?locked=companies", status_code=303)
     emp = None
     if (employee_count or "").strip().isdigit():
         emp = int(employee_count)

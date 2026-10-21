@@ -107,6 +107,7 @@ def invite_page(assessment_id: int, request: Request,
         "campaign": camp, "share_url": share_url, "message": message,
         "whatsapp_url": whatsapp, "sms_url": sms,
         "phone": request.query_params.get("phone") or "",
+        "is_pro": services.is_pro_user(db, user),
         "notifications": services_ops.notifications(db, user),
     })
 
@@ -121,6 +122,8 @@ def invite_create(assessment_id: int, request: Request,
     assessment = _owned(db, user, assessment_id)
     if assessment is None:
         return _not_found(request, user)
+    if not services.is_pro_user(db, user):
+        return RedirectResponse("/pro?locked=team", status_code=303)
     camp = _campaign_for_assessment(
         db, assessment, user, days=days, min_respondents=min_respondents,
         allow_anonymous=bool(allow_anonymous))

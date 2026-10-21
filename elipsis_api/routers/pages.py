@@ -12,6 +12,7 @@ from elipsis_api import (
     departments,
     logistics,
     models,
+    premium,
     schemas,
     services,
     services_operations,
@@ -130,7 +131,9 @@ def sample_report(request: Request, user=Depends(get_current_user)):
 
 @router.get("/pricing")
 def pricing(request: Request, user=Depends(get_current_user)):
-    return templates.TemplateResponse(request, "pricing.html", {"user": user})
+    return templates.TemplateResponse(request, "pricing.html", {
+        "user": user, "premium_plans": premium.PLANS,
+        "premium_currency": premium.CURRENCY})
 
 
 @router.get("/methodology")
@@ -292,6 +295,8 @@ def share_create(assessment_id: int, request: Request,
         return login_redirect()
     if _owned_assessment(db, user, assessment_id) is None:
         return _not_found(request, user)
+    if not services.is_pro_user(db, user):
+        return RedirectResponse("/pro?locked=reports", status_code=303)
     try:
         days = int(days or request.query_params.get("days") or 30)
     except ValueError:
@@ -469,6 +474,8 @@ def start_post(request: Request,
             raise ValueError("Select one of your saved companies.")
         dept = department.strip() or "Operations"
         if method == "team":
+            if not services.is_pro_user(db, user):
+                return RedirectResponse("/pro?locked=team", status_code=303)
             deadline = ""
             if deadline_date.strip():
                 deadline = f"{deadline_date.strip()}T{(deadline_time or '17:00').strip()}"
@@ -663,6 +670,7 @@ def assessment_results(assessment_id: int, request: Request,
          "logistics": logistics.snapshot(db, assessment_ids=[assessment_id]),
          "operations": services_operations.summary(db, [assessment.organization_id]),
          "share_links": services_ops.share_links(db, assessment_id),
+         "is_pro": services.is_pro_user(db, user),
          "notifications": services_ops.notifications(db, user)})
 
 
@@ -684,6 +692,7 @@ def assessment_pillar(assessment_id: int, code: str, request: Request,
         {"user": user, "assessment": assessment, "result": result,
          "organization": org, "department": dept,
          "benchmark": benchmarks.cohort_benchmark(db, org),
+         "is_pro": services.is_pro_user(db, user),
          "focus_pillar": code.upper()})
 
 
@@ -695,6 +704,8 @@ def assessment_export(assessment_id: int, request: Request,
     assessment = _owned_assessment(db, user, assessment_id)
     if assessment is None:
         return _not_found(request, user)
+    if not services.is_pro_user(db, user):
+        return RedirectResponse("/pro?locked=reports", status_code=303)
     _, result = services.compute(db, assessment_id)
     if result is None:
         return JSONResponse({"error": "not ready"}, status_code=404)

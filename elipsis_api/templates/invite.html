@@ -12,6 +12,16 @@
 </section>
 
 {% if not campaign %}
+{% if not is_pro %}
+<section class="block premium-note">
+  <span class="crown large" title="Premium">{% include "partials/crown.svg" %}</span>
+  <div>
+    <h3>Team questionnaires are Premium</h3>
+    <p class="muted">Send the same diagnostic to the people who do the work, collect responses without accounts, and combine them into one board-ready result.</p>
+    <a class="btn" href="/pro?locked=team">Unlock team questionnaires →</a>
+  </div>
+</section>
+{% else %}
 <section class="block">
   <h3>Create a collection link</h3>
   <form method="post" action="/assessment/{{ assessment.id }}/invite" class="stack">
@@ -26,6 +36,7 @@
     <button class="btn" type="submit">Create invite link</button>
   </form>
 </section>
+{% endif %}
 {% else %}
 <section class="two-col">
   <article class="block">
