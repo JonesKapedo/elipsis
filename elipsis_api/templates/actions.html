@@ -11,7 +11,45 @@
   </div>
 </section>
 
-{% if updated %}<div class="flash ok">Action updated.</div>{% endif %}
+{% if updated %}<div class="flash ok">Action board updated.</div>{% endif %}
+
+<section class="block">
+  <div class="block-head">
+    <h3>Saved views</h3>
+    <span class="muted small">One click back to the cut you use every week.</span>
+  </div>
+  <div class="view-chips">
+    {% for view in views %}
+    <span class="view-chip">
+      <a href="/views/{{ view.id }}">{{ view.name }}</a>
+      <form method="post" action="/views/{{ view.id }}/delete"><button type="submit" aria-label="Delete {{ view.name }}">×</button></form>
+    </span>
+    {% else %}
+    <span class="muted small">No saved views yet.</span>
+    {% endfor %}
+  </div>
+  <form method="post" action="/views" class="filter-bar" style="margin-top:.8rem">
+    <input type="hidden" name="query" value="{{ request.url.query }}">
+    <input name="name" placeholder="Name this view (e.g. Overdue dispatch)" maxlength="60" required>
+    <button class="btn ghost sm" type="submit">Save current filters</button>
+  </form>
+</section>
+
+{% if workload %}
+<section class="block">
+  <div class="block-head"><h3>Owner workload</h3><span class="muted small">Open work, not just names.</span></div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Owner</th><th class="num">Open</th><th class="num">Overdue</th><th class="num">Due soon</th><th class="num">Done</th></tr></thead>
+      <tbody>
+        {% for row in workload %}
+        <tr><td><strong>{{ row.owner }}</strong></td><td class="num">{{ row.open }}</td><td class="num">{{ row.overdue }}</td><td class="num">{{ row.due_soon }}</td><td class="num">{{ row.done }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
 
 <section class="stat-grid">
   <div class="stat-card"><span>Open actions</span><b>{{ summary.open }}</b></div>
@@ -55,9 +93,24 @@
     </form>
   </div>
 
+  <form id="bulk-form" method="post" action="/actions/bulk" class="filter-bar" style="margin-bottom:.8rem">
+    <label class="muted small"><input type="checkbox" data-check-all="bulk-form"> Select all</label>
+    <select name="status" aria-label="Bulk status">
+      <option value="keep">Keep status</option>
+      <option value="not_started">Not started</option>
+      <option value="in_progress">In progress</option>
+      <option value="blocked">Blocked</option>
+      <option value="done">Done</option>
+    </select>
+    <input name="owner" placeholder="Set owner (optional)" maxlength="120">
+    <input type="date" name="due_date" aria-label="Set due date (optional)">
+    <button class="btn sm" type="submit">Apply</button>
+  </form>
+
   {% for item in items %}
   <form method="post" action="/actions/{{ item.id }}" class="plan-row">
     <input type="hidden" name="next" value="/actions?status={{ status }}{% if owner %}&owner={{ owner|urlencode }}{% endif %}{% if overdue %}&overdue=1{% endif %}">
+    <input type="checkbox" form="bulk-form" name="item_ids" value="{{ item.id }}" aria-label="Select {{ item.title }}">
     <div>
       <div class="pr-title">{{ item.title }}</div>
       <div class="pr-meta">{{ item.organization }} · {{ item.department }}{% if item.overdue %} · <strong style="color:var(--bad)">overdue</strong>{% elif item.due_soon %} · due soon{% endif %}</div>
@@ -72,6 +125,7 @@
     <div style="display:flex;gap:.35rem">
       <input name="notes" value="{{ item.notes or '' }}" placeholder="Note" maxlength="2000" aria-label="Notes">
       <button class="btn sm" type="submit">Save</button>
+      <a class="btn ghost sm" href="/actions/{{ item.id }}/nudge">Nudge</a>
     </div>
   </form>
   {% else %}

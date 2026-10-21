@@ -37,9 +37,19 @@ Use any managed Postgres (Neon, Supabase, Vercel Postgres, RDS). Apply all migra
 ELIPSIS_DATABASE_URL='postgresql://...' alembic upgrade head
 ```
 
-The current head adds editable assumptions, evidence attachments, action-plan ownership/status, campaign review tables, review dates, share-view analytics, and the organisation audit trail.
+The current head adds editable assumptions, evidence attachments, action-plan ownership/status/phone, campaign review tables, review dates, share-view analytics, the organisation audit trail, saved views, notification read state, digests, and signed webhook endpoints.
 
 The app still seeds the question bank and first administrator on cold start. Future schema changes belong in `alembic/versions/`; do not edit production tables by hand.
+
+### Scheduled digest
+
+Send due daily/weekly digests from a cron job or Vercel Cron:
+
+```bash
+ELIPSIS_DATABASE_URL='postgresql://...' python -m elipsis_api.services_digest
+```
+
+Without `SENDGRID_API_KEY` / `SENDGRID_FROM_EMAIL`, digest attempts are logged and reported as `email_not_configured`; they do not mark the digest as sent.
 
 ## 4. After deploy
 
@@ -59,7 +69,7 @@ python run_api.py      # http://127.0.0.1:8001
 
 ## Notes
 
-- **Static CSS** is served from `/static/style.css` (repo-root `static/`).
+- **Static assets** are served from `/static/` (repo-root `static/`); the premium layer is `premium.css`.
 - **Telegram bot** is separate (`requirements-bot.txt`, `python -m telegram_bot.bot`). It is not part of the Vercel deployment.
 - **React frontend** under `frontend/` is experimental; the board-ready product path is the server-rendered templates. `frontend/node_modules` and `frontend/dist` are no longer tracked.
 - **Security**: signed, database-backed sessions with expiry/revocation; same-origin CSRF checks on unsafe methods; rate-limited login, signup, and password reset; per-organisation authorisation on assessment and marketplace APIs.

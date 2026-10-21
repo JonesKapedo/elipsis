@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Nudge owner — {{ item.title }}{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Accountability</p>
+  <h1>Nudge the owner.</h1>
+  <p class="lede">Send a short WhatsApp or SMS prompt with the action, due date, and a request to update the workspace.</p>
+  <div class="hero-actions">
+    <a class="btn ghost" href="/actions">Back to action board</a>
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/plan">Open plan</a>
+  </div>
+</section>
+
+<section class="two-col">
+  <article class="block">
+    <h3>{{ item.title }}</h3>
+    <p class="muted small">{{ organization.name if organization else 'Organisation' }} · {{ item.owner or 'Unassigned' }} · due {{ item.due_date or '—' }} · {{ item.status|replace('_',' ')|title }}</p>
+    <form method="post" action="/actions/{{ item.id }}/nudge" class="filter-bar">
+      <input name="phone" value="{{ phone }}" placeholder="+254 7…" aria-label="Owner phone" autocomplete="tel">
+      <button class="btn sm" type="submit">Save number</button>
+    </form>
+    <div class="hero-actions">
+      <a class="btn" href="{{ whatsapp_url }}" target="_blank" rel="noopener">Send on WhatsApp</a>
+      <a class="btn ghost" href="{{ sms_url }}">Send by SMS</a>
+      <button class="btn ghost" type="button" data-copy="{{ message }}">Copy message</button>
+    </div>
+  </article>
+  <article class="block">
+    <h3>Message preview</h3>
+    <p class="message-preview">{{ message }}</p>
+    <p class="muted small">Elipsis never sends the message automatically. The owner opens the link from your phone or messaging app, so the tone stays human.</p>
+  </article>
+</section>
+{% endblock %}

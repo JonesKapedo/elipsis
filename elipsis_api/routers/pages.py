@@ -2,12 +2,12 @@
 
 import os
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, Request
 from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from elipsis_api import benchmarks, models, schemas, services, services_ops
+from elipsis_api import benchmarks, models, schemas, services, services_ops, services_webhooks
 from elipsis_api.config import SESSION_COOKIE
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
@@ -500,6 +500,7 @@ def dashboard(request: Request, user=Depends(get_current_user),
 
 @router.post("/assessment/{assessment_id}/submit")
 async def assessment_submit(assessment_id: int, request: Request,
+                            background_tasks: BackgroundTasks,
                             user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
@@ -520,7 +521,15 @@ async def assessment_submit(assessment_id: int, request: Request,
         answers.append(schemas.AnswerIn(
             question_id=question.id, score=score,
             evidence=evidence if isinstance(evidence, str) else "none"))
-    services.submit(db, assessment_id, answers)
+    _, result = services.submit(db, assessment_id, answers)
+    if result is not None:
+        for hook in services_webhooks.matching_endpoints(
+                db, assessment.organization_id, "assessment.completed"):
+            background_tasks.add_task(
+                services_webhooks.deliver_event, hook.id, "assessment.completed",
+                {"event": "assessment.completed", "assessment_id": assessment_id,
+                 "readiness_index": result.get("readiness_index"),
+                 "confidence_index": result.get("confidence_index")})
     return RedirectResponse(f"/assessment/{assessment_id}/results", status_code=303)
 
 

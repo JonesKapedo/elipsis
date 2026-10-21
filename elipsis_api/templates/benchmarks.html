@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Benchmarks{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Cohort network</p>
+  <h1>Know where you sit, without exposing anyone.</h1>
+  <p class="lede">Peer medians are only shown when at least five comparable completed assessments exist. Small cohorts stay suppressed.</p>
+</section>
+
+{% for row in rows %}
+<section class="block">
+  <div class="block-head">
+    <div>
+      <h3>{{ row.org.name }}</h3>
+      <p class="muted small">{{ row.org.industry or 'Industry not set' }}{% if row.snapshot.band %} · {{ row.snapshot.band }}{% endif %}</p>
+    </div>
+    {% if row.latest %}<a class="btn ghost sm" href="/assessment/{{ row.latest.id }}/badge">Open badge</a>{% endif %}
+  </div>
+
+  {% if row.snapshot.available %}
+  <div class="kpis">
+    <div class="kpi"><span>Peer median</span><b>{{ row.snapshot.median }}</b></div>
+    <div class="kpi"><span>25th percentile</span><b>{{ row.snapshot.p25 }}</b></div>
+    <div class="kpi"><span>75th percentile</span><b>{{ row.snapshot.p75 }}</b></div>
+    <div class="kpi accent"><span>Cohort size</span><b>{{ row.snapshot.sample }}</b></div>
+  </div>
+  <div class="band-bars" style="margin-top:1rem">
+    {% for bucket in row.snapshot.buckets %}
+    <div class="band-row">
+      <span class="band-name">{{ bucket.label }}</span>
+      <span class="sp-bar"><i style="width:{{ (100 * bucket.count / row.snapshot.sample)|round|int }}%"></i></span>
+      <b>{{ bucket.count }}</b>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="callout">
+    <strong>Cohort suppressed.</strong>
+    <p>{{ row.snapshot.sample }} comparable assessment{{ '' if row.snapshot.sample == 1 else 's' }} so far. The minimum is {{ row.snapshot.minimum }}. This protects individual organisations.</p>
+  </div>
+  {% endif %}
+
+  {% if row.certification and row.certification.eligible %}
+  <div class="score-strip" style="margin-top:1rem">
+    <div class="score-main">
+      <div class="gauge-num">{{ '%.1f'|format(row.certification.score) }}<span>/100</span></div>
+      <div class="gauge-label">Current badge</div>
+      <div class="band">{{ row.certification.tier }}</div>
+    </div>
+    <div class="score-pillars">
+      {% for c in row.certification.criteria %}<div class="sp-row"><span class="sp-name">{{ c }}</span></div>{% endfor %}
+    </div>
+  </div>
+  {% elif row.latest %}
+  <p class="muted small" style="margin-top:1rem">No badge issued yet. Complete every question and reach a confidence index of 60.</p>
+  {% endif %}
+</section>
+{% else %}
+<section class="block"><p class="muted">No organisations yet. Create one from the dashboard to see cohort context.</p></section>
+{% endfor %}
+{% endblock %}

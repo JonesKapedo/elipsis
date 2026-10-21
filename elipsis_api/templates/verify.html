@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Verify readiness badge{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Public verification</p>
+  <h1>{{ payload.org }}</h1>
+  <p class="lede">This badge was signed by Elipsis. The score, tier, and issue date are shown exactly as issued.</p>
+</section>
+<section class="block">
+  <div class="kpis">
+    <div class="kpi accent"><span>Readiness index</span><b>{{ payload.score }}</b></div>
+    <div class="kpi"><span>Tier</span><b>{{ payload.tier }}</b></div>
+    <div class="kpi"><span>Issued</span><b>{{ payload.issued }}</b></div>
+    <div class="kpi"><span>Cohort</span><b>{{ payload.sample or 'Suppressed' }}</b></div>
+  </div>
+  <p class="muted small">Verification confirms the payload signature. It does not audit the underlying answers or financial assumptions.</p>
+</section>
+{% endblock %}

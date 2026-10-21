@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Partner console{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Partner mode</p>
+  <h1>Your client portfolio.</h1>
+  <p class="lede">One operating picture across every organisation you can access. Export a white-label board pack without rebuilding the analysis.</p>
+</section>
+
+{% if request.query_params.get('saved') %}<div class="flash ok">Partner branding saved.</div>{% endif %}
+
+<section class="block">
+  <div class="block-head">
+    <h3>Portfolio</h3>
+    <span class="tag">{{ rows|length }} client{{ '' if rows|length == 1 else 's' }}</span>
+  </div>
+  {% if rows %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Client</th><th>Latest score</th><th>Band</th><th class="num">Open</th><th class="num">Overdue</th><th>White-label</th></tr></thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td><strong>{{ row.org.name }}</strong><br><span class="muted small">{{ row.org.industry or 'Logistics' }}{% if row.org.city %} · {{ row.org.city }}{% endif %}</span></td>
+          <td>{{ '%.1f'|format(row.latest.readiness_index) if row.latest and row.latest.readiness_index is not none else '—' }}</td>
+          <td class="muted">{{ row.latest.maturity_band if row.latest else 'No report yet' }}</td>
+          <td class="num">{{ row.open_actions }}</td>
+          <td class="num">{{ row.overdue }}</td>
+          <td>
+            {% if row.latest %}
+            <a class="btn ghost sm" href="/assessment/{{ row.latest.id }}/report.pdf?brand={{ (prefs.partner_name or BRAND_NAME)|urlencode }}&footer={{ (prefs.partner_footer or '')|urlencode }}">PDF</a>
+            <a class="btn ghost sm" href="/assessment/{{ row.latest.id }}/summary">Summary</a>
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted">No client organisations yet. Create one from the dashboard.</p>
+  {% endif %}
+</section>
+
+<section class="block">
+  <h3>White-label identity</h3>
+  <p class="muted small">Applied to partner PDF exports. Leave blank to use the Elipsis brand.</p>
+  <form method="post" action="/partner/brand" class="stack">
+    <label>Partner name <input name="name" value="{{ prefs.partner_name or '' }}" maxlength="80" placeholder="Your advisory firm"></label>
+    <label>Footer note <input name="footer" value="{{ prefs.partner_footer or '' }}" maxlength="160" placeholder="Prepared by…"></label>
+    <label>Accent colour <input name="accent" value="{{ prefs.partner_accent or '#d9b45b' }}" maxlength="7" pattern="#[0-9a-fA-F]{3,6}"></label>
+    <button class="btn" type="submit">Save partner identity</button>
+  </form>
+</section>
+{% endblock %}

@@ -283,3 +283,129 @@ def test_workspace_search_and_brand_surface(signed_in):
     assert 'id="cmdk"' in dashboard.text
     assert 'id="cmd-trigger"' in dashboard.text
     assert 'data-admin=' in dashboard.text
+
+
+def test_growth_certification_imports_and_webhooks(signed_in):
+    import re
+
+    client = signed_in
+    created = client.post("/api/v1/assessments", json={
+        "organization": {"name": "Growth Logistics", "industry": "Logistics",
+                         "employee_count": 55, "country": "Kenya"},
+        "department": "Operations", "respondent": "Growth Tester"})
+    assert created.status_code == 201
+    assessment_id = created.json()["id"]
+    org_id = created.json()["organization_id"]
+    questions = client.get("/api/v1/questionnaire").json()
+    submitted = client.post(f"/api/v1/assessments/{assessment_id}/submit", json={
+        "answers": [{"question_id": q["id"], "score": 2, "evidence": "document"}
+                    for q in questions]})
+    assert submitted.status_code == 200
+
+    narrative = client.get(f"/assessment/{assessment_id}/narrative")
+    assert narrative.status_code == 200
+    assert "Board narrative" in narrative.text or "What to do next" in narrative.text
+
+    badge = client.get(f"/assessment/{assessment_id}/badge")
+    assert badge.status_code == 200
+    token = re.search(r"/verify/([^\"<]+)", badge.text).group(1).removesuffix(".svg")
+    assert client.get(f"/verify/{token}").status_code == 200
+    svg = client.get(f"/verify/{token}.svg")
+    assert svg.status_code == 200
+    assert "image/svg+xml" in svg.headers["content-type"]
+    assert client.get("/verify/not-a-token").status_code == 404
+    assert client.get("/benchmarks").status_code == 200
+
+    notifications = client.get("/notifications")
+    assert notifications.status_code == 200
+    digest = client.post("/notifications/digest", data={"frequency": "daily"},
+                         follow_redirects=False)
+    assert digest.status_code == 303
+    sent = client.post("/notifications/digest/send", follow_redirects=False)
+    assert sent.status_code == 303
+
+    saved = client.post("/views", data={"name": "Growth open", "query": "status=open"},
+                        follow_redirects=False)
+    assert saved.status_code == 303
+    actions = client.get("/actions")
+    assert "Growth open" in actions.text
+    view_id = int(re.search(r'/views/(\d+)"', actions.text).group(1))
+    assert client.get(f"/views/{view_id}", follow_redirects=False).status_code == 303
+
+    plan = client.get(f"/assessment/{assessment_id}/plan").text
+    item_ids = [int(x) for x in re.findall(rf"/assessment/{assessment_id}/plan/(\d+)", plan)]
+    assert item_ids
+    bulk = client.post("/actions/bulk", data={
+        "item_ids": [str(item_ids[0])], "status": "in_progress",
+        "owner": "Growth owner", "due_date": "2026-12-01"},
+        follow_redirects=False)
+    assert bulk.status_code == 303
+
+    invite = client.get(f"/assessment/{assessment_id}/invite")
+    assert invite.status_code == 200
+    made_invite = client.post(f"/assessment/{assessment_id}/invite", data={
+        "days": "14", "min_respondents": "2", "phone": "0712 345 678"},
+        follow_redirects=False)
+    assert made_invite.status_code == 303
+    token = made_invite.headers["location"].split("token=")[1].split("&")[0]
+    invite = client.get(f"/assessment/{assessment_id}/invite?token={token}&phone=0712345678")
+    assert invite.status_code == 200
+    assert "wa.me" in invite.text
+
+    nudge = client.get(f"/actions/{item_ids[0]}/nudge")
+    assert nudge.status_code == 200
+    saved_phone = client.post(f"/actions/{item_ids[0]}/nudge", data={
+        "phone": "0712 345 678"}, follow_redirects=False)
+    assert saved_phone.status_code == 303
+    assert "254712345678" in saved_phone.headers["location"]
+
+    partner = client.get("/partner")
+    assert partner.status_code == 200
+    branded = client.post("/partner/brand", data={
+        "name": "Growth Partner", "footer": "Prepared for the board",
+        "accent": "#123456"}, follow_redirects=False)
+    assert branded.status_code == 303
+    assert "Growth Partner" in client.get("/partner").text
+
+    template = client.get(f"/assessment/{assessment_id}/import/template.csv")
+    assert template.status_code == 200
+    csv_body = "code,score,evidence\n" + "\n".join(
+        f"{q['code']},4,none" for q in questions[:5])
+    imported = client.post(
+        f"/assessment/{assessment_id}/import",
+        files={"file": ("answers.csv", csv_body, "text/csv")},
+        follow_redirects=False)
+    assert imported.status_code == 303
+    assert "import=5" in imported.headers["location"]
+
+    denied = client.post("/settings/webhooks", data={
+        "organization_id": org_id, "url": "http://127.0.0.1/hook",
+        "events": ["action.updated"]}, follow_redirects=False)
+    assert denied.status_code == 303
+    assert "webhook=invalid" in denied.headers["location"]
+    made = client.post("/settings/webhooks", data={
+        "organization_id": org_id, "url": "https://93.184.216.34/hook",
+        "events": ["action.updated", "assessment.completed"]},
+        follow_redirects=False)
+    assert made.status_code == 303
+    assert "webhook=saved" in made.headers["location"]
+    settings = client.get("/settings")
+    assert settings.status_code == 200
+    assert "93.184.216.34" in settings.text
+    hook_id = int(re.search(r"/settings/webhooks/(\d+)/test", settings.text).group(1))
+    deleted = client.post(f"/settings/webhooks/{hook_id}/delete",
+                          follow_redirects=False)
+    assert deleted.status_code == 303
+
+
+def test_security_and_cache_headers(signed_in):
+    page = signed_in.get("/dashboard")
+    assert page.headers["X-Content-Type-Options"] == "nosniff"
+    assert page.headers["X-Frame-Options"] == "DENY"
+    assert page.headers["Cache-Control"] == "no-store"
+    assert "base-uri" in page.headers["Content-Security-Policy"]
+    assert page.headers["Cross-Origin-Opener-Policy"] == "same-origin"
+
+    asset = signed_in.get("/static/app.js")
+    assert asset.status_code == 200
+    assert "max-age=86400" in asset.headers["Cache-Control"]

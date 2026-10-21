@@ -978,3 +978,53 @@ body.nav-open { overflow: hidden; }
 @media (max-width: 760px) {
   .onboard-card { grid-template-columns: 1fr; }
 }
+
+/* Citation-backed narrative ------------------------------------------------ */
+.narrative-shell .report-lead { max-width: 72ch; }
+.narrative-shell .report-section h2 { letter-spacing: -.01em; }
+
+/* Outreach and partner surfaces ------------------------------------------- */
+.message-preview {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fbf8f1;
+  color: var(--ink);
+  font-size: .92rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* Notification centre ------------------------------------------------------ */
+.notification-row {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  gap: .55rem;
+  align-items: center;
+  padding: .7rem .2rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .86rem;
+}
+.notification-row:last-child { border-bottom: 0; }
+.notification-row.is-read { opacity: .55; }
+.notification-row small { display: block; color: var(--muted); }
+.notification-row a { font-size: .78rem; }
+
+/* Settings field groups ---------------------------------------------------- */
+fieldset {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: .75rem 1rem 1rem;
+  margin: .25rem 0;
+}
+fieldset legend { padding: 0 .35rem; font-size: .78rem; font-weight: 600; color: var(--muted); }
+label.inline {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .5rem;
+  margin: .35rem 0;
+  font-size: .86rem;
+  font-weight: 500;
+}
+label.inline input { width: auto; margin: 0; }

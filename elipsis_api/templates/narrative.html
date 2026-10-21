@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Board narrative — {{ organization.name }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/report.css?v=20261021">{% endblock %}
+{% block content %}
+<div class="report-toolbar noprint">
+  <a class="btn ghost sm" href="/assessment/{{ assessment.id }}/results">← Results</a>
+  <a class="btn ghost sm" href="/assessment/{{ assessment.id }}/summary">One-page summary</a>
+  <button class="btn sm" type="button" onclick="window.print()">Print / Save PDF</button>
+</div>
+<article class="report-shell narrative-shell">
+  <header class="report-cover">
+    <div class="report-brand-row">
+      <div class="report-brand"><span class="mark">{{ BRAND_MARK }}</span> {{ BRAND_NAME }}</div>
+      <p class="report-meta-line">Board narrative</p>
+    </div>
+    <h1>{{ organization.name }}</h1>
+    <p class="report-org">{% if department %}{{ department.name }} · {% endif %}{{ INDEX_NAME }}</p>
+    <p class="report-meta-line">{{ narrative.subtitle }}{% if assessment.completed_at %} · {{ assessment.completed_at }}{% endif %}</p>
+  </header>
+
+  {% for section in narrative.sections %}
+  <section class="report-section">
+    <h2>{{ section.heading }}</h2>
+    {% for paragraph in section.paragraphs %}<p class="report-lead">{{ paragraph }}</p>{% endfor %}
+  </section>
+  {% endfor %}
+
+  <section class="report-section">
+    <h2>Citations</h2>
+    <p class="muted">Every claim above resolves to one of these computed fields. No external model writes this narrative.</p>
+    <table class="report-table">
+      <thead><tr><th>Ref</th><th>Evidence</th><th>Value</th><th>Source</th></tr></thead>
+      <tbody>
+        {% for c in narrative.citations %}
+        <tr><td><strong>[{{ c.id }}]</strong></td><td>{{ c.label }}</td><td>{{ c.value }}</td><td class="muted">{{ c.source }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</article>
+{% endblock %}

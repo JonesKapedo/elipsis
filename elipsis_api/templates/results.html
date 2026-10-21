@@ -17,8 +17,11 @@
     <a class="btn" href="/assessment/{{ assessment.id }}/report.pdf">Download PDF</a>
     <a class="btn ghost" href="/assessment/{{ assessment.id }}/plan">90-day plan</a>
     <a class="btn ghost" href="/assessment/{{ assessment.id }}/summary">One-page summary</a>
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/narrative">Board narrative</a>
     <a class="btn ghost" href="/assessment/{{ assessment.id }}/export.xlsx">Excel</a>
     <a class="btn ghost" href="/assessment/{{ assessment.id }}/evidence">Evidence</a>
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/badge">Readiness badge</a>
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/invite">Invite respondents</a>
     <a class="btn ghost" href="/assessment/{{ assessment.id }}/report">View board pack</a>
     <a class="btn ghost" href="#share-links">Share links</a>
     {% if organization %}
@@ -26,6 +29,21 @@
     {% endif %}
     <a class="btn ghost" href="/start">New assessment</a>
   </div>
+  {% if request.query_params.get('import') %}
+  <div class="flash {{ 'err' if request.query_params.get('import') in ['invalid','empty'] else 'ok' }}" style="margin-top:1rem">
+    {% if request.query_params.get('import') == 'invalid' %}Import failed. Upload a CSV or XLSX under 2 MB.
+    {% elif request.query_params.get('import') == 'empty' %}No valid question codes and scores were found.
+    {% else %}{{ request.query_params.get('import') }} answers imported and rescored.{% endif %}
+  </div>
+  {% endif %}
+  <details class="block" style="margin-top:1rem">
+    <summary><strong>Import answers from CSV or XLSX</strong></summary>
+    <p class="muted small">Columns: <code>code</code>, <code>score</code> (0–4), optional <code>evidence</code>. <a href="/assessment/{{ assessment.id }}/import/template.csv">Download template</a>.</p>
+    <form method="post" action="/assessment/{{ assessment.id }}/import" enctype="multipart/form-data" class="filter-bar">
+      <input type="file" name="file" accept=".csv,.xlsx" required>
+      <button class="btn sm" type="submit">Import and rescore</button>
+    </form>
+  </details>
   {% if share_url %}
   <div class="block" style="margin-top:1rem">
     <h3>Emailable link ready</h3>

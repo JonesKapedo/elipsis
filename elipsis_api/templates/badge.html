@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Readiness badge — {{ organization.name }}{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Verifiable signal</p>
+  <h1>Readiness badge.</h1>
+  <p class="lede">A shareable, signed badge for the current assessment. The tier is explicit about what was measured and what was suppressed.</p>
+  <div class="hero-actions"><a class="btn ghost" href="/assessment/{{ assessment.id }}/results">Back to results</a><a class="btn ghost" href="/benchmarks">Cohort view</a></div>
+</section>
+
+{% if certification.eligible %}
+<section class="two-col">
+  <article class="block">
+    <h3>{{ certification.tier }}</h3>
+    <p><strong>{{ organization.name }}</strong> · {{ certification.score }}/100{% if certification.percentile is not none %} · {{ certification.percentile }}th percentile{% endif %}</p>
+    {% if verify_url %}
+    <p><img src="/verify/{{ certification.token }}.svg" alt="Elipsis readiness badge" width="360" style="max-width:100%;height:auto;border-radius:12px"></p>
+    <p><a href="{{ verify_url }}" target="_blank" rel="noopener">Open public verification →</a></p>
+    <p><code style="word-break:break-all">{{ verify_url }}</code></p>
+    <p><code style="word-break:break-all">{{ embed_code }}</code></p>
+    <button class="btn ghost sm" type="button" data-copy="{{ embed_code }}">Copy embed code</button>
+    {% endif %}
+  </article>
+  <article class="block">
+    <h3>How this was earned</h3>
+    <ul class="clean-list">{% for c in certification.criteria %}<li>{{ c }}</li>{% endfor %}</ul>
+    {% if benchmark and benchmark.available %}
+    <p class="muted small">Peer median {{ benchmark.median }} across {{ benchmark.sample }} comparable assessments.</p>
+    {% else %}
+    <p class="muted small">No peer median is published for this cohort yet. The badge records the baseline only.</p>
+    {% endif %}
+  </article>
+</section>
+{% else %}
+<section class="block">
+  <div class="callout"><strong>Not yet eligible.</strong><p>Complete every question and reach a confidence index of 60 to issue a badge.</p></div>
+</section>
+{% endif %}
+{% endblock %}

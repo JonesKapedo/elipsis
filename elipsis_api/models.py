@@ -277,6 +277,7 @@ class RoadmapItem(Base):
     roi: Mapped[float | None] = mapped_column(Float)
     kpi: Mapped[str | None] = mapped_column(String)
     owner: Mapped[str | None] = mapped_column(String)
+    owner_phone: Mapped[str | None] = mapped_column(String)
     due_date: Mapped[str | None] = mapped_column(String)
     status: Mapped[str | None] = mapped_column(String, default="not_started")
     notes: Mapped[str | None] = mapped_column(Text)
@@ -461,6 +462,11 @@ class UserPref(Base):
     motion: Mapped[str | None] = mapped_column(String, default="on")
     density: Mapped[str | None] = mapped_column(String, default="comfortable")
     pro_until: Mapped[str | None] = mapped_column(String)
+    digest_frequency: Mapped[str | None] = mapped_column(String, default="weekly")
+    digest_last_sent: Mapped[str | None] = mapped_column(String)
+    partner_name: Mapped[str | None] = mapped_column(String)
+    partner_footer: Mapped[str | None] = mapped_column(String)
+    partner_accent: Mapped[str | None] = mapped_column(String)
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
 
 
@@ -640,3 +646,55 @@ class AuditEvent(Base):
     action: Mapped[str] = mapped_column(String, nullable=False)
     detail: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class SavedView(Base):
+    """A named action-board filter for one user."""
+    __tablename__ = "saved_views"
+    __table_args__ = (UniqueConstraint("user_id", "name"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    query: Mapped[str | None] = mapped_column(String)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class NotificationRead(Base):
+    """Read state for computed workspace notifications."""
+    __tablename__ = "notification_reads"
+    __table_args__ = (UniqueConstraint("user_id", "fingerprint"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    fingerprint: Mapped[str] = mapped_column(String, nullable=False)
+    read_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class WebhookEndpoint(Base):
+    """An ERP/WMS endpoint that receives workspace events."""
+    __tablename__ = "webhook_endpoints"
+    __table_args__ = (Index("ix_webhook_endpoints_org", "organization_id"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    organization_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("organizations.id"), nullable=False)
+    url: Mapped[str] = mapped_column(String, nullable=False)
+    secret: Mapped[str] = mapped_column(String, nullable=False)
+    events: Mapped[str | None] = mapped_column(String, default="action.updated,assessment.completed")
+    active: Mapped[bool | None] = mapped_column(Boolean, default=True)
+    created_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class WebhookDelivery(Base):
+    """Best-effort delivery log for one webhook event."""
+    __tablename__ = "webhook_deliveries"
+    __table_args__ = (Index("ix_webhook_deliveries_endpoint", "endpoint_id"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    endpoint_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("webhook_endpoints.id"), nullable=False)
+    event: Mapped[str] = mapped_column(String, nullable=False)
+    payload: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str | None] = mapped_column(String, default="queued")
+    response_code: Mapped[int | None] = mapped_column(Integer)
+    error: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+    delivered_at: Mapped[str | None] = mapped_column(String)

@@ -62,6 +62,7 @@ def action_items(db: Session, org_ids: list[int] | None = None, *,
             "assessment_id": item.assessment_id,
             "title": item.title,
             "owner": item.owner,
+            "owner_phone": item.owner_phone,
             "due_date": item.due_date,
             "status": state,
             "notes": item.notes,
@@ -144,6 +145,7 @@ def notifications(db: Session, user) -> list[dict[str, Any]]:
                 "title": item["title"],
                 "detail": f"{item['organization']} · due {item['due_date']}",
                 "url": f"/assessment/{item['assessment_id']}/plan",
+                "ref": f"action:{item['id']}",
             })
         elif item["due_soon"]:
             out.append({
@@ -151,6 +153,7 @@ def notifications(db: Session, user) -> list[dict[str, Any]]:
                 "title": item["title"],
                 "detail": f"{item['organization']} · due {item['due_date']}",
                 "url": f"/assessment/{item['assessment_id']}/plan",
+                "ref": f"action:{item['id']}",
             })
     query = select(models.Assessment).where(
         models.Assessment.review_due_at.is_not(None),
@@ -171,6 +174,7 @@ def notifications(db: Session, user) -> list[dict[str, Any]]:
                 "title": "Re-assessment due",
                 "detail": f"{org.name if org else 'Organisation'} · {row.review_due_at}",
                 "url": f"/assessment/{row.id}/results",
+                "ref": f"review:{row.id}",
             })
     return out[:12]
 
@@ -351,3 +355,92 @@ def set_review(db: Session, assessment: models.Assessment, due_at: str,
                  organization_id=assessment.organization_id, user_id=actor_id,
                  detail=f"Review due {assessment.review_due_at}")
     db.commit()
+
+
+def owner_workload(db: Session, org_ids: list[int] | None = None) -> list[dict[str, Any]]:
+    buckets: dict[str, dict[str, Any]] = {}
+    for item in action_items(db, org_ids, limit=2000):
+        name = (item.get("owner") or "").strip() or "Unassigned"
+        row = buckets.setdefault(name, {
+            "owner": name, "open": 0, "done": 0, "overdue": 0,
+            "due_soon": 0, "total": 0,
+        })
+        row["total"] += 1
+        if item["status"] == "done":
+            row["done"] += 1
+        else:
+            row["open"] += 1
+        if item["overdue"]:
+            row["overdue"] += 1
+        if item["due_soon"]:
+            row["due_soon"] += 1
+    rows = list(buckets.values())
+    rows.sort(key=lambda r: (-r["overdue"], -r["open"], r["owner"].lower()))
+    return rows
+
+
+def saved_views(db: Session, user) -> list[models.SavedView]:
+    if user is None:
+        return []
+    return list(db.scalars(select(models.SavedView).where(
+        models.SavedView.user_id == user.id
+    ).order_by(models.SavedView.created_at.desc(), models.SavedView.id.desc())))
+
+
+def save_view(db: Session, user, name: str, query: str) -> models.SavedView | None:
+    if user is None:
+        return None
+    clean = (name or "").strip()[:60]
+    if not clean:
+        return None
+    query = (query or "").strip()[:500]
+    existing = db.scalar(select(models.SavedView).where(
+        models.SavedView.user_id == user.id,
+        models.SavedView.name == clean))
+    if existing:
+        existing.query = query
+        db.commit()
+        return existing
+    row = models.SavedView(user_id=user.id, name=clean, query=query)
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+def delete_view(db: Session, user, view_id: int) -> bool:
+    if user is None:
+        return False
+    row = db.get(models.SavedView, view_id)
+    if row is None or row.user_id != user.id:
+        return False
+    db.delete(row)
+    db.commit()
+    return True
+
+
+def notification_fingerprint(item: dict[str, Any]) -> str:
+    return str(item.get("ref") or f"{item.get('kind')}:{item.get('url')}:{item.get('title')}")
+
+
+def read_fingerprints(db: Session, user) -> set[str]:
+    if user is None:
+        return set()
+    return set(db.scalars(select(models.NotificationRead.fingerprint).where(
+        models.NotificationRead.user_id == user.id)))
+
+
+def mark_notifications_read(db: Session, user, fingerprints: list[str]) -> int:
+    if user is None:
+        return 0
+    existing = read_fingerprints(db, user)
+    count = 0
+    for fingerprint in fingerprints:
+        fingerprint = (fingerprint or "").strip()[:300]
+        if not fingerprint or fingerprint in existing:
+            continue
+        db.add(models.NotificationRead(
+            user_id=user.id, fingerprint=fingerprint, read_at=_now()))
+        count += 1
+    db.commit()
+    return count

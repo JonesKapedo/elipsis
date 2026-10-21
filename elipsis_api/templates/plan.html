@@ -30,7 +30,7 @@
           </select>
         </td>
         <td><input form="plan-{{ item.id }}" name="notes" value="{{ item.notes or '' }}" placeholder="Blocker or next step" maxlength="2000"></td>
-        <td><button form="plan-{{ item.id }}" class="btn sm" type="submit">Save</button></td>
+        <td><div style="display:flex;gap:.3rem;flex-wrap:wrap"><button form="plan-{{ item.id }}" class="btn sm" type="submit">Save</button><a class="btn ghost sm" href="/actions/{{ item.id }}/nudge">Nudge</a></div></td>
       </tr>
       {% else %}
       <tr><td colspan="6" class="muted">No actions generated yet. Run a completed assessment first.</td></tr>

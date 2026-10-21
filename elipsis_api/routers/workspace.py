@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from elipsis_api import models, services, services_ops
+from elipsis_api import models, services, services_ops, services_webhooks
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
 
@@ -48,13 +48,85 @@ def action_board(request: Request, user=Depends(get_current_user),
         request, "actions.html",
         {"user": user, "items": items, "status": status, "owner": owner,
          "overdue": overdue, "summary": services_ops.action_summary(db, visible),
+         "workload": services_ops.owner_workload(db, visible),
+         "views": services_ops.saved_views(db, user),
          "notifications": services_ops.notifications(db, user),
          "organizations": services.list_organizations(db, visible),
          "updated": request.query_params.get("updated") == "1"})
 
 
+@router.post("/actions/bulk")
+async def action_bulk(request: Request, background_tasks: BackgroundTasks,
+                      user=Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    form = await request.form()
+    ids = [int(value) for value in form.getlist("item_ids") if str(value).isdigit()]
+    status = str(form.get("status") or "keep")
+    owner = str(form.get("owner") or "").strip()
+    due_date = str(form.get("due_date") or "").strip()
+    changed = 0
+    for item_id in ids[:500]:
+        item = db.get(models.RoadmapItem, item_id)
+        if item is None:
+            continue
+        assessment = db.get(models.Assessment, item.assessment_id)
+        if assessment is None or not services.can_access_org(db, user, assessment.organization_id):
+            continue
+        services.update_plan_item(
+            db, assessment.id, item.id,
+            owner=owner if owner else (item.owner or ""),
+            due_date=due_date or (item.due_date or ""),
+            status=(item.status or "not_started") if status == "keep" else status,
+            notes=item.notes or "")
+        changed += 1
+        for hook in services_webhooks.matching_endpoints(
+                db, assessment.organization_id, "action.updated"):
+            background_tasks.add_task(
+                services_webhooks.deliver_event, hook.id, "action.updated",
+                {"event": "action.updated", "item_id": item.id,
+                 "title": item.title, "status": item.status, "owner": item.owner,
+                 "assessment_id": assessment.id})
+    if changed:
+        services_ops.record_audit(
+            db, action="plan.bulk_update", user_id=user.id,
+            detail=f"{changed} actions → {status}")
+        db.commit()
+    return RedirectResponse(f"/actions?updated=1&bulk={changed}", status_code=303)
+
+
+@router.post("/views")
+def view_save(name: str = Form(...), query: str = Form(""),
+              user=Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    services_ops.save_view(db, user, name, query)
+    return RedirectResponse("/actions?view=saved", status_code=303)
+
+
+@router.post("/views/{view_id}/delete")
+def view_delete(view_id: int, user=Depends(get_current_user),
+                db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    services_ops.delete_view(db, user, view_id)
+    return RedirectResponse("/actions?view=deleted", status_code=303)
+
+
+@router.get("/views/{view_id}")
+def view_open(view_id: int, user=Depends(get_current_user),
+              db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    row = db.get(models.SavedView, view_id)
+    if row is None or row.user_id != user.id:
+        return RedirectResponse("/actions", status_code=303)
+    query = (row.query or "").lstrip("?")
+    return RedirectResponse(f"/actions?{query}" if query else "/actions", status_code=303)
+
+
 @router.post("/actions/{item_id}")
-def action_update(item_id: int, request: Request,
+def action_update(item_id: int, request: Request, background_tasks: BackgroundTasks,
                   owner: str = Form(""), due_date: str = Form(""),
                   status: str = Form("not_started"), notes: str = Form(""),
                   next: str = Form("/actions"),
@@ -75,6 +147,13 @@ def action_update(item_id: int, request: Request,
         assessment_id=assessment.id, user_id=user.id,
         detail=f"{item.title}: {status}")
     db.commit()
+    for hook in services_webhooks.matching_endpoints(
+            db, assessment.organization_id, "action.updated"):
+        background_tasks.add_task(
+            services_webhooks.deliver_event, hook.id, "action.updated",
+            {"event": "action.updated", "item_id": item.id,
+             "title": item.title, "status": status, "owner": owner,
+             "assessment_id": assessment.id})
     target = _back(next, "/actions")
     sep = "&" if "?" in target else "?"
     return RedirectResponse(f"{target}{sep}updated=1", status_code=303)

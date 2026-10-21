@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from datetime import UTC
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from elipsis_api import models, paystack, services
+from elipsis_api import models, paystack, services, services_webhooks
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
 from elipsis_api.narrative import company_portrait
@@ -283,8 +283,16 @@ def bids(request: Request, user=Depends(get_current_user), db: Session = Depends
 def settings(request: Request, user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
+    org_ids = services.visible_org_ids(db, user)
+    hooks = services_webhooks.endpoints(db, org_ids)
+    deliveries = list(db.scalars(select(models.WebhookDelivery).where(
+        models.WebhookDelivery.endpoint_id.in_([h.id for h in hooks] or [0])
+    ).order_by(models.WebhookDelivery.id.desc()).limit(20))) if hooks else []
     return templates.TemplateResponse(request, "settings.html", {
-        "user": user, "prefs": _prefs(db, user),
+        "user": user, "prefs": _prefs(db, user), "webhooks": hooks,
+        "deliveries": deliveries, "events": sorted(services_webhooks.ALLOWED_EVENTS),
+        "organizations": services.list_organizations(db, org_ids),
+        "webhook_message": request.query_params.get("webhook"),
     })
 
 
@@ -303,6 +311,45 @@ def settings_save(symbol: str = Form("E"), motion: str = Form("on"), density: st
     response.set_cookie("elipsis_density", prefs.density, max_age=60 * 60 * 24 * 365, samesite="lax")
     response.set_cookie("elipsis_symbol", prefs.symbol, max_age=60 * 60 * 24 * 365, samesite="lax")
     return response
+
+
+@router.post("/settings/webhooks")
+def webhook_create(organization_id: int = Form(...), url: str = Form(...),
+                   events: list[str] = Form([]),
+                   user=Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    if not services.can_access_org(db, user, organization_id):
+        return RedirectResponse("/settings?webhook=denied", status_code=303)
+    _, error = services_webhooks.create_endpoint(
+        db, organization_id, url, events, user.id)
+    return RedirectResponse(
+        f"/settings?webhook={'saved' if not error else 'invalid'}", status_code=303)
+
+
+@router.post("/settings/webhooks/{endpoint_id}/delete")
+def webhook_delete(endpoint_id: int, user=Depends(get_current_user),
+                   db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    services_webhooks.delete_endpoint(
+        db, services.visible_org_ids(db, user), endpoint_id)
+    return RedirectResponse("/settings?webhook=deleted", status_code=303)
+
+
+@router.post("/settings/webhooks/{endpoint_id}/test")
+async def webhook_test(endpoint_id: int, background_tasks: BackgroundTasks,
+                       user=Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    endpoint = db.get(models.WebhookEndpoint, endpoint_id)
+    if endpoint is None or not services.can_access_org(db, user, endpoint.organization_id):
+        return RedirectResponse("/settings?webhook=denied", status_code=303)
+    background_tasks.add_task(
+        services_webhooks.deliver_event, endpoint.id, "webhook.test",
+        {"event": "webhook.test", "endpoint_id": endpoint.id,
+         "message": "Elipsis webhook test"})
+    return RedirectResponse("/settings?webhook=test_queued", status_code=303)
 
 
 @router.get("/inbox")

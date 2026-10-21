@@ -391,12 +391,14 @@ def ensure_plan_items(db: Session, assessment_id: int, result: dict) -> list:
 
 
 def update_plan_item(db: Session, assessment_id: int, item_id: int, *,
-                     owner, due_date, status, notes):
+                     owner, due_date, status, notes, owner_phone=None):
     item = db.get(models.RoadmapItem, item_id)
     if item is None or item.assessment_id != assessment_id:
         return None
     allowed = {"not_started", "in_progress", "blocked", "done"}
     item.owner = (owner or "").strip()[:120] or None
+    if owner_phone is not None:
+        item.owner_phone = (owner_phone or "").strip()[:40] or None
     item.due_date = (due_date or "").strip()[:10] or None
     item.status = status if status in allowed else "not_started"
     item.notes = (notes or "").strip()[:2000] or None

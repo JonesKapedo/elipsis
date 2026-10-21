@@ -26,12 +26,12 @@
   <meta name="twitter:title" content="{{ self.title() }}">
   <meta name="twitter:description" content="{{ self.description() }}">
   <meta name="twitter:image" content="{{ request.url_for('static', path='brand/og-banner.png') }}">
-  <link rel="stylesheet" href="/static/style.css">
-  <link rel="stylesheet" href="/static/app-shell.css">
-  <link rel="stylesheet" href="/static/extras.css">
-  <link rel="stylesheet" href="/static/motion.css">
-  <link rel="stylesheet" href="/static/app.css">
-  <link rel="stylesheet" href="/static/premium.css">
+  <link rel="stylesheet" href="/static/style.css?v=20261021">
+  <link rel="stylesheet" href="/static/app-shell.css?v=20261021">
+  <link rel="stylesheet" href="/static/extras.css?v=20261021">
+  <link rel="stylesheet" href="/static/motion.css?v=20261021">
+  <link rel="stylesheet" href="/static/app.css?v=20261021">
+  <link rel="stylesheet" href="/static/premium.css?v=20261021">
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %} {% if authed %}app-shell{% endif %}">
@@ -60,6 +60,7 @@
       <a href="/start" class="nav-item{% if path == '/start' %} active{% endif %}"{% if path == '/start' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">＋</span> New assessment</a>
       <a href="/compare" class="nav-item{% if path == '/compare' %} active{% endif %}"{% if path == '/compare' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">⇄</span> Compare</a>
       <a href="/trends" class="nav-item{% if path == '/trends' %} active{% endif %}"{% if path == '/trends' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">↗</span> Trends</a>
+      <a href="/benchmarks" class="nav-item{% if path == '/benchmarks' %} active{% endif %}"{% if path == '/benchmarks' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◎</span> Benchmarks</a>
       <a href="/audit" class="nav-item{% if path == '/audit' %} active{% endif %}"{% if path == '/audit' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">≡</span> Audit trail</a>
 
       {% if (user.role or '') == 'admin' or user.is_admin %}
@@ -69,6 +70,8 @@
       {% endif %}
 
       <p class="nav-group-label">Account</p>
+      <a href="/notifications" class="nav-item{% if path == '/notifications' %} active{% endif %}"{% if path == '/notifications' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◔</span> Notifications</a>
+      <a href="/partner" class="nav-item{% if path == '/partner' %} active{% endif %}"{% if path == '/partner' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◇</span> Partner console</a>
       <a href="/logout" class="nav-item nav-danger"><span class="nav-icon" aria-hidden="true">→</span> Sign out</a>
     </nav>
     <div class="sidebar-user">
@@ -163,7 +166,7 @@
   </div>
 </dialog>
 {% endif %}
-<script src="/static/app.js" defer></script>
+<script src="/static/app.js?v=20261021" defer></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

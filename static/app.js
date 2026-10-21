@@ -63,6 +63,9 @@
     { title: "New assessment", meta: "Start a diagnostic", href: "/start", icon: "＋", keys: "create start diagnose" },
     { title: "Action board", meta: "Owners, dates, overdue work", href: "/actions", icon: "✓", keys: "tasks plan execution" },
     { title: "Readiness trends", meta: "Movement over time", href: "/trends", icon: "↗", keys: "history score movement" },
+    { title: "Benchmarks", meta: "Cohort distribution and badges", href: "/benchmarks", icon: "◎", keys: "peer cohort certification" },
+    { title: "Notifications", meta: "Unread work and review dates", href: "/notifications", icon: "◔", keys: "inbox alerts digest" },
+    { title: "Partner console", meta: "Client portfolio and white-label packs", href: "/partner", icon: "◇", keys: "partner clients white label" },
     { title: "Assessments", meta: "All reports and drafts", href: "/assessments", icon: "☰", keys: "reports results" },
     { title: "Organisation", meta: "Company profile and team", href: "/company", icon: "▣", keys: "company team people" },
     { title: "Compare departments", meta: "Side-by-side scores", href: "/compare", icon: "⇄", keys: "benchmark department" },
@@ -180,6 +183,15 @@
       }
     });
   }
+
+  /* Check-all for bulk action selection ------------------------------------- */
+  $$("[data-check-all]").forEach((box) => {
+    box.addEventListener("change", () => {
+      const form = document.getElementById(box.dataset.checkAll);
+      if (!form) return;
+      $$('input[name="item_ids"]', form).forEach((input) => { input.checked = box.checked; });
+    });
+  });
 
   /* Keyboard: escape closes, "/" focuses workspace search ------------------- */
   document.addEventListener("keydown", (event) => {

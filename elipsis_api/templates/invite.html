@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Invite respondents — {{ organization.name }}{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Distribution</p>
+  <h1>Invite the people who do the work.</h1>
+  <p class="lede">Send a 20-minute diagnostic through WhatsApp or SMS. Respondents do not need an account, and the aggregate lands back in this workspace.</p>
+  <div class="hero-actions">
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/results">Back to results</a>
+    <a class="btn ghost" href="/company/campaign/{{ campaign.token if campaign else '' }}">Campaign status</a>
+  </div>
+</section>
+
+{% if not campaign %}
+<section class="block">
+  <h3>Create a collection link</h3>
+  <form method="post" action="/assessment/{{ assessment.id }}/invite" class="stack">
+    <div class="two-col">
+      <label>Deadline in days <input type="number" name="days" min="1" max="90" value="14"></label>
+      <label>Minimum responses <input type="number" name="min_respondents" min="1" max="500" value="3"></label>
+    </div>
+    <label>Phone number for the WhatsApp/SMS link (optional)
+      <input name="phone" value="{{ phone }}" placeholder="+254 7…" autocomplete="tel">
+    </label>
+    <label class="muted small"><input type="checkbox" name="allow_anonymous" value="1"> Allow anonymous responses</label>
+    <button class="btn" type="submit">Create invite link</button>
+  </form>
+</section>
+{% else %}
+<section class="two-col">
+  <article class="block">
+    <h3>Share link</h3>
+    <p class="muted small">Expires {{ campaign.deadline }} · minimum {{ campaign.min_respondents }} response{{ '' if campaign.min_respondents == 1 else 's' }}</p>
+    <p><code style="word-break:break-all">{{ share_url }}</code></p>
+    <div class="hero-actions">
+      <a class="btn" href="{{ whatsapp_url }}" target="_blank" rel="noopener">Send on WhatsApp</a>
+      <a class="btn ghost" href="{{ sms_url }}">Send by SMS</a>
+      <button class="btn ghost" type="button" data-copy="{{ share_url }}">Copy link</button>
+    </div>
+    <form method="post" action="/assessment/{{ assessment.id }}/invite" class="filter-bar" style="margin-top:1rem">
+      <input type="hidden" name="days" value="14">
+      <input name="phone" value="{{ phone }}" placeholder="+254 7…" aria-label="Phone">
+      <button class="btn ghost sm" type="submit">Refresh links</button>
+    </form>
+  </article>
+  <article class="block">
+    <h3>Message preview</h3>
+    <p class="message-preview">{{ message }}</p>
+    <p class="muted small">The link opens the mobile-first questionnaire. Responses aggregate into a master assessment once the minimum is met.</p>
+  </article>
+</section>
+{% endif %}
+{% endblock %}

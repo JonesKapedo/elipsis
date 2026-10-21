@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import csv
 import io
 
-from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Request, UploadFile
 from fastapi.responses import RedirectResponse, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -12,9 +13,10 @@ from sqlalchemy.orm import Session
 from constants import (
     PILLAR_LABELS,
 )
-from elipsis_api import benchmarks, models, services, services_ops
+from elipsis_api import benchmarks, models, services, services_ops, services_webhooks
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
+from elipsis_api.narrative import board_narrative
 
 router = APIRouter()
 
@@ -203,6 +205,7 @@ def plan_get(assessment_id: int, request: Request,
 
 @router.post("/assessment/{assessment_id}/plan/{item_id}")
 def plan_update(assessment_id: int, item_id: int, request: Request,
+                background_tasks: BackgroundTasks,
                 owner: str = Form(""), due_date: str = Form(""),
                 status: str = Form("not_started"), notes: str = Form(""),
                 user=Depends(get_current_user), db: Session = Depends(get_db)):
@@ -219,7 +222,34 @@ def plan_update(assessment_id: int, item_id: int, request: Request,
         organization_id=assessment.organization_id if assessment else None,
         assessment_id=assessment_id, user_id=user.id, detail=f"item {item_id}: {status}")
     db.commit()
+    if assessment is not None:
+        for hook in services_webhooks.matching_endpoints(
+                db, assessment.organization_id, "action.updated"):
+            background_tasks.add_task(
+                services_webhooks.deliver_event, hook.id, "action.updated",
+                {"event": "action.updated", "item_id": item_id,
+                 "status": status, "owner": owner, "assessment_id": assessment_id})
     return RedirectResponse(f"/assessment/{assessment_id}/plan?saved=1", status_code=303)
+
+
+@router.get("/assessment/{assessment_id}/narrative")
+def narrative_page(assessment_id: int, request: Request,
+                   user=Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    assessment = _owned(db, user, assessment_id)
+    if assessment is None:
+        return templates.TemplateResponse(request, "404.html", {"user": user}, status_code=404)
+    _, result = services.compute(db, assessment_id)
+    if result is None:
+        return RedirectResponse(f"/assessment/{assessment_id}/step/1", status_code=303)
+    items = services.ensure_plan_items(db, assessment_id, result)
+    context = _context(db, assessment, result, user)
+    narrative = board_narrative(
+        context["organization"], context["department"], assessment, result,
+        benchmark=context["benchmark"], actions=items)
+    context.update(narrative=narrative, items=items[:6])
+    return templates.TemplateResponse(request, "narrative.html", context)
 
 
 @router.get("/assessment/{assessment_id}/summary")
@@ -341,3 +371,80 @@ def partners(request: Request, user=Depends(get_current_user)):
 @router.get("/case-study")
 def case_study(request: Request, user=Depends(get_current_user)):
     return templates.TemplateResponse(request, "case_study.html", {"user": user})
+
+
+@router.get("/assessment/{assessment_id}/import/template.csv")
+def import_template(assessment_id: int, user=Depends(get_current_user),
+                    db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    assessment = _owned(db, user, assessment_id)
+    if assessment is None:
+        return Response(status_code=404)
+    out = io.StringIO()
+    writer = csv.writer(out)
+    writer.writerow(["code", "score", "evidence"])
+    for q in services.get_questions(db, assessment.questionnaire_id):
+        writer.writerow([q.code, "", "none"])
+    return Response(
+        content=out.getvalue(), media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="elipsis-{assessment_id}-answers.csv"'})
+
+
+def _import_rows(filename: str, raw: bytes) -> list[dict]:
+    name = (filename or "").lower()
+    if name.endswith(".xlsx"):
+        import openpyxl
+        book = openpyxl.load_workbook(io.BytesIO(raw), read_only=True, data_only=True)
+        sheet = book.active
+        rows = list(sheet.iter_rows(values_only=True))
+        if not rows:
+            return []
+        headers = [str(v or "").strip().lower() for v in rows[0]]
+        return [dict(zip(headers, row, strict=False)) for row in rows[1:]]
+    text = raw.decode("utf-8-sig", errors="replace")
+    return list(csv.DictReader(io.StringIO(text)))
+
+
+@router.post("/assessment/{assessment_id}/import")
+async def import_answers(assessment_id: int, request: Request,
+                         file: UploadFile = File(...),
+                         user=Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    assessment = _owned(db, user, assessment_id)
+    if assessment is None:
+        return Response(status_code=404)
+    raw = await file.read()
+    if not raw or len(raw) > 2 * 1024 * 1024:
+        return RedirectResponse(f"/assessment/{assessment_id}/results?import=invalid", status_code=303)
+    try:
+        rows = _import_rows(file.filename or "", raw)
+    except Exception:
+        return RedirectResponse(f"/assessment/{assessment_id}/results?import=invalid", status_code=303)
+    by_code = {q.code.lower(): q for q in services.get_questions(db, assessment.questionnaire_id)}
+    answers = []
+    for row in rows:
+        code = str(row.get("code") or row.get("question_code") or row.get("question") or "").strip().lower()
+        q = by_code.get(code)
+        if q is None:
+            continue
+        try:
+            score = int(float(row.get("score") or 0))
+        except (TypeError, ValueError):
+            continue
+        if score < 0 or score > 4:
+            continue
+        evidence = str(row.get("evidence") or "none").strip().lower()
+        if evidence not in {"none", "declared", "verified"}:
+            evidence = "none"
+        answers.append({"question_id": q.id, "score": score, "evidence": evidence})
+    if not answers:
+        return RedirectResponse(f"/assessment/{assessment_id}/results?import=empty", status_code=303)
+    services.submit(db, assessment_id, answers)
+    services_ops.record_audit(
+        db, action="answers.import", organization_id=assessment.organization_id,
+        assessment_id=assessment_id, user_id=user.id, detail=f"{len(answers)} answers imported")
+    db.commit()
+    return RedirectResponse(
+        f"/assessment/{assessment_id}/results?import={len(answers)}", status_code=303)
