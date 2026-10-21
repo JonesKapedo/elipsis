@@ -4,29 +4,29 @@
 {% block content %}
 <div class="auth auth-pro">
   <section class="auth-pitch">
-    <p class="eyebrow">JOIN THE PLATFORM</p>
-    <h1>Choose how you show up.</h1>
-    <p class="lede">Whether you run an organisation ready for change, or deliver automation that makes it real — start here. Free. No card required.</p>
+    <p class="eyebrow">JOIN ELIPSIS</p>
+    <h1>Give your company a baseline.</h1>
+    <p class="lede">Create a free account, describe your operation, and see where performance is leaking. No card. No implementation project. About 25 minutes.</p>
     <ul class="auth-points">
       <li>
         <span class="auth-icon">1</span>
         <div>
           <strong>Tell us who you are</strong>
-          <p class="muted">Organisation seeking clarity, or automation partner ready to bid.</p>
+          <p class="muted">A company seeking clarity, or an automation partner ready to deliver.</p>
         </div>
       </li>
       <li>
         <span class="auth-icon">2</span>
         <div>
           <strong>Set up in under a minute</strong>
-          <p class="muted">Work email and a password. You land in the right workspace immediately.</p>
+          <p class="muted">Work email and a password. Your company profile takes it from there.</p>
         </div>
       </li>
       <li>
         <span class="auth-icon">3</span>
         <div>
           <strong>Act on real numbers</strong>
-          <p class="muted">{{ total_questions or 63 }} questions, live scores, and a board-ready pack when you are ready.</p>
+          <p class="muted">{{ total_questions or 63 }} questions, live scoring, and a board-ready pack when you are ready.</p>
         </div>
       </li>
     </ul>
@@ -37,7 +37,7 @@
       <span class="mark" aria-hidden="true">{{ BRAND_MARK }}</span>
       <div>
         <strong>{{ BRAND_NAME }}</strong>
-        <span class="muted">New workspace</span>
+        <span class="muted">New company</span>
       </div>
     </div>
 
@@ -57,14 +57,14 @@
           <label style="display:flex;align-items:flex-start;gap:0.6rem;cursor:pointer;padding:0.75rem;border:1px solid var(--border, #e5e7eb);border-radius:8px;">
             <input type="radio" name="user_type" value="client" {% if not form or form.user_type != 'bidder' %}checked{% endif %} required style="margin-top:0.2rem;">
             <div>
-              <strong>Organisation</strong>
-              <p class="muted small" style="margin:0.15rem 0 0;">I want to measure readiness, run assessments, and request automation support.</p>
+              <strong>Company</strong>
+              <p class="muted small" style="margin:0.15rem 0 0;">I want to measure operating readiness, run diagnostics, and request support.</p>
             </div>
           </label>
           <label style="display:flex;align-items:flex-start;gap:0.6rem;cursor:pointer;padding:0.75rem;border:1px solid var(--border, #e5e7eb);border-radius:8px;">
             <input type="radio" name="user_type" value="bidder" {% if form and form.user_type == 'bidder' %}checked{% endif %} style="margin-top:0.2rem;">
             <div>
-              <strong>Automation company</strong>
+              <strong>Automation partner</strong>
               <p class="muted small" style="margin:0.15rem 0 0;">I deliver automation and physical assessments. I want to bid on open requests.</p>
             </div>
           </label>
@@ -73,7 +73,7 @@
 
       <label for="name">Full name
         <input id="name" name="name" required maxlength="120"
-               placeholder="Jane Wanjiku" value="{{ form.name if form else '' }}" autofocus>
+               placeholder="Alex Morgan" value="{{ form.name if form else '' }}" autofocus>
       </label>
       <label for="email">Work email
         <input id="email" type="email" name="email" required maxlength="200"
@@ -93,7 +93,7 @@
 
     <p class="auth-secure muted">
       By continuing you agree to use {{ BRAND_NAME }} for legitimate business assessment.
-      Passwords are hashed; sessions are HTTP-only cookies.
+      Your account and company data are private to your organisation.
     </p>
   </section>
 </div>

@@ -82,7 +82,7 @@
         {% for org in organizations %}<option value="{{ org.id }}" {% if selected_org and selected_org.id == org.id %}selected{% endif %}>{{ org.name }}</option>{% endfor %}
       </select>
     </label>
-    <label>Title <input name="title" maxlength="200" required placeholder="Late Mombasa release"></label>
+    <label>Title <input name="title" maxlength="200" required placeholder="Late port release"></label>
     <div class="ops-form-row">
       <label>Lane
         <select name="lane">{% for key, label in lane_labels.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select>

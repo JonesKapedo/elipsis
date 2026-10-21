@@ -365,15 +365,34 @@ def assessments(request: Request, user=Depends(get_current_user), db: Session = 
         return login_redirect()
     visible = services.visible_org_ids(db, user)
     focus = _int_param(request, "org")
-    scope = visible
-    if focus is not None and (visible is None or focus in visible):
-        scope = [focus]
+    orgs = services.list_organizations(db, visible)
+    company = next((org for org in orgs if org.id == focus), None)
+    if company is None and len(orgs) == 1:
+        company = orgs[0]
+    scope = [company.id] if company is not None else visible
     rows = services.list_assessments(db, scope)
+    completed = [row for row in rows
+                 if row.get("status") == "completed"
+                 and row.get("readiness_index") is not None]
+    scores = [row["readiness_index"] for row in completed]
+    lane_snapshot = logistics.snapshot(db, org_ids=scope)
+    lanes_at_risk = [lane for lane in lane_snapshot["lanes"]
+                     if lane["score"] is not None and lane["score"] < 50]
+    summary = {
+        "total": len(rows),
+        "completed": len(completed),
+        "in_progress": len(rows) - len(completed),
+        "average": round(sum(scores) / len(scores), 1) if scores else None,
+        "lanes_at_risk": len(lanes_at_risk),
+    }
     return templates.TemplateResponse(
         request, "assessments.html",
-        {"user": user, "rows": rows,
-         "organizations": services.list_organizations(db, visible),
-         "focus": focus})
+        {"user": user, "rows": rows, "summary": summary,
+         "lane_snapshot": lane_snapshot,
+         "organizations": orgs,
+         "company": company,
+         "company_context": services.company_context(company),
+         "focus": company.id if company is not None else None})
 
 
 @router.get("/start")
@@ -382,10 +401,15 @@ def start_get(request: Request, user=Depends(get_current_user),
     if user is None:
         return login_redirect()
     visible = services.visible_org_ids(db, user)
+    orgs = services.list_organizations(db, visible)
+    focus = _int_param(request, "org")
+    selected = next((org for org in orgs if org.id == focus), None)
     return templates.TemplateResponse(
         request, "start.html",
         {"user": user,
-         "organizations": services.list_organizations(db, visible),
+         "organizations": orgs,
+         "company": selected,
+         "company_context": services.company_context(selected),
          "total_questions": _question_count(db), "error": None})
 
 
@@ -394,7 +418,9 @@ def start_post(request: Request,
                organization_id: str = Form(""),
                organization_name: str = Form(""),
                industry: str = Form(""),
+               sub_industry: str = Form(""),
                employee_count: str = Form(""),
+               revenue_band: str = Form(""),
                country: str = Form(""),
                city: str = Form(""),
                department: str = Form("Operations"),
@@ -421,7 +447,9 @@ def start_post(request: Request,
                 organization=schemas.OrganizationIn(
                     name=name,
                     industry=(industry or "").strip()[:120] or None,
+                    sub_industry=(sub_industry or "").strip()[:120] or None,
                     employee_count=_optional_int(employee_count),
+                    revenue_band=(revenue_band or "").strip()[:80] or None,
                     country=(country or "").strip()[:80] or None,
                     city=(city or "").strip()[:80] or None,
                 ),
@@ -437,6 +465,7 @@ def start_post(request: Request,
             request, "start.html",
             {"user": user, "error": str(exc),
              "total_questions": _question_count(db),
+             "company": None, "company_context": None,
              "organizations": services.list_organizations(db, visible)},
             status_code=400)
     return RedirectResponse(f"/assessment/{assessment.id}/step/1", status_code=303)
@@ -505,18 +534,25 @@ def dashboard(request: Request, user=Depends(get_current_user),
     if user is None:
         return login_redirect()
     visible = services.visible_org_ids(db, user)
-    data = services.dashboard_data(db, org_ids=visible)
     orgs = services.list_organizations(db, visible)
+    focus = _int_param(request, "org")
+    company = next((org for org in orgs if org.id == focus), None)
+    if company is None and len(orgs) == 1:
+        company = orgs[0]
+    scope = [company.id] if company is not None else visible
+    data = services.dashboard_data(db, org_ids=scope)
     return templates.TemplateResponse(
         request, "dashboard.html",
         {"user": user, **data,
          "organizations": orgs,
-         "company": orgs[0] if len(orgs) == 1 else None,
-         "action_summary": services_ops.action_summary(db, visible),
+         "company": company,
+         "company_context": services.company_context(company),
+         "focus": company.id if company is not None else None,
+         "action_summary": services_ops.action_summary(db, scope),
          "notifications": services_ops.notifications(db, user),
-         "logistics": logistics.snapshot(db, org_ids=visible),
-         "operations": services_operations.summary(db, visible),
-         "trends": services_ops.org_trends(db, visible)})
+         "logistics": logistics.snapshot(db, org_ids=scope),
+         "operations": services_operations.summary(db, scope),
+         "trends": services_ops.org_trends(db, scope)})
 
 
 @router.post("/assessment/{assessment_id}/submit")
@@ -579,6 +615,7 @@ def assessment_results(assessment_id: int, request: Request,
         request, "results.html",
         {"user": user, "assessment": assessment, "result": result, "org": org,
          "organization": org, "department": dept,
+         "company_context": services.company_context(org),
          "share_url": share_url, "shared": token,
          "benchmark": benchmarks.cohort_benchmark(
              db, org, score=result.get("readiness_index")),

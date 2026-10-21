@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% block title %}{% if q %}Search: {{ q }}{% else %}Search{% endif %}{% endblock %}
-{% block description %}Search organisations, assessments and 90-day actions across your Elipsis workspace.{% endblock %}
+{% block description %}Search companies, diagnostics and 90-day actions across your Elipsis account.{% endblock %}
 {% block content %}
 <section class="search-hero">
   <p class="eyebrow">Workspace search</p>
   <h1 style="font-size:clamp(2rem,4vw,2.8rem)">Find anything you can act on.</h1>
   <p class="lede">Search organisations, assessments, departments, respondents and 90-day actions. Results are limited to organisations you can access.</p>
   <form class="search-form" action="/search" method="get" role="search">
-    <input type="search" name="q" value="{{ q }}" placeholder="Try an organisation, department, owner or action…" aria-label="Search workspace" autofocus>
+    <input type="search" name="q" value="{{ q }}" placeholder="Try an organisation, department, owner or action…" aria-label="Search your company" autofocus>
     <button class="btn" type="submit">Search</button>
   </form>
 </section>
@@ -15,7 +15,7 @@
 {% if not q %}
   <div class="empty-state">
     <p><strong>Start with a name or a phrase.</strong></p>
-    <p class="muted">For example: “Mombasa”, “dispatch”, “finance”, or the name of an action owner.</p>
+    <p class="muted">For example: “dispatch”, “warehouse”, “finance”, or the name of an action owner.</p>
   </div>
 {% elif q|length < 2 %}
   <div class="empty-state"><p>Enter at least two characters to search.</p></div>
@@ -32,7 +32,7 @@
     <h2>Organisations</h2>
     {% for row in results.organizations %}
     <a class="search-result" href="{{ row.url }}">
-      <span><strong>{{ row.org.name }}</strong><span>Open organisation workspace</span></span>
+      <span><strong>{{ row.org.name }}</strong><span>Open company record</span></span>
       <span class="arrow" aria-hidden="true">→</span>
     </a>
     {% endfor %}

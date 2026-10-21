@@ -105,7 +105,10 @@ def test_full_assessment_round_trip(signed_in):
     assert client.get(f"/assessment/{assessment_id}/results").status_code == 200
     assert client.get(f"/assessment/{assessment_id}/report").status_code == 200
     assert client.get("/dashboard").status_code == 200
-    assert client.get("/assessments").status_code == 200
+    assessments_page = client.get("/assessments")
+    assert assessments_page.status_code == 200
+    assert "Know which operating unit is holding" in assessments_page.text
+    assert "Lane signal" in assessments_page.text
 
 
 def test_step_pages_render_every_segment(signed_in):
@@ -119,6 +122,32 @@ def test_step_pages_render_every_segment(signed_in):
         assert "Why we ask" in page.text
     # Out-of-range steps clamp instead of erroring.
     assert client.get(f"/assessment/{assessment_id}/step/999").status_code == 200
+
+
+def test_login_page_is_logistics_specific():
+    from fastapi.testclient import TestClient
+
+    from elipsis_api.main import app
+    with TestClient(app) as fresh:
+        page = fresh.get("/login")
+    assert page.status_code == 200
+    assert "Every delayed load has a cost. See it." in page.text
+    assert "FOR LOGISTICS OPERATORS" in page.text
+    assert "Origin port" in page.text and "Global operations" in page.text
+    assert "Create a free operations account" in page.text
+
+
+def test_pricing_is_global_and_utility_priced():
+    from fastapi.testclient import TestClient
+
+    from elipsis_api.main import app
+    with TestClient(app) as fresh:
+        page = fresh.get("/pricing")
+    assert page.status_code == 200
+    assert "$490" in page.text and "$1,500" in page.text
+    assert "Why this pricing holds up" in page.text
+    assert "List prices are in USD" in page.text
+    assert "Kenya" not in page.text
 
 
 def test_bad_login_is_rejected(client):
@@ -428,7 +457,9 @@ def test_start_persists_logistics_organisation_fields(signed_in):
     created = client.post("/start", data={
         "organization_name": "Mombasa Line Haul",
         "industry": "Logistics",
+        "sub_industry": "Freight forwarding",
         "employee_count": "140",
+        "revenue_band": "USD 1M–10M",
         "country": "Kenya",
         "city": "Mombasa",
         "department": "Operations",
@@ -445,9 +476,28 @@ def test_start_persists_logistics_organisation_fields(signed_in):
         org = db.get(models.Organization, assessment.organization_id)
         assert org.name == "Mombasa Line Haul"
         assert org.industry == "Logistics"
+        assert org.sub_industry == "Freight forwarding"
         assert org.employee_count == 140
+        assert org.revenue_band == "USD 1M–10M"
         assert org.city == "Mombasa"
         assert org.country == "Kenya"
+        org_id = org.id
+
+    dashboard = client.get(f"/dashboard?org={org_id}")
+    assert dashboard.status_code == 200
+    assert "Mombasa Line Haul at a glance" in dashboard.text
+    assert "Freight forwarding" in dashboard.text
+    assert "Mid-sized operator" in dashboard.text
+    assert "USD 1M–10M" in dashboard.text
+
+    diagnostics = client.get(f"/assessments?org={org_id}")
+    assert diagnostics.status_code == 200
+    assert "holding Mombasa Line Haul back" in diagnostics.text
+
+    start = client.get(f"/start?org={org_id}")
+    assert start.status_code == 200
+    assert "Continue Mombasa Line Haul's diagnostic" in start.text
+    assert "Freight forwarding" in start.text
 
 
 def test_compare_page_uses_the_selected_organisation(signed_in):
@@ -494,7 +544,7 @@ def test_operations_ecosystem_round_trip(signed_in):
     assert loaded.status_code == 303
     home = client.get(f"/operations?org={org_id}")
     assert "On-time delivery" in home.text
-    assert "Mombasa release delay" in home.text
+    assert "Late port release" in home.text
 
     summary = client.get(f"/api/v1/operations?org_id={org_id}").json()
     assert summary["measured"] == 8

@@ -3,68 +3,150 @@
 {% block content %}
 <section class="hero">
   <p class="eyebrow">PRICING</p>
-  <h1>Consulting-grade insight without the 14-week slide factory.</h1>
-  <p class="lede">Every plan includes the full {{ INDEX_NAME }}, 36 executive metrics,
-  pain-point discovery, financial model, and three-horizon roadmap.</p>
+  <h1>Pay for operating clarity, not a consulting calendar.</h1>
+  <p class="lede">Start with a free diagnostic. When the numbers are useful, choose the plan
+  that matches how many operating units you need to run. Every plan includes the full
+  {{ INDEX_NAME }}, the costed constraint, and a plan your team can execute.</p>
 </section>
 
 <section class="pricing-grid">
   <article class="price-card">
-    <p class="eyebrow">Pilot</p>
-    <h2>Single assessment</h2>
-    <p class="price">From {{ CURRENCY }} 45,000</p>
-    <p class="muted">One organisation unit · one respondent track · full report pack</p>
+    <p class="eyebrow">Diagnostic</p>
+    <h2>See your number</h2>
+    <p class="price">Free</p>
+    <p class="muted">One company · one operating unit · no card required</p>
     <ul class="price-list">
-      <li>63-question ORG-001 instrument</li>
-      <li>Live scoring and autosave</li>
-      <li>Board-ready results + printable report</li>
-      <li>JSON / API export</li>
+      <li>Full 63-question logistics diagnostic</li>
+      <li>{{ INDEX_NAME }} with maturity band</li>
+      <li>Top three constraints, ranked</li>
+      <li>Sample 90-day action plan</li>
     </ul>
-    <a class="btn" href="/login">Start pilot →</a>
-  </article>
-
-  <article class="price-card featured">
-    <p class="eyebrow">Business</p>
-    <h2>Multi-department</h2>
-    <p class="price">From {{ CURRENCY }} 180,000</p>
-    <p class="muted">Up to 5 departments · portfolio dashboard · benchmark view</p>
-    <ul class="price-list">
-      <li>Everything in Pilot</li>
-      <li>Cross-unit maturity spread</li>
-      <li>Priority roadmap consolidation</li>
-      <li>Admin workspace for facilitators</li>
-    </ul>
-    <a class="btn" href="/login">Choose Business →</a>
+    <a class="btn ghost" href="/signup">Start free →</a>
   </article>
 
   <article class="price-card">
-    <p class="eyebrow">Enterprise</p>
-    <h2>Programme</h2>
-    <p class="price">Custom</p>
-    <p class="muted">Group-wide rollouts, API integration, facilitator training</p>
+    <p class="eyebrow">Pilot</p>
+    <h2>Prove it once</h2>
+    <p class="price">$1,500 <small>one-time</small></p>
+    <p class="muted">For teams that want a reviewed baseline before committing</p>
     <ul class="price-list">
-      <li>Unlimited assessments</li>
-      <li>Postgres-backed durable storage</li>
-      <li>SSO-ready session model</li>
-      <li>Dedicated onboarding</li>
+      <li>Everything in Diagnostic</li>
+      <li>Facilitated executive review (90 minutes)</li>
+      <li>Board-ready PDF and spreadsheet pack</li>
+      <li>Costed 90-day plan with owners and dates</li>
+      <li>One re-score after 90 days</li>
     </ul>
-    <a class="btn ghost" href="/login">Talk to us →</a>
+    <a class="btn" href="/contact">Book a pilot →</a>
+  </article>
+
+  <article class="price-card featured">
+    <p class="eyebrow">Operator</p>
+    <h2>Run the rhythm</h2>
+    <p class="price">$490 <small>/ month</small></p>
+    <p class="muted">For a single company keeping operating evidence current</p>
+    <ul class="price-list">
+      <li>Up to 5 operating units, unlimited re-scores</li>
+      <li>Operating ledger, action board, compliance calendar</li>
+      <li>5 team seats with role-based access</li>
+      <li>Quarterly review pack and movement history</li>
+      <li>Cancel before renewal; export everything</li>
+    </ul>
+    <a class="btn" href="/signup">Choose Operator →</a>
+  </article>
+
+  <article class="price-card">
+    <p class="eyebrow">Portfolio</p>
+    <h2>Compare the group</h2>
+    <p class="price">From $1,900 <small>/ month</small></p>
+    <p class="muted">For multi-site operators and groups that need one standard</p>
+    <ul class="price-list">
+      <li>Up to 20 operating units and multiple companies</li>
+      <li>Cross-unit benchmarks and portfolio heatmap</li>
+      <li>Unlimited seats and delegated administration</li>
+      <li>ERP, spreadsheet, and webhook connections</li>
+      <li>Named onboarding and priority support</li>
+    </ul>
+    <a class="btn ghost" href="/contact">Talk to us →</a>
   </article>
 </section>
 
+<p class="muted small" style="margin-top:-1rem">List prices are in USD. We invoice in local
+currency where required. Annual billing is available on Operator and Portfolio.</p>
+
 <section class="block">
-  <h3>What you always get</h3>
+  <h2>Why this pricing holds up</h2>
+  <p class="lede">The fee is tied to the decision you are making, not to the number of logins.
+  Here is the arithmetic a finance lead should apply before buying.</p>
   <div class="steps">
-    <article class="step-card"><h4>{{ INDEX_NAME }}</h4><p class="muted">Weighted seven-pillar score with maturity band and confidence.</p></article>
-    <article class="step-card"><h4>36 metrics</h4><p class="muted">Declarative formulas — score vs risk direction is explicit.</p></article>
-    <article class="step-card"><h4>Financial model</h4><p class="muted">Savings, investment, ROI, and payback with printed assumptions.</p></article>
-    <article class="step-card"><h4>Roadmap</h4><p class="muted">Quick wins, process automation, and AI enablement horizons.</p></article>
+    <article class="step-card">
+      <span class="step-n">01</span>
+      <h4>One consultant day, not fourteen weeks</h4>
+      <p class="muted">A credible operations review usually costs more than the Pilot. The Pilot
+      gives you the same baseline, a costed constraint, and a plan you own — in one working session.</p>
+    </article>
+    <article class="step-card">
+      <span class="step-n">02</span>
+      <h4>Less than an hour of labour per employee</h4>
+      <p class="muted">For a 100-person operator, Operator costs about $5 per employee per month.
+      If the work removes one hour of avoidable rework per employee per month, the plan pays for itself.</p>
+    </article>
+    <article class="step-card">
+      <span class="step-n">03</span>
+      <h4>The cost of one unresolved constraint</h4>
+      <p class="muted">One repeatedly delayed dispatch, one idle vehicle, or one late invoice run
+      usually costs more than the annual plan. The diagnostic tells you which one is actually happening.</p>
+    </article>
+    <article class="step-card">
+      <span class="step-n">04</span>
+      <h4>No lock-in</h4>
+      <p class="muted">Start free. Buy the Pilot only after you have seen your own numbers.
+      Leave before renewal and keep every report and export. Pricing should survive that test.</p>
+    </article>
+  </div>
+</section>
+
+<section class="block">
+  <h3>What every paid plan includes</h3>
+  <div class="steps">
+    <article class="step-card"><h4>{{ INDEX_NAME }}</h4><p class="muted">One weighted score across seven operating pillars, with a maturity band and confidence level.</p></article>
+    <article class="step-card"><h4>Costed constraint</h4><p class="muted">The friction is priced from your headcount and labour assumptions, with every assumption printed.</p></article>
+    <article class="step-card"><h4>90-day plan</h4><p class="muted">Named actions, owners, due dates, and a review cadence — not a list of recommendations.</p></article>
+    <article class="step-card"><h4>Board-ready evidence</h4><p class="muted">PDF, spreadsheet, and a read-only share link that a board, bank, or partner can review.</p></article>
+  </div>
+</section>
+
+<section class="block">
+  <h3>Questions buyers actually ask</h3>
+  <div class="steps">
+    <article class="step-card">
+      <h4>Why not charge per user?</h4>
+      <p class="muted">Because the value comes from one shared operating picture, not from restricting access.
+      Seats are generous on purpose; the plan scales with operating units.</p>
+    </article>
+    <article class="step-card">
+      <h4>We are small. Is $490 a month realistic?</h4>
+      <p class="muted">If the business is below 25 staff, start with the free diagnostic or the Pilot.
+      Move to Operator only when you are running recurring reviews and need the ledger.</p>
+    </article>
+    <article class="step-card">
+      <h4>What if the diagnosis finds little?</h4>
+      <p class="muted">Then you have saved the cost of a consulting engagement. The free diagnostic
+      is designed to answer that question before you pay.</p>
+    </article>
+    <article class="step-card">
+      <h4>Do you work outside your first market?</h4>
+      <p class="muted">Yes. The framework is operating-model based, not country specific. We invoice
+      in local currency where required and support English delivery today.</p>
+    </article>
   </div>
 </section>
 
 <section class="cta-panel">
-  <h2>Prefer to see the output first?</h2>
-  <p class="lede">Open the public sample report generated by the same engine your live assessments use.</p>
-  <a class="btn big" href="/sample">View sample report →</a>
+  <h2>See the output before you see an invoice.</h2>
+  <p class="lede">Open a completed sample report generated by the same engine your live diagnostics use.</p>
+  <div class="hero-actions" style="justify-content:center">
+    <a class="btn big" href="/sample">View sample report →</a>
+    <a class="btn ghost big" href="/signup">Start free →</a>
+  </div>
 </section>
 {% endblock %}

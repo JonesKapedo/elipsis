@@ -35,8 +35,8 @@ REPORT_HEADER = "ELIPSIS \u2014 BUSINESS TRANSFORMATION ASSESSMENT"
 QUESTIONNAIRE_CODE = "ORG-001"  # generalised: no longer finance-only
 QUESTIONNAIRE_NAME = "Elipsis Organisation Readiness Assessment"
 QUESTIONNAIRE_VERSION = "2.0"
-CURRENCY = "KES"
-DEFAULT_HOURLY_RATE = 500  # KES/hour, per the Elipsis financial impact model
+CURRENCY = "USD"
+DEFAULT_HOURLY_RATE = 35  # USD/hour blended operating labour, global default
 
 # --- Maturity scale (0-100) -----------------------------------------------
 # Bands are contiguous half-open ranges: (low, high_exclusive). An earlier

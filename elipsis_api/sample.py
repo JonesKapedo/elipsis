@@ -13,11 +13,11 @@ from elipsis_questions import QUESTIONS
 from readiness import compute as _compute
 
 SAMPLE_ORG = {
-    "name": "Demo Logistics Ltd",
+    "name": "Meridian Freight Group",
     "industry": "Logistics",
     "department": "Operations",
-    "country": "Kenya",
-    "city": "Nairobi",
+    "country": "Netherlands",
+    "city": "Rotterdam",
     "employee_count": 120,
 }
 

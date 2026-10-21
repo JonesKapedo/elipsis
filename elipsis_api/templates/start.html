@@ -2,47 +2,67 @@
 {% block title %}New assessment{% endblock %}
 {% block content %}
 <section class="head">
-  <p class="eyebrow">NEW ASSESSMENT</p>
-  <h1>Set up a logistics assessment</h1>
+  <p class="eyebrow">NEW DIAGNOSTIC</p>
+  {% if company %}
+  <h1>Continue {{ company.name }}'s diagnostic</h1>
   <p class="lede">{{ QUESTIONNAIRE_NAME }} ({{ QUESTIONNAIRE_CODE }}) ·
   {{ total_questions }} questions · about 25 minutes · autosave on every answer.</p>
+  <div class="company-strip">
+    <div><span>Company</span><strong>{{ company.name }}</strong></div>
+    <div><span>Sector</span><strong>{{ company_context.sector }}</strong></div>
+    <div><span>Scale</span><strong>{{ company_context.size }}{% if company_context.employees %} · {{ company_context.employees }} people{% endif %}</strong></div>
+    <div><span>Footprint</span><strong>{{ company_context.location }}</strong></div>
+  </div>
+  {% else %}
+  <h1>Set up a company diagnostic</h1>
+  <p class="lede">{{ QUESTIONNAIRE_NAME }} ({{ QUESTIONNAIRE_CODE }}) ·
+  {{ total_questions }} questions · about 25 minutes · autosave on every answer.</p>
+  {% endif %}
   {% if error %}<div class="flash err">{{ error }}</div>{% endif %}
 </section>
 
 <div class="split-layout">
   <section class="block">
     <form method="post" action="/start" class="stack">
-      <h3>Organisation</h3>
-      <label>Existing organisation
+      <h3>Company</h3>
+      <label>Existing company
         <select name="organization_id">
-          <option value="">— Create new organisation —</option>
+          <option value="">— Create a new company —</option>
           {% for o in organizations %}
-          <option value="{{ o.id }}">{{ o.name }}{% if o.industry %} · {{ o.industry }}{% endif %}</option>
+          <option value="{{ o.id }}" {% if company and company.id == o.id %}selected{% endif %}>{{ o.name }}{% if o.industry %} · {{ o.industry }}{% endif %}</option>
           {% endfor %}
         </select>
       </label>
 
+      <p class="muted small" style="margin:0">Only fill the fields below when creating a new company. Your profile tailors the dashboard, benchmarks, and plan.</p>
+
       <div class="form-grid">
-        <label>New organisation name
-          <input name="organization_name" placeholder="e.g. Blue Ridge Logistics Ltd" autocomplete="organization">
+        <label>Company name
+          <input name="organization_name" placeholder="e.g. Meridian Freight Group" autocomplete="organization">
         </label>
         <label>Industry
           <input name="industry" value="Logistics" list="industry-list">
         </label>
+        <label>Sub-sector
+          <input name="sub_industry" list="sub-industry-list" placeholder="e.g. Freight forwarding">
+        </label>
         <label>Employees
           <input name="employee_count" type="number" min="0" placeholder="120">
         </label>
+        <label>Annual revenue
+          <input name="revenue_band" list="revenue-list" placeholder="Select a band">
+        </label>
         <label>Country
-          <input name="country" value="Kenya" autocomplete="country-name">
+          <input name="country" placeholder="Country" autocomplete="country-name">
         </label>
         <label>City
-          <input name="city" placeholder="Nairobi" autocomplete="address-level2">
+          <input name="city" placeholder="City" autocomplete="address-level2">
         </label>
       </div>
 
       <h3>Scope</h3>
       <div class="form-grid">
-        <label>Department
+        <label>Operating unit
           <input name="department" value="Operations" list="dept-list">
         </label>
         <label>Respondent title
@@ -53,23 +73,43 @@
       <datalist id="industry-list">
         <option value="Logistics"></option>
         <option value="Manufacturing"></option>
+        <option value="Retail and distribution"></option>
+        <option value="Field services"></option>
+        <option value="Construction and infrastructure"></option>
         <option value="Financial services"></option>
-        <option value="Retail"></option>
         <option value="Healthcare"></option>
         <option value="Public sector"></option>
       </datalist>
+      <datalist id="sub-industry-list">
+        <option value="Freight forwarding"></option>
+        <option value="Road transport"></option>
+        <option value="Warehousing"></option>
+        <option value="Distribution"></option>
+        <option value="Courier and last mile"></option>
+        <option value="Port and terminal operations"></option>
+        <option value="Fleet management"></option>
+      </datalist>
+      <datalist id="revenue-list">
+        <option value="Under USD 1M"></option>
+        <option value="USD 1M–10M"></option>
+        <option value="USD 10M–50M"></option>
+        <option value="USD 50M–250M"></option>
+        <option value="USD 250M+"></option>
+      </datalist>
       <datalist id="dept-list">
         <option value="Operations"></option>
+        <option value="Dispatch"></option>
+        <option value="Warehouse"></option>
         <option value="Finance"></option>
         <option value="Customer Service"></option>
-        <option value="Supply Chain"></option>
+        <option value="Compliance"></option>
         <option value="IT"></option>
         <option value="HR"></option>
       </datalist>
 
       <div class="hero-actions">
-        <button class="btn big" type="submit">Begin assessment →</button>
-        <a class="btn ghost" href="/demo">Or run guided demo</a>
+        <button class="btn big" type="submit">Begin diagnostic →</button>
+        <a class="btn ghost" href="/demo">Or run the guided demo</a>
       </div>
     </form>
   </section>
@@ -79,10 +119,10 @@
     <ol class="opp">
       <li>Answer short segments (about three questions each).</li>
       <li>Scores update live as you progress.</li>
-      <li>Submit for the full index, metrics, and roadmap.</li>
-      <li>Share a read-only link or export JSON.</li>
+      <li>Submit for the full index, costed constraint, and roadmap.</li>
+      <li>Share a read-only board pack with your team or lender.</li>
     </ol>
-    <p class="muted small">Tip: employee count drives the financial model. Use a realistic headcount for credible savings estimates.</p>
+    <p class="muted small">Tip: a realistic headcount and revenue band make the financial model and peer comparison credible.</p>
   </aside>
 </div>
 {% endblock %}

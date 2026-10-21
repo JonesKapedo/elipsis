@@ -5,38 +5,63 @@
 
 <section class="dash-hero">
   <div>
-    <p class="eyebrow">{% if summary.total %}Operating picture{% else %}Workspace{% endif %}</p>
-    <h1>Welcome back</h1>
+    <p class="eyebrow">{% if company %}{{ company.name }} · Operating picture{% elif summary.total %}Portfolio operating picture{% else %}Your company{% endif %}</p>
+    <h1>{% if company %}{{ company.name }} at a glance{% else %}Welcome back{% endif %}</h1>
     <p class="lede">
+      {% if company_context %}
+        {{ company_context.sector }} · {{ company_context.size }}{% if company_context.employees %} ({{ company_context.employees }} people){% endif %} · {{ company_context.location }}.
+      {% endif %}
       {% if summary.total %}
-        Here is the latest picture. Start with the first constraint, then check the work already in motion.
+        Start with the first constraint, then check the work already in motion.
       {% else %}
-        Start your first logistics readiness assessment. The digital picture is free.
+        Start your first operating diagnostic. The baseline is free.
       {% endif %}
     </p>
   </div>
-  <a class="btn" href="/start{% if company %}?org={{ company.id }}{% endif %}">New assessment</a>
+  <div class="hero-actions">
+    {% if organizations|length > 1 %}
+    <form method="get" action="/dashboard" class="assess-filter">
+      <label for="dash-org" class="sr-only">Operating company</label>
+      <select id="dash-org" name="org" onchange="this.form.submit()">
+        <option value="">All companies</option>
+        {% for org in organizations %}
+        <option value="{{ org.id }}" {% if company and company.id == org.id %}selected{% endif %}>{{ org.name }}</option>
+        {% endfor %}
+      </select>
+    </form>
+    {% endif %}
+    <a class="btn" href="/start{% if company %}?org={{ company.id }}{% endif %}">New diagnostic</a>
+  </div>
 </section>
+
+{% if company_context %}
+<div class="company-strip">
+  <div><span>Company</span><strong>{{ company_context.name }}</strong></div>
+  <div><span>Sector</span><strong>{{ company_context.sector }}</strong></div>
+  <div><span>Scale</span><strong>{{ company_context.size }}{% if company_context.employees %} · {{ company_context.employees }} people{% endif %}</strong></div>
+  <div><span>Revenue</span><strong>{{ company_context.revenue }}</strong></div>
+</div>
+{% endif %}
 
 {% if not summary.total %}
 <section class="onboard-card">
   <div class="onboard-copy">
     <p class="eyebrow">Start here</p>
     <h2>From zero to a board-ready picture in one sitting.</h2>
-    <p class="muted">No consultants, no black box. Answer 63 operational questions, see your score live, and leave with a ranked 90-day plan.</p>
+    <p class="muted">No consultants, no black box. Answer 63 operating questions, see your score live, and leave with a ranked 90-day plan built around {{ company.name if company else 'your company' }}.</p>
     <div class="onboard-actions">
-      <a class="btn" href="/start{% if company %}?org={{ company.id }}{% endif %}">Start assessment</a>
+      <a class="btn" href="/start{% if company %}?org={{ company.id }}{% endif %}">Start diagnostic</a>
       <a class="btn ghost" href="/sample">See a sample report</a>
     </div>
   </div>
   <ol class="onboard-steps">
     <li{% if company %} class="done"{% endif %}>
       <span class="onboard-num">1</span>
-      <div><strong>{% if company %}Workspace ready{% else %}Name your organisation{% endif %}</strong><small>{% if company %}{{ company.name }} is set up and ready.{% else %}Add your company and operating scope.{% endif %}</small></div>
+      <div><strong>{% if company %}Company profile ready{% else %}Name your company{% endif %}</strong><small>{% if company %}{{ company.name }} is set up and ready.{% else %}Add your company, sector, and operating scope.{% endif %}</small></div>
     </li>
     <li>
       <span class="onboard-num">2</span>
-      <div><strong>Run the assessment</strong><small>63 questions · 20–25 minutes · save and resume</small></div>
+      <div><strong>Run the diagnostic</strong><small>63 questions · 20–25 minutes · save and resume</small></div>
     </li>
     <li>
       <span class="onboard-num">3</span>

@@ -14,6 +14,7 @@ from typing import Any
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
+from constants import CURRENCY
 from elipsis_api import models
 
 METRIC_CATALOG: dict[str, dict[str, Any]] = {
@@ -23,7 +24,7 @@ METRIC_CATALOG: dict[str, dict[str, Any]] = {
         "help": "Jobs delivered inside the promise window, as a share of all jobs.",
     },
     "cost_per_shipment": {
-        "label": "Cost per shipment", "unit": "kes", "target": 18000,
+        "label": "Cost per shipment", "unit": "currency", "target": 180,
         "direction": "lower", "lane": "cash",
         "help": "Direct operating cost divided by completed shipments.",
     },
@@ -110,8 +111,8 @@ def format_value(key: str, value: float | None) -> str:
     unit = METRIC_CATALOG.get(key, {}).get("unit", "")
     if unit == "percent":
         return f"{value:,.1f}%"
-    if unit == "kes":
-        return f"KES {value:,.0f}"
+    if unit == "currency":
+        return f"{CURRENCY} {value:,.0f}"
     if unit == "days":
         return f"{value:,.1f} days"
     if unit == "per100":
@@ -579,7 +580,7 @@ def ensure_sample_data(db: Session, org_id: int, user_id: int | None = None) -> 
     if existing_metrics is None:
         series = {
             "on_time_delivery": [80, 82, 84, 86, 88, 91],
-            "cost_per_shipment": [26100, 25200, 24400, 23900, 23100, 22400],
+            "cost_per_shipment": [261, 252, 244, 239, 231, 224],
             "invoice_accuracy": [89, 91, 93, 94, 95, 96],
             "fleet_utilization": [58, 61, 64, 68, 71, 74],
             "cash_conversion_days": [62, 58, 54, 49, 45, 42],
@@ -604,7 +605,7 @@ def ensure_sample_data(db: Session, org_id: int, user_id: int | None = None) -> 
             models.OperationalIncident.organization_id == org_id).limit(1)) is None:
         today = _today()
         samples = [
-            ("Mombasa release delay", "dispatch", "high", "open", 2,
+            ("Late port release", "dispatch", "high", "open", 2,
              "MBS-4821", "Two customer deliveries missed the morning window.",
              "Release papers arrived after the transporter cut-off.",
              "Pre-clear release documents the day before loading."),

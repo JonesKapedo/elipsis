@@ -172,6 +172,38 @@ def can_access_org(db: Session, user, organization_id: int | None) -> bool:
     return organization_id in owned_org_ids(db, user)
 
 
+def company_context(org: models.Organization | None) -> dict[str, Any] | None:
+    """Human-readable company profile used to tailor every operating page."""
+    if org is None:
+        return None
+    employees = org.employee_count
+    if employees is None:
+        size = "Scale not set"
+    elif employees < 50:
+        size = "Small operator"
+    elif employees < 200:
+        size = "Mid-sized operator"
+    elif employees < 1000:
+        size = "Large operator"
+    else:
+        size = "Enterprise network"
+    sector = (org.sub_industry or org.industry or "Logistics").strip()
+    location = ", ".join(part for part in (org.city, org.country) if part) or "Footprint not set"
+    revenue = (org.revenue_band or "").strip() or "Revenue band not set"
+    return {
+        "name": org.name,
+        "sector": sector,
+        "industry": org.industry or "Logistics",
+        "sub_industry": org.sub_industry or "",
+        "size": size,
+        "employees": employees,
+        "revenue": revenue,
+        "location": location,
+        "country": org.country or "",
+        "city": org.city or "",
+    }
+
+
 def company_overview(db: Session, org: models.Organization) -> dict[str, Any]:
     rows = list_assessments(db, [org.id])
     completed = sorted(

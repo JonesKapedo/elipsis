@@ -86,7 +86,8 @@ def my_company(request: Request, user=Depends(get_current_user), db: Session = D
         except Exception:
             camps = []
         rows.append({
-            "org": org, "overview": overview, "portrait": portrait, "insight": insight,
+            "org": org, "context": services.company_context(org),
+            "overview": overview, "portrait": portrait, "insight": insight,
             "latest": latest, "assessments": overview["rows"],
             "spark": analytics.sparkline([t["value"] for t in overview["trend"]]),
             "editing": request.query_params.get("edit") == str(org.id),
@@ -99,7 +100,8 @@ def my_company(request: Request, user=Depends(get_current_user), db: Session = D
 
 @router.post("/company")
 def create_company(request: Request, name: str = Form(...), industry: str = Form(""),
-                   employee_count: str = Form(""), country: str = Form("Kenya"),
+                   sub_industry: str = Form(""), employee_count: str = Form(""),
+                   revenue_band: str = Form(""), country: str = Form(""),
                    city: str = Form(""), user=Depends(get_current_user),
                    db: Session = Depends(get_db)):
     if user is None:
@@ -109,7 +111,9 @@ def create_company(request: Request, name: str = Form(...), industry: str = Form
     org = models.Organization(
         name=name.strip()[:160],
         industry=industry.strip()[:120] or None,
+        sub_industry=sub_industry.strip()[:120] or None,
         employee_count=_parse_staff(employee_count),
+        revenue_band=revenue_band.strip()[:80] or None,
         country=country.strip()[:80] or None,
         city=city.strip()[:80] or None,
     )
@@ -122,7 +126,8 @@ def create_company(request: Request, name: str = Form(...), industry: str = Form
 
 @router.post("/company/{organization_id}/edit")
 def edit_company(organization_id: int, name: str = Form(...), industry: str = Form(""),
-                 employee_count: str = Form(""), country: str = Form(""),
+                 sub_industry: str = Form(""), employee_count: str = Form(""),
+                 revenue_band: str = Form(""), country: str = Form(""),
                  city: str = Form(""), user=Depends(get_current_user),
                  db: Session = Depends(get_db)):
     if user is None:
@@ -133,7 +138,9 @@ def edit_company(organization_id: int, name: str = Form(...), industry: str = Fo
     if name.strip():
         org.name = name.strip()[:160]
     org.industry = industry.strip()[:120] or None
+    org.sub_industry = sub_industry.strip()[:120] or None
     org.employee_count = _parse_staff(employee_count)
+    org.revenue_band = revenue_band.strip()[:80] or None
     org.country = country.strip()[:80] or None
     org.city = city.strip()[:80] or None
     db.commit()
