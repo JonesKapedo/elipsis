@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Incidents{% endblock %}
+{% block content %}
+<section class="head ops-head">
+  <div>
+    <p class="eyebrow">Operations · Incident register</p>
+    <h1>Log the failure before it becomes normal.</h1>
+    <p class="lede">A delay, claim, stock variance, or missed handoff is evidence. Record the impact, find the root cause, and promote the fix to the action board.</p>
+  </div>
+  <div class="ops-head-actions">
+    <span class="ops-pill ops-state-danger">{{ counts.open }} open</span>
+    <span class="ops-pill ops-state-warn">{{ counts.critical + counts.high }} high severity</span>
+  </div>
+</section>
+
+{% include "_operations_tabs.html" %}
+
+{% if saved %}<div class="flash ok">Incident register updated.</div>{% endif %}
+{% if error %}<div class="flash err">{{ error }}</div>{% endif %}
+
+<div class="ops-toolbar">
+  <div class="ops-filter-chips">
+    {% for status in ['open', 'investigating', 'resolved', 'all'] %}
+    <a href="/operations/incidents?status={{ status }}{% if selected_org %}&org={{ selected_org.id }}{% endif %}" class="ops-chip{% if status_filter == status %} is-on{% endif %}">{{ status|title }}</a>
+    {% endfor %}
+  </div>
+  <span class="muted small">{{ rows|length }} shown · {{ counts.total }} total</span>
+</div>
+
+<section class="ops-form-grid">
+  <div class="block">
+    <div class="block-head"><h3>{{ status_filter|title }} incidents</h3></div>
+    {% if rows %}
+    <div class="ops-incident-list">
+      {% for row in rows %}
+      <article class="ops-incident">
+        <div class="ops-incident-head">
+          <div>
+            <strong>{{ row.title }}</strong>
+            <small>{{ org_names.get(row.organization_id, '') }} · {{ row.occurred_on }}{% if row.shipment_ref %} · {{ row.shipment_ref }}{% endif %}</small>
+          </div>
+          <div class="ops-incident-tags">
+            <span class="tag {{ 'warn' if row.severity in ['high','critical'] else '' }}">{{ row.severity }}</span>
+            <span class="tag {{ 'ok' if row.status == 'resolved' else 'warn' }}">{{ row.status }}</span>
+          </div>
+        </div>
+        {% if row.customer_impact %}<p><strong>Impact:</strong> {{ row.customer_impact }}</p>{% endif %}
+        {% if row.root_cause %}<p><strong>Cause:</strong> {{ row.root_cause }}</p>{% endif %}
+        {% if row.corrective_action %}<p><strong>Corrective action:</strong> {{ row.corrective_action }}</p>{% endif %}
+        <div class="ops-incident-foot">
+          <span class="muted small">{{ lane_labels.get(row.lane, row.lane or 'Unassigned') }} · {{ row.owner or 'Unassigned' }}</span>
+          <div class="ops-inline-actions">
+            {% if row.status != 'resolved' %}
+            <form method="post" action="/operations/incidents/{{ row.id }}/resolve">
+              <input type="hidden" name="organization_id" value="{{ row.organization_id }}">
+              <input name="note" placeholder="Closure note" maxlength="300">
+              <button class="btn ghost sm" type="submit">Resolve</button>
+            </form>
+            {% endif %}
+            {% if row.action_item_id %}
+            <span class="ops-pill ops-state-good">On action board #{{ row.action_item_id }}</span>
+            {% elif row.status != 'resolved' %}
+            <form method="post" action="/operations/incidents/{{ row.id }}/promote">
+              <input type="hidden" name="organization_id" value="{{ row.organization_id }}">
+              <button class="btn ghost sm" type="submit">Promote to action</button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><p><strong>Nothing in this queue.</strong></p><p class="muted">That is a good sign. Add an incident when something fails or a customer is affected.</p></div>
+    {% endif %}
+  </div>
+
+  <form method="post" action="/operations/incidents" class="block stack">
+    <h3>Log an incident</h3>
+    <label>Organisation
+      <select name="organization_id" required>
+        {% for org in organizations %}<option value="{{ org.id }}" {% if selected_org and selected_org.id == org.id %}selected{% endif %}>{{ org.name }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Title <input name="title" maxlength="200" required placeholder="Late Mombasa release"></label>
+    <div class="ops-form-row">
+      <label>Lane
+        <select name="lane">{% for key, label in lane_labels.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select>
+      </label>
+      <label>Severity
+        <select name="severity">{% for sev in severities %}<option value="{{ sev }}" {% if sev == 'medium' %}selected{% endif %}>{{ sev|title }}</option>{% endfor %}</select>
+      </label>
+    </div>
+    <div class="ops-form-row">
+      <label>Occurred on <input name="occurred_on" type="date"></label>
+      <label>Shipment ref <input name="shipment_ref" maxlength="80" placeholder="MBS-4821"></label>
+    </div>
+    <label>Customer impact <textarea name="customer_impact" rows="2" placeholder="What the customer saw"></textarea></label>
+    <label>Root cause <textarea name="root_cause" rows="2" placeholder="Why it happened"></textarea></label>
+    <label>Corrective action <textarea name="corrective_action" rows="2" placeholder="What changes now"></textarea></label>
+    <label>Owner <input name="owner" maxlength="120" placeholder="Operations lead"></label>
+    <button class="btn" type="submit" {% if not organizations %}disabled{% endif %}>Log incident</button>
+  </form>
+</section>
+{% endblock %}

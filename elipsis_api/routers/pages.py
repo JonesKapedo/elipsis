@@ -7,7 +7,16 @@ from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from elipsis_api import benchmarks, logistics, models, schemas, services, services_ops, services_webhooks
+from elipsis_api import (
+    benchmarks,
+    logistics,
+    models,
+    schemas,
+    services,
+    services_operations,
+    services_ops,
+    services_webhooks,
+)
 from elipsis_api.config import SESSION_COOKIE
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
@@ -506,6 +515,7 @@ def dashboard(request: Request, user=Depends(get_current_user),
          "action_summary": services_ops.action_summary(db, visible),
          "notifications": services_ops.notifications(db, user),
          "logistics": logistics.snapshot(db, org_ids=visible),
+         "operations": services_operations.summary(db, visible),
          "trends": services_ops.org_trends(db, visible)})
 
 
@@ -576,6 +586,7 @@ def assessment_results(assessment_id: int, request: Request,
          "sources": benchmarks.SOURCES, "method_note": benchmarks.METHOD_NOTE,
          "previous": previous, "delta": delta,
          "logistics": logistics.snapshot(db, assessment_ids=[assessment_id]),
+         "operations": services_operations.summary(db, [assessment.organization_id]),
          "share_links": services_ops.share_links(db, assessment_id),
          "notifications": services_ops.notifications(db, user)})
 

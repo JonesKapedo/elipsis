@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% block title %}Data exchange{% endblock %}
+{% block content %}
+<section class="head ops-head">
+  <div>
+    <p class="eyebrow">Operations · Data exchange</p>
+    <h1>Bring your own system.</h1>
+    <p class="lede">Import from a spreadsheet or ERP, export the full operating record, use the JSON API, and subscribe another system to workspace events.</p>
+  </div>
+  <div class="ops-head-actions">
+    <a class="btn ghost sm" href="/operations/export.json{{ ('?org=' ~ selected_org.id) if selected_org else '' }}">Export JSON</a>
+    <a class="btn ghost sm" href="/operations/metrics/export.csv{{ ('?org=' ~ selected_org.id) if selected_org else '' }}">Export metrics CSV</a>
+  </div>
+</section>
+
+{% include "_operations_tabs.html" %}
+
+{% if saved %}<div class="flash ok">Change saved.</div>{% endif %}
+{% if error %}<div class="flash err">{{ error }}</div>{% endif %}
+
+{% if new_token %}
+<section class="block ops-token-reveal">
+  <p class="eyebrow">Copy this token now</p>
+  <h3>It will not be shown again.</h3>
+  <code class="ops-token">{{ new_token }}</code>
+  <p class="muted small">Use it as <code>Authorization: Bearer &lt;token&gt;</code>. The token is scoped to one organisation and can be revoked here.</p>
+</section>
+{% endif %}
+
+<section class="ops-loop compact-loop">
+  <div class="ops-loop-grid">
+    <div><span class="ops-loop-num">CSV</span><strong>Spreadsheet / ERP</strong><small>Metrics, incidents, and document dates.</small></div>
+    <div><span class="ops-loop-num">API</span><strong>JSON over HTTPS</strong><small>Read summary and write operating records.</small></div>
+    <div><span class="ops-loop-num">HOOK</span><strong>Signed webhooks</strong><small>Push metric, incident, and import events out.</small></div>
+    <div><span class="ops-loop-num">ACT</span><strong>Action board</strong><small>Promote an incident into a tracked fix.</small></div>
+  </div>
+</section>
+
+<section class="ops-form-grid">
+  <form method="post" action="/operations/import" enctype="multipart/form-data" class="block stack">
+    <h3>Import a CSV</h3>
+    <label>Organisation
+      <select name="organization_id" required>
+        {% for org in organizations %}<option value="{{ org.id }}" {% if selected_org and selected_org.id == org.id %}selected{% endif %}>{{ org.name }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Record type
+      <select name="kind" required>
+        <option value="metrics">Operating metrics</option>
+        <option value="incidents">Incidents</option>
+        <option value="documents">Compliance documents</option>
+      </select>
+    </label>
+    <label>CSV file <input type="file" name="file" accept=".csv,text/csv" required></label>
+    <p class="muted small">UTF-8, up to 500 rows and 512 KB. Bad rows are skipped and listed on the import report.</p>
+    <div class="ops-inline-actions">
+      <button class="btn" type="submit" {% if not organizations %}disabled{% endif %}>Import CSV</button>
+      <a class="btn ghost sm" href="/operations/templates/metrics.csv">Metric template</a>
+      <a class="btn ghost sm" href="/operations/templates/incidents.csv">Incident template</a>
+      <a class="btn ghost sm" href="/operations/templates/documents.csv">Document template</a>
+    </div>
+  </form>
+
+  <div class="block stack">
+    <h3>First-run sample</h3>
+    {% if selected_org %}
+    <p class="muted small">Load a complete six-month example for <strong>{{ selected_org.name }}</strong>, then replace it with live readings.</p>
+    <form method="post" action="/operations/sample">
+      <input type="hidden" name="organization_id" value="{{ selected_org.id }}">
+      <button class="btn ghost" type="submit">Load sample operating data</button>
+    </form>
+    {% else %}
+    <p class="muted small">Choose one organisation above to load a sample or import records.</p>
+    {% endif %}
+    <hr class="ops-rule">
+    <h3>What is connected</h3>
+    <div class="ops-connection-list">
+      <div><strong>Webhook endpoints</strong><span class="ops-pill {{ 'ops-state-good' if hooks else '' }}">{{ hooks|length }} active</span></div>
+      <div><strong>API tokens</strong><span class="ops-pill {{ 'ops-state-good' if tokens else '' }}">{{ tokens|length }} active</span></div>
+      <div><strong>Imports recorded</strong><span class="ops-pill">{{ history|length }}</span></div>
+    </div>
+    <a class="btn ghost sm" href="/settings">Manage webhooks →</a>
+  </div>
+</section>
+
+<section class="block" id="tokens">
+  <div class="block-head">
+    <div><h3>API tokens</h3><p class="muted small" style="margin:.25rem 0 0">Organisation-scoped bearer tokens for servers and automations. Store the raw token in a secret manager.</p></div>
+  </div>
+  {% if tokens %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Name</th><th>Organisation</th><th>Prefix</th><th>Scope</th><th>Last used</th><th></th></tr></thead>
+      <tbody>
+        {% for token in tokens %}
+        <tr>
+          <td><strong>{{ token.name }}</strong></td>
+          <td>{{ org_names.get(token.organization_id, '') }}</td>
+          <td><code>{{ token.prefix }}…</code></td>
+          <td>{{ token.scopes }}</td>
+          <td class="small">{{ token.last_used_at or 'Never' }}</td>
+          <td>
+            <form method="post" action="/operations/tokens/{{ token.id }}/revoke">
+              <input type="hidden" name="organization_id" value="{{ token.organization_id }}">
+              <button class="btn ghost sm" type="submit">Revoke</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted small">No tokens yet.</p>
+  {% endif %}
+  <form method="post" action="/operations/tokens" class="ops-token-form">
+    <label>Organisation
+      <select name="organization_id" required>
+        {% for org in organizations %}<option value="{{ org.id }}" {% if selected_org and selected_org.id == org.id %}selected{% endif %}>{{ org.name }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Token name <input name="name" maxlength="120" required placeholder="WMS production"></label>
+    <label>Scope
+      <select name="scopes"><option value="read,write">Read and write</option><option value="read">Read only</option></select>
+    </label>
+    <button class="btn" type="submit" {% if not organizations %}disabled{% endif %}>Create token</button>
+  </form>
+</section>
+
+<section class="block">
+  <div class="block-head"><h3>JSON API</h3><span class="muted small">Session cookie or bearer token</span></div>
+  <div class="ops-api-grid">
+    <div class="ops-api-card">
+      <span class="ops-method get">GET</span>
+      <code>/api/v1/operations</code>
+      <p>Summary, lane health, latest metrics, incident counts, and compliance counts.</p>
+    </div>
+    <div class="ops-api-card">
+      <span class="ops-method get">GET</span>
+      <code>/api/v1/operations/metrics</code>
+      <p>Latest metric per organisation, with target, status, and prior-period movement.</p>
+    </div>
+    <div class="ops-api-card">
+      <span class="ops-method post">POST</span>
+      <code>/api/v1/operations/metrics</code>
+      <p>Write a reading. Body: <code>metric_key</code>, <code>value</code>, <code>period_end</code>, optional <code>note</code>.</p>
+    </div>
+    <div class="ops-api-card">
+      <span class="ops-method post">POST</span>
+      <code>/api/v1/operations/incidents</code>
+      <p>Open an incident. Body: <code>title</code>, optional severity, lane, impact, cause, owner.</p>
+    </div>
+    <div class="ops-api-card">
+      <span class="ops-method get">GET</span>
+      <code>/api/v1/operations/documents</code>
+      <p>Compliance register with expiry state and days remaining.</p>
+    </div>
+    <div class="ops-api-card">
+      <span class="ops-method get">GET</span>
+      <code>/api/v1/operations/export</code>
+      <p>Full JSON bundle for a warehouse, data lake, or backup.</p>
+    </div>
+  </div>
+  <pre class="ops-code"><code>curl {{ request.base_url }}api/v1/operations \
+  -H "Authorization: Bearer $ELIPSIS_TOKEN"
+
+curl -X POST {{ request.base_url }}api/v1/operations/metrics \
+  -H "Authorization: Bearer $ELIPSIS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"metric_key":"on_time_delivery","value":94.2,"period_end":"2026-10-31"}'</code></pre>
+  <p class="muted small">A token is already scoped to its organisation, so <code>organization_id</code> is not required in token-authenticated writes.</p>
+</section>
+
+<section class="block">
+  <div class="block-head"><h3>Import history</h3><span class="muted small">Every interchange is auditable.</span></div>
+  {% if history %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>When</th><th>Kind</th><th>File</th><th class="num">Rows</th><th class="num">Imported</th><th class="num">Skipped</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for batch in history %}
+        <tr>
+          <td class="small">{{ batch.created_at }}</td>
+          <td>{{ batch.kind|title }}</td>
+          <td class="small">{{ batch.filename or '—' }}</td>
+          <td class="num">{{ batch.row_count }}</td>
+          <td class="num">{{ batch.imported_count }}</td>
+          <td class="num">{{ batch.skipped_count }}</td>
+          <td><span class="tag {{ 'ok' if batch.status == 'imported' else 'warn' }}">{{ batch.status }}</span></td>
+          <td><a class="btn ghost sm" href="/operations/imports/{{ batch.id }}">Open</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted">No imports yet. Use the CSV form above to bring in your first records.</p>
+  {% endif %}
+</section>
+
+<section class="block">
+  <div class="block-head"><h3>Webhook endpoints</h3><a class="btn ghost sm" href="/settings">Add or test →</a></div>
+  {% if hooks %}
+  <div class="ops-connection-list">
+    {% for hook in hooks %}
+    <div><strong>{{ hook.url }}</strong><span class="ops-pill {{ 'ops-state-good' if hook.active else '' }}">{{ 'active' if hook.active else 'paused' }}</span><small>{{ hook.events }}</small></div>
+    {% endfor %}
+  </div>
+  <p class="muted small">New events: <code>metric.recorded</code>, <code>incident.opened</code>, <code>data.imported</code>. Add them under Settings → Webhooks.</p>
+  {% else %}
+  <p class="muted">No endpoints yet. Add one to push operating events into an ERP, WMS, or internal queue.</p>
+  {% endif %}
+</section>
+{% endblock %}

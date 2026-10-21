@@ -59,6 +59,18 @@
   </section>
   {% endif %}
 
+  {% if results.operations %}
+  <section class="search-group">
+    <h2>Operations</h2>
+    {% for row in results.operations %}
+    <a class="search-result" href="{{ row.url }}">
+      <span><strong>{{ row.title }}</strong><span>{{ row.kind }} · {{ row.detail }}</span></span>
+      <span class="arrow" aria-hidden="true">→</span>
+    </a>
+    {% endfor %}
+  </section>
+  {% endif %}
+
   {% if results.actions %}
   <section class="search-group">
     <h2>90-day actions</h2>

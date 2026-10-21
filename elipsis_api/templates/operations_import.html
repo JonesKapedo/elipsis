@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Import report{% endblock %}
+{% block content %}
+<section class="head ops-head">
+  <div>
+    <p class="eyebrow">Operations · Import report</p>
+    <h1>{{ batch.filename or 'CSV import' }}</h1>
+    <p class="lede">{{ batch.imported_count }} of {{ batch.row_count }} rows imported into {{ org_names.get(batch.organization_id, 'the organisation') }}. {{ batch.skipped_count }} skipped.</p>
+  </div>
+  <a class="btn ghost sm" href="/operations/data?org={{ batch.organization_id }}">Back to data exchange</a>
+</section>
+
+{% include "_operations_tabs.html" %}
+
+<section class="stat-grid">
+  <div class="stat-card"><span>Record type</span><b style="font-size:1.2rem">{{ batch.kind|title }}</b></div>
+  <div class="stat-card ok"><span>Imported</span><b>{{ batch.imported_count }}</b></div>
+  <div class="stat-card warn"><span>Skipped</span><b>{{ batch.skipped_count }}</b></div>
+  <div class="stat-card"><span>Status</span><b style="font-size:1.2rem">{{ batch.status|title }}</b></div>
+</section>
+
+<section class="block">
+  <div class="block-head"><h3>Row errors</h3><span class="muted small">First 20 errors only</span></div>
+  {% if errors %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th class="num">Row</th><th>Error</th></tr></thead>
+      <tbody>{% for error in errors %}<tr><td class="num">{{ error.row }}</td><td>{{ error.error }}</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="flash ok">No row errors. The whole file landed cleanly.</div>
+  {% endif %}
+</section>
+
+<section class="block">
+  <div class="block-head"><h3>What happens now</h3></div>
+  <div class="ops-loop-grid">
+    <a href="/operations?org={{ batch.organization_id }}"><span class="ops-loop-num">1</span><strong>Check the signal</strong><small>See the latest readings and lane health.</small></a>
+    <a href="/operations/metrics?org={{ batch.organization_id }}"><span class="ops-loop-num">2</span><strong>Review the ledger</strong><small>Confirm values, targets, and movement.</small></a>
+    <a href="/operations/incidents?org={{ batch.organization_id }}"><span class="ops-loop-num">3</span><strong>Promote the fix</strong><small>Turn a repeated failure into an action.</small></a>
+  </div>
+</section>
+{% endblock %}

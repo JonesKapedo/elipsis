@@ -78,6 +78,40 @@
 </section>
 {% endif %}
 
+{% if operations %}
+<section class="block">
+  <div class="block-head">
+    <div>
+      <h3>Operating evidence</h3>
+      <p class="muted small" style="margin:.25rem 0 0">Connect the score to what actually happened this month.</p>
+    </div>
+    <a class="btn ghost sm" href="/operations?org={{ organization.id }}">Open operations →</a>
+  </div>
+  {% if operations.measured %}
+  <div class="ops-strip">
+    <span><strong>{{ operations.measured }}</strong> metrics tracked</span>
+    <span><strong>{{ operations.at_target }}</strong> at target</span>
+    <span><strong>{{ operations.incidents.open }}</strong> open incidents</span>
+    <span><strong>{{ operations.documents.expiring + operations.documents.expired }}</strong> documents due</span>
+  </div>
+  <div class="ops-metric-grid" style="margin-top:.85rem">
+    {% for item in operations.metrics[:4] %}
+    <article class="ops-metric ops-state-{{ item.status }}">
+      <div class="ops-metric-top"><span>{{ item.label }}</span><span class="ops-pill">{{ item.status|title }}</span></div>
+      <b>{{ item.formatted }}</b>
+      <div class="ops-metric-meta"><span>Target {{ item.target_formatted }}</span><span>{{ item.metric.period_end }}</span></div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="ops-empty-inline">
+    <p><strong>The assessment is the map. Operating data is the feedback loop.</strong> Add service, cost, cash, capacity, incident, and expiry records for this organisation.</p>
+    <a class="btn ghost sm" href="/operations?org={{ organization.id }}">Connect operating data →</a>
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+
 <section class="two-col">
   <article class="block">
     <h3>Re-assessment cadence</h3>

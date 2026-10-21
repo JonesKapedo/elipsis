@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}Operations{% endblock %}
+{% block description %}Run the operating week: logistics KPIs, incidents, compliance, and the actions that follow.{% endblock %}
+{% block content %}
+<section class="head ops-head">
+  <div>
+    <p class="eyebrow">Operations ecosystem</p>
+    <h1>Run the week, not just the assessment.</h1>
+    <p class="lede">Assessment scores show where the business is exposed. This is where the operating evidence lives: service, cost, cash, capacity, incidents, and the documents that keep you trading.</p>
+  </div>
+  <div class="ops-head-actions">
+    {% if organizations|length > 1 or not selected_org %}
+    <form method="get" action="/operations" class="ops-org-switch">
+      <label class="sr-only" for="ops-org">Organisation</label>
+      <select id="ops-org" name="org" onchange="this.form.submit()">
+        <option value="">All organisations</option>
+        {% for org in organizations %}<option value="{{ org.id }}" {% if selected_org and selected_org.id == org.id %}selected{% endif %}>{{ org.name }}</option>{% endfor %}
+      </select>
+    </form>
+    {% endif %}
+    <a class="btn ghost sm" href="/operations/data{{ ('?org=' ~ selected_org.id) if selected_org else '' }}">Connect data</a>
+  </div>
+</section>
+
+{% include "_operations_tabs.html" %}
+
+{% if saved %}<div class="flash ok">Operating record saved.</div>{% endif %}
+{% if error %}<div class="flash err">{{ error }}</div>{% endif %}
+{% if sample_loaded %}<div class="flash ok">Sample operating history loaded. Replace it with your own readings when ready.</div>{% endif %}
+
+{% if not organizations %}
+<section class="empty-state">
+  <p><strong>Create an organisation first.</strong></p>
+  <p class="muted">The operations ledger is scoped to an organisation so evidence, incidents, and actions stay together.</p>
+  <a class="btn" href="/company">Create organisation</a>
+</section>
+{% elif ops.measured == 0 %}
+<section class="ops-onboard">
+  <div>
+    <p class="eyebrow">No operating readings yet</p>
+    <h2>Connect the numbers behind the score.</h2>
+    <p class="muted">Add eight core logistics metrics manually, import a CSV from your ERP or spreadsheet, or load a sample history to see how the loop works.</p>
+    <div class="hero-actions">
+      <a class="btn" href="/operations/metrics{{ ('?org=' ~ selected_org.id) if selected_org else '' }}">Add a reading</a>
+      <a class="btn ghost" href="/operations/data{{ ('?org=' ~ selected_org.id) if selected_org else '' }}">Import CSV or use API</a>
+    </div>
+  </div>
+  {% if selected_org %}
+  <form method="post" action="/operations/sample" class="ops-sample">
+    <input type="hidden" name="organization_id" value="{{ selected_org.id }}">
+    <p class="eyebrow">Guided preview</p>
+    <p><strong>{{ selected_org.name }}</strong></p>
+    <p class="muted small">Loads six months of realistic sample metrics, three incidents, and three compliance entries. You can replace every row later.</p>
+    <button class="btn ghost" type="submit">Load sample operating data</button>
+  </form>
+  {% endif %}
+</section>
+{% else %}
+<section class="stat-grid ops-stats">
+  <div class="stat-card"><span>Metrics tracked</span><b>{{ ops.measured }}</b></div>
+  <div class="stat-card ok"><span>At target</span><b>{{ ops.at_target }}</b></div>
+  <div class="stat-card danger"><span>At risk</span><b>{{ ops.at_risk }}</b></div>
+  <div class="stat-card warn"><span>Open incidents</span><b>{{ ops.incidents.open }}</b></div>
+  <div class="stat-card warn"><span>Documents expiring</span><b>{{ ops.documents.expiring + ops.documents.expired }}</b></div>
+</section>
+
+<section class="block">
+  <div class="block-head">
+    <div><h3>Operating signal by lane</h3><p class="muted small" style="margin:.25rem 0 0">Each lane combines the assessment view with the numbers you record here.</p></div>
+    <a class="btn ghost sm" href="/operations/metrics{{ ('?org=' ~ selected_org.id) if selected_org else '' }}">Open KPI ledger →</a>
+  </div>
+  <div class="lane-grid">
+    {% for lane in ops.lanes %}
+    <article class="lane-card ops-lane ops-state-{{ lane.state }}">
+      <div class="lane-top"><strong>{{ lane.label }}</strong><span class="ops-dot"></span></div>
+      <p>{% if lane.measured %}{{ lane.measured }} metric{% if lane.measured != 1 %}s{% endif %} connected{% else %}No readings yet{% endif %}</p>
+      <div class="lane-reading">{{ lane.state|replace('_', ' ')|title }}</div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="block">
+  <div class="block-head">
+    <div><h3>Latest readings</h3><p class="muted small" style="margin:.25rem 0 0">Latest period per organisation. Movement compares the prior period.</p></div>
+    <span class="muted small">Last reading {{ ops.last_updated or '—' }}</span>
+  </div>
+  <div class="ops-metric-grid">
+    {% for item in ops.metrics %}
+    <article class="ops-metric ops-state-{{ item.status }}">
+      <div class="ops-metric-top">
+        <span>{{ item.label }}{% if not selected_org %} <small class="muted">· {{ org_names.get(item.metric.organization_id, '') }}</small>{% endif %}</span>
+        <span class="ops-pill">{{ item.status|replace('_', ' ')|title }}</span>
+      </div>
+      <b>{{ item.formatted }}</b>
+      <div class="ops-metric-meta">
+        <span>Target {{ item.target_formatted }}</span>
+        {% if item.delta is not none %}<span class="ops-move {{ item.movement }}">{{ '%+.1f'|format(item.delta) }} vs prior</span>{% else %}<span>First reading</span>{% endif %}
+      </div>
+      {% if item.spark_points %}
+      <div class="ops-spark" aria-hidden="true">{% for point in item.spark_points %}<i style="height:{{ point }}%"></i>{% endfor %}</div>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="two-col">
+  <article class="block">
+    <div class="block-head"><h3>Incident queue</h3><a class="btn ghost sm" href="/operations/incidents{{ ('?org=' ~ selected_org.id) if selected_org else '' }}">All incidents →</a></div>
+    {% if recent_incidents %}
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Incident</th><th>Severity</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for row in recent_incidents %}
+          <tr>
+            <td><strong>{{ row.title }}</strong><br><span class="muted small">{{ org_names.get(row.organization_id, '') }} · {{ row.occurred_on }}</span></td>
+            <td><span class="tag {{ 'warn' if row.severity in ['high','critical'] else '' }}">{{ row.severity }}</span></td>
+            <td><span class="tag {{ 'ok' if row.status == 'resolved' else 'warn' }}">{{ row.status }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="muted">No incidents logged. Add one when a handoff fails, a customer is affected, or a control breaks.</p>
+    {% endif %}
+  </article>
+
+  <article class="block">
+    <div class="block-head"><h3>Compliance calendar</h3><a class="btn ghost sm" href="/operations/documents{{ ('?org=' ~ selected_org.id) if selected_org else '' }}">All documents →</a></div>
+    {% if doc_rows %}
+    <div class="ops-doc-list">
+      {% for item in doc_rows %}
+      <div class="ops-doc-row">
+        <span>
+          <strong>{{ item.row.title }}</strong>
+          <small>{{ org_names.get(item.row.organization_id, '') }} · expires {{ item.row.expires_on }}</small>
+        </span>
+        <span class="ops-pill ops-state-{{ item.state }}">{{ item.label }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="muted">No documents tracked. Add licences, insurance, inspections, and key contracts so expiry does not surprise the business.</p>
+    {% endif %}
+  </article>
+</section>
+
+<section class="block">
+  <div class="block-head"><h3>Workspace activity</h3><span class="muted small">Evidence trail</span></div>
+  {% if activity %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Change</th><th>Organisation</th><th>By</th><th>When</th></tr></thead>
+      <tbody>
+        {% for item in activity %}
+        <tr>
+          <td><strong>{{ item.label }}</strong><br><span class="muted small">{{ item.event.detail or '—' }}</span></td>
+          <td class="small">{{ item.organization.name if item.organization else '—' }}</td>
+          <td class="small">{{ item.user.email if item.user else 'System' }}</td>
+          <td class="small">{{ item.event.created_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted small">No operating changes recorded yet. Saving a reading, incident, document, import, or token will appear here.</p>
+  {% endif %}
+</section>
+
+<section class="block ops-loop">
+  <div class="block-head"><h3>The operating loop</h3><span class="muted small">Assessment → evidence → action → proof</span></div>
+  <div class="ops-loop-grid">
+    <a href="/assessments"><span class="ops-loop-num">1</span><strong>Assess</strong><small>Find the constraint across 21 subdomains.</small></a>
+    <a href="/operations/metrics{% if selected_org %}?org={{ selected_org.id }}{% endif %}"><span class="ops-loop-num">2</span><strong>Operate</strong><small>Record the service, cost, cash, and capacity numbers.</small></a>
+    <a href="/operations/incidents{% if selected_org %}?org={{ selected_org.id }}{% endif %}"><span class="ops-loop-num">3</span><strong>Learn</strong><small>Log the failure, root cause, and corrective action.</small></a>
+    <a href="/actions"><span class="ops-loop-num">4</span><strong>Act</strong><small>Promote the fix to the action board and keep the proof.</small></a>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

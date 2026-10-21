@@ -94,6 +94,39 @@
 </section>
 {% endif %}
 
+{% if operations %}
+<section class="block">
+  <div class="block-head">
+    <div>
+      <h3>Operating evidence</h3>
+      <p class="muted small" style="margin:.25rem 0 0">The numbers behind the readiness picture. Record them weekly, not once a year.</p>
+    </div>
+    <a class="btn ghost sm" href="/operations{% if company %}?org={{ company.id }}{% endif %}">Open operations →</a>
+  </div>
+  {% if operations.measured %}
+  <div class="ops-metric-grid">
+    {% for item in operations.metrics[:4] %}
+    <article class="ops-metric ops-state-{{ item.status }}">
+      <div class="ops-metric-top"><span>{{ item.label }}</span><span class="ops-pill">{{ item.status|title }}</span></div>
+      <b>{{ item.formatted }}</b>
+      <div class="ops-metric-meta"><span>Target {{ item.target_formatted }}</span>{% if item.delta is not none %}<span class="ops-move {{ item.movement }}">{{ '%+.1f'|format(item.delta) }}</span>{% endif %}</div>
+    </article>
+    {% endfor %}
+  </div>
+  <div class="ops-strip">
+    <span><strong>{{ operations.incidents.open }}</strong> open incidents</span>
+    <span><strong>{{ operations.documents.expiring + operations.documents.expired }}</strong> documents need attention</span>
+    <span><strong>{{ operations.at_target }}/{{ operations.measured }}</strong> metrics at target</span>
+  </div>
+  {% else %}
+  <div class="ops-empty-inline">
+    <p><strong>No operating readings yet.</strong> Connect service, cost, cash, and compliance data to see whether the plan is working.</p>
+    <a class="btn ghost sm" href="/operations{% if company %}?org={{ company.id }}{% endif %}">Connect operating data →</a>
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+
 {% if notifications or action_summary.total %}
 <section class="two-col">
   <article class="block">

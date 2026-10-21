@@ -26,12 +26,12 @@
   <meta name="twitter:title" content="{{ self.title() }}">
   <meta name="twitter:description" content="{{ self.description() }}">
   <meta name="twitter:image" content="{{ request.url_for('static', path='brand/og-banner.png') }}">
-  <link rel="stylesheet" href="/static/style.css?v=20261021c">
-  <link rel="stylesheet" href="/static/app-shell.css?v=20261021c">
-  <link rel="stylesheet" href="/static/extras.css?v=20261021c">
-  <link rel="stylesheet" href="/static/motion.css?v=20261021c">
-  <link rel="stylesheet" href="/static/app.css?v=20261021c">
-  <link rel="stylesheet" href="/static/premium.css?v=20261021c">
+  <link rel="stylesheet" href="/static/style.css?v=20261021d">
+  <link rel="stylesheet" href="/static/app-shell.css?v=20261021d">
+  <link rel="stylesheet" href="/static/extras.css?v=20261021d">
+  <link rel="stylesheet" href="/static/motion.css?v=20261021d">
+  <link rel="stylesheet" href="/static/app.css?v=20261021d">
+  <link rel="stylesheet" href="/static/premium.css?v=20261021d">
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %} {% if authed %}app-shell{% endif %}">
@@ -51,11 +51,12 @@
       <a href="/dashboard" class="nav-item{% if path == '/dashboard' %} active{% endif %}"{% if path == '/dashboard' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◉</span> Overview</a>
       <a href="/assessments" class="nav-item{% if path.startswith('/assessments') or path.startswith('/assessment/') or path.startswith('/compare') or path.startswith('/trends') or path.startswith('/benchmarks') %} active{% endif %}"{% if path.startswith('/assessments') or path.startswith('/assessment/') or path.startswith('/compare') or path.startswith('/trends') or path.startswith('/benchmarks') %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">☰</span> Assessments</a>
       <a href="/actions" class="nav-item{% if path == '/actions' %} active{% endif %}"{% if path == '/actions' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">✓</span> Action plan{% if notifications %}<span class="nav-badge">{{ notifications|length }}</span>{% endif %}</a>
+      <a href="/operations" class="nav-item{% if path.startswith('/operations') %} active{% endif %}"{% if path.startswith('/operations') %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">▤</span> Operations</a>
       <a href="/company" class="nav-item{% if path.startswith('/company') or path == '/audit' %} active{% endif %}"{% if path.startswith('/company') or path == '/audit' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">▣</span> Organisation</a>
       <a href="/marketplace" class="nav-item{% if path.startswith('/marketplace') %} active{% endif %}"{% if path.startswith('/marketplace') %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◈</span> Marketplace <span class="nav-note">{% if (user.role or '') == 'admin' or user.is_admin %}admin{% else %}locked{% endif %}</span></a>
 
       {% if (user.role or '') == 'admin' or user.is_admin %}
-      <p class="nav-group-label">Operations</p>
+      <p class="nav-group-label">Admin</p>
       <a href="/admin" class="nav-item{% if path.startswith('/admin') %} active{% endif %}"{% if path.startswith('/admin') %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◎</span> Admin</a>
       {% endif %}
 
@@ -161,7 +162,7 @@
   </div>
 </dialog>
 {% endif %}
-<script src="/static/app.js?v=20261021c" defer></script>
+<script src="/static/app.js?v=20261021d" defer></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>
