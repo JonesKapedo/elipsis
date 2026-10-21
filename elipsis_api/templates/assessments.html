@@ -1,31 +1,163 @@
 {% extends "base.html" %}
-{% block title %}Assessments{% endblock %}
+{% block title %}Logistics diagnostics{% endblock %}
 {% block content %}
-<section class="head">
-  <p class="eyebrow">Assessment intelligence</p>
-  <h1>Assessments</h1>
-  <p class="lede">Every diagnostic in one place. Open a live draft, review a completed result, then compare units or track movement over time.</p>
+<section class="head assess-head">
+  <div>
+    <p class="eyebrow">LOGISTICS DIAGNOSTICS</p>
+    <h1>Know which operating unit is holding the business back.</h1>
+    <p class="lede">Assess dispatch, line-haul, warehouse, customer service, finance, and compliance against the same logistics framework. Then track whether the constraint is actually moving.</p>
+    <div class="hero-actions">
+      <a class="btn" href="/start">Start a logistics diagnostic →</a>
+      <a class="btn ghost" href="/sample">See a completed sample</a>
+    </div>
+  </div>
+  <div class="assess-head-aside">
+    {% if organizations|length > 1 %}
+    <form method="get" action="/assessments" class="assess-filter">
+      <label for="assess-org">Operating company</label>
+      <select id="assess-org" name="org" onchange="this.form.submit()">
+        <option value="">All companies</option>
+        {% for org in organizations %}
+        <option value="{{ org.id }}" {% if focus == org.id %}selected{% endif %}>{{ org.name }}</option>
+        {% endfor %}
+      </select>
+    </form>
+    {% endif %}
+    <p class="assess-head-note"><strong>{{ summary.total }}</strong> diagnostic{% if summary.total != 1 %}s{% endif %} in scope{% if summary.in_progress %} · <strong>{{ summary.in_progress }}</strong> still in progress{% endif %}</p>
+  </div>
 </section>
+
 {% include "_assessment_tabs.html" %}
-<section class="block">
-<table class="table">
-  <thead><tr><th>Organisation</th><th>Department</th><th>Status</th>
-  <th class="num">{{ INDEX_SHORT }}</th><th>Maturity</th><th></th></tr></thead>
-  <tbody>
-  {% for r in rows %}
-    <tr>
-      <td>{{ r.organization }}</td>
-      <td>{{ r.department or '—' }}</td>
-      <td>{{ r.status }}</td>
-      <td class="num">{{ '%.1f'|format(r.readiness_index) if r.readiness_index is not none else '—' }}</td>
-      <td>{{ r.maturity_band or '—' }}</td>
-      <td><a href="/assessment/{{ r.id }}{{ '/results' if r.status == 'completed' else '' }}">Open</a></td>
-    </tr>
-  {% else %}
-    <tr><td colspan="6" class="muted">No assessments yet.</td></tr>
-  {% endfor %}
-  </tbody>
-</table>
+
+<section class="assess-kpis">
+  <div class="assess-kpi">
+    <span>Diagnostics</span>
+    <b>{{ summary.total }}</b>
+    <small>{{ summary.in_progress }} in progress</small>
+  </div>
+  <div class="assess-kpi accent">
+    <span>Completed</span>
+    <b>{{ summary.completed }}</b>
+    <small>Ready for review</small>
+  </div>
+  <div class="assess-kpi">
+    <span>Average readiness</span>
+    <b>{{ '%.1f'|format(summary.average) if summary.average is not none else '—' }}</b>
+    <small>Across completed units</small>
+  </div>
+  <div class="assess-kpi {{ 'danger' if summary.lanes_at_risk else '' }}">
+    <span>Lanes below 50</span>
+    <b>{{ summary.lanes_at_risk }}</b>
+    <small>{{ lane_snapshot.weakest.label if lane_snapshot.weakest else 'No lane signal yet' }}</small>
+  </div>
 </section>
-<p><a class="btn" href="/start">New assessment</a></p>
+
+{% if rows %}
+<section class="assess-layout">
+  <div class="block assess-register">
+    <div class="block-head">
+      <div>
+        <h3>Diagnostic register</h3>
+        <p class="muted small" style="margin:.25rem 0 0">Every operating unit, newest first. Continue drafts or open completed results.</p>
+      </div>
+      <a class="btn ghost sm" href="/start">New diagnostic</a>
+    </div>
+    <div class="table-wrap">
+      <table class="table assess-table">
+        <thead><tr><th>Operating unit</th><th>Status</th><th>{{ INDEX_SHORT }}</th><th>Maturity</th><th></th></tr></thead>
+        <tbody>
+        {% for r in rows %}
+          <tr>
+            <td>
+              <strong>{{ r.organization }}</strong>
+              <span class="assess-unit-meta">{{ r.department or 'Company-wide' }}{% if r.respondent %} · {{ r.respondent }}{% endif %}</span>
+            </td>
+            <td><span class="tag {{ 'ok' if r.status == 'completed' else 'warn' }}">{{ r.status|replace('_', ' ')|title }}</span></td>
+            <td>
+              {% if r.readiness_index is not none %}
+              <div class="assess-score">
+                <b>{{ '%.1f'|format(r.readiness_index) }}</b>
+                <span class="assess-meter"><i style="width:{{ [r.readiness_index, 100]|min }}%"></i></span>
+              </div>
+              {% else %}
+              <span class="muted">—</span>
+              {% endif %}
+            </td>
+            <td>{{ r.maturity_band or '—' }}</td>
+            <td class="assess-action">
+              <a class="btn ghost sm" href="/assessment/{{ r.id }}{{ '/results' if r.status == 'completed' else '' }}">{{ 'View results' if r.status == 'completed' else 'Continue' }} →</a>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <aside class="assess-side">
+    <div class="block">
+      <div class="block-head"><h3>Lane signal</h3><span class="muted small">{{ lane_snapshot.measured }}/6 measured</span></div>
+      {% if lane_snapshot.weakest %}
+      <div class="assess-constraint">
+        <span>First constraint</span>
+        <b>{{ lane_snapshot.weakest.label }} · {{ '%.1f'|format(lane_snapshot.weakest.score) }}</b>
+        <p>{{ lane_snapshot.weakest.reading }}</p>
+      </div>
+      {% else %}
+      <p class="muted small">Complete a diagnostic to turn the six logistics lanes into a measured operating picture.</p>
+      {% endif %}
+      <div class="assess-lanes">
+        {% for lane in lane_snapshot.lanes %}
+        <a href="/methodology" class="assess-lane{% if lane_snapshot.weakest and lane.key == lane_snapshot.weakest.key %} is-weak{% endif %}">
+          <span>{{ lane.label }}</span>
+          <b>{{ '%.1f'|format(lane.score) if lane.score is not none else '—' }}</b>
+          <i><em style="width:{{ lane.score if lane.score is not none else 0 }}%"></em></i>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="block assess-next">
+      <p class="eyebrow">NEXT MOVE</p>
+      <h3>Turn the constraint into a fix.</h3>
+      <p class="muted small">Promote the weakest lane into a 90-day action with an owner, a cost, and a review date. Then track it in the operations ledger.</p>
+      <div class="hero-actions">
+        <a class="btn ghost sm" href="/actions">Action plan →</a>
+        <a class="btn ghost sm" href="/operations">Operations →</a>
+      </div>
+    </div>
+  </aside>
+</section>
+{% else %}
+<section class="block assess-empty">
+  <div class="assess-empty-copy">
+    <p class="eyebrow">START HERE</p>
+    <h2>Your first diagnostic takes about 25 minutes.</h2>
+    <p class="lede">Answer plain-English questions about how work actually moves through the business. You get a scored readiness index, a costed constraint, and a 90-day plan — not a generic maturity report.</p>
+    <div class="hero-actions">
+      <a class="btn big" href="/start">Start the logistics diagnostic →</a>
+      <a class="btn ghost big" href="/sample">See a completed sample</a>
+    </div>
+  </div>
+  <div class="assess-steps">
+    <article><span>01</span><strong>Describe the operation</strong><p>Company, unit, headcount, and the lane you want to improve.</p></article>
+    <article><span>02</span><strong>Answer the diagnostic</strong><p>Plain questions across seven pillars and six logistics lanes.</p></article>
+    <article><span>03</span><strong>Get the costed plan</strong><p>Readiness score, annual savings estimate, owners, and dates.</p></article>
+  </div>
+</section>
+<section class="block">
+  <div class="block-head">
+    <div><h3>What the diagnostic covers</h3><p class="muted small" style="margin:.25rem 0 0">The same six lanes used in the operations ledger.</p></div>
+    <a class="btn ghost sm" href="/methodology">How scoring works →</a>
+  </div>
+  <div class="lane-grid">
+    {% for lane in lane_snapshot.lanes %}
+    <article class="lane-card">
+      <div class="lane-top"><strong>{{ lane.label }}</strong><span class="lane-score">—</span></div>
+      <p>{{ lane.question }}</p>
+      <div class="lane-reading">{{ lane.reading }}</div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
 {% endblock %}

@@ -1,69 +1,91 @@
 {% extends "base.html" %}
 {% block title %}Sign in{% endblock %}
-{% block body_class %}page-auth{% endblock %}
+{% block body_class %}page-auth page-login{% endblock %}
 {% block content %}
-<div class="auth auth-pro">
-  <section class="auth-pitch">
-    <p class="eyebrow">WELCOME BACK</p>
-    <h1>Sign in to your transformation workspace.</h1>
-    <p class="lede">Pick up assessments, compare departments, and share board packs from one secure account.</p>
-    <ul class="auth-points">
-      <li>
-        <span class="auth-icon">◈</span>
-        <div>
-          <strong>{{ INDEX_NAME }}</strong>
-          <p class="muted">{{ total_questions or 63 }} questions · seven pillars · live scores</p>
+<div class="auth-login">
+  <section class="auth-story">
+    <a class="auth-story-brand" href="/" aria-label="{{ BRAND_NAME }} home">
+      <img src="/static/brand/elipsis-logo-light.svg" alt="{{ BRAND_NAME }}">
+    </a>
+
+    <div class="auth-story-copy">
+      <p class="eyebrow">FOR KENYAN LOGISTICS OPERATORS</p>
+      <h1>Every delayed load has a cost. See it.</h1>
+      <p class="lede">Elipsis turns dispatch, fleet, warehouse, cash, and compliance signals into one operating picture — then prices the friction and gives your team a 90-day plan to remove it.</p>
+
+      <div class="auth-lane-card" aria-label="Illustrative lane view">
+        <div class="auth-lane-head">
+          <span>Mombasa → Nairobi corridor</span>
+          <span class="auth-sample">Illustrative</span>
         </div>
-      </li>
-      <li>
-        <span class="auth-icon">▣</span>
-        <div>
-          <strong>Board-ready outputs</strong>
-          <p class="muted">Metrics, {{ CURRENCY }} impact, roadmap, emailable links</p>
+        <div class="auth-route">
+          <div class="auth-stop"><b>Mombasa</b><span>Port · CFS</span></div>
+          <div class="auth-route-track" aria-hidden="true"><i></i><span class="auth-truck">▮</span></div>
+          <div class="auth-stop right"><b>Nairobi</b><span>DC · last mile</span></div>
         </div>
-      </li>
-    </ul>
-    <div class="auth-proof">
-      <div><b>7</b><span>pillars</span></div>
-      <div><b>36</b><span>metrics</span></div>
-      <div><b>{{ total_questions or 63 }}</b><span>questions</span></div>
+        <div class="auth-lane-metrics">
+          <div><span>On-time release</span><b>84%</b><em class="watch">watch</em></div>
+          <div><span>Idle at dock</span><b>6.2h</b><em class="risk">risk</em></div>
+          <div><span>Cash cycle</span><b>48d</b><em class="watch">watch</em></div>
+        </div>
+        <p class="auth-lane-note">Sample output, not a customer claim. Your live picture starts after the diagnostic.</p>
+      </div>
+
+      <ul class="auth-outcomes">
+        <li><span>01</span><div><strong>One operating score</strong><p>See where dispatch, fleet, cash, and compliance are leaking time and margin.</p></div></li>
+        <li><span>02</span><div><strong>Evidence, not opinion</strong><p>Turn delays, rework, idle assets, and expiring documents into a priced action list.</p></div></li>
+        <li><span>03</span><div><strong>Built for your scale</strong><p>Designed for 10–199 staff freight forwarders, transporters, warehouses, and distributors.</p></div></li>
+      </ul>
     </div>
+
+    <p class="auth-story-foot">Nairobi · Mombasa · East Africa trade corridors</p>
   </section>
 
-  <section class="auth-card auth-card-pro" aria-labelledby="signin-heading">
-    <div class="auth-card-brand">
-      <span class="mark" aria-hidden="true">{{ BRAND_MARK }}</span>
-      <div>
-        <strong>{{ BRAND_NAME }}</strong>
-        <span class="muted">Secure sign-in</span>
+  <section class="auth-panel" aria-labelledby="signin-heading">
+    <div class="auth-panel-inner">
+      <div class="auth-panel-brand">
+        <span class="mark" aria-hidden="true">{{ BRAND_MARK }}</span>
+        <div><strong>{{ BRAND_NAME }}</strong><span>Logistics operations workspace</span></div>
+      </div>
+
+      <div class="auth-panel-head">
+        <p class="eyebrow">SECURE SIGN-IN</p>
+        <h2 id="signin-heading">Welcome back</h2>
+        <p>Sign in to continue your diagnostic, operating ledger, and action plan.</p>
+      </div>
+
+      {% if error %}
+      <p class="error" role="alert">{{ error }}</p>
+      {% endif %}
+
+      <form method="post" action="/login" class="auth-form" novalidate>
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+        <label for="email">Work email
+          <input id="email" type="email" name="email" required
+                 autocomplete="username" placeholder="name@company.co.ke" autofocus
+                 spellcheck="false" value="{{ email if email else '' }}">
+        </label>
+        <label for="password">Password
+          <input id="password" type="password" name="password" required
+                 autocomplete="current-password" placeholder="Enter your password" minlength="4">
+        </label>
+        <div class="auth-form-row">
+          <span class="auth-secure-line"><span aria-hidden="true">◈</span> Encrypted session</span>
+          <a href="/forgot-password">Forgot password?</a>
+        </div>
+        <button class="btn big full" type="submit">Sign in to workspace →</button>
+      </form>
+
+      <div class="auth-divider">New to Elipsis?</div>
+      <a class="btn ghost full" href="/signup">Create a free operations account</a>
+      <p class="auth-panel-note">Start with the {{ total_questions or 63 }}-question logistics diagnostic. No card required. Prefer to look first? <a href="/sample">Open the sample report</a>.</p>
+
+      <div class="auth-assurance">
+        <span><b>7</b> operating pillars</span>
+        <span><b>6</b> logistics lanes</span>
+        <span><b>90</b> day plan</span>
       </div>
     </div>
-
-    <div class="auth-card-head">
-      <h2 id="signin-heading">Sign in</h2>
-      <p class="muted">New here? <a href="/signup"><strong>Create a free account</strong></a></p>
-    </div>
-
-    {% if error %}
-    <p class="error" role="alert">{{ error }}</p>
-    {% endif %}
-
-    <form method="post" action="/login" class="stack" novalidate>
-      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
-      <label for="email">Work email
-        <input id="email" type="email" name="email" required
-               autocomplete="username" placeholder="name@company.com" autofocus
-               spellcheck="false" value="{{ email if email else '' }}">
-      </label>
-      <label for="password">Password
-        <input id="password" type="password" name="password" required
-               autocomplete="current-password" placeholder="Your password" minlength="4">
-      </label>
-      <button class="btn big full" type="submit">Sign in →</button>
-    </form>
-    <p class="muted small" style="margin-top:0.75rem"><a href="/forgot-password">Forgot your password?</a></p>
-
-    <p class="muted small" style="margin-top:1rem">New organisations start a free assessment. <a href="/sample">Browse the sample report</a> with no account.</p>
   </section>
 </div>
 {% endblock %}

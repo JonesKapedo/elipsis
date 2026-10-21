@@ -105,7 +105,10 @@ def test_full_assessment_round_trip(signed_in):
     assert client.get(f"/assessment/{assessment_id}/results").status_code == 200
     assert client.get(f"/assessment/{assessment_id}/report").status_code == 200
     assert client.get("/dashboard").status_code == 200
-    assert client.get("/assessments").status_code == 200
+    assessments_page = client.get("/assessments")
+    assert assessments_page.status_code == 200
+    assert "Know which operating unit is holding the business back" in assessments_page.text
+    assert "Lane signal" in assessments_page.text
 
 
 def test_step_pages_render_every_segment(signed_in):
@@ -119,6 +122,18 @@ def test_step_pages_render_every_segment(signed_in):
         assert "Why we ask" in page.text
     # Out-of-range steps clamp instead of erroring.
     assert client.get(f"/assessment/{assessment_id}/step/999").status_code == 200
+
+
+def test_login_page_is_logistics_specific():
+    from fastapi.testclient import TestClient
+
+    from elipsis_api.main import app
+    with TestClient(app) as fresh:
+        page = fresh.get("/login")
+    assert page.status_code == 200
+    assert "Every delayed load has a cost. See it." in page.text
+    assert "Mombasa" in page.text and "Nairobi" in page.text
+    assert "Create a free operations account" in page.text
 
 
 def test_bad_login_is_rejected(client):

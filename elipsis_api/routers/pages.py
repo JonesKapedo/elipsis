@@ -369,9 +369,24 @@ def assessments(request: Request, user=Depends(get_current_user), db: Session = 
     if focus is not None and (visible is None or focus in visible):
         scope = [focus]
     rows = services.list_assessments(db, scope)
+    completed = [row for row in rows
+                 if row.get("status") == "completed"
+                 and row.get("readiness_index") is not None]
+    scores = [row["readiness_index"] for row in completed]
+    lane_snapshot = logistics.snapshot(db, org_ids=scope)
+    lanes_at_risk = [lane for lane in lane_snapshot["lanes"]
+                     if lane["score"] is not None and lane["score"] < 50]
+    summary = {
+        "total": len(rows),
+        "completed": len(completed),
+        "in_progress": len(rows) - len(completed),
+        "average": round(sum(scores) / len(scores), 1) if scores else None,
+        "lanes_at_risk": len(lanes_at_risk),
+    }
     return templates.TemplateResponse(
         request, "assessments.html",
-        {"user": user, "rows": rows,
+        {"user": user, "rows": rows, "summary": summary,
+         "lane_snapshot": lane_snapshot,
          "organizations": services.list_organizations(db, visible),
          "focus": focus})
 
