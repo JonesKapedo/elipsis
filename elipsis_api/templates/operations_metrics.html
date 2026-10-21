@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}KPI ledger{% endblock %}
+{% block content %}
+<section class="head ops-head">
+  <div>
+    <p class="eyebrow">Operations · KPI ledger</p>
+    <h1>Make the operating numbers visible.</h1>
+    <p class="lede">Eight logistics metrics, one reading per period, compared to a target. Import from CSV when the numbers already live in a spreadsheet or ERP.</p>
+  </div>
+  <div class="ops-head-actions">
+    <a class="btn ghost sm" href="/operations/metrics/export.csv{{ ('?org=' ~ selected_org.id) if selected_org else '' }}">Export CSV</a>
+    <a class="btn ghost sm" href="/operations/data{{ ('?org=' ~ selected_org.id) if selected_org else '' }}">Import data</a>
+  </div>
+</section>
+
+{% include "_operations_tabs.html" %}
+
+{% if saved %}<div class="flash ok">Reading saved.</div>{% endif %}
+{% if error %}<div class="flash err">{{ error }}</div>{% endif %}
+
+<section class="ops-form-grid">
+  <form method="post" action="/operations/metrics" class="block stack">
+    <h3>Record a reading</h3>
+    <label>Organisation
+      <select name="organization_id" required>
+        {% for org in organizations %}<option value="{{ org.id }}" {% if selected_org and selected_org.id == org.id %}selected{% endif %}>{{ org.name }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Metric
+      <select name="metric_key" required>
+        {% for key, spec in catalog.items() %}<option value="{{ key }}">{{ spec.label }}{% if spec.target is not none %} · target {{ spec.target }}{% endif %}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Value <input name="value" type="number" step="0.01" min="0" required placeholder="e.g. 91.5"></label>
+    <label>Period end <input name="period_end" type="date" required></label>
+    <label>Note <input name="note" maxlength="500" placeholder="Source, cut, or caveat"></label>
+    <button class="btn" type="submit" {% if not organizations %}disabled{% endif %}>Save reading</button>
+    {% if not organizations %}<p class="muted small">Create an organisation first.</p>{% endif %}
+  </form>
+
+  <aside class="block">
+    <h3>What each metric answers</h3>
+    <div class="ops-catalog">
+      {% for key, spec in catalog.items() %}
+      <div>
+        <strong>{{ spec.label }}</strong>
+        <small>{{ spec.help }}</small>
+        <span class="ops-pill">{{ spec.direction|title }} is better · target {{ spec.target }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </aside>
+</section>
+
+<section class="block">
+  <div class="block-head">
+    <h3>Latest reading per metric</h3>
+    <form method="get" action="/operations/metrics" class="ops-inline-filter">
+      {% if selected_org %}<input type="hidden" name="org" value="{{ selected_org.id }}">{% endif %}
+      <select name="key" onchange="this.form.submit()">
+        <option value="">All metrics</option>
+        {% for key, spec in catalog.items() %}<option value="{{ key }}" {% if selected_key == key %}selected{% endif %}>{{ spec.label }}</option>{% endfor %}
+      </select>
+    </form>
+  </div>
+  {% if rows %}
+  <div class="ops-metric-grid">
+    {% for item in rows %}
+    <article class="ops-metric ops-state-{{ item.status }}">
+      <div class="ops-metric-top"><span>{{ item.label }}</span><span class="ops-pill">{{ item.status|title }}</span></div>
+      <b>{{ item.formatted }}</b>
+      <div class="ops-metric-meta"><span>{{ org_names.get(item.metric.organization_id, '') }}</span><span>{{ item.metric.period_end }}</span></div>
+      <div class="ops-metric-meta"><span>Target {{ item.target_formatted }}</span>{% if item.delta is not none %}<span class="ops-move {{ item.movement }}">{{ '%+.1f'|format(item.delta) }}</span>{% endif %}</div>
+      {% if item.spark_points %}<div class="ops-spark" aria-hidden="true">{% for point in item.spark_points %}<i style="height:{{ point }}%"></i>{% endfor %}</div>{% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state"><p><strong>No readings yet.</strong></p><p class="muted">Record the first metric or import a CSV. Start with on-time delivery and cash conversion.</p></div>
+  {% endif %}
+</section>
+
+<section class="block">
+  <div class="block-head"><h3>Reading history</h3><span class="muted small">{{ readings|length }} most recent</span></div>
+  {% if readings %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Period</th><th>Organisation</th><th>Metric</th><th class="num">Value</th><th>Status</th><th>Source</th><th>Note</th></tr></thead>
+      <tbody>
+        {% for item in readings %}
+        <tr>
+          <td>{{ item.row.period_end }}</td>
+          <td>{{ org_names.get(item.row.organization_id, '') }}</td>
+          <td>{{ item.label }}</td>
+          <td class="num"><strong>{{ item.formatted }}</strong></td>
+          <td><span class="ops-pill ops-state-{{ item.status }}">{{ item.status|title }}</span></td>
+          <td class="small">{{ item.row.source or 'manual' }}</td>
+          <td class="small">{{ item.row.note or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted">No history yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

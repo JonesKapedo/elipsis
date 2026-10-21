@@ -1,0 +1,8 @@
+{% set ops_q = ('?org=' ~ selected_org.id) if selected_org else '' %}
+<nav class="tabs workspace-tabs" aria-label="Operations">
+  <a class="tab" href="/operations{{ ops_q }}"{% if path == '/operations' %} aria-current="page"{% endif %}>Today</a>
+  <a class="tab" href="/operations/metrics{{ ops_q }}"{% if path.startswith('/operations/metrics') %} aria-current="page"{% endif %}>KPI ledger</a>
+  <a class="tab" href="/operations/incidents{{ ops_q }}"{% if path.startswith('/operations/incidents') %} aria-current="page"{% endif %}>Incidents</a>
+  <a class="tab" href="/operations/documents{{ ops_q }}"{% if path.startswith('/operations/documents') %} aria-current="page"{% endif %}>Compliance</a>
+  <a class="tab" href="/operations/data{{ ops_q }}"{% if path.startswith('/operations/data') or path.startswith('/operations/imports') %} aria-current="page"{% endif %}>Data exchange</a>
+</nav>

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Compliance calendar{% endblock %}
+{% block content %}
+<section class="head ops-head">
+  <div>
+    <p class="eyebrow">Operations · Compliance calendar</p>
+    <h1>Know what expires before it stops a job.</h1>
+    <p class="lede">Licences, insurance, inspections, contracts, and the SOPs that keep service predictable. Track the date, the owner, and the next renewal.</p>
+  </div>
+  <div class="ops-head-actions">
+    <span class="ops-pill ops-state-danger">{{ counts.expired }} expired</span>
+    <span class="ops-pill ops-state-warn">{{ counts.expiring }} due in 30 days</span>
+  </div>
+</section>
+
+{% include "_operations_tabs.html" %}
+
+{% if saved %}<div class="flash ok">Compliance calendar updated.</div>{% endif %}
+{% if error %}<div class="flash err">{{ error }}</div>{% endif %}
+
+<div class="ops-toolbar">
+  <div class="ops-filter-chips">
+    {% for status in ['active', 'archived', 'all'] %}
+    <a href="/operations/documents?status={{ status }}{% if selected_org %}&org={{ selected_org.id }}{% endif %}" class="ops-chip{% if status_filter == status %} is-on{% endif %}">{{ status|title }}</a>
+    {% endfor %}
+  </div>
+  <span class="muted small">{{ rows|length }} shown · {{ counts.total }} total</span>
+</div>
+
+<section class="ops-form-grid">
+  <div class="block">
+    <div class="block-head"><h3>Register</h3><a class="btn ghost sm" href="/operations/templates/documents.csv">CSV template</a></div>
+    {% if rows %}
+    <div class="table-wrap">
+      <table class="table ops-doc-table">
+        <thead><tr><th>Document</th><th>Owner</th><th>Expiry</th><th>Status</th><th>Next action</th></tr></thead>
+        <tbody>
+          {% for item in rows %}
+          <tr>
+            <td><strong>{{ item.row.title }}</strong><br><span class="muted small">{{ item.row.doc_type|title }}{% if item.row.reference %} · {{ item.row.reference }}{% endif %} · {{ org_names.get(item.row.organization_id, '') }}</span></td>
+            <td>{{ item.row.owner or '—' }}</td>
+            <td>{{ item.row.expires_on }}<br><span class="ops-pill ops-state-{{ item.state }}">{{ item.label }}</span></td>
+            <td><span class="tag {{ 'ok' if item.row.status == 'active' else '' }}">{{ item.row.status }}</span></td>
+            <td>
+              {% if item.row.status == 'active' %}
+              <div class="ops-inline-actions">
+                <form method="post" action="/operations/documents/{{ item.row.id }}/renew">
+                  <input type="hidden" name="organization_id" value="{{ item.row.organization_id }}">
+                  <input name="expires_on" type="date" required aria-label="New expiry date for {{ item.row.title }}">
+                  <button class="btn ghost sm" type="submit">Renew</button>
+                </form>
+                <form method="post" action="/operations/documents/{{ item.row.id }}/archive">
+                  <input type="hidden" name="organization_id" value="{{ item.row.organization_id }}">
+                  <button class="btn ghost sm" type="submit">Archive</button>
+                </form>
+              </div>
+              {% else %}
+              <span class="muted small">No action</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state"><p><strong>No documents in this view.</strong></p><p class="muted">Add the documents that can stop a load, a claim, or a contract.</p></div>
+    {% endif %}
+  </div>
+
+  <form method="post" action="/operations/documents" class="block stack">
+    <h3>Add a document</h3>
+    <label>Organisation
+      <select name="organization_id" required>
+        {% for org in organizations %}<option value="{{ org.id }}" {% if selected_org and selected_org.id == org.id %}selected{% endif %}>{{ org.name }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Title <input name="title" maxlength="200" required placeholder="Goods-in-transit insurance"></label>
+    <div class="ops-form-row">
+      <label>Type
+        <select name="doc_type">{% for item in doc_types %}<option value="{{ item }}">{{ item|title }}</option>{% endfor %}</select>
+      </label>
+      <label>Reference <input name="reference" maxlength="120" placeholder="GIT-2026-14"></label>
+    </div>
+    <label>Owner <input name="owner" maxlength="120" placeholder="Compliance lead"></label>
+    <div class="ops-form-row">
+      <label>Issued on <input name="issued_on" type="date"></label>
+      <label>Expires on <input name="expires_on" type="date" required></label>
+    </div>
+    <label>Note <textarea name="note" rows="2" placeholder="Cover, scope, renewal contact"></textarea></label>
+    <button class="btn" type="submit" {% if not organizations %}disabled{% endif %}>Add document</button>
+  </form>
+</section>
+{% endblock %}

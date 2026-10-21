@@ -176,7 +176,9 @@ def notifications(db: Session, user) -> list[dict[str, Any]]:
                 "url": f"/assessment/{row.id}/results",
                 "ref": f"review:{row.id}",
             })
-    return out[:12]
+    from elipsis_api import services_operations
+    out.extend(services_operations.notifications(db, org_ids))
+    return out[:16]
 
 
 def share_links(db: Session, assessment_id: int) -> list[models.ShareLink]:
@@ -233,7 +235,7 @@ def search_workspace(db: Session, org_ids: list[int] | None, query: str,
     q = (query or "").strip()
     out: dict[str, Any] = {
         "query": q, "organizations": [], "assessments": [], "actions": [],
-        "total": 0,
+        "operations": [], "total": 0,
     }
     if len(q) < 2:
         return out
@@ -298,8 +300,10 @@ def search_workspace(db: Session, org_ids: list[int] | None, query: str,
          "url": f"/assessment/{assessment.id}/plan"}
         for item, assessment, org_name, dept_name in db.execute(action_query).all()
     ]
+    from elipsis_api import services_operations
+    out["operations"] = services_operations.search_operations(db, org_ids, q, limit=limit)
     out["total"] = (len(out["organizations"]) + len(out["assessments"])
-                    + len(out["actions"]))
+                    + len(out["actions"]) + len(out["operations"]))
     return out
 
 

@@ -220,12 +220,15 @@ except Exception as _exc:  # noqa: BLE001
     print(f"[elipsis] collect not mounted: {_exc}", flush=True)
 
 from elipsis_api.routers import growth as _growth  # noqa: E402
+from elipsis_api.routers import operations_ui as _operations  # noqa: E402
 from elipsis_api.routers import value as _value  # noqa: E402
 from elipsis_api.routers import workspace as _workspace  # noqa: E402
 
 app.include_router(_value.router)
 app.include_router(_workspace.router)
 app.include_router(_growth.router)
+app.include_router(_operations.router)
+app.include_router(_operations.api_router)
 app.include_router(pages.router)
 
 try:

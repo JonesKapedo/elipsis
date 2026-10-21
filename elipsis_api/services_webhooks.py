@@ -17,6 +17,7 @@ from elipsis_api import models, security
 
 ALLOWED_EVENTS = {
     "action.updated", "assessment.completed", "review.due", "webhook.test",
+    "metric.recorded", "incident.opened", "data.imported",
 }
 
 

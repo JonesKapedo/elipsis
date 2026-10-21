@@ -698,3 +698,105 @@ class WebhookDelivery(Base):
     error: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
     delivered_at: Mapped[str | None] = mapped_column(String)
+
+
+class OperationalMetric(Base):
+    """One operating KPI reading for an organisation and period."""
+    __tablename__ = "operational_metrics"
+    __table_args__ = (
+        UniqueConstraint("organization_id", "metric_key", "period_end"),
+        Index("ix_operational_metrics_org_key", "organization_id", "metric_key"),
+    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    organization_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("organizations.id"), nullable=False)
+    metric_key: Mapped[str] = mapped_column(String, nullable=False)
+    value: Mapped[float] = mapped_column(Float, nullable=False)
+    period_end: Mapped[str] = mapped_column(String, nullable=False)
+    source: Mapped[str | None] = mapped_column(String, default="manual")
+    note: Mapped[str | None] = mapped_column(Text)
+    created_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class OperationalIncident(Base):
+    """A service failure, delay, claim, or control break."""
+    __tablename__ = "operational_incidents"
+    __table_args__ = (
+        Index("ix_operational_incidents_org_status", "organization_id", "status"),
+        Index("ix_operational_incidents_org_occurred", "organization_id", "occurred_on"),
+    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    organization_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("organizations.id"), nullable=False)
+    lane: Mapped[str | None] = mapped_column(String, default="dispatch")
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    severity: Mapped[str | None] = mapped_column(String, default="medium")
+    status: Mapped[str | None] = mapped_column(String, default="open")
+    occurred_on: Mapped[str | None] = mapped_column(String)
+    shipment_ref: Mapped[str | None] = mapped_column(String)
+    customer_impact: Mapped[str | None] = mapped_column(Text)
+    root_cause: Mapped[str | None] = mapped_column(Text)
+    corrective_action: Mapped[str | None] = mapped_column(Text)
+    owner: Mapped[str | None] = mapped_column(String)
+    action_item_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("roadmap_items.id"))
+    created_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+    resolved_at: Mapped[str | None] = mapped_column(String)
+
+
+class ComplianceDocument(Base):
+    """A licence, insurance, contract, or SOP with an expiry date."""
+    __tablename__ = "compliance_documents"
+    __table_args__ = (
+        Index("ix_compliance_documents_org_expiry", "organization_id", "expires_on"),
+    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    organization_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("organizations.id"), nullable=False)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    doc_type: Mapped[str | None] = mapped_column(String, default="licence")
+    reference: Mapped[str | None] = mapped_column(String)
+    owner: Mapped[str | None] = mapped_column(String)
+    issued_on: Mapped[str | None] = mapped_column(String)
+    expires_on: Mapped[str | None] = mapped_column(String)
+    status: Mapped[str | None] = mapped_column(String, default="active")
+    note: Mapped[str | None] = mapped_column(Text)
+    created_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class DataImport(Base):
+    """Audit record for one CSV interchange into the operations ledger."""
+    __tablename__ = "data_imports"
+    __table_args__ = (Index("ix_data_imports_org_created", "organization_id", "created_at"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    organization_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("organizations.id"), nullable=False)
+    kind: Mapped[str] = mapped_column(String, nullable=False)
+    filename: Mapped[str | None] = mapped_column(String)
+    row_count: Mapped[int | None] = mapped_column(Integer, default=0)
+    imported_count: Mapped[int | None] = mapped_column(Integer, default=0)
+    skipped_count: Mapped[int | None] = mapped_column(Integer, default=0)
+    status: Mapped[str | None] = mapped_column(String, default="imported")
+    errors: Mapped[str | None] = mapped_column(Text)
+    created_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class ApiToken(Base):
+    """Hashed bearer token for an organisation-scoped integration."""
+    __tablename__ = "api_tokens"
+    __table_args__ = (Index("ix_api_tokens_org", "organization_id"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    organization_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("organizations.id"), nullable=False)
+    user_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    prefix: Mapped[str] = mapped_column(String, nullable=False)
+    token_hash: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    scopes: Mapped[str | None] = mapped_column(String, default="read,write")
+    last_used_at: Mapped[str | None] = mapped_column(String)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+    revoked_at: Mapped[str | None] = mapped_column(String)

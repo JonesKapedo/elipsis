@@ -466,3 +466,131 @@ def test_compare_page_uses_the_selected_organisation(signed_in):
     assert "Guided Demo Co" in page.text
     assert "Unit rankings" in page.text
     assert "Choose an organisation" not in page.text
+
+
+def test_operations_ecosystem_round_trip(signed_in):
+    import re
+
+    client = signed_in
+    created = client.post("/api/v1/assessments", json={
+        "organization": {"name": "Operations Ecosystem", "industry": "Logistics",
+                         "employee_count": 72, "country": "Kenya", "city": "Mombasa"},
+        "department": "Operations", "respondent": "Ops Tester"})
+    assert created.status_code == 201
+    assessment_id = created.json()["id"]
+    org_id = created.json()["organization_id"]
+    questions = client.get("/api/v1/questionnaire").json()
+    submitted = client.post(f"/api/v1/assessments/{assessment_id}/submit", json={
+        "answers": [{"question_id": q["id"], "score": 3, "evidence": "document"}
+                    for q in questions]})
+    assert submitted.status_code == 200
+
+    home = client.get(f"/operations?org={org_id}")
+    assert home.status_code == 200
+    assert "Connect the numbers behind the score" in home.text
+
+    loaded = client.post("/operations/sample", data={"organization_id": org_id},
+                         follow_redirects=False)
+    assert loaded.status_code == 303
+    home = client.get(f"/operations?org={org_id}")
+    assert "On-time delivery" in home.text
+    assert "Mombasa release delay" in home.text
+
+    summary = client.get(f"/api/v1/operations?org_id={org_id}").json()
+    assert summary["measured"] == 8
+    assert summary["incidents"]["open"] >= 2
+    assert summary["documents"]["expiring"] >= 1
+
+    recorded = client.post("/operations/metrics", data={
+        "organization_id": org_id, "metric_key": "on_time_delivery",
+        "value": "96.4", "period_end": "2026-10-31",
+        "note": "Weekly dispatch review"}, follow_redirects=False)
+    assert recorded.status_code == 303
+    metrics = client.get(f"/api/v1/operations/metrics?org_id={org_id}").json()["metrics"]
+    on_time = next(item for item in metrics if item["metric_key"] == "on_time_delivery")
+    assert on_time["value"] == 96.4
+    assert on_time["status"] == "good"
+
+    incident = client.post("/operations/incidents", data={
+        "organization_id": org_id, "title": "Customer status calls",
+        "lane": "customer", "severity": "high", "occurred_on": "2026-10-20",
+        "shipment_ref": "NBO-9001", "customer_impact": "Three calls on one load",
+        "root_cause": "No automatic status update", "owner": "Customer lead",
+        "corrective_action": "Send a status message at each handoff"},
+        follow_redirects=False)
+    assert incident.status_code == 303
+    queue = client.get(f"/operations/incidents?org={org_id}&status=open")
+    assert "Customer status calls" in queue.text
+    incident_id = int(re.search(r'/operations/incidents/(\d+)/promote', queue.text).group(1))
+    promoted = client.post(f"/operations/incidents/{incident_id}/promote", data={
+        "organization_id": org_id}, follow_redirects=False)
+    assert promoted.status_code == 303
+    assert "On action board" in client.get(
+        f"/operations/incidents?org={org_id}&status=open").text
+    resolved = client.post(f"/operations/incidents/{incident_id}/resolve", data={
+        "organization_id": org_id, "note": "Status update shipped"},
+        follow_redirects=False)
+    assert resolved.status_code == 303
+
+    document = client.post("/operations/documents", data={
+        "organization_id": org_id, "title": "Carrier contract", "doc_type": "contract",
+        "reference": "CC-2026-9", "owner": "Commercial lead",
+        "issued_on": "2026-01-01", "expires_on": "2026-11-01",
+        "note": "Annual renewal"}, follow_redirects=False)
+    assert document.status_code == 303
+    docs = client.get(f"/operations/documents?org={org_id}")
+    assert "Carrier contract" in docs.text
+    doc_id = int(re.search(r'/operations/documents/(\d+)/renew', docs.text).group(1))
+    renewed = client.post(f"/operations/documents/{doc_id}/renew", data={
+        "organization_id": org_id, "expires_on": "2027-11-01"},
+        follow_redirects=False)
+    assert renewed.status_code == 303
+    archived = client.post(f"/operations/documents/{doc_id}/archive", data={
+        "organization_id": org_id}, follow_redirects=False)
+    assert archived.status_code == 303
+
+    csv_body = (b"metric_key,value,period_end,note\n"
+                b"invoice_accuracy,99.2,2026-09-30,ERP close\n"
+                b"not_a_metric,12,2026-09-30,skip me\n")
+    imported = client.post("/operations/import", data={
+        "organization_id": org_id, "kind": "metrics"},
+        files={"file": ("metrics.csv", csv_body, "text/csv")},
+        follow_redirects=False)
+    assert imported.status_code == 303
+    assert "/operations/imports/" in imported.headers["location"]
+    report = client.get(imported.headers["location"])
+    assert "1 of 2 rows imported" in report.text
+    assert "unknown metric" in report.text
+
+    export = client.get(f"/operations/metrics/export.csv?org={org_id}")
+    assert export.status_code == 200
+    assert "invoice_accuracy" in export.text
+
+    token_page = client.post("/operations/tokens", data={
+        "organization_id": org_id, "name": "WMS test", "scopes": "read,write"})
+    assert token_page.status_code == 201
+    raw_token = re.search(r"elps_[A-Za-z0-9_\-]+", token_page.text).group(0)
+    auth = {"Authorization": f"Bearer {raw_token}"}
+    api_summary = client.get("/api/v1/operations", headers=auth)
+    assert api_summary.status_code == 200
+    assert api_summary.json()["measured"] == 8
+    api_write = client.post("/api/v1/operations/metrics", headers=auth, json={
+        "metric_key": "fleet_utilization", "value": 82, "period_end": "2026-10-31"})
+    assert api_write.status_code == 201
+    assert api_write.json()["metric_key"] == "fleet_utilization"
+
+    read_page = client.post("/operations/tokens", data={
+        "organization_id": org_id, "name": "Read only", "scopes": "read"})
+    read_token = re.search(r"elps_[A-Za-z0-9_\-]+", read_page.text).group(0)
+    denied = client.post("/api/v1/operations/incidents", headers={
+        "Authorization": f"Bearer {read_token}"}, json={"title": "Nope"})
+    assert denied.status_code == 403
+
+    dashboard = client.get("/dashboard")
+    assert "Operating evidence" in dashboard.text
+    activity = client.get(f"/operations?org={org_id}")
+    assert "Workspace activity" in activity.text
+    assert "Metric Recorded" in activity.text
+    bundle = client.get(f"/operations/export.json?org={org_id}")
+    assert bundle.status_code == 200
+    assert bundle.json()["metrics"]
