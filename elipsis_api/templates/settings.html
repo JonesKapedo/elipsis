@@ -23,6 +23,7 @@
     <a href="#security">Security</a>
     <a href="#company">Company identity</a>
     <a href="#integrations">Integrations</a>
+    <a href="/account/data">Data and privacy</a>
   </nav>
 
   <div class="settings-main">
@@ -96,6 +97,13 @@
         <label class="field">Quiet hours
           <input name="quiet_hours" maxlength="40" value="{{ prefs.quiet_hours or '' }}" placeholder="e.g. 18:30–07:00">
         </label>
+        <label class="field">Timezone
+          <select name="timezone">
+            {% for value, label in timezone_choices %}
+            <option value="{{ value }}" {% if (prefs.timezone or 'UTC') == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </label>
       </div>
 
       <div class="section-label" id="appearance"><span>03</span><div><h2>Appearance</h2><p>Small adjustments for legibility and motion sensitivity.</p></div></div>
@@ -118,7 +126,7 @@
       </div>
 
       <div class="settings-submit">
-        <p class="muted small">These preferences apply to this account on every device.</p>
+        <p class="muted small">These preferences apply to this account on every device. Support due times use the saved timezone; audit records keep UTC.</p>
         <button class="btn" type="submit">Save settings</button>
       </div>
     </form>
@@ -139,6 +147,8 @@
         </div>
         <button class="btn" type="submit">Change password</button>
       </form>
+      <hr>
+      <p class="muted small">Terms v{{ legal.current_version }}: {{ 'accepted' if legal.terms_accepted else 'not recorded' }}. Privacy: {{ 'acknowledged' if legal.privacy_accepted else 'not recorded' }}. <a href="/account/data">Review data and legal records</a>.</p>
     </section>
 
     <section class="block settings-block" id="company">

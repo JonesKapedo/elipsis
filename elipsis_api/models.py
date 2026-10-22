@@ -504,6 +504,7 @@ class UserPref(Base):
     notify_actions: Mapped[int | None] = mapped_column(Integer, default=1)
     digest_day: Mapped[str | None] = mapped_column(String, default="monday")
     quiet_hours: Mapped[str | None] = mapped_column(String)
+    timezone: Mapped[str | None] = mapped_column(String, default="UTC")
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
 
 
@@ -928,4 +929,143 @@ class AssessmentNote(Base):
     user_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
     section: Mapped[str | None] = mapped_column(String, default="Overall")
     body: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class SupportTicket(Base):
+    """A customer support request with a published SLA clock."""
+    __tablename__ = "support_tickets"
+    __table_args__ = (
+        UniqueConstraint("reference", name="uq_support_tickets_reference"),
+        Index("ix_support_tickets_user", "user_id"),
+        Index("ix_support_tickets_status_priority", "status", "priority"),
+        Index("ix_support_tickets_due", "first_response_due"),
+    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    reference: Mapped[str] = mapped_column(String, nullable=False)
+    user_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    organization_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("organizations.id"))
+    requester_email: Mapped[str] = mapped_column(String, nullable=False)
+    subject: Mapped[str] = mapped_column(String, nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    category: Mapped[str | None] = mapped_column(String, default="general")
+    priority: Mapped[str | None] = mapped_column(String, default="normal")
+    status: Mapped[str | None] = mapped_column(String, default="open")
+    channel: Mapped[str | None] = mapped_column(String, default="app")
+    source_path: Mapped[str | None] = mapped_column(String)
+    timezone: Mapped[str | None] = mapped_column(String, default="UTC")
+    assigned_to: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    first_response_due: Mapped[str | None] = mapped_column(String)
+    first_response_at: Mapped[str | None] = mapped_column(String)
+    resolution_due: Mapped[str | None] = mapped_column(String)
+    resolved_at: Mapped[str | None] = mapped_column(String)
+    csat_score: Mapped[int | None] = mapped_column(Integer)
+    csat_comment: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+    updated_at: Mapped[str | None] = mapped_column(String)
+
+
+class SupportMessage(Base):
+    __tablename__ = "support_messages"
+    __table_args__ = (Index("ix_support_messages_ticket", "ticket_id", "created_at"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    ticket_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("support_tickets.id"), nullable=False)
+    author_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    author_name: Mapped[str | None] = mapped_column(String)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    internal: Mapped[int | None] = mapped_column(Integer, default=0)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class ServiceIncident(Base):
+    __tablename__ = "service_incidents"
+    __table_args__ = (
+        UniqueConstraint("reference", name="uq_service_incidents_reference"),
+        Index("ix_service_incidents_started", "started_at"),
+    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    reference: Mapped[str] = mapped_column(String, nullable=False)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    summary: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str | None] = mapped_column(String, default="investigating")
+    impact: Mapped[str | None] = mapped_column(String, default="minor")
+    components: Mapped[str | None] = mapped_column(String, default="web,api")
+    started_at: Mapped[str | None] = mapped_column(String, default=_now)
+    resolved_at: Mapped[str | None] = mapped_column(String)
+    postmortem: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+    updated_at: Mapped[str | None] = mapped_column(String)
+
+
+class ServiceIncidentUpdate(Base):
+    __tablename__ = "service_incident_updates"
+    __table_args__ = (Index("ix_service_incident_updates_incident", "incident_id", "created_at"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    incident_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("service_incidents.id"), nullable=False)
+    status: Mapped[str | None] = mapped_column(String)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    created_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class Feedback(Base):
+    __tablename__ = "feedback"
+    __table_args__ = (Index("ix_feedback_kind_created", "kind", "created_at"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    organization_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("organizations.id"))
+    kind: Mapped[str | None] = mapped_column(String, default="nps")
+    score: Mapped[int | None] = mapped_column(Integer)
+    comment: Mapped[str | None] = mapped_column(Text)
+    context: Mapped[str | None] = mapped_column(String)
+    path: Mapped[str | None] = mapped_column(String)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class LegalAcceptance(Base):
+    __tablename__ = "legal_acceptances"
+    __table_args__ = (
+        UniqueConstraint("user_id", "document", "version", name="uq_legal_acceptance"),
+        Index("ix_legal_acceptances_user", "user_id"),
+    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    document: Mapped[str] = mapped_column(String, nullable=False)
+    version: Mapped[str] = mapped_column(String, nullable=False)
+    accepted_at: Mapped[str | None] = mapped_column(String, default=_now)
+    ip_hash: Mapped[str | None] = mapped_column(String)
+    user_agent: Mapped[str | None] = mapped_column(String)
+
+
+class DataRequest(Base):
+    __tablename__ = "data_requests"
+    __table_args__ = (
+        UniqueConstraint("reference", name="uq_data_requests_reference"),
+        Index("ix_data_requests_user", "user_id"),
+        Index("ix_data_requests_status", "status"),
+    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    reference: Mapped[str] = mapped_column(String, nullable=False)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    organization_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("organizations.id"))
+    kind: Mapped[str] = mapped_column(String, nullable=False)
+    status: Mapped[str | None] = mapped_column(String, default="received")
+    note: Mapped[str | None] = mapped_column(Text)
+    due_at: Mapped[str | None] = mapped_column(String)
+    completed_at: Mapped[str | None] = mapped_column(String)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+    updated_at: Mapped[str | None] = mapped_column(String)
+
+
+class StatusSubscriber(Base):
+    __tablename__ = "status_subscribers"
+    __table_args__ = (UniqueConstraint("email", name="uq_status_subscriber_email"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    email: Mapped[str] = mapped_column(String, nullable=False)
+    active: Mapped[int | None] = mapped_column(Integer, default=1)
     created_at: Mapped[str | None] = mapped_column(String, default=_now)

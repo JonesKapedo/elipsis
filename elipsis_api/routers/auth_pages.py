@@ -8,7 +8,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from elipsis_api import auth_extra, models, ratelimit, security, services
+from elipsis_api import auth_extra, models, ratelimit, security, services, services_success
 from elipsis_api.config import SESSION_COOKIE
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, safe_next, templates
@@ -35,10 +35,17 @@ async def signup(request: Request,
            password: str = Form(...),
            password2: str = Form(...),
            user_type: str = Form("client"),
+           accept_terms: str = Form(""),
            db: Session = Depends(get_db)):
     ratelimit.enforce(request, "signup", limit=5, window=60)
     form = {"name": (name or "").strip(), "email": (email or "").strip(),
             "user_type": (user_type or "client").strip()}
+    if not accept_terms:
+        return templates.TemplateResponse(
+            request, "signup.html",
+            {"user": None, "error": "Accept the terms to create an account.",
+             "form": form, "total_questions": _question_count(db) or 63},
+            status_code=400)
     if password != password2:
         return templates.TemplateResponse(
             request, "signup.html",
@@ -60,6 +67,9 @@ async def signup(request: Request,
             {"user": None, "error": "Could not create account. Please try again.",
              "form": form, "total_questions": _question_count(db) or 63},
             status_code=500)
+    services_success.record_acceptance(
+        db, account, document="terms",
+        version=services_success.LEGAL_VERSION, request=request)
     from elipsis_api.services_email import is_email_configured, send_email
     if is_email_configured():
         account.email_verified = False

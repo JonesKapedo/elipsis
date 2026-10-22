@@ -18,6 +18,7 @@ from elipsis_api import (
     services_operations,
     services_ops,
     services_room,
+    services_success,
     services_webhooks,
 )
 from elipsis_api.config import SESSION_COOKIE
@@ -86,9 +87,22 @@ def robots(request: Request):
         "Allow: /terms\n"
         "Allow: /security\n"
         "Allow: /case-study\n"
+        "Allow: /trust\n"
+        "Allow: /status\n"
+        "Allow: /help\n"
+        "Allow: /service-standards\n"
+        "Allow: /changelog\n"
+        "Allow: /accessibility\n"
+        "Allow: /dpa\n"
+        "Allow: /subprocessors\n"
         "Disallow: /dashboard\n"
         "Disallow: /assessment/\n"
         "Disallow: /api/\n"
+        "Disallow: /company\n"
+        "Disallow: /support\n"
+        "Disallow: /account\n"
+        "Disallow: /admin\n"
+        "Disallow: /settings\n"
         f"Sitemap: {base}/sitemap.xml\n"
     )
     return PlainTextResponse(body, media_type="text/plain")
@@ -98,7 +112,9 @@ def robots(request: Request):
 def sitemap(request: Request):
     base = str(request.base_url).rstrip("/")
     paths = ("/", "/methodology", "/pricing", "/partners", "/sample",
-             "/privacy", "/terms", "/security", "/case-study", "/login", "/signup")
+             "/privacy", "/terms", "/security", "/case-study", "/trust",
+             "/status", "/help", "/service-standards", "/changelog",
+             "/accessibility", "/dpa", "/subprocessors", "/login", "/signup")
     urls = "".join(
         f"<url><loc>{base}{path}</loc><changefreq>monthly</changefreq>"
         f"<priority>{'1.0' if path == '/' else '0.7'}</priority></url>"
@@ -602,7 +618,9 @@ def dashboard(request: Request, user=Depends(get_current_user),
          "notifications": services_ops.notifications(db, user),
          "logistics": logistics.snapshot(db, org_ids=scope),
          "operations": services_operations.summary(db, scope),
-         "trends": services_ops.org_trends(db, scope)})
+         "trends": services_ops.org_trends(db, scope),
+         "activation": services_success.activation(db, user, company),
+         "health": services_success.customer_health(db, company) if company else None})
 
 
 @router.post("/assessment/{assessment_id}/submit")

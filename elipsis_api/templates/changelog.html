@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Changelog — {{ BRAND_NAME }}{% endblock %}
+{% block description %}What changed in {{ BRAND_NAME }}, with dated release notes and change policy.{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Product</p>
+  <h1>Changelog</h1>
+  <p class="lede">What changed, when, and what it means for your team. Breaking changes get at least 30 days' notice and a migration path.</p>
+</section>
+
+<section class="block">
+  <div class="changelog">
+    {% for entry in entries %}
+    <article class="changelog-item">
+      <div class="changelog-meta">
+        <span class="tag">{{ entry.tag }}</span>
+        <time datetime="{{ entry.date }}">{{ entry.date }}</time>
+        <span class="muted small">v{{ entry.version }}</span>
+      </div>
+      <div>
+        <h3>{{ entry.title }}</h3>
+        <p>{{ entry.body }}</p>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="block prose">
+  <h3>Release policy</h3>
+  <ul>
+    <li>Every material change is recorded here, including service and policy changes.</li>
+    <li>Breaking or deprecating changes get at least 30 days' notice and a migration path.</li>
+    <li>Security fixes may be published after the fix, not before, to avoid increasing risk.</li>
+    <li>Dates are UTC. The version is the product release, not a marketing label.</li>
+  </ul>
+  <p>Subscribe through the status page for operational updates. Product release notes are available here and in the help centre.</p>
+</section>
+{% endblock %}

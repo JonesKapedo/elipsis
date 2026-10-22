@@ -10,7 +10,16 @@ from fastapi.responses import RedirectResponse, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from elipsis_api import auth_extra, departments, models, ratelimit, services, services_ops, services_room
+from elipsis_api import (
+    auth_extra,
+    departments,
+    models,
+    ratelimit,
+    services,
+    services_ops,
+    services_room,
+    services_success,
+)
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
 from elipsis_api.routers.pages import _set_session_cookie
@@ -404,6 +413,7 @@ def invite_accept_page(token: str, request: Request,
 async def invite_accept(token: str, request: Request,
                         name: str = Form(""), email: str = Form(""),
                         password: str = Form(""), password2: str = Form(""),
+                        accept_terms: str = Form(""),
                         db: Session = Depends(get_db)):
     ratelimit.enforce(request, "invite", limit=10, window=60)
     invite = services_room.find_invite(db, token)
@@ -431,6 +441,8 @@ async def invite_accept(token: str, request: Request,
         error = "Passwords do not match."
     elif len(password or "") < 8:
         error = "Use at least eight characters for the password."
+    elif not accept_terms:
+        error = "Accept the terms to create an account."
     if error:
         return templates.TemplateResponse(request, "invite_accept.html", {
             "user": None, "invite": invite, "org": org, "error": error,
@@ -450,6 +462,9 @@ async def invite_accept(token: str, request: Request,
             "user": None, "invite": invite, "org": org, "error": str(exc),
             "form": {"name": name, "email": email}, "departments": departments.DEPARTMENTS,
         }, status_code=400)
+    services_success.record_acceptance(
+        db, account, document="terms",
+        version=services_success.LEGAL_VERSION, request=request)
     from elipsis_api.services_email import is_email_configured, send_email
     if is_email_configured():
         account.email_verified = False

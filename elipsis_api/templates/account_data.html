@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Data and privacy — {{ BRAND_NAME }}{% endblock %}
+{% block description %}Export your data, request erasure or correction, and review legal acceptance records.{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Your account</p>
+  <h1>Data and privacy</h1>
+  <p class="lede">Take your data with you, ask us to correct it, or ask us to erase it. Every request gets a reference and a due date.</p>
+</section>
+
+{% if created %}<div class="flash ok" role="status">Request {{ request.query_params.get('ref', '') }} recorded. We will acknowledge within 2 business days.</div>{% endif %}
+{% if accepted %}<div class="flash ok" role="status">Legal acceptance recorded.</div>{% endif %}
+{% if error %}<div class="flash err" role="alert">{{ error|replace('+', ' ') }}</div>{% endif %}
+
+<section class="support-layout">
+  <div>
+    <div class="block">
+      <div class="block-head"><h3>Download your data</h3><span class="muted small">JSON</span></div>
+      <p class="muted">Your account, organisations, assessments, answers, plan, support tickets, feedback, legal records and data requests. The file is generated immediately; it is not emailed.</p>
+      <form method="post" action="/account/data/export">
+        <button class="btn" type="submit">Download JSON</button>
+      </form>
+      <p class="muted small">The export does not include uploaded evidence files. Ask support if you need the original files.</p>
+    </div>
+
+    <div class="block">
+      <div class="block-head"><h3>Request erasure or correction</h3><span class="muted small">30-day target</span></div>
+      <form method="post" action="/account/data/request" class="form-stack">
+        <label for="data-kind">Request type</label>
+        <select id="data-kind" name="kind">
+          <option value="erasure">Erase my personal data</option>
+          <option value="correction">Correct my personal data</option>
+        </select>
+        <label for="data-note">What should we know?</label>
+        <textarea id="data-note" name="note" rows="4" maxlength="4000" placeholder="Tell us which data, which organisation and any legal retention that applies."></textarea>
+        <p class="muted small">Erasure may be limited by tax, security or legal retention. We will tell you what remains and why rather than silently deleting everything.</p>
+        <button class="btn danger" type="submit">Submit request</button>
+      </form>
+    </div>
+
+    <div class="block">
+      <div class="block-head"><h3>Your requests</h3><span class="muted small">{{ requests|length }} shown</span></div>
+      {% if requests %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Reference</th><th>Type</th><th>Status</th><th>Due</th><th>Completed</th></tr></thead>
+          <tbody>
+          {% for row in requests %}
+            <tr>
+              <td>{{ row.reference }}</td>
+              <td>{{ row.kind|title }}</td>
+              <td><span class="pill">{{ row.status|replace('_', ' ')|title }}</span></td>
+              <td>{{ format_dt(row.due_at, timezone, '%d %b %Y') }}</td>
+              <td>{{ format_dt(row.completed_at, timezone, '%d %b %Y') if row.completed_at else '—' }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="muted">No requests yet.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <aside>
+    <div class="block">
+      <div class="block-head"><h3>Legal acceptance</h3><span class="pill">{{ legal.current_version }}</span></div>
+      <p class="small">Terms: <strong>{{ 'Accepted' if legal.terms_accepted else 'Not recorded' }}</strong></p>
+      <p class="small">Privacy: <strong>{{ 'Accepted' if legal.privacy_accepted else 'Not recorded' }}</strong></p>
+      <form method="post" action="/legal/accept" class="form-stack compact">
+        <label class="check"><input type="checkbox" name="terms" value="1" required> I accept the <a href="/terms">terms of service</a>.</label>
+        <label class="check"><input type="checkbox" name="privacy" value="1"> I acknowledge the <a href="/privacy">privacy notice</a>.</label>
+        <button class="btn ghost" type="submit">Record acceptance</button>
+      </form>
+      {% if legal.records %}
+      <hr>
+      {% for row in legal.records %}
+      <p class="muted small">{{ row.document|title }} v{{ row.version }} · {{ row.accepted_at[:10] }}</p>
+      {% endfor %}
+      {% endif %}
+    </div>
+
+    <div class="block">
+      <div class="block-head"><h3>Retention</h3><a class="small" href="/dpa">DPA</a></div>
+      <dl class="policy-list">
+        {% for label, period in retention %}
+        <div><dt>{{ label }}</dt><dd>{{ period }}</dd></div>
+        {% endfor %}
+      </dl>
+    </div>
+
+    <div class="block">
+      <h3>Need help?</h3>
+      <p class="muted small">Privacy: <a href="mailto:{{ privacy_email }}">{{ privacy_email }}</a></p>
+      <a class="btn ghost" href="/support">Open support</a>
+    </div>
+  </aside>
+</section>
+{% endblock %}

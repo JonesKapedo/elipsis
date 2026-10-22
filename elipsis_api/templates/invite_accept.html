@@ -43,6 +43,7 @@
             <input type="password" name="password2" minlength="8" autocomplete="new-password" required>
           </label>
         </div>
+        <label class="check small"><input type="checkbox" name="accept_terms" value="1" required> I accept the <a href="/terms" target="_blank" rel="noopener">terms of service</a> and acknowledge the <a href="/privacy" target="_blank" rel="noopener">privacy notice</a>.</label>
         <button class="btn big full" type="submit">Create account and join →</button>
       </form>
       <p class="muted small">Already have an account? <a href="/login?next=/invite/{{ invite.token }}">Sign in to accept</a></p>

@@ -5,8 +5,10 @@
   <p class="eyebrow">Trust centre</p>
   <h1>Privacy notice</h1>
   <p class="lede">How {{ BRAND_NAME }} handles company, assessment and account data, and the choices you have.</p>
-  <p class="muted">Last updated: 21 October 2026. This is a plain-language notice, not legal advice.</p>
+  <p class="muted">Version 2026-10-22. This is a plain-language notice, not legal advice.</p>
 </section>
+{% include "partials/trust_nav.html" %}
+
 <article class="block prose">
   <h3>Who controls the data</h3>
   <p>{{ BRAND_NAME }} is the data controller for account and assessment data. Where a consultant or employer runs an assessment on behalf of another organisation, that organisation is the controller for the answers and we act as a processor under a written instruction.</p>
@@ -15,18 +17,20 @@
     <li>Account data: name, email, password hash, organisation and department.</li>
     <li>Assessment data: answers, free-text notes, scores, evidence files you upload, action-plan owners and comments.</li>
     <li>Billing data: plan and Paystack reference. Card data is handled by Paystack; we do not store card numbers.</li>
-    <li>Technical data: session cookie, IP-derived rate-limit counters, security logs.</li>
+    <li>Technical data: session cookie, IP-derived rate-limit counters, security logs and request identifiers.</li>
   </ul>
   <h3>Why we use it</h3>
   <p>To calculate your report, save your plan, provide support, secure the service, process payment, and produce aggregate benchmarks. Aggregate benchmarks are shown only when at least five comparable assessments exist and never identify a named organisation.</p>
   <h3>Lawful basis</h3>
   <p>Contract (providing the service), legitimate interests (security and service improvement), consent (optional marketing), and legal obligation (tax and lawful requests).</p>
   <h3>Sharing</h3>
-  <p>We use hosting, database, email and payment processors. We do not sell personal data. We disclose data only to processors under contract, or where required by law.</p>
+  <p>We use hosting, database, email and payment processors. The named register is public at <a href="/subprocessors">/subprocessors</a>. We do not sell personal data. We disclose data only to processors under contract, or where required by law.</p>
+  <h3>AI and automated analysis</h3>
+  <p>Assessment scoring is rules-based and auditable. If AI-assisted narrative is enabled, customer assessment data is not used to train third-party models, output is labelled, and a human remains responsible for the decision.</p>
   <h3>Retention</h3>
-  <p>Assessment and account data are kept while the account is active and for up to 24 months after closure for backup, dispute and legal reasons. Evidence files can be deleted earlier from the results page. Backups expire on a rolling 35-day cycle.</p>
+  <p>Assessment and account data are kept while the account is active. Closed-account data is deleted within 90 days, subject to tax, dispute and legal retention. Support tickets are kept for 36 months after resolution and security logs for 12 months. Evidence files can be deleted earlier from the results page. Backups expire on a rolling 35-day cycle. The full schedule is in the <a href="/dpa">DPA</a>.</p>
   <h3>Your rights</h3>
-  <p>You can access, correct, export, restrict or erase your data, and object to processing. Email <a href="mailto:privacy@elipsis.co.ke">privacy@elipsis.co.ke</a>. We respond within 14 days where the Act requires it. You may also complain to the Office of the Data Protection Commissioner (ODPC).</p>
+  <p>You can access, correct, export, restrict or erase your data, and object to processing. Export your account and assessment data immediately from <a href="/account/data">Data and privacy</a>. Submit erasure or correction requests there and track the reference and 30-day due date. Email <a href="mailto:privacy@elipsis.co.ke">privacy@elipsis.co.ke</a> if you need help. We respond within 14 days where the Act requires it. You may also complain to the Office of the Data Protection Commissioner (ODPC).</p>
   <h3>Breach notification</h3>
   <p>If a breach is likely to result in a risk to rights and freedoms, we notify the ODPC without undue delay and, where required, affected individuals. Our internal target is within 72 hours of confirmation.</p>
   <h3>Cookies</h3>

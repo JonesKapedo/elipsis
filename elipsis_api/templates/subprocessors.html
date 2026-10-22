@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Subprocessors — {{ BRAND_NAME }}{% endblock %}
+{% block description %}Named subprocessors, processing purposes, regions and safeguards for {{ BRAND_NAME }}.{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Trust centre</p>
+  <h1>Subprocessor register</h1>
+  <p class="lede">Every provider that can process customer data, why it is used, where it operates and the safeguard in place.</p>
+  <p class="muted small">Last reviewed {{ legal_version }}. We give notice before adding a provider that handles customer data.</p>
+</section>
+{% include "partials/trust_nav.html" %}
+
+<section class="block">
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Provider</th><th>Purpose</th><th>Region</th><th>Safeguard</th></tr></thead>
+      <tbody>
+      {% for name, purpose, region, safeguard in subprocessors %}
+        <tr><td><strong>{{ name }}</strong></td><td>{{ purpose }}</td><td>{{ region }}</td><td>{{ safeguard }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="block split-block">
+  <div>
+    <h3>Change notice</h3>
+    <p class="muted">We publish a changelog entry and email paid customers at least 30 days before a new subprocessor starts handling customer data. If you object on reasonable data-protection grounds, contact us and we will discuss an alternative or a termination path.</p>
+  </div>
+  <div>
+    <h3>What is not a subprocessor</h3>
+    <p class="muted">A provider that only receives aggregate, non-identifying traffic data, or that never receives customer content, is listed only when it can materially affect confidentiality. We still document it in the security review.</p>
+  </div>
+</section>
+
+<section class="block">
+  <div class="block-head"><h3>Retention schedule</h3><a class="small" href="/dpa">DPA</a></div>
+  <dl class="policy-list">
+    {% for label, period in retention %}
+    <div><dt>{{ label }}</dt><dd>{{ period }}</dd></div>
+    {% endfor %}
+  </dl>
+</section>
+{% endblock %}

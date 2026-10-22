@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Service status — {{ BRAND_NAME }}{% endblock %}
+{% block description %}Live service status, active incidents and 30-day availability for {{ BRAND_NAME }}.{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Service</p>
+  <h1>Service status</h1>
+  <p class="lede">What is working, what is not, and when the next update is due. We do not hide incidents behind marketing language.</p>
+</section>
+
+<section class="service-banner {{ 'ok' if availability.met else 'warn' }}" role="status">
+  <div>
+    <span class="status-dot {{ 'operational' if availability.met else 'degraded' }}" aria-hidden="true"></span>
+    <strong>{{ 'All systems operating within target' if availability.met else 'Availability is below target' }}</strong>
+    <p class="muted small">30-day availability: {{ availability.percent }}% against a {{ availability.target }}% target.
+      Recorded downtime: {{ availability.downtime_minutes }} minutes.</p>
+  </div>
+  <a class="btn ghost" href="/service-standards">Read the SLA</a>
+</section>
+
+<section class="block">
+  <div class="block-head"><h3>Components</h3><span class="muted small">Updated continuously</span></div>
+  <div class="status-grid">
+    {% for item in components %}
+    <div class="status-item">
+      <span class="status-dot {{ item.state }}" aria-hidden="true"></span>
+      <span>{{ item.label }}</span>
+      <strong>{{ 'Operational' if item.state == 'operational' else 'Degraded' }}</strong>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="block">
+  <div class="block-head"><h3>Incident history</h3><span class="muted small">Last 30 days</span></div>
+  {% if incidents %}
+    <div class="incident-list">
+    {% for incident in incidents %}
+      <article class="incident-card">
+        <div class="row-between">
+          <div>
+            <span class="tag {{ incident.impact }}">{{ incident_impact_labels.get(incident.impact, 'Minor') }}</span>
+            <h4>{{ incident.title }}</h4>
+          </div>
+          <span class="pill">{{ incident_status_labels.get(incident.status, 'Investigating') }}</span>
+        </div>
+        <p>{{ incident.summary }}</p>
+        <p class="muted small">
+          Started {{ format_dt(incident.started_at, timezone) }}
+          {% if incident.resolved_at %} · Resolved {{ format_dt(incident.resolved_at, timezone) }}{% endif %}
+          · {{ incident.reference }}
+        </p>
+        {% if timeline.get(incident.id) %}
+        <ol class="timeline">
+          {% for update in timeline[incident.id] %}
+          <li>
+            <strong>{{ incident_status_labels.get(update.status, 'Update') }}</strong>
+            <span class="muted small">{{ format_dt(update.created_at, timezone) }}</span>
+            <p>{{ update.body }}</p>
+          </li>
+          {% endfor %}
+        </ol>
+        {% endif %}
+        {% if incident.postmortem %}
+        <details>
+          <summary>Postmortem</summary>
+          <p>{{ incident.postmortem }}</p>
+        </details>
+        {% endif %}
+      </article>
+    {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <h4>No incidents recorded</h4>
+      <p class="muted">That is the result we want. Availability and incident history remain public so you can verify it.</p>
+    </div>
+  {% endif %}
+</section>
+
+<section class="block split-block">
+  <div>
+    <h3>Get incident updates by email</h3>
+    <p class="muted">We send an email when an incident is published and whenever its status changes. No marketing.</p>
+    {% if subscribed %}
+    <div class="flash ok" role="status">You are subscribed to status updates.</div>
+    {% endif %}
+    {% if error %}<div class="flash err" role="alert">{{ error }}</div>{% endif %}
+    <form method="post" action="/status/subscribe" class="inline-form">
+      <label class="sr-only" for="status-email">Email address</label>
+      <input id="status-email" type="email" name="email" placeholder="you@company.com" required>
+      <button class="btn" type="submit">Subscribe</button>
+    </form>
+  </div>
+  <div>
+    <h3>Need help now?</h3>
+    <p class="muted">Open a support ticket so we can trace the issue against your account and keep you updated.</p>
+    <a class="btn ghost" href="/support">Open support</a>
+    <a class="btn ghost" href="/help">Browse help</a>
+  </div>
+</section>
+{% endblock %}

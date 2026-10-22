@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Help centre — {{ BRAND_NAME }}{% endblock %}
+{% block description %}Task-based help for assessments, reports, team workspace, billing, privacy and security.{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Help centre</p>
+  <h1>How can we help?</h1>
+  <p class="lede">Short, task-based answers. If the answer is not here, open a ticket and we will write it.</p>
+</section>
+
+<section class="block">
+  <form method="get" action="/help" class="help-search" role="search">
+    <label class="sr-only" for="help-q">Search help</label>
+    <input id="help-q" type="search" name="q" value="{{ query }}" placeholder="Search: invite, report, export, billing…">
+    <button class="btn" type="submit">Search</button>
+  </form>
+  {% if query %}
+  <p class="muted small">{{ articles|length }} result(s) for “{{ query }}”. <a href="/help">Clear search</a></p>
+  {% endif %}
+</section>
+
+<section class="block">
+  <div class="help-grid">
+    {% for article in articles %}
+    <a class="help-card" href="/help/{{ article.slug }}">
+      <span class="eyebrow">{{ article.category }}</span>
+      <h3>{{ article.title }}</h3>
+      <p>{{ article.summary }}</p>
+      <span class="small">Read the steps</span>
+    </a>
+    {% else %}
+    <div class="empty-state">
+      <h4>No article matched</h4>
+      <p class="muted">Try a shorter term, or ask support and we will add the missing article.</p>
+      <a class="btn ghost" href="/support">Open support</a>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="block split-block">
+  <div>
+    <h3>Still stuck?</h3>
+    <p class="muted">Open a ticket with the page, what you tried and what happened. That gives us enough to reproduce the issue.</p>
+    <a class="btn" href="/support">Open support</a>
+  </div>
+  <div>
+    <h3>Service status</h3>
+    <p class="muted">Check whether the issue is already known before you wait on a reply.</p>
+    <a class="btn ghost" href="/status">View status</a>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Accessibility statement — {{ BRAND_NAME }}{% endblock %}
+{% block description %}Accessibility commitment, WCAG 2.2 AA target, known limitations and reporting route.{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Trust centre</p>
+  <h1>Accessibility statement</h1>
+  <p class="lede">We want the assessment and the plan to be usable by the people who have to act on them, including keyboard and screen-reader users.</p>
+  <p class="muted small">Last reviewed {{ legal_version }}. This statement describes a target and known gaps, not a certification.</p>
+</section>
+{% include "partials/trust_nav.html" %}
+
+<article class="block prose">
+  <h3>Our target</h3>
+  <p>We aim to meet WCAG 2.2 Level AA for public pages, signup, the assessment, results, company workspace, support and settings. WCAG 2.2 became a W3C Recommendation on 12 December 2024.</p>
+
+  <h3>What we have done</h3>
+  <ul>
+    <li>Semantic headings, landmarks, labels and a visible keyboard focus style.</li>
+    <li>Text alternatives for brand and interface imagery where the image carries meaning.</li>
+    <li>Reduced-motion support and no essential information conveyed by colour alone.</li>
+    <li>Form labels, error text and status messages that can be announced by assistive technology.</li>
+    <li>Responsive layouts that reflow on narrow screens and support zoom.</li>
+    <li>Plain-language error messages that say what to fix.</li>
+  </ul>
+
+  <h3>Known limitations</h3>
+  <ul>
+    <li>Some legacy tables and charts are not yet fully optimised for narrow screens or screen-reader navigation.</li>
+    <li>The generated PDF report is designed for print and may not preserve a logical reading order in every PDF reader.</li>
+    <li>Third-party payment pages are controlled by Paystack and are outside our direct codebase.</li>
+    <li>We have not completed an independent external audit. We do not claim one.</li>
+  </ul>
+
+  <h3>Testing</h3>
+  <p>Each release should check keyboard-only navigation, focus order, zoom at 200%, reduced motion, form labels and error announcements. Automated checks are useful but do not replace a manual pass.</p>
+
+  <h3>Report an access blocker</h3>
+  <p>If a page blocks you, email <a href="mailto:{{ support_email }}">{{ support_email }}</a> or open a support ticket. Include the page, the task, your browser and the assistive technology you use. We treat an access blocker as a service defect, not a feature request.</p>
+
+  <h3>Feedback and enforcement</h3>
+  <p>We acknowledge accessibility reports within 2 business days and aim to give a fix or a workaround within 10 business days. If you are not satisfied, ask for escalation to the founder through the support ticket.</p>
+</article>
+
+<section class="block">
+  <div class="block-head"><h3>Need a different format?</h3></div>
+  <p class="muted">We can provide report content in an alternative format on request. Ask support and tell us what you need.</p>
+  <a class="btn ghost" href="/support">Contact support</a>
+</section>
+{% endblock %}

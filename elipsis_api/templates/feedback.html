@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Feedback — {{ BRAND_NAME }}{% endblock %}
+{% block description %}Tell us what is working and what is getting in the way.{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Customer voice</p>
+  <h1>Tell us what to fix</h1>
+  <p class="lede">A score is useful. A specific example is more useful. We read both and follow up with detractors personally.</p>
+</section>
+
+{% if sent %}<div class="flash ok" role="status">Thank you. Your feedback is in the review queue.</div>{% endif %}
+
+<section class="support-layout">
+  <div class="block">
+    <div class="block-head"><h3>Share feedback</h3><span class="muted small">Takes under a minute</span></div>
+    <form method="post" action="/feedback" class="form-stack">
+      <label for="feedback-kind">What kind of feedback?</label>
+      <select id="feedback-kind" name="kind">
+        <option value="nps"{% if request.query_params.get('kind') == 'nps' %} selected{% endif %}>Relationship / NPS</option>
+        <option value="csat"{% if request.query_params.get('kind') == 'csat' %} selected{% endif %}>Satisfaction with the service</option>
+        <option value="ces"{% if request.query_params.get('kind') == 'ces' %} selected{% endif %}>Effort (how easy was it?)</option>
+        <option value="feature"{% if request.query_params.get('kind') == 'feature' %} selected{% endif %}>Feature or document request</option>
+      </select>
+
+      <fieldset class="rating-field">
+        <legend>Score</legend>
+        {% for value in range(0, 11) %}
+        <label><input type="radio" name="score" value="{{ value }}" required> {{ value }}</label>
+        {% endfor %}
+      </fieldset>
+      <p class="muted small">NPS: 9-10 promoter, 7-8 passive, 0-6 detractor. For effort, 0 is very hard and 10 is effortless.</p>
+
+      <label for="feedback-context">What were you doing?</label>
+      <input id="feedback-context" name="context" maxlength="120" placeholder="e.g. first report, team invite, renewal">
+
+      <label for="feedback-comment">What should we know?</label>
+      <textarea id="feedback-comment" name="comment" rows="5" maxlength="4000" placeholder="Be specific. Which screen, what happened, what would have helped?"></textarea>
+      <button class="btn" type="submit">Send feedback</button>
+    </form>
+  </div>
+
+  <aside class="block">
+    <div class="block-head"><h3>What happens next</h3></div>
+    <ol class="help-steps">
+      <li>Feedback enters the monthly review.</li>
+      <li>Detractors receive a personal follow-up.</li>
+      <li>Repeated themes become a product, documentation or service fix.</li>
+      <li>Service failures are handled through support, not hidden in a survey.</li>
+    </ol>
+    <hr>
+    <h4>Recent feedback</h4>
+    {% if recent %}
+      {% for row in recent %}
+      <div class="feedback-row">
+        <span class="pill">{{ row.kind|upper }} {{ row.score }}</span>
+        <span class="muted small">{{ row.created_at[:10] }}</span>
+        {% if row.comment %}<p class="small">{{ row.comment }}</p>{% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+    <p class="muted small">Nothing yet. You can be the first.</p>
+    {% endif %}
+  </aside>
+</section>
+{% endblock %}
