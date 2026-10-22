@@ -273,6 +273,24 @@
     });
   });
 
+  /* Copy invite links ------------------------------------------------------- */
+  $$("[data-copy]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const target = document.querySelector(button.getAttribute("data-copy"));
+      if (!target) return;
+      try {
+        await navigator.clipboard.writeText(target.value || target.textContent || "");
+        const previous = button.textContent;
+        button.textContent = "Copied";
+        button.classList.add("copied");
+        window.setTimeout(() => { button.textContent = previous; button.classList.remove("copied"); }, 1800);
+      } catch (err) {
+        target.select();
+        document.execCommand("copy");
+      }
+    });
+  });
+
   /* Auto-dismiss flash messages -------------------------------------------- */
   $$(".flash.ok").forEach((flash) => {
     window.setTimeout(() => {

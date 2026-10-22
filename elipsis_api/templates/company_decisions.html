@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}{{ org.name }} decisions{% endblock %}
+{% block body_class %}page-company-decisions{% endblock %}
+{% block content %}
+<section class="head reveal">
+  <p class="eyebrow">DECISION LOG · {{ org.name|upper }}</p>
+  <h1>What leadership decided.</h1>
+  <p class="lede">One record per call: context, owner, due date, and outcome. Stops the same debate returning every quarter.</p>
+</section>
+{% include "partials/company_tabs.html" %}
+{% if message %}<div class="flash ok">{{ message }}</div>{% endif %}
+{% if error %}<div class="flash err">{{ error }}</div>{% endif %}
+
+<section class="decision-layout">
+  {% if can_contribute %}
+  <form method="post" action="/company/{{ org.id }}/decisions" class="block decision-form reveal">
+    <div class="section-label"><span>+</span><div><h2>Record a decision</h2><p>Keep the wording short enough to act on.</p></div></div>
+    <label class="field">Decision
+      <input name="title" maxlength="160" required placeholder="e.g. Freeze new courier contracts until OTIF recovers">
+    </label>
+    <label class="field">Context
+      <textarea name="detail" rows="3" maxlength="4000" placeholder="Why now, what was considered, what changes."></textarea>
+    </label>
+    <div class="form-grid">
+      <label class="field">Owner
+        <select name="owner_id">
+          <option value="">Unassigned</option>
+          {% for m in members %}<option value="{{ m.user.id }}">{{ m.user.name or m.user.email }} — {{ m.role_label }}</option>{% endfor %}
+        </select>
+      </label>
+      <label class="field">Owner name override
+        <input name="owner_name" maxlength="120" placeholder="Optional">
+      </label>
+      <label class="field">Due date
+        <input type="date" name="due_date">
+      </label>
+      <label class="field">Linked diagnostic
+        <select name="assessment_id">
+          <option value="">None</option>
+          {% for a in assessments %}<option value="{{ a.id }}">{{ a.department or 'Company-wide' }} · {{ a.completed_at or a.status }}</option>{% endfor %}
+        </select>
+      </label>
+    </div>
+    <button class="btn" type="submit">Record decision</button>
+  </form>
+  {% endif %}
+
+  <div class="decision-list-wrap">
+    {% for d in decisions %}
+    <article class="block decision-card reveal{% if d.overdue %} overdue{% endif %}">
+      <div class="decision-top">
+        <span class="status-dot {{ d.row.status }}"></span>
+        <div><strong>{{ d.row.title }}</strong><span class="muted">{{ d.row.owner_name or 'Leadership' }}{% if d.row.due_date %} · due {{ d.row.due_date }}{% endif %}{% if d.row.assessment_id %} · report #{{ d.row.assessment_id }}{% endif %}</span></div>
+        <span class="tag {{ 'ok' if d.row.status == 'done' else 'risk' if d.overdue else 'watch' }}">{{ d.row.status|replace('_',' ') }}</span>
+      </div>
+      {% if d.row.detail %}<p>{{ d.row.detail }}</p>{% endif %}
+      {% if can_contribute %}
+      <form method="post" action="/company/{{ org.id }}/decisions/{{ d.row.id }}/status" class="decision-status">
+        <select name="status">{% for s in states %}<option value="{{ s }}" {% if d.row.status == s %}selected{% endif %}>{{ s|replace('_',' ')|capitalize }}</option>{% endfor %}</select>
+        <button class="btn ghost sm" type="submit">Update</button>
+      </form>
+      {% endif %}
+    </article>
+    {% else %}
+    <div class="block empty-room"><h2>No decisions yet.</h2><p class="muted">Record the next management call so the team can execute it without waiting for a meeting.</p></div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

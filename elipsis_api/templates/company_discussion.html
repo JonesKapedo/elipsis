@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}{{ org.name }} room{% endblock %}
+{% block body_class %}page-company-room{% endblock %}
+{% block content %}
+<section class="head reveal">
+  <p class="eyebrow">TEAM ROOM · {{ org.name|upper }}</p>
+  <h1>Talk where the work lives.</h1>
+  <p class="lede">Share a result, ask for context, flag a risk, or record a win. Everything stays against the company, not a personal inbox.</p>
+</section>
+{% include "partials/company_tabs.html" %}
+{% if message %}<div class="flash ok">{{ message }}</div>{% endif %}
+{% if error %}<div class="flash err">{{ error }}</div>{% endif %}
+
+<section class="room-layout">
+  <div class="room-feed">
+    {% if can_contribute %}
+    <form method="post" action="/company/{{ org.id }}/posts" class="block composer reveal">
+      <label class="field">Post to the room
+        <textarea name="body" rows="3" maxlength="4000" required placeholder="What should the team know, decide, or look at?"></textarea>
+      </label>
+      <div class="composer-row">
+        <label class="field compact">Type
+          <select name="tag">{% for tag in tags %}<option value="{{ tag }}">{{ tag|capitalize }}</option>{% endfor %}</select>
+        </label>
+        <button class="btn" type="submit">Post</button>
+      </div>
+    </form>
+    {% else %}<div class="block muted">Your role can read the room but not post.</div>{% endif %}
+
+    {% for post in posts %}
+    <article class="block post-card reveal{% if post.row.pinned %} pinned{% endif %}" id="post-{{ post.row.id }}">
+      <div class="post-head">
+        <span class="member-avatar">{{ post.initials }}</span>
+        <div><strong>{{ post.author.name if post.author else 'Former member' }}</strong><span class="muted">{{ post.row.created_at }} · {{ (post.row.tag or 'update')|capitalize }}</span></div>
+        {% if post.row.pinned %}<span class="tag ok">Pinned</span>{% endif %}
+      </div>
+      <p class="post-body">{{ post.row.body }}</p>
+      <div class="post-actions">
+        {% if can_manage %}<form method="post" action="/company/{{ org.id }}/posts/{{ post.row.id }}/pin"><button class="text-link" type="submit">{% if post.row.pinned %}Unpin{% else %}Pin{% endif %}</button></form>{% endif %}
+        <span class="muted small">{{ post.replies|length }} repl{% if post.replies|length == 1 %}y{% else %}ies{% endif %}</span>
+      </div>
+      {% if post.replies %}
+      <div class="post-replies">
+        {% for reply in post.replies %}
+        <div class="reply"><span class="member-avatar sm">{{ reply.initials }}</span><div><strong>{{ reply.author.name if reply.author else 'Member' }}</strong><p>{{ reply.row.body }}</p><small>{{ reply.row.created_at }}</small></div></div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% if can_contribute %}
+      <form method="post" action="/company/{{ org.id }}/posts/{{ post.row.id }}/reply" class="reply-form">
+        <input name="body" maxlength="2000" placeholder="Reply to this thread…" required>
+        <button class="btn ghost sm" type="submit">Reply</button>
+      </form>
+      {% endif %}
+    </article>
+    {% else %}
+    <div class="block empty-room reveal">
+      <h2>The room is quiet.</h2>
+      <p class="muted">Start with one useful post: the latest score, a blocked action, a customer exception, or a decision the team needs to understand.</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <aside class="room-side-stack">
+    <article class="block reveal">
+      <h2>Who is here</h2>
+      <ul class="member-list compact">
+        {% for m in members %}
+        <li><span class="member-avatar sm">{{ m.initials }}</span><div><strong>{{ m.user.name or m.user.email }}</strong><span class="muted">{{ m.role_label }}{% if m.title %} · {{ m.title }}{% endif %}</span></div></li>
+        {% endfor %}
+      </ul>
+      {% if can_manage %}<a class="btn ghost sm full" href="/company/{{ org.id }}/invite">Invite a manager</a>{% endif %}
+    </article>
+    <article class="block room-guidance reveal">
+      <h2>Keep it useful</h2>
+      <p class="muted small">Post facts and decisions, not status theatre. Link the diagnostic or action where possible. If a thread changes a commitment, record it in the decision log.</p>
+      <a class="text-link" href="/company/{{ org.id }}/decisions">Open decision log →</a>
+    </article>
+  </aside>
+</section>
+{% endblock %}

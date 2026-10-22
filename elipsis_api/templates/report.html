@@ -15,7 +15,7 @@
   <a class="btn ghost sm" href="/assessment/{{ assessment.id }}/export.json">Export JSON</a>
 </div>
 
-<article class="report-shell">
+<article class="report-shell" style="--report-accent:{{ branding.accent }}">
 
   <header class="report-cover">
     <div class="report-brand-row">
@@ -28,6 +28,7 @@
 
     <h1>{{ INDEX_NAME }}</h1>
     <p class="report-org">{{ organization.name if organization else 'Organisation' }} · {{ dept_name }}</p>
+    {% if branding.cover_note %}<p class="report-cover-note">{{ branding.cover_note }}</p>{% endif %}
     <p class="report-meta-line">
       {% if assessment.respondent %}{{ assessment.respondent }} · {% endif %}
       Completed {{ assessment.completed_at or '—' }}
@@ -352,6 +353,7 @@
   <footer class="report-footer-note">
     <p>
       <strong>{{ BRAND_NAME }}</strong> — {{ BRAND_TAGLINE }}
+      {% if branding.footer %}{{ branding.footer }}.{% endif %}
       This document is a management decision-support pack. Financial figures are estimates, not audited results.
       © {{ BRAND_NAME }}. Confidential.
     </p>

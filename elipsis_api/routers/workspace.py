@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from elipsis_api import models, services, services_ops, services_webhooks
+from elipsis_api import departments, models, services, services_ops, services_webhooks
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
 
@@ -208,27 +208,60 @@ def team_page(organization_id: int, request: Request,
     org = db.get(models.Organization, organization_id)
     if org is None:
         return _not_found(request, user)
+    from elipsis_api import services_room
+    role = services.org_role(db, user, organization_id)
     return templates.TemplateResponse(
-        request, "team.html",
+        request, "company_team.html",
         {"user": user, "org": org, "organization": org,
-         "members": services_ops.team_members(db, organization_id),
+         "members": services_room.member_rows(db, organization_id),
+         "invites": services_room.invites(db, organization_id),
+         "role": role, "role_label": services.ROLE_LABELS.get(role, "Member"),
+         "can_manage": services.can_manage_org(db, user, organization_id),
+         "is_pro": services.company_is_pro(db, organization_id, user),
+         "pulse": services_room.pulse(db, organization_id),
+         "branding": services_room.branding(org),
+         "company_context": services.company_context(org),
+         "roles": {k: v for k, v in services.ROLE_LABELS.items() if k != "owner"},
+         "departments": departments.DEPARTMENTS,
+         "notifications": services_ops.notifications(db, user),
          "message": request.query_params.get("message"),
          "error": request.query_params.get("error")})
 
 
 @router.post("/company/{organization_id}/team")
 def team_add(organization_id: int, request: Request,
-             email: str = Form(...),
+             email: str = Form(...), role: str = Form("manager"),
+             title: str = Form(""), department: str = Form(""),
              user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
     if not services.can_access_org(db, user, organization_id):
         return _not_found(request, user)
-    ok, message = services_ops.add_team_member(db, organization_id, email, user.id)
-    key = "message" if ok else "error"
-    from urllib.parse import quote
-    return RedirectResponse(
-        f"/company/{organization_id}/team?{key}={quote(message)}", status_code=303)
+    if not services.can_manage_org(db, user, organization_id):
+        return _team_redirect(organization_id, "error", "Only owners and managers can add people.")
+    ok, message = services_ops.add_team_member(
+        db, organization_id, email, user.id, role=role, title=title, department=department)
+    return _team_redirect(organization_id, "message" if ok else "error", message)
+
+
+@router.post("/company/{organization_id}/team/{member_id}/update")
+def team_update(organization_id: int, member_id: int, request: Request,
+                role: str = Form("analyst"), title: str = Form(""),
+                department: str = Form(""), status: str = Form("active"),
+                user=Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    if not services.can_access_org(db, user, organization_id):
+        return _not_found(request, user)
+    if not services.can_manage_org(db, user, organization_id):
+        return _team_redirect(organization_id, "error", "Only owners and managers can change roles.")
+    link = db.get(models.OrgOwner, member_id)
+    if link is None or link.organization_id != organization_id:
+        return _not_found(request, user)
+    from elipsis_api import services_room
+    ok, message = services_room.update_member(
+        db, link, user.id, role=role, title=title, department=department, status=status)
+    return _team_redirect(organization_id, "message" if ok else "error", message)
 
 
 @router.post("/company/{organization_id}/team/{member_id}/remove")
@@ -238,8 +271,13 @@ def team_remove(organization_id: int, member_id: int, request: Request,
         return login_redirect()
     if not services.can_access_org(db, user, organization_id):
         return _not_found(request, user)
+    if not services.can_manage_org(db, user, organization_id):
+        return _team_redirect(organization_id, "error", "Only owners and managers can remove people.")
     ok, message = services_ops.remove_team_member(db, organization_id, member_id, user.id)
-    key = "message" if ok else "error"
+    return _team_redirect(organization_id, "message" if ok else "error", message)
+
+
+def _team_redirect(organization_id: int, key: str, message: str):
     from urllib.parse import quote
     return RedirectResponse(
         f"/company/{organization_id}/team?{key}={quote(message)}", status_code=303)

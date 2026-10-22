@@ -25,8 +25,11 @@
       <p class="muted">{% if row.context.location != 'Footprint not set' %}{{ row.context.location }}{% endif %}{% if row.org.employee_count %} · {{ row.org.employee_count }} people{% endif %}{% if row.org.revenue_band %} · {{ row.org.revenue_band }}{% endif %}</p>
     </div>
     <div class="company-profile-score">
-      <strong>{{ row.context.completeness.percent }}%</strong>
-      <span>profile complete</span>
+      <div class="company-pulse-mini {{ row.pulse.band }}"><strong>{{ row.pulse.score }}</strong><span>pulse</span></div>
+      <div class="company-profile-score">
+        <strong>{{ row.context.completeness.percent }}%</strong>
+        <span>profile complete</span>
+      </div>
     </div>
   </div>
 
@@ -43,12 +46,13 @@
   </div>
 
   <div class="hero-actions company-actions">
-    <a class="btn" href="/start?org={{ row.org.id }}">Start a diagnostic</a>
-    <a class="btn ghost" href="{% if is_pro %}/start?org={{ row.org.id }}&amp;method=team{% else %}/pro?locked=team{% endif %}">Ask the team{% if not is_pro %} <span class="crown" title="Premium">{% include "partials/crown.svg" %}</span>{% endif %}</a>
+    <a class="btn" href="/company/{{ row.org.id }}">Open workspace <span class="tag">{{ row.pulse.score }}/100</span></a>
+    <a class="btn ghost" href="/start?org={{ row.org.id }}">Start a diagnostic</a>
+    <a class="btn ghost" href="{% if row.company_pro %}/start?org={{ row.org.id }}&amp;method=team{% else %}/pro?locked=team{% endif %}">Ask the team{% if not row.company_pro %} <span class="crown" title="Premium">{% include "partials/crown.svg" %}</span>{% endif %}</a>
     <a class="btn ghost" href="/setup?org={{ row.org.id }}">Update profile</a>
     <a class="btn ghost" href="/dashboard?org={{ row.org.id }}">Dashboard</a>
     <a class="btn ghost" href="/trends?org={{ row.org.id }}">Trends</a>
-    <a class="btn ghost" href="/company/{{ row.org.id }}/team">Team</a>
+    <a class="btn ghost" href="/company/{{ row.org.id }}/team">Team · {{ row.members }}</a>
   </div>
 
   {% if row.portrait %}

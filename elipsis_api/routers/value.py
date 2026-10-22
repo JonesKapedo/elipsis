@@ -277,7 +277,7 @@ def export_xlsx(assessment_id: int, request: Request,
     assessment = _owned(db, user, assessment_id)
     if assessment is None:
         return templates.TemplateResponse(request, "404.html", {"user": user}, status_code=404)
-    if not services.is_pro_user(db, user):
+    if not services.company_is_pro(db, assessment.organization_id, user):
         return RedirectResponse("/pro?locked=reports", status_code=303)
     _, result = services.compute(db, assessment_id)
     if result is None:

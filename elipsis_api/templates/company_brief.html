@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}{{ org.name }} executive brief{% endblock %}
+{% block body_class %}page-company-brief{% endblock %}
+{% block content %}
+<section class="head brief-head reveal">
+  <div>
+    <p class="eyebrow">EXECUTIVE BRIEF · {{ org.name|upper }}</p>
+    <h1>{{ org.name }} operating brief</h1>
+    <p class="lede">{{ company_context.sector }} · {{ company_context.location }} · prepared from the live workspace.</p>
+  </div>
+  <div class="hero-actions no-print">
+    <button class="btn" type="button" onclick="window.print()">Print / save PDF</button>
+    <a class="btn ghost" href="/company/{{ org.id }}">Back to workspace</a>
+  </div>
+</section>
+{% include "partials/company_tabs.html" %}
+
+<section class="brief-sheet" style="--room-accent:{{ branding.accent }}">
+  <header class="brief-cover">
+    <span class="room-monogram" style="--room-accent:{{ branding.accent }}">{{ org.name[:2]|upper }}</span>
+    <div>
+      <p class="eyebrow">OPERATING BRIEF · {{ schedule.today }}</p>
+      <h2>{{ org.name }}</h2>
+      <p>{{ branding.cover_note or company_context.primary_services or company_context.sector }}</p>
+    </div>
+    <div class="brief-pulse">
+      <strong>{{ pulse.score }}</strong><span>pulse /100</span>
+    </div>
+  </header>
+
+  <div class="brief-stats">
+    <div><span>Latest readiness</span><strong>{{ '%.1f'|format(pulse.latest_score) if pulse.latest_score else '—' }}</strong></div>
+    <div><span>Open actions</span><strong>{{ pulse.actions.total - pulse.actions.done }}</strong></div>
+    <div><span>Overdue</span><strong>{{ pulse.actions.overdue }}</strong></div>
+    <div><span>Team</span><strong>{{ members|length }}</strong></div>
+  </div>
+
+  <section class="brief-section">
+    <h3>What the pulse says</h3>
+    <div class="brief-bars">
+      {% for c in pulse.components %}
+      <div><span>{{ c.label }}</span><div class="meter"><span style="width:{{ c.value }}%;background:{{ branding.accent }}"></span></div><strong>{{ c.value }}</strong><small>{{ c.note }}</small></div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="brief-section">
+    <h3>Decisions requiring follow-through</h3>
+    {% if decisions %}
+    <table class="table"><thead><tr><th>Decision</th><th>Owner</th><th>Due</th><th>Status</th></tr></thead>
+      <tbody>{% for d in decisions %}<tr><td>{{ d.row.title }}</td><td>{{ d.row.owner_name or 'Leadership' }}</td><td>{{ d.row.due_date or '—' }}</td><td>{{ d.row.status|replace('_',' ') }}</td></tr>{% endfor %}</tbody>
+    </table>
+    {% else %}<p class="muted">No decisions recorded.</p>{% endif %}
+  </section>
+
+  <section class="brief-section">
+    <h3>Next commitments</h3>
+    {% if schedule["items"] %}
+    <table class="table"><thead><tr><th>Date</th><th>Commitment</th><th>Owner</th><th>Type</th></tr></thead>
+      <tbody>{% for item in schedule["items"][:10] %}<tr><td>{{ item.date }}</td><td>{{ item.title }}</td><td>{{ item.owner }}</td><td>{{ item.kind }}</td></tr>{% endfor %}</tbody>
+    </table>
+    {% else %}<p class="muted">Nothing scheduled in the next two weeks.</p>{% endif %}
+  </section>
+
+  <section class="brief-section brief-activity">
+    <h3>Recent activity</h3>
+    <ul>{% for a in activity %}<li><strong>{{ a.actor }}</strong> · {{ a.action|replace('.',' ') }} <span class="muted">{{ a.detail }}</span></li>{% endfor %}</ul>
+  </section>
+
+  <footer class="brief-footer">
+    <span>{{ branding.footer or 'Prepared by the company team in Elipsis.' }}</span>
+    <span>{{ schedule.today }} · {{ org.name }}</span>
+  </footer>
+</section>
+{% endblock %}

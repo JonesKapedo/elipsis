@@ -12,7 +12,7 @@ from constants import (
     INDEX_SHORT,
     PILLAR_LABELS,
 )
-from elipsis_api import analytics, models, services
+from elipsis_api import analytics, models, services, services_room
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
 from elipsis_api.narrative import company_portrait
@@ -39,7 +39,7 @@ def assessment_report(assessment_id: int, request: Request,
     assessment, result = _guarded(db, user, assessment_id)
     if assessment is None or result is None:
         return _not_found(request, user)
-    if not services.is_pro_user(db, user):
+    if not services.company_is_pro(db, assessment.organization_id, user):
         return RedirectResponse("/pro?locked=reports", status_code=303)
     org = db.get(models.Organization, assessment.organization_id)
     dept = db.get(models.Department, assessment.department_id) if assessment.department_id else None
@@ -60,6 +60,7 @@ def assessment_report(assessment_id: int, request: Request,
         "comparison_max": max([r.get("readiness_index") or 0 for r in comparison_rows] + [1]),
         "portrait": company_portrait(org, dept, result),
         "insight": analytics.build(result),
+        "branding": services_room.branding(org),
     })
 
 
@@ -74,7 +75,7 @@ def assessment_report_pdf(assessment_id: int, request: Request,
     assessment, result = _guarded(db, user, assessment_id)
     if assessment is None or result is None:
         return _not_found(request, user)
-    if not services.is_pro_user(db, user):
+    if not services.company_is_pro(db, assessment.organization_id, user):
         return RedirectResponse("/pro?locked=reports", status_code=303)
     org = db.get(models.Organization, assessment.organization_id)
     dept = (db.get(models.Department, assessment.department_id)
@@ -86,7 +87,8 @@ def assessment_report_pdf(assessment_id: int, request: Request,
         except Exception:  # noqa: BLE001
             pass
     brand = (request.query_params.get("brand") or "").strip()[:80] or BRAND_NAME
-    footer_note = (request.query_params.get("footer") or "").strip()[:160] or None
+    org_brand = services_room.branding(org)
+    footer_note = (org_brand["footer"] or request.query_params.get("footer") or "").strip()[:160] or None
     try:
         pdf_bytes = build_pdf(
             brand_name=brand, brand_tagline=BRAND_TAGLINE,
@@ -94,6 +96,7 @@ def assessment_report_pdf(assessment_id: int, request: Request,
             organization=org, department=dept, assessment=assessment, result=result,
             pillar_labels=PILLAR_LABELS, comparison_rows=comparison_rows or None,
             insight=analytics.build(result), footer_note=footer_note,
+            accent_color=org_brand["accent"],
         )
     except Exception as exc:  # noqa: BLE001
         print(f"[elipsis] PDF build failed: {exc}", flush=True)

@@ -969,3 +969,135 @@ def test_free_user_is_gated_from_team_reports_and_sharing():
                            follow_redirects=False)
         assert share.status_code == 303
         assert share.headers["location"] == "/pro?locked=reports"
+
+
+def test_company_room_membership_collaboration_and_branding():
+    from fastapi.testclient import TestClient
+
+    from elipsis_api import models, security, services_room
+    from elipsis_api.database import SessionLocal
+    from elipsis_api.main import app
+
+    with SessionLocal() as db:
+        owner = models.User(
+            email="room-owner@example.com", name="Room Owner", role="client",
+            user_type="client", password_hash=security.hash_password("room-owner-pass"))
+        db.add(owner)
+        db.commit()
+        org = models.Organization(name="Room Co", industry="Logistics")
+        db.add(org)
+        db.commit()
+        db.add(models.OrgOwner(user_id=owner.id, organization_id=org.id,
+                               role="owner", status="active"))
+        db.add(models.UserPref(user_id=owner.id, pro_until="active"))
+        db.commit()
+        org_id = org.id
+
+    with TestClient(app) as admin:
+        login = admin.post("/login", data={
+            "email": "room-owner@example.com", "password": "room-owner-pass"},
+            headers={"x-forwarded-for": "203.0.113.77"}, follow_redirects=False)
+        assert login.status_code == 303
+
+        for path in (f"/company/{org_id}", f"/company/{org_id}/desk",
+                     f"/company/{org_id}/discussion", f"/company/{org_id}/decisions",
+                     f"/company/{org_id}/team", f"/company/{org_id}/brief"):
+            page = admin.get(path)
+            assert page.status_code == 200, (path, page.text[:300])
+        ics = admin.get(f"/company/{org_id}/schedule.ics")
+        assert ics.status_code == 200
+        assert "BEGIN:VCALENDAR" in ics.text
+
+        post = admin.post(f"/company/{org_id}/posts", data={
+            "body": "Morning huddle: two vans down, reroute priority loads.",
+            "tag": "risk"}, follow_redirects=False)
+        assert post.status_code == 303
+        with SessionLocal() as db:
+            post_id = db.query(models.CompanyPost).filter_by(
+                organization_id=org_id).one().id
+
+        invite = admin.post(f"/company/{org_id}/invite", data={
+            "email": "room-manager@example.com", "role": "manager",
+            "title": "Dispatch lead", "department": "Operations",
+            "note": "Own the morning huddle.", "days": "7", "max_uses": "1"},
+            follow_redirects=False)
+        assert invite.status_code == 303
+        assert "Invite%20link%20ready" in invite.headers["location"]
+        with SessionLocal() as db:
+            created_invite = services_room.invites(db, org_id)[0]
+            token = created_invite.token
+        invite_page = admin.get(f"/company/{org_id}/invite?token={token}")
+        assert invite_page.status_code == 200
+        assert f"/invite/{token}" in invite_page.text
+
+        with TestClient(app) as invited:
+            page = invited.get(f"/invite/{token}")
+            assert page.status_code == 200
+            assert "Room Co" in page.text
+            joined = invited.post(f"/invite/{token}", data={
+                "name": "Room Manager", "email": "room-manager@example.com",
+                "password": "room-manager-pass", "password2": "room-manager-pass"},
+                headers={"x-forwarded-for": "203.0.113.78"}, follow_redirects=False)
+            assert joined.status_code == 303
+            assert joined.headers["location"] == f"/company/{org_id}?joined=1"
+            assert invited.get(f"/company/{org_id}/desk").status_code == 200
+            assert invited.get(f"/company/{org_id}/team").status_code == 200
+            reply = invited.post(f"/company/{org_id}/posts/{post_id}/reply", data={
+                "body": "Reroute confirmed; customer desk notified."},
+                follow_redirects=False)
+            assert reply.status_code == 303
+
+        with SessionLocal() as db:
+            membership = db.query(models.OrgOwner).filter_by(
+                organization_id=org_id, user_id=db.query(models.User).filter_by(
+                    email="room-manager@example.com").one().id).one()
+            assert membership.role == "manager"
+            assert membership.status == "active"
+
+        decision = admin.post(f"/company/{org_id}/decisions", data={
+            "title": "Move to a single dispatch board",
+            "detail": "Remove the duplicate spreadsheet by month end.",
+            "owner_name": "Room Manager", "due_date": "2026-12-01"},
+            follow_redirects=False)
+        assert decision.status_code == 303
+        discussion = admin.get(f"/company/{org_id}/discussion")
+        assert discussion.status_code == 200
+        assert "Reroute confirmed" in discussion.text
+        assert admin.get(f"/company/{org_id}/decisions").status_code == 200
+
+        assessment = admin.post("/api/v1/assessments", json={
+            "organization_id": org_id, "department": "Operations",
+            "respondent": "Room Owner"})
+        assert assessment.status_code == 201
+        assessment_id = assessment.json()["id"]
+        note = admin.post(f"/assessment/{assessment_id}/notes", data={
+            "section": "Operations", "body": "Night shift is the constraint."},
+            follow_redirects=False)
+        assert note.status_code == 303
+        results = admin.get(f"/assessment/{assessment_id}/results")
+        assert results.status_code == 200
+        assert "Night shift is the constraint." in results.text
+
+        saved = admin.post(f"/company/{org_id}/settings", data={
+            "accent_color": "#1f6f5c", "report_footer": "Board use only",
+            "report_cover_note": "Prepared for the Q4 board review.",
+            "week_start": "sunday", "huddle_day": "tuesday",
+            "huddle_time": "09:15", "next": "/settings"}, follow_redirects=False)
+        assert saved.status_code == 303
+        assert saved.headers["location"] == "/settings?company=saved"
+        with SessionLocal() as db:
+            refreshed = db.get(models.Organization, org_id)
+            assert refreshed.accent_color == "#1f6f5c"
+            assert refreshed.report_footer == "Board use only"
+            assert refreshed.huddle_day == "tuesday"
+        prefs_page = admin.get("/settings")
+        assert prefs_page.status_code == 200
+        assert "Company identity" in prefs_page.text
+        assert "room-owner-pass" not in prefs_page.text
+        report = admin.get(f"/assessment/{assessment_id}/report")
+        assert report.status_code == 200
+        assert "Prepared for the Q4 board review." in report.text
+        assert "Board use only" in report.text
+        pdf = admin.get(f"/assessment/{assessment_id}/report.pdf")
+        assert pdf.status_code == 200
+        assert pdf.content[:4] == b"%PDF"

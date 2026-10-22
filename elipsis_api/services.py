@@ -82,6 +82,60 @@ def user_prefs(db: Session, user) -> models.UserPref:
     return row
 
 
+ROLE_LABELS = {
+    "owner": "Owner",
+    "manager": "Manager",
+    "supervisor": "Supervisor",
+    "analyst": "Analyst",
+    "viewer": "Viewer",
+}
+ROLE_LEVELS = {"viewer": 1, "analyst": 2, "supervisor": 3, "manager": 4, "owner": 5}
+
+
+def org_membership(db: Session, user, organization_id: int | None):
+    if user is None or organization_id is None:
+        return None
+    row = db.scalar(select(models.OrgOwner).where(
+        models.OrgOwner.user_id == user.id,
+        models.OrgOwner.organization_id == organization_id))
+    if row is None or (row.status or "active") != "active":
+        return None
+    return row
+
+
+def org_role(db: Session, user, organization_id: int | None) -> str:
+    if is_admin(user):
+        return "owner"
+    row = org_membership(db, user, organization_id)
+    if row is None:
+        return ""
+    return row.role if row.role in ROLE_LABELS else "owner"
+
+
+def can_manage_org(db: Session, user, organization_id: int | None) -> bool:
+    return ROLE_LEVELS.get(org_role(db, user, organization_id), 0) >= 4
+
+
+def can_contribute_org(db: Session, user, organization_id: int | None) -> bool:
+    return ROLE_LEVELS.get(org_role(db, user, organization_id), 0) >= 2
+
+
+def company_is_pro(db: Session, organization_id: int | None, actor=None) -> bool:
+    if organization_id is None:
+        return False
+    if actor is not None and is_pro_user(db, actor):
+        return True
+    rows = db.scalars(select(models.OrgOwner).where(
+        models.OrgOwner.organization_id == organization_id)).all()
+    for row in rows:
+        if (row.status or "active") != "active":
+            continue
+        member = db.get(models.User, row.user_id)
+        if member is not None and is_pro_user(db, member):
+            return True
+    return False
+
+
 def is_pro_user(db: Session, user) -> bool:
     if user is None:
         return False
@@ -172,8 +226,10 @@ def reset_demo_data(db: Session, org_ids: list[int] | None = None):
 def owned_org_ids(db: Session, user) -> list[int]:
     if user is None:
         return []
-    return list(db.scalars(select(models.OrgOwner.organization_id).where(
-        models.OrgOwner.user_id == user.id)))
+    rows = db.scalars(select(models.OrgOwner).where(
+        models.OrgOwner.user_id == user.id)).all()
+    return [row.organization_id for row in rows
+            if (row.status or "active") == "active"]
 
 
 def owned_orgs(db: Session, user) -> list[models.Organization]:
@@ -185,7 +241,11 @@ def claim_org(db: Session, user_id: int, organization_id: int) -> None:
         models.OrgOwner.user_id == user_id,
         models.OrgOwner.organization_id == organization_id))
     if exists is None:
-        db.add(models.OrgOwner(user_id=user_id, organization_id=organization_id))
+        db.add(models.OrgOwner(user_id=user_id, organization_id=organization_id,
+                               role="owner", status="active"))
+        db.commit()
+    elif (exists.status or "active") != "active":
+        exists.status = "active"
         db.commit()
 
 

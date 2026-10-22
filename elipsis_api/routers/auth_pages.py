@@ -96,7 +96,9 @@ def login_resilient(request: Request, email: str = Form(...), password: str = Fo
     if old:
         services.delete_session(db, old)
     token = services.create_session(db, account.id)
-    dest = nxt or ("/dashboard" if services.owned_org_ids(db, account) else "/setup")
+    prefs = db.get(models.UserPref, account.id)
+    home = (prefs.landing_page if prefs and prefs.landing_page else "/dashboard")
+    dest = nxt or (home if services.owned_org_ids(db, account) else "/setup")
     response = RedirectResponse(dest, status_code=303)
     _set_session_cookie(response, token)
     return response

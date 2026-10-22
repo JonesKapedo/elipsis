@@ -177,6 +177,35 @@
   </article>
 </section>
 
+{% if notes is defined %}
+<section class="block assessment-notes reveal" id="notes">
+  <div class="section-label"><span>✎</span><div><h2>Team annotations</h2><p>Capture local context against a section of this report. Notes are internal to the company.</p></div></div>
+  {% if request.query_params.get('note') %}<div class="flash ok">{{ request.query_params.get('note') }}</div>{% endif %}
+  {% if request.query_params.get('note_error') %}<div class="flash err">{{ request.query_params.get('note_error') }}</div>{% endif %}
+  <div class="notes-layout">
+    {% if can_contribute %}
+    <form method="post" action="/assessment/{{ assessment.id }}/notes" class="stack">
+      <label class="field">Section
+        <select name="section">{% for section in note_sections %}<option value="{{ section }}">{{ section }}</option>{% endfor %}</select>
+      </label>
+      <label class="field">Note
+        <textarea name="body" rows="3" maxlength="3000" required placeholder="What does the number miss? What should the next manager know?"></textarea>
+      </label>
+      <button class="btn sm" type="submit">Save note</button>
+    </form>
+    {% else %}<p class="muted small">Your role can read notes but not add them.</p>{% endif %}
+    <div class="note-list">
+      {% for note in notes %}
+      <article class="note-card">
+        <span class="member-avatar sm">{{ note.initials }}</span>
+        <div><strong>{{ note.author.name if note.author else 'Member' }} <span class="tag">{{ note.row.section }}</span></strong><p>{{ note.row.body }}</p><small>{{ note.row.created_at }}</small></div>
+      </article>
+      {% else %}<p class="muted small">No annotations yet. Add the first piece of local context.</p>{% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
 <section class="headline">
   <div class="gauge">
     <div class="gauge-num">{{ '%.1f'|format(result.readiness_index) }}<span>/100</span></div>

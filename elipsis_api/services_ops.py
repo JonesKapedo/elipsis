@@ -318,17 +318,26 @@ def team_members(db: Session, organization_id: int) -> list[dict[str, Any]]:
 
 
 def add_team_member(db: Session, organization_id: int, email: str,
-                    actor_id: int | None) -> tuple[bool, str]:
+                    actor_id: int | None, role: str = "manager",
+                    title: str = "", department: str = "") -> tuple[bool, str]:
     email = (email or "").strip().lower()
     user = db.scalar(select(models.User).where(models.User.email == email))
     if user is None:
-        return False, "That email is not registered yet. Ask them to create an account first."
+        return False, "That email is not registered yet. Use a private invite link instead."
     exists = db.scalar(select(models.OrgOwner).where(
         models.OrgOwner.organization_id == organization_id,
         models.OrgOwner.user_id == user.id))
     if exists is not None:
-        return False, "That person is already on this organisation."
-    db.add(models.OrgOwner(user_id=user.id, organization_id=organization_id))
+        if (exists.status or "active") == "active":
+            return False, "That person is already on this organisation."
+        exists.status = "active"
+    else:
+        db.add(models.OrgOwner(
+            user_id=user.id, organization_id=organization_id,
+            role=role if role in {"manager", "supervisor", "analyst", "viewer"} else "manager",
+            title=(title or "").strip()[:120] or None,
+            department=(department or "").strip()[:120] or None,
+            status="active"))
     record_audit(db, action="team.add", organization_id=organization_id,
                  user_id=actor_id, detail=f"Added {email}")
     db.commit()
@@ -338,9 +347,10 @@ def add_team_member(db: Session, organization_id: int, email: str,
 def remove_team_member(db: Session, organization_id: int, user_id: int,
                        actor_id: int | None) -> tuple[bool, str]:
     owners = list(db.scalars(select(models.OrgOwner).where(
-        models.OrgOwner.organization_id == organization_id)))
+        models.OrgOwner.organization_id == organization_id,
+        models.OrgOwner.status != "suspended")))
     if len(owners) <= 1:
-        return False, "Keep at least one owner on the organisation."
+        return False, "Keep at least one active member on the organisation."
     row = next((o for o in owners if o.user_id == user_id), None)
     if row is None:
         return False, "That person is not on this organisation."

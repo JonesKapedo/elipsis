@@ -10,14 +10,18 @@
   {% if password_message == 'current' %}<div class="flash err">The current password is incorrect.</div>{% endif %}
   {% if password_message == 'short' %}<div class="flash err">Use at least eight characters for the new password.</div>{% endif %}
   {% if password_message == 'mismatch' %}<div class="flash err">The new passwords do not match.</div>{% endif %}
+  {% if company_saved %}<div class="flash ok">Company workspace settings saved.</div>{% endif %}
+  {% if company_error %}<div class="flash err">{{ company_error }}</div>{% endif %}
 </section>
 
 <div class="settings-layout">
   <nav class="settings-nav block" aria-label="Settings sections">
     <a href="#profile">Profile</a>
     <a href="#defaults">Operating defaults</a>
+    <a href="#notifications">Notifications</a>
     <a href="#appearance">Appearance</a>
     <a href="#security">Security</a>
+    <a href="#company">Company identity</a>
     <a href="#integrations">Integrations</a>
   </nav>
 
@@ -33,6 +37,19 @@
         </label>
         <label class="field">Role
           <input name="job_title" maxlength="120" value="{{ prefs.job_title or '' }}" placeholder="e.g. Operations Director" autocomplete="organization-title">
+        </label>
+        <label class="field">Phone
+          <input name="phone" maxlength="40" value="{{ prefs.phone or '' }}" placeholder="+254 …" autocomplete="tel">
+        </label>
+        <label class="field">Landing page
+          <select name="landing_page">
+            {% for value, label in [('/dashboard','Overview'),('/assessments','Assessments'),('/actions','Action plan'),('/company','Company'),('/operations','Operations')] %}
+            <option value="{{ value }}" {% if (prefs.landing_page or '/dashboard') == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label class="field wide">Short bio
+          <textarea name="bio" rows="2" maxlength="500" placeholder="What you own in the operating system.">{{ prefs.bio or '' }}</textarea>
         </label>
         <label class="field">Default department
           <select name="default_department">
@@ -51,13 +68,37 @@
             {% endfor %}
           </select>
         </label>
+      </div>
+
+      <div class="section-label" id="notifications"><span>02</span><div><h2>Notifications and rhythm</h2><p>Choose what interrupts you and when the team digest should land.</p></div></div>
+      <div class="form-grid">
         <label class="field field-check">
           <input type="checkbox" name="notify_email" value="1" {% if prefs.notify_email %}checked{% endif %}>
           <span>Email me when a team questionnaire reaches its minimum or an action becomes overdue.</span>
         </label>
+        <label class="field field-check">
+          <input type="checkbox" name="notify_team" value="1" {% if prefs.notify_team is none or prefs.notify_team %}checked{% endif %}>
+          <span>Include team invitations, room posts, and member changes in my digest.</span>
+        </label>
+        <label class="field field-check">
+          <input type="checkbox" name="notify_reports" value="1" {% if prefs.notify_reports is none or prefs.notify_reports %}checked{% endif %}>
+          <span>Include new reports, annotations, and review dates in my digest.</span>
+        </label>
+        <label class="field field-check">
+          <input type="checkbox" name="notify_actions" value="1" {% if prefs.notify_actions is none or prefs.notify_actions %}checked{% endif %}>
+          <span>Include overdue actions and decisions in my digest.</span>
+        </label>
+        <label class="field">Digest day
+          <select name="digest_day">
+            {% for day in ['monday','tuesday','wednesday','thursday','friday'] %}<option value="{{ day }}" {% if (prefs.digest_day or 'monday') == day %}selected{% endif %}>{{ day|capitalize }}</option>{% endfor %}
+          </select>
+        </label>
+        <label class="field">Quiet hours
+          <input name="quiet_hours" maxlength="40" value="{{ prefs.quiet_hours or '' }}" placeholder="e.g. 18:30–07:00">
+        </label>
       </div>
 
-      <div class="section-label" id="appearance"><span>02</span><div><h2>Appearance</h2><p>Small adjustments for legibility and motion sensitivity.</p></div></div>
+      <div class="section-label" id="appearance"><span>03</span><div><h2>Appearance</h2><p>Small adjustments for legibility and motion sensitivity.</p></div></div>
       <div class="form-grid">
         <label class="field">Diamond mark
           <input name="symbol" maxlength="2" value="{{ prefs.symbol or 'E' }}">
@@ -83,7 +124,7 @@
     </form>
 
     <section class="block settings-block" id="security">
-      <div class="section-label"><span>03</span><div><h2>Security</h2><p>Change the password used for this account.</p></div></div>
+      <div class="section-label"><span>04</span><div><h2>Security</h2><p>Change the password used for this account.</p></div></div>
       <form method="post" action="/settings/password" class="stack">
         <div class="form-grid">
           <label class="field">Current password
@@ -100,8 +141,43 @@
       </form>
     </section>
 
+    <section class="block settings-block" id="company">
+      <div class="section-label"><span>05</span><div><h2>Company identity</h2><p>Report colour, cover note, footer, and the operating rhythm for each company you manage.</p></div></div>
+      {% if managed_orgs %}
+      {% for org in managed_orgs %}
+      <details class="settings-details company-brand-card" {% if loop.first %}open{% endif %}>
+        <summary><span class="member-avatar sm" style="--room-accent:{{ branding[org.id].accent }}">{{ org.name[:2]|upper }}</span> {{ org.name }}</summary>
+        <form method="post" action="/company/{{ org.id }}/settings" class="stack">
+          <input type="hidden" name="next" value="/settings">
+          <div class="form-grid">
+            <label class="field">Report accent
+              <input type="color" name="accent_color" value="{{ branding[org.id].accent }}">
+            </label>
+            <label class="field">Week starts
+              <select name="week_start"><option value="monday" {% if (org.week_start or 'monday') == 'monday' %}selected{% endif %}>Monday</option><option value="sunday" {% if org.week_start == 'sunday' %}selected{% endif %}>Sunday</option></select>
+            </label>
+            <label class="field">Huddle day
+              <select name="huddle_day">{% for day in ['monday','tuesday','wednesday','thursday','friday'] %}<option value="{{ day }}" {% if (org.huddle_day or 'monday') == day %}selected{% endif %}>{{ day|capitalize }}</option>{% endfor %}</select>
+            </label>
+            <label class="field">Huddle time
+              <input type="time" name="huddle_time" value="{{ org.huddle_time or '08:30' }}">
+            </label>
+          </div>
+          <label class="field">Report cover note
+            <textarea name="report_cover_note" rows="2" maxlength="2000" placeholder="One line that frames the operating picture for the board.">{{ org.report_cover_note or '' }}</textarea>
+          </label>
+          <label class="field">Report footer
+            <input name="report_footer" maxlength="240" value="{{ org.report_footer or '' }}" placeholder="Confidential — {{ org.name }} leadership">
+          </label>
+          <button class="btn sm" type="submit">Save company identity</button>
+        </form>
+      </details>
+      {% endfor %}
+      {% else %}<p class="muted small">You need to own or manage a company to change report branding and huddle settings.</p>{% endif %}
+    </section>
+
     <section class="block settings-block" id="integrations">
-      <div class="section-label"><span>04</span><div><h2>Integrations</h2><p>Signed webhooks for ERP, WMS, and operations workflows.</p></div></div>
+      <div class="section-label"><span>06</span><div><h2>Integrations</h2><p>Signed webhooks for ERP, WMS, and operations workflows.</p></div></div>
       {% if webhook_message %}
       <div class="flash {{ 'err' if webhook_message in ['invalid','denied'] else 'ok' }}">{{ webhook_message|replace('_',' ') }}</div>
       {% endif %}

@@ -17,6 +17,7 @@ from elipsis_api import (
     services,
     services_operations,
     services_ops,
+    services_room,
     services_webhooks,
 )
 from elipsis_api.config import SESSION_COOKIE
@@ -295,7 +296,8 @@ def share_create(assessment_id: int, request: Request,
         return login_redirect()
     if _owned_assessment(db, user, assessment_id) is None:
         return _not_found(request, user)
-    if not services.is_pro_user(db, user):
+    assessment = db.get(models.Assessment, assessment_id)
+    if assessment is None or not services.company_is_pro(db, assessment.organization_id, user):
         return RedirectResponse("/pro?locked=reports", status_code=303)
     try:
         days = int(days or request.query_params.get("days") or 30)
@@ -308,7 +310,6 @@ def share_create(assessment_id: int, request: Request,
             expires_days=max(1, min(365, days)))
     except ValueError:
         return RedirectResponse(f"/assessment/{assessment_id}/results", status_code=303)
-    assessment = db.get(models.Assessment, assessment_id)
     services_ops.record_audit(
         db, action="share.create",
         organization_id=assessment.organization_id if assessment else None,
@@ -352,7 +353,9 @@ def login(request: Request, email: str = Form(...), password: str = Form(...),
     if old:
         services.delete_session(db, old)
     token = services.create_session(db, account.id)
-    dest = nxt or ("/dashboard" if services.owned_org_ids(db, account) else "/setup")
+    prefs = db.get(models.UserPref, account.id)
+    home = (prefs.landing_page if prefs and prefs.landing_page else "/dashboard")
+    dest = nxt or (home if services.owned_org_ids(db, account) else "/setup")
     response = RedirectResponse(dest, status_code=303)
     _set_session_cookie(response, token)
     return response
@@ -442,6 +445,7 @@ def start_get(request: Request, user=Depends(get_current_user),
         request, "start.html",
         {"user": user, **context, "company": selected,
          "company_context": services.company_context(selected),
+         "company_pro": services.company_is_pro(db, selected.id, user),
          "department": department,
          "brief": departments.department_brief(department),
          "method": request.query_params.get("method") or "self",
@@ -474,7 +478,7 @@ def start_post(request: Request,
             raise ValueError("Select one of your saved companies.")
         dept = department.strip() or "Operations"
         if method == "team":
-            if not services.is_pro_user(db, user):
+            if not services.company_is_pro(db, org_id, user):
                 return RedirectResponse("/pro?locked=team", status_code=303)
             deadline = ""
             if deadline_date.strip():
@@ -509,6 +513,7 @@ def start_post(request: Request,
             {"user": user, **context, "error": str(exc),
              "company": selected,
              "company_context": services.company_context(selected),
+             "company_pro": services.company_is_pro(db, selected.id, user),
              "department": department,
              "brief": departments.department_brief(department),
              "method": method},
@@ -670,7 +675,11 @@ def assessment_results(assessment_id: int, request: Request,
          "logistics": logistics.snapshot(db, assessment_ids=[assessment_id]),
          "operations": services_operations.summary(db, [assessment.organization_id]),
          "share_links": services_ops.share_links(db, assessment_id),
-         "is_pro": services.is_pro_user(db, user),
+         "is_pro": services.company_is_pro(db, assessment.organization_id, user),
+         "company_pro": services.company_is_pro(db, assessment.organization_id, user),
+         "notes": services_room.notes(db, assessment.id),
+         "note_sections": services_room.SECTIONS,
+         "can_contribute": services.can_contribute_org(db, user, assessment.organization_id),
          "notifications": services_ops.notifications(db, user)})
 
 
@@ -692,7 +701,7 @@ def assessment_pillar(assessment_id: int, code: str, request: Request,
         {"user": user, "assessment": assessment, "result": result,
          "organization": org, "department": dept,
          "benchmark": benchmarks.cohort_benchmark(db, org),
-         "is_pro": services.is_pro_user(db, user),
+         "is_pro": services.company_is_pro(db, assessment.organization_id, user),
          "focus_pillar": code.upper()})
 
 
@@ -704,7 +713,7 @@ def assessment_export(assessment_id: int, request: Request,
     assessment = _owned_assessment(db, user, assessment_id)
     if assessment is None:
         return _not_found(request, user)
-    if not services.is_pro_user(db, user):
+    if not services.company_is_pro(db, assessment.organization_id, user):
         return RedirectResponse("/pro?locked=reports", status_code=303)
     _, result = services.compute(db, assessment_id)
     if result is None:

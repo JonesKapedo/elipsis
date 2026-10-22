@@ -1,0 +1,8 @@
+<nav class="workspace-tabs company-tabs no-print" aria-label="Company workspace">
+  <a class="tab{% if active == 'overview' %} active{% endif %}" href="/company/{{ org.id }}"{% if active == 'overview' %} aria-current="page"{% endif %}>Overview</a>
+  <a class="tab{% if active == 'desk' %} active{% endif %}" href="/company/{{ org.id }}/desk"{% if active == 'desk' %} aria-current="page"{% endif %}>Operating desk</a>
+  <a class="tab{% if active == 'discussion' %} active{% endif %}" href="/company/{{ org.id }}/discussion"{% if active == 'discussion' %} aria-current="page"{% endif %}>Room</a>
+  <a class="tab{% if active == 'decisions' %} active{% endif %}" href="/company/{{ org.id }}/decisions"{% if active == 'decisions' %} aria-current="page"{% endif %}>Decisions</a>
+  <a class="tab{% if active == 'team' %} active{% endif %}" href="/company/{{ org.id }}/team"{% if active == 'team' %} aria-current="page"{% endif %}>Team</a>
+  {% if is_pro %}<a class="tab{% if active == 'brief' %} active{% endif %}" href="/company/{{ org.id }}/brief"{% if active == 'brief' %} aria-current="page"{% endif %}>Executive brief</a>{% endif %}
+</nav>
