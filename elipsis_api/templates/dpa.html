@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Data processing agreement — {{ BRAND_NAME }}{% endblock %}
+{% block description %}Plain-language data processing terms, subprocessors, security measures and deletion commitments.{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Trust centre</p>
+  <h1>Data processing agreement</h1>
+  <p class="lede">The working terms that apply when {{ BRAND_NAME }} processes assessment data for your organisation.</p>
+  <p class="muted small">Version {{ legal_version }}. This is a plain-language DPA template, not legal advice. A signed copy is available on request.</p>
+</section>
+{% include "partials/trust_nav.html" %}
+
+<article class="block prose">
+  <h3>1. Roles</h3>
+  <p>The customer is the controller of organisation, assessment, evidence and team data. {{ BRAND_NAME }} is the processor when it handles that data on the customer's instruction. {{ BRAND_NAME }} is the controller for account, billing, security and service-contact data.</p>
+
+  <h3>2. Scope and purpose</h3>
+  <p>Processing is limited to providing the assessment, report, plan, company workspace, support, billing and security functions described in the service. We do not sell personal data or use customer assessment data to train third-party models.</p>
+
+  <h3>3. Customer instructions</h3>
+  <p>The customer instructs {{ BRAND_NAME }} to process data for the documented service. We will tell the customer if an instruction appears to breach applicable data-protection law. Instructions outside the service require a written agreement and may incur a fee.</p>
+
+  <h3>4. Confidentiality</h3>
+  <p>Personnel with access to customer data are bound by confidentiality. Access is limited to the minimum needed for support, security and service operation. Administrative access is logged.</p>
+
+  <h3>5. Security measures</h3>
+  <ul>
+    <li>Tenant-scoped authorisation checks on organisation data.</li>
+    <li>Password hashing and signed, server-revocable sessions.</li>
+    <li>Same-origin request checks, rate limits and parameterised database access.</li>
+    <li>TLS in transit and encrypted hosting-provider storage at rest.</li>
+    <li>Uploaded evidence is served as an attachment and never executed.</li>
+    <li>Security headers, request identifiers and restrictive browser policies.</li>
+    <li>Backups with a rolling 35-day expiry.</li>
+  </ul>
+
+  <h3>6. Subprocessors</h3>
+  <p>The current register is published at <a href="/subprocessors">/subprocessors</a>. The customer gives general authorisation for those providers. We will give notice before a new subprocessor handles customer data and a reasonable opportunity to object. A subprocessor is bound by obligations no less protective than this DPA.</p>
+
+  <h3>7. International transfers</h3>
+  <p>Data may be processed in the regions listed in the subprocessor register. Where required, transfers rely on an appropriate safeguard such as standard contractual clauses or an equivalent mechanism. The customer is responsible for confirming that its own transfer analysis is satisfied.</p>
+
+  <h3>8. Data-subject requests</h3>
+  <p>The product provides self-service JSON export and a tracked erasure/correction workflow. The customer should route requests from its own staff through those tools or contact <a href="mailto:{{ privacy_email }}">{{ privacy_email }}</a>. We assist within the service's 30-day completion target and do not charge for routine assistance.</p>
+
+  <h3>9. Breach notification</h3>
+  <p>We notify the customer without undue delay after confirming a personal-data breach affecting their data. Our internal target is 72 hours. The notice includes what happened, the likely impact, containment steps and the contact for follow-up. We do not wait for a complete root-cause analysis before warning the customer.</p>
+
+  <h3>10. Deletion and return</h3>
+  <p>The customer can export data at any time. On verified account closure, active data is deleted within 90 days, subject to legal retention and backup expiry. Backups expire on a rolling 35-day cycle. We confirm completion in writing on request.</p>
+
+  <h3>11. Audit and assurance</h3>
+  <p>We answer reasonable security questionnaires and provide the evidence we hold. We are not yet ISO 27001 certified or SOC 2 audited. We will not claim a certification we do not hold. On-site audits require reasonable notice, a confidentiality agreement and a scope that respects other customers' data.</p>
+
+  <h3>12. Liability and term</h3>
+  <p>This DPA continues while {{ BRAND_NAME }} processes customer data. Liability is subject to the main service terms. If a conflict exists between this DPA and the main terms on data protection, this DPA prevails.</p>
+
+  <h3>13. Contact</h3>
+  <p>Data protection: <a href="mailto:{{ privacy_email }}">{{ privacy_email }}</a>. Security: <a href="mailto:{{ security_email }}">{{ security_email }}</a>. Support: <a href="mailto:{{ support_email }}">{{ support_email }}</a>.</p>
+</article>
+
+<section class="block">
+  <div class="block-head"><h3>Retention schedule</h3></div>
+  <dl class="policy-list">
+    {% for label, period in retention %}
+    <div><dt>{{ label }}</dt><dd>{{ period }}</dd></div>
+    {% endfor %}
+  </dl>
+</section>
+{% endblock %}

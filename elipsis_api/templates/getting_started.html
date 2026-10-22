@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Getting started — {{ BRAND_NAME }}{% endblock %}
+{% block description %}Your activation path from account to a working operating rhythm.{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Activation</p>
+  <h1>Get to first value, then to a rhythm</h1>
+  <p class="lede">Seven steps from an empty account to a team that runs the plan. Do the next one, not all of them.</p>
+</section>
+
+{% if organizations|length > 1 %}
+<div class="company-switch">
+  <span class="muted small">Company</span>
+  {% for org in organizations %}
+  <a class="pill{% if org.id == company.id %} active{% endif %}" href="/getting-started?org={{ org.id }}">{{ org.name }}</a>
+  {% endfor %}
+</div>
+{% endif %}
+
+<section class="activation-grid">
+  <div class="block">
+    <div class="row-between">
+      <div>
+        <p class="eyebrow">Activation progress</p>
+        <h2>{{ activation.complete }} of {{ activation.total }} complete</h2>
+      </div>
+      <div class="score-ring" style="--pct: {{ activation.percent }}%" aria-label="{{ activation.percent }} percent complete">
+        <strong>{{ activation.percent }}%</strong>
+      </div>
+    </div>
+    <div class="progress-track" role="progressbar" aria-valuenow="{{ activation.percent }}" aria-valuemin="0" aria-valuemax="100">
+      <span style="width: {{ activation.percent }}%"></span>
+    </div>
+    {% if activation.next %}
+    <div class="next-action">
+      <span class="eyebrow">Next best action</span>
+      <h3>{{ activation.next.label }}</h3>
+      <p class="muted">{{ activation.next.detail }}</p>
+      <a class="btn" href="{{ activation.next.url }}">Do this next</a>
+    </div>
+    {% else %}
+    <div class="next-action">
+      <span class="eyebrow">Activation complete</span>
+      <h3>Keep the rhythm going</h3>
+      <p class="muted">Repeat the assessment after 90 days and review progress with your team.</p>
+      <a class="btn" href="/start">Repeat assessment</a>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="block">
+    <div class="block-head"><h3>Company health</h3><span class="pill {{ 'ok' if health.score >= 75 else 'warn' if health.score >= 50 else 'err' }}">{{ health.band }} · {{ health.score }}/100</span></div>
+    <p class="muted small">Transparent scoring, not a black box. Each factor below adds to the total.</p>
+    <div class="health-factors">
+      {% for factor in health.factors %}
+      <div class="health-row">
+        <div class="row-between"><span>{{ factor.label }}</span><strong>{{ factor.points }}/{{ factor.max }}</strong></div>
+        <div class="progress-track small"><span style="width: {{ (factor.points / factor.max * 100)|round }}%"></span></div>
+        <span class="muted small">{{ factor.detail }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    <a class="btn ghost" href="{{ health.next_action.url }}">{{ health.next_action.label }}</a>
+  </div>
+</section>
+
+<section class="block">
+  <div class="block-head"><h3>Your path</h3><span class="muted small">{{ company.name }}</span></div>
+  <ol class="milestone-list">
+    {% for item in activation.milestones %}
+    <li class="milestone {{ 'done' if item.done else '' }}">
+      <span class="milestone-mark" aria-hidden="true">{{ loop.index }}</span>
+      <div>
+        <strong>{{ item.label }}</strong>
+        <span class="muted small">{{ item.detail }}</span>
+      </div>
+      {% if not item.done %}<a class="btn ghost small" href="{{ item.url }}">Open</a>{% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+</section>
+
+<section class="block split-block">
+  <div>
+    <h3>Why this matters</h3>
+    <p class="muted">A completed assessment is useful. An assessment with an owned action, a teammate and a recorded decision is what changes the operation. That is what this page measures.</p>
+  </div>
+  <div>
+    <h3>Need a hand?</h3>
+    <p class="muted">Open a ticket if a step is unclear or blocked. We will answer with the exact next click, not a generic article.</p>
+    <a class="btn ghost" href="/support">Open support</a>
+  </div>
+</section>
+{% endblock %}

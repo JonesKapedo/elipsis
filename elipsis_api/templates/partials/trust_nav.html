@@ -1,0 +1,10 @@
+<nav class="tabs workspace-tabs" aria-label="Trust centre">
+  <a class="tab" href="/trust"{% if request.url.path == '/trust' %} aria-current="page"{% endif %}>Overview</a>
+  <a class="tab" href="/security"{% if request.url.path == '/security' %} aria-current="page"{% endif %}>Security</a>
+  <a class="tab" href="/privacy"{% if request.url.path == '/privacy' %} aria-current="page"{% endif %}>Privacy</a>
+  <a class="tab" href="/dpa"{% if request.url.path == '/dpa' %} aria-current="page"{% endif %}>DPA</a>
+  <a class="tab" href="/subprocessors"{% if request.url.path == '/subprocessors' %} aria-current="page"{% endif %}>Subprocessors</a>
+  <a class="tab" href="/service-standards"{% if request.url.path == '/service-standards' %} aria-current="page"{% endif %}>Service standard</a>
+  <a class="tab" href="/status"{% if request.url.path == '/status' %} aria-current="page"{% endif %}>Status</a>
+  <a class="tab" href="/accessibility"{% if request.url.path == '/accessibility' %} aria-current="page"{% endif %}>Accessibility</a>
+</nav>

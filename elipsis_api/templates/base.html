@@ -87,6 +87,7 @@
         <button type="button" class="cmd-trigger" id="cmd-trigger" aria-haspopup="dialog" aria-controls="cmdk">
           <span class="cmd-trigger-label">Commands</span><kbd>⌘K</kbd>
         </button>
+        <a class="topbar-bell" href="/help" aria-label="Help centre">?</a>
         <a class="topbar-bell" href="/notifications" aria-label="Notifications">
           <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path></svg>
           {% if notifications %}<span class="topbar-bell-dot">{{ notifications|length }}</span>{% endif %}
@@ -106,6 +107,7 @@
     <a href="/pricing"{% if path == '/pricing' %} aria-current="page"{% endif %}>Pricing</a>
     <a href="/partners"{% if path == '/partners' %} aria-current="page"{% endif %}>Partners</a>
     <a href="/sample"{% if path == '/sample' %} aria-current="page"{% endif %}>Sample</a>
+    <a href="/help"{% if path.startswith('/help') %} aria-current="page"{% endif %}>Help</a>
     <a class="pill" href="/signup">Start free</a>
     <a href="/login">Sign in</a>
   </nav>
@@ -132,11 +134,21 @@
       <a href="/pricing">Pricing</a>
       <a href="/partners">Partners</a>
       <a href="/use-cases">Use cases</a>
+      <a href="/changelog">Changelog</a>
     </nav>
     <nav class="foot-links" aria-label="Trust">
+      <a href="/trust">Trust centre</a>
+      <a href="/security">Security</a>
       <a href="/privacy">Privacy</a>
       <a href="/terms">Terms</a>
-      <a href="/security">Security</a>
+      <a href="/dpa">DPA</a>
+      <a href="/subprocessors">Subprocessors</a>
+    </nav>
+    <nav class="foot-links" aria-label="Service">
+      <a href="/status">Status</a>
+      <a href="/help">Help</a>
+      <a href="/support">Support</a>
+      <a href="/accessibility">Accessibility</a>
     </nav>
     <span class="foot-note">No consultants required. No black box. Assumptions printed.</span>
   </div>

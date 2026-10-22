@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Support — {{ BRAND_NAME }}{% endblock %}
+{% block description %}Open a support ticket, track its SLA and read the conversation in one place.{% endblock %}
+{% block content %}
+<section class="dash-hero">
+  <div>
+    <p class="eyebrow">Customer operations</p>
+    <h1>Support that keeps its promises</h1>
+    <p class="lede">Every ticket gets a reference, a severity, a due time and a visible conversation. Urgent issues are covered 24/7.</p>
+  </div>
+  <div class="hero-actions">
+    <a class="btn ghost" href="/help">Browse help</a>
+    <a class="btn ghost" href="/status">Service status</a>
+  </div>
+</section>
+
+<section class="support-layout">
+  <div class="block">
+    <div class="block-head"><h3>Open a ticket</h3><span class="muted small">First response: 30 min to 1 business day</span></div>
+    {% if error %}<div class="flash err" role="alert">{{ error }}</div>{% endif %}
+    <form method="post" action="/support" class="form-stack">
+      <label for="support-subject">Subject</label>
+      <input id="support-subject" name="subject" required minlength="4" maxlength="180" placeholder="What is blocked or wrong?">
+
+      <label for="support-category">Category</label>
+      <select id="support-category" name="category">
+        <option value="general">General question</option>
+        <option value="assessment">Assessment or report</option>
+        <option value="billing">Billing or renewal</option>
+        <option value="team">Team or access</option>
+        <option value="data">Data or privacy</option>
+        <option value="security">Security</option>
+        <option value="bug">Something is broken</option>
+      </select>
+
+      <label for="support-priority">Severity</label>
+      <select id="support-priority" name="priority">
+        <option value="normal">Normal — workaround exists</option>
+        <option value="high">High — core workflow blocked</option>
+        <option value="urgent">Urgent — service down or data at risk</option>
+        <option value="low">Low — question or request</option>
+      </select>
+
+      <label for="support-body">What happened?</label>
+      <textarea id="support-body" name="body" rows="7" required minlength="15" maxlength="8000" placeholder="Tell us the page, what you tried, what you expected and what happened. Do not paste passwords or card details."></textarea>
+      <p class="muted small">Do not include passwords, card numbers or other customers' data.</p>
+      <button class="btn" type="submit">Send to support</button>
+    </form>
+  </div>
+
+  <aside class="block">
+    <div class="block-head"><h3>Your tickets</h3><span class="muted small">{{ tickets|length }} shown</span></div>
+    {% if created %}<div class="flash ok" role="status">Ticket created.</div>{% endif %}
+    {% if tickets %}
+    <div class="ticket-list">
+      {% for row in tickets %}
+      <a class="ticket-row" href="/support/{{ row.ticket.reference }}">
+        <div>
+          <strong>{{ row.ticket.subject }}</strong>
+          <span class="muted small">{{ row.ticket.reference }} · {{ row.ticket.created_at[:10] }}</span>
+        </div>
+        <div class="ticket-meta">
+          <span class="pill {{ row.state.state }}">{{ row.state.status_label }}</span>
+          <span class="small">{{ row.state.priority_label }}</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <h4>No tickets yet</h4>
+      <p class="muted">If something blocks you, open a ticket. We would rather hear about it early.</p>
+    </div>
+    {% endif %}
+    <hr>
+    <h4>Direct email</h4>
+    <p class="muted small">Prefer email? <a href="mailto:{{ support_email }}">{{ support_email }}</a>. In-app tickets keep the SLA clock and history attached.</p>
+    <a class="btn ghost" href="/service-standards">Read the service standard</a>
+  </aside>
+</section>
+{% endblock %}

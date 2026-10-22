@@ -9,7 +9,9 @@ Do not catch-all rewrite to /api/index — that turns every path into 404.
 
 import os
 import sys
+import time
 import traceback
+import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -99,6 +101,10 @@ class SecurityMiddleware(BaseHTTPMiddleware):
     CSRF_EXEMPT = {"/paystack/webhook"}
 
     async def dispatch(self, request: Request, call_next):
+        request_id = (request.headers.get("x-request-id") or "")[:64]
+        if not request_id or not all(ch.isalnum() or ch in "-_" for ch in request_id):
+            request_id = uuid.uuid4().hex
+        started = time.perf_counter()
         if request.method not in self.SAFE_METHODS and request.url.path not in self.CSRF_EXEMPT:
             fetch_site = request.headers.get("sec-fetch-site", "")
             if fetch_site == "cross-site":
@@ -116,6 +122,8 @@ class SecurityMiddleware(BaseHTTPMiddleware):
                 if f"{parsed.scheme}://{parsed.netloc}" not in allowed:
                     return JSONResponse(status_code=403, content={"detail": "csrf_rejected"})
         response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+        response.headers["Server-Timing"] = f"app;dur={(time.perf_counter() - started) * 1000:.1f}"
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("X-Frame-Options", "DENY")
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
@@ -124,9 +132,17 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             "Content-Security-Policy",
             "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'")
         response.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin")
+        response.headers.setdefault("Cross-Origin-Resource-Policy", "same-origin")
         response.headers.setdefault("X-Permitted-Cross-Domain-Policies", "none")
         response.headers.setdefault("X-DNS-Prefetch-Control", "off")
         path = request.url.path
+        private_prefix = (
+            "/assessment", "/assessments", "/company", "/dashboard", "/settings",
+            "/support", "/account", "/admin", "/api", "/actions", "/operations",
+            "/inbox", "/letter", "/notifications", "/feedback", "/getting-started",
+        )
+        if path.startswith(private_prefix):
+            response.headers.setdefault("X-Robots-Tag", "noindex, nofollow")
         content_type = response.headers.get("content-type", "")
         if path.startswith("/static/"):
             response.headers.setdefault("Cache-Control", "public, max-age=86400")
@@ -222,12 +238,14 @@ except Exception as _exc:  # noqa: BLE001
 from elipsis_api.routers import company_room as _company_room  # noqa: E402
 from elipsis_api.routers import growth as _growth  # noqa: E402
 from elipsis_api.routers import operations_ui as _operations  # noqa: E402
+from elipsis_api.routers import service as _service  # noqa: E402
 from elipsis_api.routers import value as _value  # noqa: E402
 from elipsis_api.routers import workspace as _workspace  # noqa: E402
 
 app.include_router(_value.router)
 app.include_router(_workspace.router)
 app.include_router(_company_room.router)
+app.include_router(_service.router)
 app.include_router(_growth.router)
 app.include_router(_operations.router)
 app.include_router(_operations.api_router)

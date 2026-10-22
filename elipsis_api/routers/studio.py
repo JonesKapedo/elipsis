@@ -17,6 +17,7 @@ from elipsis_api import (
     premium,
     security,
     services,
+    services_success,
     services_webhooks,
 )
 from elipsis_api.database import get_db
@@ -506,6 +507,8 @@ def settings(request: Request, user=Depends(get_current_user), db: Session = Dep
         "password_message": request.query_params.get("password"),
         "company_saved": request.query_params.get("company") == "saved",
         "company_error": request.query_params.get("company_error"),
+        "timezone_choices": services_success.TIMEZONE_CHOICES,
+        "legal": services_success.legal_state(db, user),
     })
 
 
@@ -514,6 +517,7 @@ def settings_save(symbol: str = Form("E"), motion: str = Form("on"), density: st
                   name: str = Form(""), job_title: str = Form(""), phone: str = Form(""),
                   bio: str = Form(""), landing_page: str = Form("/dashboard"),
                   digest_day: str = Form("monday"), quiet_hours: str = Form(""),
+                  timezone: str = Form("UTC"),
                   notify_email: str = Form(""), notify_team: str = Form(""),
                   notify_reports: str = Form(""), notify_actions: str = Form(""),
                   default_organization_id: str = Form(""),
@@ -535,6 +539,8 @@ def settings_save(symbol: str = Form("E"), motion: str = Form("on"), density: st
     prefs.digest_day = digest_day if digest_day in {
         "monday", "tuesday", "wednesday", "thursday", "friday"} else "monday"
     prefs.quiet_hours = (quiet_hours or "").strip()[:40] or None
+    allowed_zones = {key for key, _ in services_success.TIMEZONE_CHOICES}
+    prefs.timezone = timezone if timezone in allowed_zones else "UTC"
     prefs.notify_email = 1 if notify_email else 0
     prefs.notify_team = 1 if notify_team else 0
     prefs.notify_reports = 1 if notify_reports else 0

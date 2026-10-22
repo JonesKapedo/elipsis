@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}{{ ticket.reference }} — support{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Ticket {{ ticket.reference }}</p>
+  <h1>{{ ticket.subject }}</h1>
+  <p class="lede">{{ ticket.body }}</p>
+  <div class="ticket-meta">
+    <span class="pill {{ state.state }}">{{ state.status_label }}</span>
+    <span class="pill">{{ state.priority_label }}</span>
+    <span class="muted small">Opened {{ format_dt(ticket.created_at, timezone) }}</span>
+  </div>
+</section>
+
+{% if created %}<div class="flash ok" role="status">Received. Your reference is {{ ticket.reference }}. We will reply by the target below.</div>{% endif %}
+{% if replied %}<div class="flash ok" role="status">Reply added.</div>{% endif %}
+{% if csat_saved %}<div class="flash ok" role="status">Thank you. Your rating helps us fix the right things.</div>{% endif %}
+
+<section class="sla-strip {{ state.state }}">
+  <div><span class="muted small">First response target</span><strong>{{ format_dt(ticket.first_response_due, timezone) }}</strong></div>
+  <div><span class="muted small">Resolution target</span><strong>{{ format_dt(ticket.resolution_due, timezone) }}</strong></div>
+  <div><span class="muted small">State</span><strong>{{ state.state|replace('_', ' ')|title }}</strong></div>
+  <div><span class="muted small">Next step</span><strong>{% if ticket.status == 'waiting_customer' %}Your reply{% elif state.resolved %}Rate the resolution{% else %}Elipsis reply{% endif %}</strong></div>
+</section>
+
+<section class="ticket-thread block">
+  <article class="ticket-message customer">
+    <div class="row-between"><strong>You</strong><span class="muted small">{{ format_dt(ticket.created_at, timezone) }}</span></div>
+    <p>{{ ticket.body }}</p>
+  </article>
+  {% for message in messages %}
+  <article class="ticket-message {{ 'staff' if message.author_name and message.author_id != user.id else 'customer' }}">
+    <div class="row-between">
+      <strong>{{ message.author_name or 'Elipsis support' }}</strong>
+      <span class="muted small">{{ format_dt(message.created_at, timezone) }}</span>
+    </div>
+    <p>{{ message.body }}</p>
+  </article>
+  {% endfor %}
+  {% if not messages %}
+  <p class="muted small">No replies yet. The first response target is shown above.</p>
+  {% endif %}
+</section>
+
+{% if state.resolved and not ticket.csat_score %}
+<section class="block">
+  <div class="block-head"><h3>How did we do?</h3><span class="muted small">One rating, one optional comment</span></div>
+  <form method="post" action="/support/{{ ticket.reference }}/csat" class="form-stack compact">
+    <fieldset class="rating-field">
+      <legend>Resolution satisfaction</legend>
+      {% for value, label in [(1, 'Very poor'), (2, 'Poor'), (3, 'Okay'), (4, 'Good'), (5, 'Excellent')] %}
+      <label><input type="radio" name="score" value="{{ value }}" required> {{ label }}</label>
+      {% endfor %}
+    </fieldset>
+    <label for="csat-comment">Comment (optional)</label>
+    <textarea id="csat-comment" name="comment" rows="3" maxlength="2000" placeholder="What should we improve?"></textarea>
+    <button class="btn" type="submit">Send rating</button>
+  </form>
+</section>
+{% elif ticket.csat_score %}
+<section class="block">
+  <div class="block-head"><h3>Your rating</h3><span class="pill">{{ ticket.csat_score }}/5</span></div>
+  {% if ticket.csat_comment %}<p>{{ ticket.csat_comment }}</p>{% endif %}
+</section>
+{% endif %}
+
+<section class="block">
+  <div class="block-head"><h3>Reply</h3><span class="muted small">Replying reopens a resolved ticket</span></div>
+  <form method="post" action="/support/{{ ticket.reference }}/reply" class="form-stack">
+    <label for="reply-body">Message</label>
+    <textarea id="reply-body" name="body" rows="5" required maxlength="8000" placeholder="Add context, a screenshot description or the result of a workaround."></textarea>
+    <button class="btn" type="submit">Send reply</button>
+  </form>
+</section>
+
+<p class="small"><a href="/support">Back to all tickets</a> · Urgent and not moving? Reply with “escalate” and ask for the founder.</p>
+{% endblock %}
