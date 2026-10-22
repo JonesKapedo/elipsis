@@ -42,6 +42,12 @@ class Organization(Base):
     operating_sites: Mapped[str | None] = mapped_column(String)
     primary_services: Mapped[str | None] = mapped_column(Text)
     systems_used: Mapped[str | None] = mapped_column(Text)
+    accent_color: Mapped[str | None] = mapped_column(String, default="#b45309")
+    report_footer: Mapped[str | None] = mapped_column(String)
+    report_cover_note: Mapped[str | None] = mapped_column(Text)
+    week_start: Mapped[str | None] = mapped_column(String, default="monday")
+    huddle_day: Mapped[str | None] = mapped_column(String, default="monday")
+    huddle_time: Mapped[str | None] = mapped_column(String, default="08:30")
 
 
 class Department(Base):
@@ -309,13 +315,20 @@ class RoadmapPhase(Base):
 
 
 class OrgOwner(Base):
-    """Links a user to organisations they created. Assessments stay free."""
+    """Links a user to an organisation with a role and team profile."""
     __tablename__ = "org_owners"
     __table_args__ = (UniqueConstraint("user_id", "organization_id"),)
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
     organization_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("organizations.id"), nullable=False)
+    role: Mapped[str | None] = mapped_column(String, default="owner")
+    title: Mapped[str | None] = mapped_column(String)
+    department: Mapped[str | None] = mapped_column(String)
+    status: Mapped[str | None] = mapped_column(String, default="active")
+    invited_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    joined_at: Mapped[str | None] = mapped_column(String, default=_now)
+    last_seen_at: Mapped[str | None] = mapped_column(String)
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
 
 
@@ -483,6 +496,14 @@ class UserPref(Base):
     default_department: Mapped[str | None] = mapped_column(String)
     notify_email: Mapped[int | None] = mapped_column(Integer, default=1)
     onboarding_complete: Mapped[int | None] = mapped_column(Integer, default=0)
+    phone: Mapped[str | None] = mapped_column(String)
+    bio: Mapped[str | None] = mapped_column(Text)
+    landing_page: Mapped[str | None] = mapped_column(String, default="/dashboard")
+    notify_team: Mapped[int | None] = mapped_column(Integer, default=1)
+    notify_reports: Mapped[int | None] = mapped_column(Integer, default=1)
+    notify_actions: Mapped[int | None] = mapped_column(Integer, default=1)
+    digest_day: Mapped[str | None] = mapped_column(String, default="monday")
+    quiet_hours: Mapped[str | None] = mapped_column(String)
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
 
 
@@ -823,3 +844,88 @@ class ApiToken(Base):
     last_used_at: Mapped[str | None] = mapped_column(String)
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
     revoked_at: Mapped[str | None] = mapped_column(String)
+
+
+class OrgInvite(Base):
+    """Tokenised private link that admits a teammate into a company."""
+    __tablename__ = "org_invites"
+    __table_args__ = (Index("ix_org_invites_org", "organization_id"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    token: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    organization_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("organizations.id"), nullable=False)
+    created_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    email: Mapped[str | None] = mapped_column(String)
+    role: Mapped[str | None] = mapped_column(String, default="manager")
+    title: Mapped[str | None] = mapped_column(String)
+    department: Mapped[str | None] = mapped_column(String)
+    note: Mapped[str | None] = mapped_column(Text)
+    max_uses: Mapped[int | None] = mapped_column(Integer, default=1)
+    uses: Mapped[int | None] = mapped_column(Integer, default=0)
+    status: Mapped[str | None] = mapped_column(String, default="active")
+    expires_at: Mapped[str | None] = mapped_column(String)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class CompanyPost(Base):
+    """A note, question, result, or win shared with the company team."""
+    __tablename__ = "company_posts"
+    __table_args__ = (Index("ix_company_posts_org_created", "organization_id", "created_at"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    organization_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("organizations.id"), nullable=False)
+    author_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    tag: Mapped[str | None] = mapped_column(String, default="update")
+    pinned: Mapped[int | None] = mapped_column(Integer, default=0)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+    updated_at: Mapped[str | None] = mapped_column(String)
+
+
+class CompanyPostReply(Base):
+    __tablename__ = "company_post_replies"
+    __table_args__ = (Index("ix_company_post_replies_post", "post_id"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    post_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("company_posts.id"), nullable=False)
+    author_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class CompanyDecision(Base):
+    """A management decision with an owner, due date, and outcome."""
+    __tablename__ = "company_decisions"
+    __table_args__ = (Index("ix_company_decisions_org_status", "organization_id", "status"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    organization_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("organizations.id"), nullable=False)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    detail: Mapped[str | None] = mapped_column(Text)
+    owner_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    owner_name: Mapped[str | None] = mapped_column(String)
+    due_date: Mapped[str | None] = mapped_column(String)
+    status: Mapped[str | None] = mapped_column(String, default="open")
+    assessment_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("assessments.id"))
+    roadmap_item_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("roadmap_items.id"))
+    created_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+    updated_at: Mapped[str | None] = mapped_column(String)
+    completed_at: Mapped[str | None] = mapped_column(String)
+
+
+class AssessmentNote(Base):
+    """A teammate's annotation against a report section."""
+    __tablename__ = "assessment_notes"
+    __table_args__ = (Index("ix_assessment_notes_assessment", "assessment_id"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    assessment_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("assessments.id"), nullable=False)
+    organization_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("organizations.id"), nullable=False)
+    user_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    section: Mapped[str | None] = mapped_column(String, default="Overall")
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)

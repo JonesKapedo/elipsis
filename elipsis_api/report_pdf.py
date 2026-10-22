@@ -26,13 +26,14 @@ LINE = colors.HexColor("#e5e7eb")
 SOFT = colors.HexColor("#fff7ed")
 
 
-def _styles():
+def _styles(accent=None):
+    accent = accent or ACCENT
     base = getSampleStyleSheet()
     return {
         "brand": ParagraphStyle("brand", parent=base["Normal"], fontName="Helvetica-Bold",
                                 fontSize=11, textColor=INK, spaceAfter=2),
         "doc": ParagraphStyle("doc", parent=base["Normal"], fontName="Helvetica-Bold",
-                             fontSize=8, textColor=ACCENT, spaceBefore=6, spaceAfter=4),
+                             fontSize=8, textColor=accent, spaceBefore=6, spaceAfter=4),
         "h1": ParagraphStyle("h1", parent=base["Heading1"], fontName="Helvetica-Bold",
                              fontSize=18, textColor=INK, spaceAfter=6, leading=22),
         "h2": ParagraphStyle("h2", parent=base["Heading2"], fontName="Helvetica-Bold",
@@ -100,9 +101,16 @@ def build_pdf(
     comparison_rows: list[dict] | None = None,
     insight: Any = None,
     footer_note: str | None = None,
+    accent_color: str | None = None,
 ) -> bytes:
     """Return a complete board-pack PDF as bytes."""
-    styles = _styles()
+    accent = ACCENT
+    if accent_color and len(accent_color) == 7 and accent_color.startswith("#"):
+        try:
+            accent = colors.HexColor(accent_color)
+        except Exception:  # noqa: BLE001
+            pass
+    styles = _styles(accent)
     pillar_labels = pillar_labels or {}
     org_name = getattr(organization, "name", None) or "Organisation"
     dept_name = getattr(department, "name", None) or "Organisation-wide"
@@ -130,7 +138,7 @@ def build_pdf(
         ("ALIGN", (1, 0), (1, 0), "RIGHT"),
     ]))
     story.append(cover_top)
-    story.append(HRFlowable(width="100%", thickness=2, color=ACCENT, spaceAfter=8))
+    story.append(HRFlowable(width="100%", thickness=2, color=accent, spaceAfter=8))
     story.append(Paragraph("EXECUTIVE BOARD PACK", styles["doc"]))
     story.append(Paragraph(index_name, styles["h1"]))
     story.append(Paragraph(f"<b>{org_name}</b> · {dept_name}", styles["body"]))

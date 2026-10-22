@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}{{ org.name }} operating desk{% endblock %}
+{% block body_class %}page-company-desk{% endblock %}
+{% block content %}
+<section class="head reveal">
+  <p class="eyebrow">OPERATING DESK · {{ org.name|upper }}</p>
+  <h1>What needs attention next.</h1>
+  <p class="lede">Actions, questionnaire deadlines, review dates, compliance expiries, and decisions in one schedule. Export it to the team calendar.</p>
+  <div class="hero-actions">
+    <a class="btn" href="/company/{{ org.id }}/schedule.ics">Export calendar</a>
+    <a class="btn ghost" href="/company/{{ org.id }}/decisions">Decision log</a>
+    <a class="btn ghost" href="/actions?org={{ org.id }}">Action plan</a>
+  </div>
+  {% if request.query_params.get('message') %}<div class="flash ok">{{ request.query_params.get('message') }}</div>{% endif %}
+</section>
+{% include "partials/company_tabs.html" %}
+
+<section class="desk-grid">
+  <article class="block reveal">
+    <div class="row-between"><h2>Next 21 days</h2><span class="tag watch">{{ schedule.huddle.day }} huddle {{ schedule.huddle.time }}</span></div>
+    {% if schedule["items"] %}
+    <div class="desk-timeline">
+      {% for item in schedule["items"] %}
+      <a class="desk-item {{ item.tone }}" href="{{ item.href }}">
+        <span class="desk-date"><strong>{{ item.date[8:10] }}</strong><small>{{ item.date[5:7] }}/{{ item.date[0:4] }}</small></span>
+        <span class="desk-kind">{{ item.kind }}</span>
+        <span class="desk-title"><strong>{{ item.title }}</strong><small>{{ item.owner }}</small></span>
+        <span class="desk-arrow">→</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}<p class="muted">No scheduled commitments. Set due dates on actions or create a team questionnaire to start the desk.</p>{% endif %}
+  </article>
+
+  <aside class="room-side-stack">
+    <article class="block reveal">
+      <h2>Owner workload</h2>
+      {% if schedule.workload %}
+      <div class="workload-list">
+        {% for row in schedule.workload[:10] %}
+        <div class="workload-row">
+          <div class="row-between"><strong>{{ row.owner }}</strong><span class="muted">{{ row.open }} open{% if row.overdue %} · {{ row.overdue }} overdue{% endif %}</span></div>
+          <div class="meter"><span style="width:{{ [100, (row.done * 100 / row.total if row.total else 0)]|min }}%;background:{{ branding.accent }}"></span></div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}<p class="muted small">Assign owners to actions to see load.</p>{% endif %}
+    </article>
+    <article class="block reveal">
+      <h2>Huddle agenda</h2>
+      <ol class="agenda-list">
+        <li><strong>Score</strong><span>Company pulse {{ pulse.score }}/100 · {{ pulse.band }}</span></li>
+        <li><strong>Overdue</strong><span>{{ pulse.actions.overdue }} action{% if pulse.actions.overdue != 1 %}s{% endif %} need a decision</span></li>
+        <li><strong>Exceptions</strong><span>Open incidents and expiring compliance</span></li>
+        <li><strong>Next bet</strong><span>One decision to unblock this week</span></li>
+      </ol>
+    </article>
+  </aside>
+</section>
+{% endblock %}

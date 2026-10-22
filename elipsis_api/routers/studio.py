@@ -196,6 +196,7 @@ def my_company(request: Request, user=Depends(get_current_user), db: Session = D
                 })
         except Exception:
             camps = []
+        from elipsis_api import services_room
         rows.append({
             "org": org, "context": services.company_context(org),
             "overview": overview, "portrait": portrait, "insight": insight,
@@ -203,6 +204,9 @@ def my_company(request: Request, user=Depends(get_current_user), db: Session = D
             "spark": analytics.sparkline([t["value"] for t in overview["trend"]]),
             "editing": request.query_params.get("edit") == str(org.id),
             "campaigns": camps,
+            "pulse": services_room.pulse(db, org.id),
+            "members": len(services_room.member_rows(db, org.id)),
+            "company_pro": services.company_is_pro(db, org.id, user),
         })
     return templates.TemplateResponse(request, "company.html", {
         "user": user, "rows": rows, "prefs": _prefs(db, user),
@@ -488,23 +492,32 @@ def settings(request: Request, user=Depends(get_current_user), db: Session = Dep
     deliveries = list(db.scalars(select(models.WebhookDelivery).where(
         models.WebhookDelivery.endpoint_id.in_([h.id for h in hooks] or [0])
     ).order_by(models.WebhookDelivery.id.desc()).limit(20))) if hooks else []
+    organizations = services.list_organizations(db, org_ids)
+    managed = [org for org in organizations if services.can_manage_org(db, user, org.id)]
+    from elipsis_api import services_room
     return templates.TemplateResponse(request, "settings.html", {
         "user": user, "prefs": _prefs(db, user), "webhooks": hooks,
         "deliveries": deliveries, "events": sorted(services_webhooks.ALLOWED_EVENTS),
-        "organizations": services.list_organizations(db, org_ids),
+        "organizations": organizations, "managed_orgs": managed,
+        "branding": {org.id: services_room.branding(org) for org in managed},
         "departments": departments.DEPARTMENTS,
         "webhook_message": request.query_params.get("webhook"),
         "saved": request.query_params.get("saved") == "1",
         "password_message": request.query_params.get("password"),
+        "company_saved": request.query_params.get("company") == "saved",
+        "company_error": request.query_params.get("company_error"),
     })
 
 
 @router.post("/settings")
 def settings_save(symbol: str = Form("E"), motion: str = Form("on"), density: str = Form("comfortable"),
-                  name: str = Form(""), job_title: str = Form(""),
+                  name: str = Form(""), job_title: str = Form(""), phone: str = Form(""),
+                  bio: str = Form(""), landing_page: str = Form("/dashboard"),
+                  digest_day: str = Form("monday"), quiet_hours: str = Form(""),
+                  notify_email: str = Form(""), notify_team: str = Form(""),
+                  notify_reports: str = Form(""), notify_actions: str = Form(""),
                   default_organization_id: str = Form(""),
                   default_department: str = Form(""),
-                  notify_email: str = Form(""),
                   user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
@@ -515,7 +528,17 @@ def settings_save(symbol: str = Form("E"), motion: str = Form("on"), density: st
     prefs.motion = "off" if motion == "off" else "on"
     prefs.density = density if density in {"comfortable", "compact"} else "comfortable"
     prefs.job_title = (job_title or "").strip()[:120] or None
+    prefs.phone = (phone or "").strip()[:40] or None
+    prefs.bio = (bio or "").strip()[:500] or None
+    prefs.landing_page = landing_page if landing_page in {
+        "/dashboard", "/assessments", "/actions", "/company", "/operations"} else "/dashboard"
+    prefs.digest_day = digest_day if digest_day in {
+        "monday", "tuesday", "wednesday", "thursday", "friday"} else "monday"
+    prefs.quiet_hours = (quiet_hours or "").strip()[:40] or None
     prefs.notify_email = 1 if notify_email else 0
+    prefs.notify_team = 1 if notify_team else 0
+    prefs.notify_reports = 1 if notify_reports else 0
+    prefs.notify_actions = 1 if notify_actions else 0
     prefs.default_department = (
         default_department if default_department in departments.DEPARTMENT_LABELS else None)
     org_id = int(default_organization_id) if default_organization_id.strip().isdigit() else None

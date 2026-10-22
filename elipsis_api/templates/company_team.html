@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}{{ org.name }} team{% endblock %}
+{% block body_class %}page-company-team{% endblock %}
+{% block content %}
+<section class="head reveal">
+  <p class="eyebrow">TEAM · {{ org.name|upper }}</p>
+  <h1>The people who run the work.</h1>
+  <p class="lede">Roles decide who can contribute, manage people, and change company settings. Invited managers join straight into this company.</p>
+  <div class="hero-actions">
+    {% if can_manage and is_pro %}<a class="btn" href="/company/{{ org.id }}/invite">Private invite link</a>{% endif %}
+    <a class="btn ghost" href="/company/{{ org.id }}">Company workspace</a>
+  </div>
+</section>
+{% include "partials/company_tabs.html" %}
+{% if message %}<div class="flash ok">{{ message }}</div>{% endif %}
+{% if error %}<div class="flash err">{{ error }}</div>{% endif %}
+{% if not is_pro %}<div class="flash err">Team invites and the company room are Premium. You can still review existing members.</div>{% endif %}
+
+<section class="team-layout">
+  <article class="block reveal">
+    <div class="row-between"><h2>{{ members|length }} member{% if members|length != 1 %}s{% endif %}</h2><span class="tag watch">{{ pulse.score }}/100 pulse</span></div>
+    <div class="team-grid">
+      {% for m in members %}
+      <div class="team-card{% if m.status == 'suspended' %} suspended{% endif %}">
+        <span class="member-avatar">{{ m.initials }}</span>
+        <div class="team-card-body">
+          <strong>{{ m.user.name or m.user.email }}</strong>
+          <span class="muted">{{ m.user.email }}</span>
+          <div class="team-meta">
+            <span class="tag {{ 'ok' if m.role in ['owner','manager'] else 'watch' }}">{{ m.role_label }}</span>
+            {% if m.title %}<span class="muted small">{{ m.title }}</span>{% endif %}
+            {% if m.department %}<span class="muted small">{{ m.department }}</span>{% endif %}
+            {% if m.status == 'suspended' %}<span class="tag risk">suspended</span>{% endif %}
+          </div>
+        </div>
+        {% if can_manage %}
+        <details class="member-manage">
+          <summary>Manage</summary>
+          <form method="post" action="/company/{{ org.id }}/team/{{ m.link.id }}/update" class="stack">
+            <label class="field">Role
+              <select name="role">
+                {% for key, label in roles.items() %}<option value="{{ key }}" {% if m.role == key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                {% if m.role == 'owner' %}<option value="owner" selected>Owner</option>{% endif %}
+              </select>
+            </label>
+            <label class="field">Title <input name="title" maxlength="120" value="{{ m.title or '' }}"></label>
+            <label class="field">Department
+              <select name="department"><option value="">None</option>{% for d in departments %}<option value="{{ d.label }}" {% if m.department == d.label %}selected{% endif %}>{{ d.label }}</option>{% endfor %}</select>
+            </label>
+            <label class="field">Status
+              <select name="status"><option value="active" {% if m.status != 'suspended' %}selected{% endif %}>Active</option><option value="suspended" {% if m.status == 'suspended' %}selected{% endif %}>Suspended</option></select>
+            </label>
+            <button class="btn ghost sm" type="submit">Save member</button>
+          </form>
+          <form method="post" action="/company/{{ org.id }}/team/{{ m.link.id }}/remove" data-confirm="Remove this person from the company?">
+            <button class="text-link danger" type="submit">Remove from company</button>
+          </form>
+        </details>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </article>
+
+  <aside class="room-side-stack">
+    <article class="block reveal">
+      <h2>Open invites</h2>
+      {% if invites %}
+      <ul class="invite-mini">
+        {% for i in invites[:6] %}
+        <li><div><strong>{{ i.email or 'Anyone with the link' }}</strong><span class="muted">{{ i.role|capitalize if i.role else 'Manager' }} · {{ i.uses or 0 }}/{{ i.max_uses or 1 }} used · {{ i.status }}</span></div><span class="tag {{ 'risk' if i.status != 'active' else 'watch' }}">{{ i.status }}</span></li>
+        {% endfor %}
+      </ul>
+      {% if can_manage and is_pro %}<a class="btn ghost sm full" href="/company/{{ org.id }}/invite">Manage invites</a>{% endif %}
+      {% else %}<p class="muted small">No open links.</p>{% endif %}
+    </article>
+
+    {% if can_manage %}
+    <details class="block add-existing reveal">
+      <summary><strong>Add an existing account</strong></summary>
+      <p class="muted small">Use this only when the person already has an Elipsis account. Otherwise send a private invite.</p>
+      <form method="post" action="/company/{{ org.id }}/team" class="stack">
+        <label class="field">Work email <input type="email" name="email" required placeholder="name@company.com"></label>
+        <label class="field">Role
+          <select name="role">{% for key, label in roles.items() %}<option value="{{ key }}" {% if key == 'manager' %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+        </label>
+        <label class="field">Title <input name="title" maxlength="120"></label>
+        <label class="field">Department
+          <select name="department"><option value="">None</option>{% for d in departments %}<option value="{{ d.label }}">{{ d.label }}</option>{% endfor %}</select>
+        </label>
+        <button class="btn sm" type="submit">Add member</button>
+      </form>
+    </details>
+    {% endif %}
+  </aside>
+</section>
+{% endblock %}

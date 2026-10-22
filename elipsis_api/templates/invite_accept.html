@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Join {{ org.name if org else 'company' }}{% endblock %}
+{% block body_class %}page-invite-accept{% endblock %}
+{% block content %}
+<section class="invite-accept-wrap">
+  <div class="invite-accept-card block reveal">
+    {% if org %}<span class="room-monogram" style="--room-accent:{{ org.accent_color or '#b45309' }}">{{ org.name[:2]|upper }}</span>{% endif %}
+    <p class="eyebrow">PRIVATE COMPANY INVITE</p>
+    <h1>{% if org %}Join {{ org.name }}{% else %}Invite unavailable{% endif %}</h1>
+    {% if invite and org %}
+    <p class="lede">{{ invite.note or 'You have been invited to the company operating workspace: diagnostics, reports, team room, desk, and decisions.' }}</p>
+    <div class="invite-facts">
+      <div><span>Role</span><strong>{{ invite.role|capitalize if invite.role else 'Manager' }}</strong></div>
+      {% if invite.title %}<div><span>Title</span><strong>{{ invite.title }}</strong></div>{% endif %}
+      {% if invite.department %}<div><span>Department</span><strong>{{ invite.department }}</strong></div>{% endif %}
+      <div><span>Expires</span><strong>{{ invite.expires_at[:10] if invite.expires_at else '—' }}</strong></div>
+    </div>
+    {% endif %}
+    {% if message %}<div class="flash ok">{{ message }}</div>{% endif %}
+    {% if error %}<div class="flash err">{{ error }}</div>{% endif %}
+
+    {% if invite and org and not error %}
+      {% if user %}
+      <form method="post" action="/invite/{{ invite.token }}">
+        <p class="muted">Signed in as <strong>{{ user.email }}</strong>. Accepting adds this company to your workspace.</p>
+        <button class="btn big full" type="submit">Join {{ org.name }} →</button>
+      </form>
+      <p class="muted small">Not you? <a href="/login?next=/invite/{{ invite.token }}">Switch account</a></p>
+      {% else %}
+      <form method="post" action="/invite/{{ invite.token }}" class="stack">
+        <label class="field">Full name
+          <input name="name" maxlength="120" value="{{ form.name }}" autocomplete="name" required>
+        </label>
+        <label class="field">Work email
+          <input type="email" name="email" value="{{ form.email }}" autocomplete="email" required {% if invite.email %}readonly{% endif %}>
+        </label>
+        {% if invite.email %}<p class="muted small">This invite is locked to {{ invite.email }}.</p>{% endif %}
+        <div class="form-grid">
+          <label class="field">Password
+            <input type="password" name="password" minlength="8" autocomplete="new-password" required>
+          </label>
+          <label class="field">Confirm password
+            <input type="password" name="password2" minlength="8" autocomplete="new-password" required>
+          </label>
+        </div>
+        <button class="btn big full" type="submit">Create account and join →</button>
+      </form>
+      <p class="muted small">Already have an account? <a href="/login?next=/invite/{{ invite.token }}">Sign in to accept</a></p>
+      {% endif %}
+    {% else %}
+    <p class="muted">Ask the person who invited you for a fresh link, or ask them to check the expiry and use limit.</p>
+    <a class="btn ghost" href="/">Back to Elipsis</a>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

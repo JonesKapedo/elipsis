@@ -198,3 +198,11 @@ body.report-body main{
   .report-kpis,.report-kpis-row{grid-template-columns:1fr}
   .report-score-right{text-align:left}
 }
+
+/* Company report identity */
+.report-cover{border-bottom-color:var(--report-accent,#b45309);border-top:5px solid var(--report-accent,#b45309)}
+.report-brand .mark{background:linear-gradient(135deg,var(--report-accent,#b45309),color-mix(in srgb,var(--report-accent,#b45309) 70%,#f5c56b))}
+.report-doc-type{color:var(--report-accent,#b45309)}
+.report-cover-note{margin-top:.9rem;padding:.65rem .8rem;border-left:3px solid var(--report-accent,#b45309);background:#fffaf0;color:#4b4237;font-size:.9rem;line-height:1.55}
+.report-section h2::after{content:"";display:block;width:34px;height:2px;margin-top:.5rem;background:var(--report-accent,#b45309);opacity:.7}
+.report-footer-note strong{color:var(--report-accent,#b45309)}

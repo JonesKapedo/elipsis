@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}{{ org.name }} workspace{% endblock %}
+{% block body_class %}page-company-room{% endblock %}
+{% block content %}
+<section class="head company-room-head reveal">
+  <div class="room-id">
+    <span class="room-monogram" style="--room-accent:{{ branding.accent }}">{{ org.name[:2]|upper }}</span>
+    <div>
+      <p class="eyebrow">COMPANY WORKSPACE · {{ role_label|upper }}</p>
+      <h1>{{ org.name }}</h1>
+      <p class="lede">{{ company_context.sector }}{% if company_context.location != 'Footprint not set' %} · {{ company_context.location }}{% endif %} · {{ members|length }} teammate{% if members|length != 1 %}s{% endif %}</p>
+    </div>
+  </div>
+  <div class="hero-actions">
+    {% if can_manage and is_pro %}<a class="btn" href="/company/{{ org.id }}/invite">Invite a manager</a>{% endif %}
+    {% if is_pro %}<a class="btn ghost" href="/company/{{ org.id }}/brief">Brief</a>{% endif %}
+    <a class="btn ghost" href="/setup?org={{ org.id }}">Edit profile</a>
+  </div>
+  {% if joined %}<div class="flash ok">You joined {{ org.name }}. Your workspace now includes the company team, desk, and reports.</div>{% endif %}
+  {% if request.query_params.get('message') %}<div class="flash ok">{{ request.query_params.get('message') }}</div>{% endif %}
+  {% if request.query_params.get('error') %}<div class="flash err">{{ request.query_params.get('error') }}</div>{% endif %}
+</section>
+
+{% include "partials/company_tabs.html" %}
+
+<section class="company-pulse-grid">
+  <article class="block pulse-card reveal" style="--room-accent:{{ branding.accent }}">
+    <div class="section-label"><span>01</span><div><h2>Company pulse</h2><p>One score across readiness, action control, team, incidents, and compliance.</p></div></div>
+    <div class="pulse-main">
+      <div class="pulse-ring {{ pulse.band }}" style="--pulse:{{ pulse.score }}%">
+        <span><strong>{{ pulse.score }}</strong><small>/100</small></span>
+      </div>
+      <div class="pulse-copy">
+        <span class="tag {{ 'ok' if pulse.band == 'strong' else 'warn' if pulse.band == 'watch' else 'risk' }}">{{ pulse.band|capitalize }}</span>
+        <h3>{% if pulse.band == 'strong' %}The operating system is holding.{% elif pulse.band == 'watch' %}A few controls need attention.{% else %}Leadership attention is overdue.{% endif %}</h3>
+        <p class="muted">Latest diagnostic <strong>{{ '%.1f'|format(pulse.latest_score) if pulse.latest_score else '—' }}</strong> · {{ pulse.actions.overdue }} overdue action{% if pulse.actions.overdue != 1 %}s{% endif %} · {{ members|length }} member{% if members|length != 1 %}s{% endif %}</p>
+        <div class="hero-actions">
+          <a class="btn ghost sm" href="/company/{{ org.id }}/desk">Open desk</a>
+          {% if is_pro %}<a class="btn ghost sm" href="/company/{{ org.id }}/brief">Board brief</a>{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="pulse-bars">
+      {% for c in pulse.components %}
+      <div class="pulse-row">
+        <span>{{ c.label }}</span>
+        <div class="meter"><span style="width:{{ c.value }}%;background:{{ branding.accent }}"></span></div>
+        <strong>{{ c.value }}</strong>
+      </div>
+      {% endfor %}
+    </div>
+  </article>
+
+  <aside class="room-side-stack">
+    <article class="block room-card reveal">
+      <div class="row-between"><h2>Next 14 days</h2><a class="text-link" href="/company/{{ org.id }}/desk">All →</a></div>
+      {% if schedule["items"] %}
+      <ul class="room-list">
+        {% for item in schedule["items"][:6] %}
+        <li>
+          <span class="date-chip">{{ item.date[8:10] }}<small>{{ item.date[5:7] }}/{{ item.date[0:4] }}</small></span>
+          <div><strong>{{ item.title }}</strong><span class="muted">{{ item.kind }} · {{ item.owner }}</span></div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="muted small">Nothing scheduled in the next two weeks. Add action due dates or a team questionnaire deadline to populate the desk.</p>
+      {% endif %}
+    </article>
+
+    <article class="block room-card reveal">
+      <div class="row-between"><h2>Weekly huddle</h2><span class="tag watch">{{ schedule.huddle.day }} {{ schedule.huddle.time }}</span></div>
+      <p class="muted small">{{ schedule.huddle.date }} · Owners: {% for row in schedule.workload[:4] %}{{ row.owner }}{% if not loop.last %}, {% endif %}{% endfor %}{% if not schedule.workload %}no workload assigned{% endif %}.</p>
+      <div class="hero-actions">
+        <a class="btn ghost sm" href="/company/{{ org.id }}/schedule.ics">Add to calendar</a>
+        <a class="btn ghost sm" href="/company/{{ org.id }}/decisions">Decisions</a>
+      </div>
+    </article>
+  </aside>
+</section>
+
+<section class="room-columns">
+  <article class="block room-card reveal">
+    <div class="row-between"><h2>Team room</h2>{% if is_pro %}<a class="text-link" href="/company/{{ org.id }}/discussion">Open →</a>{% endif %}</div>
+    {% if is_pro %}
+      <p class="muted small">Share a result, ask a question, leave context for the next manager, or record a win.</p>
+      <div class="member-strip">
+        {% for m in members[:7] %}
+        <span class="member-chip" title="{{ m.user.name or m.user.email }} · {{ m.role_label }}"><i>{{ m.initials }}</i><span>{{ (m.user.name or m.user.email).split(' ')[0] }}</span></span>
+        {% endfor %}
+        {% if can_manage %}<a class="member-chip add" href="/company/{{ org.id }}/invite">+ Invite</a>{% endif %}
+      </div>
+      <div class="room-callout">
+        <strong>Private links, not shared passwords.</strong>
+        <p>Invite a supervisor with their name, role, department, and an expiry. They create their own account and land directly in this company.</p>
+      </div>
+    {% else %}
+      <div class="room-lock"><span class="crown">{% include "partials/crown.svg" %}</span><div><strong>Premium company room</strong><p>Invite managers, discuss results, record decisions, and give the team a shared operating desk.</p></div><a class="btn sm" href="/pro?locked=team&amp;org={{ org.id }}">Unlock</a></div>
+    {% endif %}
+  </article>
+
+  <article class="block room-card reveal">
+    <div class="row-between"><h2>Decision log</h2><a class="text-link" href="/company/{{ org.id }}/decisions">All →</a></div>
+    {% if decisions %}
+    <ul class="decision-list">
+      {% for d in decisions %}
+      <li>
+        <span class="status-dot {{ d.row.status }}"></span>
+        <div><strong>{{ d.row.title }}</strong><span class="muted">{{ d.row.owner_name or 'Leadership' }}{% if d.row.due_date %} · due {{ d.row.due_date }}{% endif %}</span></div>
+        <span class="tag {{ 'ok' if d.row.status == 'done' else 'risk' if d.overdue else 'watch' }}">{{ d.row.status|replace('_',' ') }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="muted small">No decisions recorded. Capture the next call so the team can execute without re-litigating it.</p>{% endif %}
+  </article>
+</section>
+
+<section class="block room-card reveal">
+  <div class="row-between"><h2>Recent company activity</h2><a class="text-link" href="/audit">Audit trail →</a></div>
+  {% if activity %}
+  <ol class="activity-feed">
+    {% for a in activity %}
+    <li><span class="activity-dot"></span><div><strong>{{ a.action|replace('.',' · ') }}</strong><span class="muted">{{ a.detail }}</span></div><small>{{ a.at }}</small></li>
+    {% endfor %}
+  </ol>
+  {% else %}<p class="muted small">Activity appears here as the team invites people, records decisions, and shares notes.</p>{% endif %}
+</section>
+{% endblock %}

@@ -122,7 +122,7 @@ def invite_create(assessment_id: int, request: Request,
     assessment = _owned(db, user, assessment_id)
     if assessment is None:
         return _not_found(request, user)
-    if not services.is_pro_user(db, user):
+    if not services.company_is_pro(db, assessment.organization_id, user):
         return RedirectResponse("/pro?locked=team", status_code=303)
     camp = _campaign_for_assessment(
         db, assessment, user, days=days, min_respondents=min_respondents,

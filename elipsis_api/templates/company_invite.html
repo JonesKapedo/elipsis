@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Invite to {{ org.name }}{% endblock %}
+{% block body_class %}page-company-invite{% endblock %}
+{% block content %}
+<section class="head reveal">
+  <p class="eyebrow">PRIVATE INVITE · {{ org.name|upper }}</p>
+  <h1>Give a manager their own door in.</h1>
+  <p class="lede">They create an account with the invited email and land directly in this company. No shared passwords. No manual setup.</p>
+  <div class="hero-actions"><a class="btn ghost" href="/company/{{ org.id }}/team">Back to team</a></div>
+</section>
+{% include "partials/company_tabs.html" %}
+{% if message %}<div class="flash ok">{{ message }}</div>{% endif %}
+{% if error %}<div class="flash err">{{ error }}</div>{% endif %}
+
+{% if created %}
+<section class="block invite-created reveal">
+  <span class="crown large">{% include "partials/crown.svg" %}</span>
+  <div>
+    <h2>Invite ready</h2>
+    <p class="muted">Send this link privately to {{ created.email or 'the person you are inviting' }}. It expires {{ created.expires_at[:10] }} and allows {{ created.max_uses or 1 }} use{% if (created.max_uses or 1) != 1 %}s{% endif %}.</p>
+    <div class="copy-line"><input id="invite-url" readonly value="{{ base_url }}/invite/{{ created.token }}"><button class="btn sm" type="button" data-copy="#invite-url">Copy link</button></div>
+  </div>
+</section>
+{% endif %}
+
+<section class="invite-layout">
+  <form method="post" action="/company/{{ org.id }}/invite" class="block reveal">
+    <div class="section-label"><span>01</span><div><h2>Create a private link</h2><p>Role and department are applied when they accept.</p></div></div>
+    <div class="form-grid">
+      <label class="field">Email lock
+        <input type="email" name="email" placeholder="Optional — restrict to one email">
+      </label>
+      <label class="field">Role
+        <select name="role">{% for key, label in roles.items() %}<option value="{{ key }}" {% if key == 'manager' %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+      </label>
+      <label class="field">Job title
+        <input name="title" maxlength="120" placeholder="e.g. Fleet Supervisor">
+      </label>
+      <label class="field">Department
+        <select name="department"><option value="">None</option>{% for d in departments %}<option value="{{ d.label }}">{{ d.label }}</option>{% endfor %}</select>
+      </label>
+      <label class="field">Expires
+        <select name="days">{% for d in invite_days %}<option value="{{ d }}" {% if d == 7 %}selected{% endif %}>{{ d }} days</option>{% endfor %}</select>
+      </label>
+      <label class="field">Uses
+        <select name="max_uses"><option value="1">One person</option><option value="3">Up to 3 people</option><option value="10">Up to 10 people</option></select>
+      </label>
+    </div>
+    <label class="field">Private note
+      <textarea name="note" rows="3" maxlength="1000" placeholder="Context for the invitee — visible after they join? Keep it short."></textarea>
+    </label>
+    <button class="btn" type="submit">Generate link</button>
+  </form>
+
+  <aside class="block reveal">
+    <h2>Invite history</h2>
+    {% if invites %}
+    <ul class="invite-history">
+      {% for i in invites %}
+      <li>
+        <div><strong>{{ i.email or 'Any invited email' }}</strong><span class="muted">{{ i.role|capitalize if i.role else 'Manager' }} · {{ i.uses or 0 }}/{{ i.max_uses or 1 }} used · expires {{ i.expires_at[:10] if i.expires_at else '—' }}</span></div>
+        <div class="invite-history-actions">
+          <span class="tag {{ 'ok' if i.status == 'active' else 'risk' }}">{{ i.status }}</span>
+          <form method="post" action="/company/{{ org.id }}/invite/{{ i.id }}/revoke" data-confirm="Revoke this invite link?">
+            <button class="text-link danger" type="submit">Revoke</button>
+          </form>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="muted small">No links issued yet.</p>{% endif %}
+    <div class="room-callout">
+      <strong>How access works</strong>
+      <p>A company Premium owner covers the workspace. Invited members inherit access to the company room, desk, reports, and diagnostics without buying a separate plan.</p>
+    </div>
+  </aside>
+</section>
+{% endblock %}
