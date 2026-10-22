@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Trust centre — {{ BRAND_NAME }}{% endblock %}
+{% block description %}Security, privacy, service delivery, accessibility and data processing information for {{ BRAND_NAME }}.{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Trust centre</p>
+  <h1>Proof before promises</h1>
+  <p class="lede">The controls, contracts, service targets and limitations that govern your account. If a claim is not evidenced here, ask us for the evidence.</p>
+</section>
+
+{% include "partials/trust_nav.html" %}
+
+<section class="kpis">
+  <div class="kpi accent"><span class="kpi-lb">30-day availability</span><b>{{ availability.percent }}%</b><span class="muted small">Target {{ availability.target }}%</span></div>
+  <div class="kpi"><span class="kpi-lb">Support first response</span><b>30 min</b><span class="muted small">Urgent issues, 24/7</span></div>
+  <div class="kpi"><span class="kpi-lb">Data requests</span><b>30 days</b><span class="muted small">Completion target</span></div>
+  <div class="kpi"><span class="kpi-lb">Accessibility</span><b>WCAG 2.2 AA</b><span class="muted small">Target, not a certification</span></div>
+</section>
+
+<section class="block trust-grid">
+  <article class="trust-card">
+    <h3>Security</h3>
+    <p>Tenant-scoped access, signed sessions, hashed passwords, rate limits, same-origin request checks and conservative security headers.</p>
+    <a href="/security">Security controls</a>
+  </article>
+  <article class="trust-card">
+    <h3>Privacy</h3>
+    <p>Plain-language notice, named subprocessors, retention schedule, self-service export and a tracked erasure workflow.</p>
+    <a href="/privacy">Privacy notice</a>
+  </article>
+  <article class="trust-card">
+    <h3>Data processing</h3>
+    <p>Customer responsibilities, processor obligations, subprocessors, international transfers and deletion terms.</p>
+    <a href="/dpa">Read the DPA</a>
+  </article>
+  <article class="trust-card">
+    <h3>Service delivery</h3>
+    <p>Published severity model, response and resolution targets, incident communication, credits and escalation.</p>
+    <a href="/service-standards">Service standard</a>
+  </article>
+  <article class="trust-card">
+    <h3>Live status</h3>
+    <p>Component health, active incidents, resolution notes and 30-day availability computed from incident records.</p>
+    <a href="/status">Open status</a>
+  </article>
+  <article class="trust-card">
+    <h3>Accessibility</h3>
+    <p>WCAG 2.2 AA target, keyboard and screen-reader checks, known limitations and a route to report blockers.</p>
+    <a href="/accessibility">Accessibility statement</a>
+  </article>
+  <article class="trust-card">
+    <h3>Data rights</h3>
+    <p>Immediate JSON export. Erasure and correction requests with a reference, due date and completion record.</p>
+    <a href="/account/data">Data and privacy</a>
+  </article>
+  <article class="trust-card">
+    <h3>Vulnerability disclosure</h3>
+    <p>Private reporting, acknowledgement within 2 business days and a coordinated disclosure timeline.</p>
+    <a href="/security">Report an issue</a>
+  </article>
+</section>
+
+<section class="block">
+  <div class="block-head"><h3>Subprocessors</h3><a class="small" href="/subprocessors">Full register</a></div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Provider</th><th>Purpose</th><th>Region</th><th>Safeguard</th></tr></thead>
+      <tbody>
+      {% for name, purpose, region, safeguard in subprocessors %}
+        <tr><td><strong>{{ name }}</strong></td><td>{{ purpose }}</td><td>{{ region }}</td><td>{{ safeguard }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="block split-block">
+  <div>
+    <h3>Retention at a glance</h3>
+    <dl class="policy-list">
+      {% for label, period in retention %}
+      <div><dt>{{ label }}</dt><dd>{{ period }}</dd></div>
+      {% endfor %}
+    </dl>
+  </div>
+  <div>
+    <h3>Tell us what is missing</h3>
+    <p class="muted">Procurement teams should not have to chase basic answers. If a control, document or test result is missing, ask and we will publish the gap rather than invent an answer.</p>
+    <a class="btn ghost" href="/feedback?kind=feature">Request a trust document</a>
+    <a class="btn ghost" href="/support">Ask support</a>
+  </div>
+</section>
+
+<section class="block">
+  <div class="block-head"><h3>Start here</h3><a class="small" href="/help">All help articles</a></div>
+  <div class="help-grid">
+    {% for article in articles %}
+    <a class="help-card" href="/help/{{ article.slug }}">
+      <span class="eyebrow">{{ article.category }}</span>
+      <h4>{{ article.title }}</h4>
+      <p>{{ article.summary }}</p>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

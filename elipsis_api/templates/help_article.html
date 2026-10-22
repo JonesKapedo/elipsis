@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ article.title }} — {{ BRAND_NAME }} help{% endblock %}
+{% block description %}{{ article.summary }}{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">{{ article.category }}</p>
+  <h1>{{ article.title }}</h1>
+  <p class="lede">{{ article.summary }}</p>
+  <p class="small"><a href="/help">Help centre</a> / {{ article.category }}</p>
+</section>
+
+<article class="block prose">
+  <h3>Steps</h3>
+  <ol class="help-steps">
+    {% for step in article.steps %}<li>{{ step }}</li>{% endfor %}
+  </ol>
+  <p><a class="btn" href="{{ article.link }}">Open the relevant screen</a></p>
+  <h3>If it still does not work</h3>
+  <p>Open a support ticket and include the page, your browser and what you expected to happen. We use that detail to fix the article as well as the issue.</p>
+  <a class="btn ghost" href="/support">Open support</a>
+</article>
+
+{% if related %}
+<section class="block">
+  <div class="block-head"><h3>Related</h3></div>
+  <div class="help-grid">
+    {% for item in related %}
+    <a class="help-card" href="/help/{{ item.slug }}">
+      <span class="eyebrow">{{ item.category }}</span>
+      <h4>{{ item.title }}</h4>
+      <p>{{ item.summary }}</p>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

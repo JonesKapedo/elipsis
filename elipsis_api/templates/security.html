@@ -6,6 +6,8 @@
   <h1>Security and data handling</h1>
   <p class="lede">What we protect, how, and what we will tell you if something goes wrong.</p>
 </section>
+{% include "partials/trust_nav.html" %}
+
 <article class="block prose">
   <h3>Access control</h3>
   <ul>
@@ -22,18 +24,21 @@
   </ul>
   <h3>Application protections</h3>
   <ul>
-    <li>CSRF tokens on state-changing forms, rate limits on authentication and expensive endpoints, and parameterised database access through SQLAlchemy.</li>
+    <li>Same-origin request checks on state-changing forms, rate limits on authentication and expensive endpoints, and parameterised database access through SQLAlchemy.</li>
     <li>Uploaded files are served as attachments with a safe filename; they are never executed.</li>
-    <li>Security headers include a content security policy, frame denial, referrer policy and nosniff.</li>
+    <li>Security headers include a content security policy, frame denial, referrer policy, nosniff and request identifiers for incident tracing.</li>
+    <li>Private account pages are marked noindex and private responses are not cached.</li>
   </ul>
   <h3>Payment data</h3>
   <p>Card details go directly to Paystack. We store only the plan, status and Paystack reference. Webhook signatures are verified before entitlements change.</p>
   <h3>Data location and processors</h3>
-  <p>Production infrastructure is hosted by Vercel and Neon. Email is sent through SendGrid when configured. A current processor list is available to customers on request.</p>
+  <p>Production infrastructure is hosted by Vercel and Neon. Email is sent through SendGrid when configured. The current subprocessor register is public at <a href="/subprocessors">/subprocessors</a>.</p>
   <h3>Incident response</h3>
-  <p>We triage suspected incidents, contain access, preserve logs, and notify the ODPC and affected customers where the law requires. Our internal notification target is 72 hours after confirmation. We will not hide a breach behind marketing language.</p>
+  <p>We triage suspected incidents, contain access, preserve logs, and notify the ODPC and affected customers where the law requires. Our internal notification target is 72 hours after confirmation. Service incidents are published on the <a href="/status">status page</a> with customer-facing updates. We will not hide a breach behind marketing language.</p>
   <h3>Report a vulnerability</h3>
-  <p>Email <a href="mailto:security@elipsis.co.ke">security@elipsis.co.ke</a> with steps to reproduce. Please do not access other customers’ data, disrupt the service, or publish details before we have had a reasonable chance to fix the issue. We will acknowledge within two working days.</p>
+  <p>Email <a href="mailto:security@elipsis.co.ke">security@elipsis.co.ke</a> with steps to reproduce. Machine-readable contact details are at <a href="/.well-known/security.txt">/.well-known/security.txt</a>. Please do not access other customers’ data, disrupt the service, or publish details before we have had a reasonable chance to fix the issue. We acknowledge within two business days and triage within five.</p>
+  <h3>Your data rights</h3>
+  <p>You can export account and assessment data as JSON from <a href="/account/data">Data and privacy</a>, and submit an erasure or correction request with a tracked 30-day clock.</p>
   <h3>What we do not claim</h3>
   <p>We are not yet ISO 27001 certified or SOC 2 audited. This page describes controls, not a certification. Procurement questionnaires are welcome.</p>
 </article>

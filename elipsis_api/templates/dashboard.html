@@ -43,6 +43,47 @@
 </div>
 {% endif %}
 
+{% if company %}
+<section class="journey-strip">
+  <div class="journey-card">
+    <div class="row-between">
+      <div>
+        <span class="eyebrow">Activation</span>
+        <strong>{{ activation.complete }} of {{ activation.total }} steps</strong>
+      </div>
+      <span class="pill">{{ activation.percent }}%</span>
+    </div>
+    <div class="progress-track small" role="progressbar" aria-valuenow="{{ activation.percent }}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{ activation.percent }}%"></span></div>
+    {% if activation.next %}
+    <a class="journey-next" href="{{ activation.next.url }}">Next: {{ activation.next.label }} →</a>
+    {% else %}
+    <span class="muted small">Activation complete. Keep the rhythm going.</span>
+    {% endif %}
+  </div>
+  <div class="journey-card">
+    <div class="row-between">
+      <div>
+        <span class="eyebrow">Customer health</span>
+        <strong>{{ health.band }} · {{ health.score }}/100</strong>
+      </div>
+      <span class="pill {{ 'ok' if health.score >= 75 else 'warn' if health.score >= 50 else 'err' }}">{{ health.band }}</span>
+    </div>
+    <p class="muted small">{{ health.next_action.label }}</p>
+    <a class="journey-next" href="{{ health.next_action.url }}">Open next action →</a>
+  </div>
+  <div class="journey-card">
+    <div class="row-between">
+      <div>
+        <span class="eyebrow">Need help?</span>
+        <strong>Support with a real SLA</strong>
+      </div>
+    </div>
+    <p class="muted small">Urgent issues are answered in 30 minutes, 24/7.</p>
+    <a class="journey-next" href="/support">Open support →</a>
+  </div>
+</section>
+{% endif %}
+
 {% if not summary.total %}
 <section class="onboard-card">
   <div class="onboard-copy">

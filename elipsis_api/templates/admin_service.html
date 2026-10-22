@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% block title %}Service desk — admin{% endblock %}
+{% block content %}
+<section class="dash-hero">
+  <div>
+    <p class="eyebrow">Operations · Service desk</p>
+    <h1>Run the service promise</h1>
+    <p class="lede">Tickets, SLA breaches, incidents, data requests and customer voice in one operating view.</p>
+  </div>
+  <div class="hero-actions">
+    <a class="btn ghost" href="/admin">Admin pulse</a>
+    <a class="btn ghost" href="/status">Public status</a>
+  </div>
+</section>
+{% include "_admin_tabs.html" %}
+
+{% if message %}<div class="flash ok" role="status">{{ message }}</div>{% endif %}
+
+<section class="kpis">
+  <div class="kpi accent"><span class="kpi-lb">Open tickets</span><b>{{ metrics.open }}</b></div>
+  <div class="kpi"><span class="kpi-lb">Urgent open</span><b>{{ metrics.urgent }}</b></div>
+  <div class="kpi {{ 'warn' if metrics.breached }}"><span class="kpi-lb">SLA breached</span><b>{{ metrics.breached }}</b></div>
+  <div class="kpi"><span class="kpi-lb">CSAT average</span><b>{{ metrics.csat if metrics.csat is not none else '—' }}</b><span class="muted small">{{ metrics.ratings }} rating(s)</span></div>
+  <div class="kpi"><span class="kpi-lb">30-day availability</span><b>{{ availability.percent }}%</b></div>
+  <div class="kpi {{ 'warn' if metrics.low_csat }}"><span class="kpi-lb">Low CSAT</span><b>{{ metrics.low_csat }}</b><span class="muted small">Follow up within 1 business day</span></div>
+  <div class="kpi {{ 'warn' if health_queue }}"><span class="kpi-lb">Accounts to touch</span><b>{{ health_queue|length }}</b><span class="muted small">Health below 75</span></div>
+  <div class="kpi"><span class="kpi-lb">NPS</span><b>{{ feedback.nps if feedback.nps is not none else '—' }}</b><span class="muted small">{{ feedback.nps_responses }} response(s)</span></div>
+</section>
+
+{% if health_queue %}
+<section class="block">
+  <div class="block-head"><h3>Proactive outreach</h3><span class="muted small">At-risk first · contact within 2 business days</span></div>
+  <div class="admin-ticket-list">
+    {% for row in health_queue %}
+    <article class="admin-ticket">
+      <div class="row-between">
+        <div>
+          <a href="/company/{{ row.org.id }}"><strong>{{ row.org.name }}</strong></a>
+          <div class="muted small">{{ row.health.band }} · {{ row.health.score }}/100 · {{ row.health.next_action.label }}</div>
+        </div>
+        <a class="btn small ghost" href="/company/{{ row.org.id }}">Open room</a>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="block">
+  <div class="block-head"><h3>Support queue</h3><span class="muted small">Priority then ticket order</span></div>
+  {% if ticket_rows %}
+  <div class="admin-ticket-list">
+    {% for row in ticket_rows %}
+    <article class="admin-ticket {{ row.state.state }}">
+      <div class="row-between">
+        <div>
+          <a href="/support/{{ row.ticket.reference }}"><strong>{{ row.ticket.subject }}</strong></a>
+          <div class="muted small">{{ row.ticket.reference }} · {{ row.ticket.requester_email }} · opened {{ row.ticket.created_at[:16] }}</div>
+        </div>
+        <div class="ticket-meta">
+          <span class="pill {{ row.state.state }}">{{ row.state.status_label }}</span>
+          <span class="pill">{{ row.state.priority_label }}</span>
+          <span class="small">{{ human_due(row.ticket.first_response_due, timezone) if not row.ticket.first_response_at else 'First reply sent' }}</span>
+        </div>
+      </div>
+      <p class="small">{{ row.ticket.body[:280] }}{% if row.ticket.body|length > 280 %}…{% endif %}</p>
+      <form method="post" action="/admin/service/tickets/{{ row.ticket.id }}" class="admin-ticket-form">
+        <label class="sr-only" for="reply-{{ row.ticket.id }}">Reply</label>
+        <textarea id="reply-{{ row.ticket.id }}" name="body" rows="2" placeholder="Reply to the customer…"></textarea>
+        <select name="priority" aria-label="Priority">
+          {% for key, label in priority_labels.items() %}
+          <option value="{{ key }}"{% if row.ticket.priority == key %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <select name="status" aria-label="Status">
+          {% for key, label in status_labels.items() %}
+          <option value="{{ key }}"{% if row.ticket.status == key %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <label class="check small"><input type="checkbox" name="internal" value="1"> Internal note</label>
+        <button class="btn small" type="submit">Update</button>
+      </form>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state"><h4>No open tickets</h4><p class="muted">The queue is clear. Check the service standard before celebrating.</p></div>
+  {% endif %}
+</section>
+
+{% if metrics.low_csat_tickets %}
+<section class="block">
+  <div class="block-head"><h3>Low-score follow-up</h3><span class="muted small">CSAT 1–2 · personal reply within one business day</span></div>
+  <div class="admin-ticket-list">
+    {% for ticket in metrics.low_csat_tickets %}
+    <article class="admin-ticket">
+      <div class="row-between">
+        <div>
+          <a href="/support/{{ ticket.reference }}"><strong>{{ ticket.subject }}</strong></a>
+          <div class="muted small">{{ ticket.reference }} · {{ ticket.requester_email }} · CSAT {{ ticket.csat_score }}/5</div>
+        </div>
+        <span class="pill">{{ ticket.status|replace('_', ' ')|title }}</span>
+      </div>
+      {% if ticket.csat_comment %}<p class="small">{{ ticket.csat_comment }}</p>{% endif %}
+      <a class="small" href="/support/{{ ticket.reference }}">Reply and record the follow-up</a>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="split-block">
+  <div class="block">
+    <div class="block-head"><h3>Publish an incident</h3><span class="muted small">Appears on /status immediately</span></div>
+    <form method="post" action="/admin/service/incidents" class="form-stack compact">
+      <label for="incident-title">Title</label>
+      <input id="incident-title" name="title" required maxlength="180" placeholder="API latency above target">
+      <label for="incident-summary">Customer-facing summary</label>
+      <textarea id="incident-summary" name="summary" rows="3" maxlength="4000" placeholder="What is affected, what we know and when the next update is due."></textarea>
+      <label for="incident-impact">Impact</label>
+      <select id="incident-impact" name="impact">
+        {% for key, label in incident_impact_labels.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+      </select>
+      <label for="incident-components">Components</label>
+      <input id="incident-components" name="components" value="web,api" maxlength="200">
+      <button class="btn danger" type="submit">Publish incident</button>
+    </form>
+  </div>
+
+  <div class="block">
+    <div class="block-head"><h3>Data requests</h3><span class="muted small">{{ data_requests|length }} open</span></div>
+    {% if data_requests %}
+      {% for row in data_requests %}
+      <div class="admin-request">
+        <div class="row-between">
+          <strong>{{ row.reference }} · {{ row.kind|title }}</strong>
+          <span class="pill">{{ row.status|replace('_', ' ')|title }}</span>
+        </div>
+        <p class="muted small">Due {{ format_dt(row.due_at, timezone, '%d %b %Y') }} · user {{ row.user_id }}</p>
+        {% if row.note %}<p class="small">{{ row.note }}</p>{% endif %}
+        <form method="post" action="/admin/service/data-requests/{{ row.id }}/complete" class="inline-form">
+          <input name="note" placeholder="Resolution note" maxlength="1000">
+          <button class="btn small" type="submit">Mark complete</button>
+        </form>
+      </div>
+      {% endfor %}
+    {% else %}
+    <p class="muted">No open data requests.</p>
+    {% endif %}
+  </div>
+</section>
+
+<section class="block">
+  <div class="block-head"><h3>Incident log</h3><span class="muted small">Newest first</span></div>
+  {% if incidents %}
+    {% for incident in incidents %}
+    <article class="admin-incident">
+      <div class="row-between">
+        <div>
+          <span class="tag {{ incident.impact }}">{{ incident_impact_labels.get(incident.impact, 'Minor') }}</span>
+          <strong>{{ incident.title }}</strong>
+          <span class="muted small">{{ incident.reference }} · started {{ incident.started_at[:16] }}</span>
+        </div>
+        <span class="pill">{{ incident_status_labels.get(incident.status, 'Investigating') }}</span>
+      </div>
+      <p class="small">{{ incident.summary }}</p>
+      <form method="post" action="/admin/service/incidents/{{ incident.id }}/update" class="admin-ticket-form">
+        <select name="status" aria-label="Incident status">
+          {% for key, label in incident_status_labels.items() %}
+          <option value="{{ key }}"{% if incident.status == key %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <input name="body" required maxlength="4000" placeholder="Customer-facing update">
+        <textarea name="postmortem" rows="2" maxlength="8000" placeholder="Postmortem for major incidents (optional)"></textarea>
+        <button class="btn small" type="submit">Publish update</button>
+      </form>
+      {% if incident.postmortem %}
+      <details><summary>Postmortem</summary><p>{{ incident.postmortem }}</p></details>
+      {% endif %}
+    </article>
+    {% endfor %}
+  {% else %}
+  <p class="muted">No incidents recorded.</p>
+  {% endif %}
+</section>
+
+<section class="block">
+  <div class="block-head"><h3>Customer voice</h3><span class="muted small">{{ feedback.responses }} response(s)</span></div>
+  <p class="muted small">CSAT {{ feedback.csat if feedback.csat is not none else '—' }}% · CES {{ feedback.ces if feedback.ces is not none else '—' }} · NPS {{ feedback.nps if feedback.nps is not none else '—' }}</p>
+  {% if feedback.recent %}
+    {% for row in feedback.recent %}
+    <div class="feedback-row">
+      <span class="pill">{{ row.kind|upper }} {{ row.score }}</span>
+      <span class="muted small">{{ row.created_at[:16] }} · user {{ row.user_id }}</span>
+      {% if row.comment %}<p class="small">{{ row.comment }}</p>{% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+  <p class="muted">No feedback yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

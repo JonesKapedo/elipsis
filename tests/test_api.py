@@ -466,6 +466,7 @@ def test_setup_persists_logistics_organisation_fields():
             "password": "testpass123",
             "password2": "testpass123",
             "user_type": "client",
+            "accept_terms": "1",
         }, follow_redirects=False)
         assert signup.status_code == 303
         saved = client.post("/setup", data={
@@ -548,6 +549,7 @@ def test_provider_signup_is_invitation_only():
             "password": "testpass123",
             "password2": "testpass123",
             "user_type": "bidder",
+            "accept_terms": "1",
         })
     assert page.status_code == 400
     assert "invitation-only" in page.text
@@ -1036,7 +1038,8 @@ def test_company_room_membership_collaboration_and_branding():
             assert "Room Co" in page.text
             joined = invited.post(f"/invite/{token}", data={
                 "name": "Room Manager", "email": "room-manager@example.com",
-                "password": "room-manager-pass", "password2": "room-manager-pass"},
+                "password": "room-manager-pass", "password2": "room-manager-pass",
+                "accept_terms": "1"},
                 headers={"x-forwarded-for": "203.0.113.78"}, follow_redirects=False)
             assert joined.status_code == 303
             assert joined.headers["location"] == f"/company/{org_id}?joined=1"
@@ -1101,3 +1104,253 @@ def test_company_room_membership_collaboration_and_branding():
         pdf = admin.get(f"/assessment/{assessment_id}/report.pdf")
         assert pdf.status_code == 200
         assert pdf.content[:4] == b"%PDF"
+
+
+def test_service_public_surface_and_trust_headers(client):
+    for path in ("/status", "/trust", "/dpa", "/subprocessors", "/accessibility",
+                 "/service-standards", "/changelog", "/help",
+                 "/help/start-first-assessment", "/.well-known/security.txt"):
+        page = client.get(path)
+        assert page.status_code == 200, (path, page.text[:200])
+    status = client.get("/status")
+    assert status.headers["x-request-id"]
+    assert "Server-Timing" in status.headers
+    assert "report-uri" not in status.text or "Content-Security-Policy" not in status.text
+    security = client.get("/.well-known/security.txt")
+    assert "security@elipsis.co.ke" in security.text
+    sitemap = client.get("/sitemap.xml")
+    assert "/trust" in sitemap.text and "/status" in sitemap.text
+
+
+def test_signup_requires_and_records_terms_acceptance():
+    import uuid
+
+    from fastapi.testclient import TestClient
+
+    from elipsis_api import models, services_success
+    from elipsis_api.database import SessionLocal
+    from elipsis_api.main import app
+
+    email = f"terms-{uuid.uuid4().hex}@example.com"
+    payload = {
+        "name": "Terms Tester", "email": email,
+        "password": "terms-test-pass", "password2": "terms-test-pass",
+        "user_type": "client",
+    }
+    with TestClient(app) as fresh:
+        rejected = fresh.post("/signup", data=payload,
+                              headers={"x-forwarded-for": "198.51.100.201"})
+        assert rejected.status_code == 400
+        assert "agree" in rejected.text.lower() or "terms" in rejected.text.lower()
+
+        accepted = fresh.post("/signup", data={**payload, "accept_terms": "1"},
+                              headers={"x-forwarded-for": "198.51.100.202"},
+                              follow_redirects=False)
+        assert accepted.status_code == 303
+
+    with SessionLocal() as db:
+        user = db.query(models.User).filter_by(email=email).one()
+        rows = db.query(models.LegalAcceptance).filter_by(
+            user_id=user.id, document="terms").all()
+        assert rows and rows[0].version == services_success.LEGAL_VERSION
+
+
+def test_support_ticket_lifecycle_and_sla(signed_in):
+    import uuid
+
+    from elipsis_api import models, services_success
+    from elipsis_api.database import SessionLocal
+
+    client = signed_in
+    subject = f"Status page publish gap {uuid.uuid4().hex[:8]}"
+    created = client.post("/support", data={
+        "subject": subject,
+        "body": "The incident resolution did not appear on the public status page. "
+                "Please check the publish step and confirm the gap.",
+        "category": "bug", "priority": "high",
+    }, headers={"x-forwarded-for": "198.51.100.210"}, follow_redirects=False)
+    assert created.status_code == 303
+    reference = created.headers["location"].split("/support/")[1].split("?")[0]
+
+    page = client.get(f"/support/{reference}")
+    assert page.status_code == 200
+    assert subject in page.text
+    assert "First response target" in page.text
+
+    reply = client.post(f"/support/{reference}/reply", data={
+        "body": "Adding one more detail: the publish timestamp was stale."},
+        follow_redirects=False)
+    assert reply.status_code == 303
+
+    with SessionLocal() as db:
+        ticket = db.query(models.SupportTicket).filter_by(reference=reference).one()
+        ticket_id = ticket.id
+        assert ticket.first_response_due and ticket.resolution_due
+        assert ticket.status == "open"
+
+    updated = client.post(f"/admin/service/tickets/{ticket_id}", data={
+        "body": "Confirmed the publish race and shipped the fix.",
+        "status": "resolved", "priority": "high"}, follow_redirects=False)
+    assert updated.status_code == 303
+    rated = client.post(f"/support/{reference}/csat", data={
+        "score": "5", "comment": "Clear and fast."}, follow_redirects=False)
+    assert rated.status_code == 303
+
+    with SessionLocal() as db:
+        ticket = db.query(models.SupportTicket).filter_by(reference=reference).one()
+        assert ticket.status == "resolved"
+        assert ticket.first_response_at
+        assert ticket.csat_score == 5
+        assert len(services_success.messages_for(db, ticket.id)) >= 2
+
+
+def test_incident_status_page_and_subscribers(signed_in):
+    import uuid
+
+    from elipsis_api import models
+    from elipsis_api.database import SessionLocal
+
+    client = signed_in
+    address = f"status-{uuid.uuid4().hex}@example.com"
+    subscribed = client.post("/status/subscribe", data={"email": address},
+                             headers={"x-forwarded-for": "198.51.100.220"},
+                             follow_redirects=False)
+    assert subscribed.status_code == 303
+
+    title = f"Elevated report latency {uuid.uuid4().hex[:6]}"
+    created = client.post("/admin/service/incidents", data={
+        "title": title, "summary": "Reports are loading slower than normal.",
+        "impact": "minor", "components": "web,reports"}, follow_redirects=False)
+    assert created.status_code == 303
+    with SessionLocal() as db:
+        incident = db.query(models.ServiceIncident).filter_by(title=title).one()
+        incident_id = incident.id
+        subscriber = db.query(models.StatusSubscriber).filter_by(email=address).one()
+        assert subscriber.active == 1
+
+    updated = client.post(f"/admin/service/incidents/{incident_id}/update", data={
+        "status": "resolved", "body": "Latency back to normal after a cache flush.",
+        "postmortem": "Cache stampede after a deploy; added a jittered TTL and alert."},
+        follow_redirects=False)
+    assert updated.status_code == 303
+
+    page = client.get("/status")
+    assert page.status_code == 200
+    assert title in page.text
+    assert "Resolved" in page.text
+    assert "jittered TTL" in page.text
+
+
+def test_feedback_data_export_and_erasure_request(signed_in):
+    from elipsis_api import models
+    from elipsis_api.database import SessionLocal
+
+    client = signed_in
+    feedback = client.post("/feedback", data={
+        "kind": "nps", "score": "9", "comment": "Useful weekly rhythm.",
+        "context": "service"}, follow_redirects=False)
+    assert feedback.status_code == 303
+
+    exported = client.post("/account/data/export")
+    assert exported.status_code == 200
+    assert "attachment" in exported.headers["content-disposition"]
+    payload = exported.json()
+    assert payload["account"]["email"] == "admin@elipsis.local"
+    assert payload["feedback"]
+
+    requested = client.post("/account/data/request", data={
+        "kind": "correction", "note": "Correct the display name."},
+        follow_redirects=False)
+    assert requested.status_code == 303
+    assert "ELP-DR-" in requested.headers["location"]
+
+    with SessionLocal() as db:
+        row = db.query(models.DataRequest).filter_by(
+            kind="correction").order_by(models.DataRequest.id.desc()).first()
+        assert row.status == "received"
+        request_id = row.id
+        feedback_row = db.query(models.Feedback).filter_by(
+            user_id=db.query(models.User).filter_by(
+                email="admin@elipsis.local").one().id).order_by(
+            models.Feedback.id.desc()).first()
+        assert feedback_row.score == 9
+
+    completed = client.post(f"/admin/service/data-requests/{request_id}/complete", data={
+        "note": "Display name corrected."}, follow_redirects=False)
+    assert completed.status_code == 303
+    with SessionLocal() as db:
+        assert db.get(models.DataRequest, request_id).status == "completed"
+
+
+def test_settings_timezone_and_activation_page(signed_in):
+    from elipsis_api import models
+    from elipsis_api.database import SessionLocal
+
+    client = signed_in
+    saved = client.post("/settings", data={"timezone": "Africa/Nairobi"},
+                        follow_redirects=False)
+    assert saved.status_code == 303
+    with SessionLocal() as db:
+        user = db.query(models.User).filter_by(email="admin@elipsis.local").one()
+        assert db.get(models.UserPref, user.id).timezone == "Africa/Nairobi"
+
+    page = client.get("/getting-started", follow_redirects=False)
+    assert page.status_code in (200, 303)
+    if page.status_code == 200:
+        assert "activation" in page.text.lower() or "first assessment" in page.text.lower()
+    assert client.get("/support").status_code == 200
+    assert client.get("/feedback").status_code == 200
+    assert client.get("/account/data").status_code == 200
+    assert client.get("/admin/service").status_code == 200
+
+
+def test_activation_health_and_ticket_org_link():
+    import uuid
+
+    from fastapi.testclient import TestClient
+
+    from elipsis_api import models, security, services_success
+    from elipsis_api.database import SessionLocal
+    from elipsis_api.main import app
+
+    email = f"journey-{uuid.uuid4().hex}@example.com"
+    with SessionLocal() as db:
+        user = models.User(email=email, name="Journey Owner", role="client",
+                           user_type="client", password_hash=security.hash_password("journey-pass"))
+        db.add(user)
+        db.commit()
+        org = models.Organization(name="Journey Co", industry="Logistics")
+        db.add(org)
+        db.commit()
+        db.add(models.OrgOwner(user_id=user.id, organization_id=org.id,
+                               role="owner", status="active"))
+        db.add(models.UserPref(user_id=user.id, timezone="Africa/Nairobi"))
+        db.commit()
+        activation = services_success.activation(db, user, org)
+        health = services_success.customer_health(db, org)
+        org_id = org.id
+        assert activation["total"] == 7 and 0 <= activation["percent"] <= 100
+        assert 0 <= health["score"] <= 100
+        assert sum(item["max"] for item in health["factors"]) == 100
+
+    with TestClient(app) as owner:
+        login = owner.post("/login", data={"email": email, "password": "journey-pass"},
+                           headers={"x-forwarded-for": "198.51.100.230"},
+                           follow_redirects=False)
+        assert login.status_code == 303
+        page = owner.get("/getting-started")
+        assert page.status_code == 200
+        assert "Journey Co" in page.text
+        assert owner.get("/dashboard").status_code == 200
+
+        opened = owner.post("/support", data={
+            "subject": "Onboarding question about the first assessment",
+            "body": "Which department should own the first assessment in a small team?",
+            "category": "general", "priority": "normal",
+        }, headers={"x-forwarded-for": "198.51.100.231"}, follow_redirects=False)
+        assert opened.status_code == 303
+
+    with SessionLocal() as db:
+        ticket = db.query(models.SupportTicket).filter_by(
+            requester_email=email).one()
+        assert ticket.organization_id == org_id

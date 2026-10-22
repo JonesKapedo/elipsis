@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Service standard — {{ BRAND_NAME }}{% endblock %}
+{% block description %}Published support response and resolution targets, incident communication, service credits and escalation.{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Trust centre</p>
+  <h1>Service standard</h1>
+  <p class="lede">What you can expect when you buy, when something breaks, and when you need a person. The targets are public so they can be measured.</p>
+  <p class="muted small">Version {{ legal_version }}. Paid plans. Free accounts receive the same security, privacy and accessibility commitments.</p>
+</section>
+{% include "partials/trust_nav.html" %}
+
+<section class="kpis">
+  <div class="kpi accent"><span class="kpi-lb">Availability target</span><b>99.9%</b><span class="muted small">Monthly</span></div>
+  <div class="kpi"><span class="kpi-lb">Urgent response</span><b>30 min</b><span class="muted small">24/7</span></div>
+  <div class="kpi"><span class="kpi-lb">Urgent resolution</span><b>4 hours</b><span class="muted small">Target</span></div>
+  <div class="kpi"><span class="kpi-lb">30-day availability</span><b>{{ availability.percent }}%</b><span class="muted small">Current</span></div>
+</section>
+
+<section class="block">
+  <div class="block-head"><h3>Support targets</h3><span class="muted small">Clock starts when the ticket is received</span></div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Severity</th><th>Use when</th><th>First response</th><th>Resolution target</th><th>Coverage</th></tr></thead>
+      <tbody>
+      {% for key, label in priority_labels.items() %}
+        <tr>
+          <td><strong>{{ label }}</strong></td>
+          <td>
+            {% if key == 'urgent' %}Service unavailable, security or privacy incident, or customer data at risk.
+            {% elif key == 'high' %}Core workflow blocked for multiple users with no reasonable workaround.
+            {% elif key == 'normal' %}Feature degraded or one user blocked, but a workaround exists.
+            {% else %}Question, documentation issue, cosmetic defect or feature request.{% endif %}
+          </td>
+          <td>{{ sla[key].first // 60 }} min{% if sla[key].first >= 3600 %} ({{ sla[key].first // 3600 }}h){% endif %}</td>
+          <td>{{ sla[key].resolution // 3600 }}h{% if sla[key].resolution >= 86400 %} ({{ sla[key].resolution // 86400 }} days){% endif %}</td>
+          <td>{{ sla[key].coverage }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="block prose">
+  <h3>Incident communication</h3>
+  <ul>
+    <li>Urgent incidents are acknowledged on the status page within 30 minutes.</li>
+    <li>We update at least every 60 minutes while an urgent incident is active.</li>
+    <li>Every urgent incident gets a written postmortem within 5 business days.</li>
+    <li>We state what we know, what we do not know and when the next update is due.</li>
+  </ul>
+
+  <h3>Service credits</h3>
+  <p>If monthly availability falls below 99.9%, a paid account can request a credit: 10% below 99.9%, 25% below 99.5% and 50% below 99.0%. Credits apply to the next renewal and are not cash refunds. Request them through support within 30 days of the affected month.</p>
+
+  <h3>Escalation</h3>
+  <p>If a ticket misses its target, reply with “escalate” or ask for the founder. Escalations are answered within 4 business hours. A missed target is not a reason to stop communicating.</p>
+
+  <h3>Exclusions</h3>
+  <p>The targets do not cover outages caused by customer systems, misuse, force majeure, or scheduled maintenance announced at least 48 hours in advance. Announced maintenance is excluded from availability only when it stays inside the published window.</p>
+
+  <h3>How we measure</h3>
+  <p>Support metrics come from ticket timestamps and due times. Availability is computed from public incident records over a rolling 30 days. We publish the live number on the status page rather than asking you to trust a quarterly summary.</p>
+</article>
+
+<section class="block split-block">
+  <div>
+    <h3>Retention schedule</h3>
+    <dl class="policy-list">
+      {% for label, period in retention %}
+      <div><dt>{{ label }}</dt><dd>{{ period }}</dd></div>
+      {% endfor %}
+    </dl>
+  </div>
+  <div>
+    <h3>Open a ticket</h3>
+    <p class="muted">Use the in-app desk so the SLA clock, reference and conversation stay in one place.</p>
+    <a class="btn" href="/support">Open support</a>
+    <a class="btn ghost" href="/status">Current status</a>
+  </div>
+</section>
+{% endblock %}
