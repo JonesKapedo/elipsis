@@ -99,7 +99,7 @@ Both paths use the same request record and assessment summary.
 | Admin | Platform owner. Approves requests, verifies bidders, approves bids, awards work, manages users and billing. |
 | Super Admin | Future extension. Full system and admin management. |
 
-Implementation uses the existing `User.user_type`, `User.is_admin`, and company membership roles. Do not add a second conflicting role field. Centralise permission checks in a new permissions service.
+Implementation uses the existing `User.user_type`, `User.is_admin`, and company membership roles. Do not add a second conflicting role field. Core checks live in `elipsis_api/permissions.py` (admin, membership, org roles, Pro access, visible organisations); `services.py` re-exports them for existing callers.
 
 Company workspace roles remain unchanged: owner, manager, supervisor, analyst, viewer.
 
@@ -810,7 +810,7 @@ The upgrade is not successful merely because it has more screens. It is successf
 
 ## 27. As-built status
 
-Implemented on `customer-service-delivery`, uncommitted on top of `84f9499` (PR #14 is merged; this is the next change set):
+Implemented on `marketplace-platform-upgrade` and opened as PR #15:
 
 - Marketplace models, verification states, entitlements, switch helpers, conversations, notifications, billing records, and signed handoffs.
 - Request privacy and admin-only review APIs; non-admin admin routes return 404.
@@ -825,14 +825,15 @@ Implemented on `customer-service-delivery`, uncommitted on top of `84f9499` (PR 
 - Great Turbinez seeded as trusted/pinned verified partner with inactive subscription (no marketplace exemption).
 - Feature flags: messaging, billing, handoff, and verification.
 - Paystack recurring wiring: plan codes are read from environment; checkout passes the plan when configured; `charge.success`, `subscription.create`, `subscription.not_renew`, `subscription.disable`, and `invoice.payment_failed` renew or update access and `BillingSubscription` records.
+- Transactional email with Resend as the recommended provider: branded verification, welcome, password reset, workspace invite, marketplace lifecycle, conversation, payment receipt, failed payment, cancellation, and digest messages. `notify_email` is respected for non-security events.
 - Migrations `1ba0fb9462ad`, `5b7b51e54c7c`, and `6c1f2a9d8e44`; `alembic check` is clean on SQLite.
-- Regression suite passes (`111` tests; lifecycle suite `5` passing).
+- Core authorization is centralised in `elipsis_api/permissions.py`; marketplace visibility helpers call it directly instead of duplicating role checks.
+- Regression suite passes (`119` tests; lifecycle suite `5` passing).
 
 Deferred pending provider/partner details:
 
 - Live Paystack plan codes and USD checkout verification (the code path is wired; values belong in Vercel).
 - Turbinez `/from-elipsis` contract and shared fetch secret.
-- Transactional email for invitations and notifications.
 - Browser/screenshot QA and production auth-session diagnosis.
 - Full-repo ruff baseline remains dirty outside changed files.
 

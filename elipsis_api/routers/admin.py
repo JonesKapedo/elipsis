@@ -10,6 +10,7 @@ from elipsis_api import models, services
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user
 from elipsis_api.query_utils import count_rows, isoformat
+from elipsis_api.services_email_events import send_user_event_sync
 from elipsis_api.services_marketplace import (
     BID_APPROVED,
     BID_AWARDED,
@@ -47,6 +48,18 @@ def _notify(db: Session, user_id: int | None, event: str, title: str,
     db.add(models.MarketplaceNotification(
         user_id=user_id, event=event, title=title, body=body, url=url,
         created_at=now_iso()))
+
+
+def _client_user_id(db: Session, req: models.PhysicalAssessmentRequest) -> int | None:
+    if req.user_id:
+        return req.user_id
+    org = db.get(models.Organization, req.organization_id) if req.organization_id else None
+    return org.user_id if org else None
+
+
+def _org_name(db: Session, req: models.PhysicalAssessmentRequest) -> str:
+    org = db.get(models.Organization, req.organization_id) if req.organization_id else None
+    return org.name if org else "the client"
 
 
 def _request_payload(db: Session, req: models.PhysicalAssessmentRequest) -> dict:
@@ -190,6 +203,9 @@ def approve_request(
             f"/marketplace/{req.id}")
     db.commit()
     db.refresh(req)
+    send_user_event_sync(
+        db, _client_user_id(db, req), "request_approved",
+        request_title=req.title, url=f"/marketplace/{req.id}")
     return {"id": req.id, "status": req.status, "message": "Request approved"}
 
 
@@ -219,6 +235,10 @@ def reject_request(
             req.rejection_reason, f"/marketplace/{req.id}")
     db.commit()
     db.refresh(req)
+    send_user_event_sync(
+        db, _client_user_id(db, req), "request_rejected",
+        request_title=req.title, reason=req.rejection_reason,
+        url=f"/marketplace/{req.id}")
     return {"id": req.id, "status": req.status, "message": "Request rejected"}
 
 
@@ -250,6 +270,10 @@ def approve_bid(
                 f"/marketplace/{req.id}")
     db.commit()
     db.refresh(bid)
+    if req:
+        send_user_event_sync(
+            db, _client_user_id(db, req), "bid_approved",
+            request_title=req.title, url=f"/marketplace/{req.id}")
     return {"id": bid.id, "status": bid.status, "message": "Bid approved"}
 
 
@@ -266,6 +290,7 @@ def reject_bid(
     if bid.status not in (BID_PENDING, BID_APPROVED):
         raise HTTPException(status_code=400, detail=f"Cannot reject bid with status: {bid.status}")
     req = db.get(models.PhysicalAssessmentRequest, bid.request_id)
+    bidder = db.get(models.BidderCompany, bid.bidder_company_id)
     bid.status = BID_REJECTED
     bid.admin_reviewed_by = admin_user.id
     bid.admin_reviewed_at = now_iso()
@@ -275,8 +300,15 @@ def reject_bid(
         organization_id=req.organization_id if req else None,
         assessment_id=req.assessment_id if req else None,
         user_id=admin_user.id, detail=f"request={bid.request_id}; bid={bid.id}; reason={reason[:500]}")
+    _notify(db, bidder.user_id if bidder else None,
+            "bid.rejected", "Your proposal was not approved", reason.strip()[:500],
+            f"/marketplace/{bid.request_id}")
     db.commit()
     db.refresh(bid)
+    if bidder and req:
+        send_user_event_sync(
+            db, bidder.user_id, "bid_rejected", request_title=req.title,
+            reason=reason.strip()[:2000], url=f"/marketplace/{req.id}")
     return {"id": bid.id, "status": bid.status, "message": "Bid rejected"}
 
 
@@ -349,6 +381,15 @@ def award_request(
             f"/marketplace/conversations/{conv.id}")
     db.commit()
     db.refresh(req)
+    client_name = _org_name(db, req)
+    send_user_event_sync(
+        db, _client_user_id(db, req), "request_awarded_client",
+        request_title=req.title, partner_name=bidder.company_name,
+        url=f"/marketplace/conversations/{conv.id}")
+    send_user_event_sync(
+        db, bidder.user_id, "request_awarded_bidder",
+        request_title=req.title, client_name=client_name,
+        url=f"/marketplace/conversations/{conv.id}")
     return {
         "id": req.id,
         "status": req.status,
@@ -383,6 +424,14 @@ def verify_bidder(
             bidder.verification_notes, "/bidder/shop")
     db.commit()
     db.refresh(bidder)
+    event = {
+        VERIFY_APPROVED: "bidder_approved",
+        VERIFY_REJECTED: "bidder_rejected",
+        VERIFY_MORE_INFO: "bidder_more_info",
+    }[decision]
+    send_user_event_sync(
+        db, bidder.user_id, event, company_name=bidder.company_name,
+        notes=bidder.verification_notes, url="/marketplace/partner")
     return {"id": bidder.id, "verification_status": bidder.verification_status}
 
 

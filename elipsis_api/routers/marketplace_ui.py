@@ -477,6 +477,10 @@ def marketplace_create(request: Request,
         organization_id=org_id, assessment_id=selected_assessment.id,
         user_id=user.id, detail=f"request={row.id}; title={row.title[:120]}")
     db.commit()
+    from elipsis_api.services_email_events import send_user_event_sync
+    send_user_event_sync(
+        db, user.id, "request_submitted", request_title=row.title,
+        request_id=row.id, url=f"/marketplace/{row.id}")
     return RedirectResponse("/marketplace?submitted=1", status_code=303)
 
 
@@ -713,6 +717,14 @@ def marketplace_conversation_message(conversation_id: int, request: Request,
         notify_user(db, uid, "conversation.message", "New marketplace message",
                     text[:180], f"/marketplace/conversations/{conv.id}")
     db.commit()
+    from elipsis_api.services_email_events import send_user_event_sync
+    req = db.get(models.PhysicalAssessmentRequest, conv.request_id)
+    for uid in recipients:
+        send_user_event_sync(
+            db, uid, "conversation_message",
+            request_title=req.title if req else "your implementation request",
+            sender_name=user.name or user.email, message=text[:500],
+            url=f"/marketplace/conversations/{conv.id}")
     return RedirectResponse(
         f"/marketplace/conversations/{conv.id}?ok=Message sent", status_code=303)
 
@@ -990,11 +1002,18 @@ def admin_publish_request(request_id: int, request: Request,
     req.published_at = req.published_at or now_iso()
     req.reviewed_by = user.id
     req.reviewed_at = now_iso()
+    notify_user(db, req.user_id, "request.approved", "Your request is approved",
+                "Verified implementation partners can now review it.",
+                f"/marketplace/{req.id}")
     record_audit(
         db, action="marketplace.request_approved",
         organization_id=req.organization_id, assessment_id=req.assessment_id,
         user_id=user.id, detail=f"request={req.id}")
     db.commit()
+    from elipsis_api.services_email_events import send_user_event_sync
+    send_user_event_sync(
+        db, req.user_id, "request_approved", request_title=req.title,
+        url=f"/marketplace/{req.id}")
     return RedirectResponse("/admin/requests", status_code=303)
 
 
@@ -1018,11 +1037,18 @@ def admin_reject_request(request_id: int, request: Request,
     req.reviewed_at = now_iso()
     if note:
         req.admin_notes = f"Rejected: {note}"
+    notify_user(db, req.user_id, "request.rejected", "Your request needs changes",
+                note or "An admin asked for changes before publishing.",
+                f"/marketplace/{req.id}")
     record_audit(
         db, action="marketplace.request_rejected",
         organization_id=req.organization_id, assessment_id=req.assessment_id,
         user_id=user.id, detail=f"request={req.id}; reason={note}")
     db.commit()
+    from elipsis_api.services_email_events import send_user_event_sync
+    send_user_event_sync(
+        db, req.user_id, "request_rejected", request_title=req.title,
+        reason=note or "Update the request and resubmit.", url=f"/marketplace/{req.id}")
     return RedirectResponse("/admin/requests", status_code=303)
 
 

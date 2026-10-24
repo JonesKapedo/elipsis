@@ -8,7 +8,7 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from elipsis_api import models, services
+from elipsis_api import models, permissions
 
 REQUEST_PENDING = "pending_review"
 REQUEST_APPROVED = "approved"
@@ -190,13 +190,13 @@ def is_request_owner(db: Session, user, req: models.PhysicalAssessmentRequest) -
         return False
     if getattr(req, "user_id", None) == user.id:
         return True
-    return services.can_access_org(db, user, req.organization_id)
+    return permissions.can_access_org(db, user, req.organization_id)
 
 
 def can_view_request(db: Session, user, req: models.PhysicalAssessmentRequest) -> bool:
     if user is None or req is None:
         return False
-    if services.is_admin(user) or getattr(user, "is_admin", False):
+    if permissions.is_admin(user):
         return True
     if is_request_owner(db, user, req):
         return True
@@ -208,7 +208,7 @@ def can_view_request(db: Session, user, req: models.PhysicalAssessmentRequest) -
 def can_view_full_request(db: Session, user, req: models.PhysicalAssessmentRequest) -> bool:
     if user is None or req is None:
         return False
-    if services.is_admin(user) or getattr(user, "is_admin", False):
+    if permissions.is_admin(user):
         return True
     if is_request_owner(db, user, req):
         return True
@@ -218,7 +218,7 @@ def can_view_full_request(db: Session, user, req: models.PhysicalAssessmentReque
 def can_view_contact_details(db: Session, user, req: models.PhysicalAssessmentRequest) -> bool:
     if user is None or req is None:
         return False
-    if services.is_admin(user) or is_request_owner(db, user, req):
+    if permissions.is_admin(user) or is_request_owner(db, user, req):
         return True
     if req.status != REQUEST_AWARDED or req.awarded_bid_id is None:
         return False
@@ -240,7 +240,7 @@ def can_bid(db: Session, user, req: models.PhysicalAssessmentRequest) -> bool:
 def can_view_bid(db: Session, user, bid: models.BidSubmission) -> bool:
     if user is None or bid is None:
         return False
-    if services.is_admin(user) or getattr(user, "is_admin", False):
+    if permissions.is_admin(user):
         return True
     bidder = get_bidder_company(db, user.id)
     if bidder and bid.bidder_company_id == bidder.id:
@@ -256,7 +256,7 @@ def can_view_conversation(db: Session, user, conv: models.MarketplaceConversatio
         return False
     if user.id in (conv.requester_id, conv.bidder_user_id):
         return True
-    return bool(conv.admin_involved and (services.is_admin(user) or getattr(user, "is_admin", False)))
+    return bool(conv.admin_involved and (permissions.is_admin(user)))
 
 
 def visible_bid_status(bid: models.BidSubmission) -> bool:
@@ -272,7 +272,7 @@ def assessment_is_unlocked(db: Session, user_id: int, assessment_id: int) -> boo
     if purchase is not None:
         return True
     user = db.get(models.User, user_id)
-    return bool(user and services.is_pro_user(db, user))
+    return bool(user and permissions.is_pro_user(db, user))
 
 
 def switches_remaining(req: models.PhysicalAssessmentRequest) -> int:
@@ -417,4 +417,12 @@ def switch_request(db: Session, req: models.PhysicalAssessmentRequest,
                  detail=f"request={req.id}; old_bid={old_bid.id if old_bid else None}; new_bid={new_bid.id}")
     db.commit()
     db.refresh(conv)
+    from elipsis_api.services_email_events import send_user_event_sync
+    if old_bidder is not None:
+        send_user_event_sync(
+            db, old_bidder.user_id, "request_switched_old",
+            request_title=req.title, url=f"/marketplace/{req.id}")
+    send_user_event_sync(
+        db, new_bidder.user_id, "request_switched_new",
+        request_title=req.title, url=f"/marketplace/conversations/{conv.id}")
     return conv

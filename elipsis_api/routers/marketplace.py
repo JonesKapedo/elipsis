@@ -382,6 +382,11 @@ def submit_bid(
     )
     db.commit()
     db.refresh(bid)
+    from elipsis_api.services_email_events import send_user_event_sync
+    send_user_event_sync(
+        db, current_user.id, "bid_submitted", request_title=req.title,
+        estimated_cost=f"${bid.estimated_cost:,.2f}" if bid.estimated_cost is not None else "",
+        timeline=bid.timeline, url=f"/marketplace/{request_id}")
     return {
         "id": bid.id,
         "request_id": request_id,
