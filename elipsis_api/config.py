@@ -96,14 +96,17 @@ CONFIG_ERRORS: list[str] = []
 
 def _database_url_from_env() -> str:
     """First configured database URL, including common Vercel/Neon names."""
-    names = (
+    names = [
         "ELIPSIS_DATABASE_URL",
         "NEON_DATABASE_URL",
         "POSTGRES_URL",
         "POSTGRES_PRISMA_URL",
-        "DATABASE_URL",
         "TURBINEZ_DATABASE_URL",
-    )
+    ]
+    # Generic DATABASE_URL is common on Vercel/Neon but often stale in local
+    # .env files, so only trust it in production.
+    if is_production():
+        names.insert(4, "DATABASE_URL")
     for name in names:
         value = os.getenv(name)
         if value and value.strip():

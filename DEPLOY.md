@@ -17,7 +17,7 @@ Do not point Vercel at the Telegram bot or at the incomplete React SPA under `fr
 
 | Variable | Required | Notes |
 | --- | --- | --- |
-| `ELIPSIS_DATABASE_URL` | **Yes** | PostgreSQL URL, e.g. `postgresql://user:pass@host:5432/db?sslmode=require`. If missing or unreachable, the app starts in **degraded mode** (SQLite + visible config errors) instead of crashing. Fix this before trusting any data. |
+| `ELIPSIS_DATABASE_URL` | **Yes** | PostgreSQL URL, e.g. `postgresql://user:pass@host-pooler.region.aws.neon.tech/db?sslmode=require`. Production **fails closed** without it; it never writes accounts to ephemeral SQLite. `DATABASE_URL`, `POSTGRES_URL`, and `NEON_DATABASE_URL` are accepted aliases. |
 | `ELIPSIS_SECRET_KEY` | **Yes** | Long random string used to sign session cookies. If absent in production, sessions use a per-process random secret (users are logged out on cold start) and the error is reported in health detail. |
 | `ELIPSIS_ADMIN_EMAIL` | Recommended | First admin when the users table is empty. Default: `admin@elipsis.local` |
 | `ELIPSIS_ADMIN_PASSWORD` | **Yes** | If absent in production, the default admin is not seeded; sign-up remains available. |
@@ -29,11 +29,11 @@ Do not point Vercel at the Telegram bot or at the incomplete React SPA under `fr
 | `ELIPSIS_PUBLIC_URL` | Recommended | Public origin used in email links, e.g. `https://elipsis.ai`. |
 | `ELIPSIS_MARKETPLACE_ENABLED` | Optional | Default `0` (coming-soon page; API returns 503). Set to `1` only when the marketplace is ready. |
 
-`psycopg[binary]` is already in `requirements.txt`.
+`psycopg[binary]` is declared in both `pyproject.toml` (the Vercel build source) and `requirements.txt`.
 
 ## 3. Database
 
-Use any managed Postgres (Neon, Supabase, Vercel Postgres, RDS). Apply all migrations before deploy:
+Use any managed Postgres (Neon, Supabase, Vercel Postgres, RDS). This project is deployed on Neon; use the **pooled** connection string for serverless. Apply all migrations before deploy:
 
 ```bash
 ELIPSIS_DATABASE_URL='postgresql://...' alembic upgrade head

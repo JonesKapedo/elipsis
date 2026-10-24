@@ -69,6 +69,16 @@ def test_common_platform_database_aliases(monkeypatch):
     )
 
 
+def test_generic_database_url_is_trusted_in_production(monkeypatch):
+    _clear_db_env(monkeypatch)
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setenv(
+        "DATABASE_URL",
+        "postgresql://nobody:nobody@127.0.0.1:5432/neondb",
+    )
+    assert config.resolve_database_url().startswith("postgresql://")
+
+
 def test_broken_driver_does_not_propagate(monkeypatch):
     """A driver that imports but misbehaves reports unusable instead of raising."""
     stub = types.ModuleType("psycopg")  # no paramstyle / no real driver
