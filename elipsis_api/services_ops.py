@@ -341,6 +341,16 @@ def add_team_member(db: Session, organization_id: int, email: str,
     record_audit(db, action="team.add", organization_id=organization_id,
                  user_id=actor_id, detail=f"Added {email}")
     db.commit()
+    from elipsis_api import services
+    from elipsis_api.services_email_events import send_user_event_sync
+    org = db.get(models.Organization, organization_id)
+    actor = db.get(models.User, actor_id) if actor_id else None
+    send_user_event_sync(
+        db, user.id, "workspace_added",
+        org_name=org.name if org else "the workspace",
+        inviter_name=(actor.name or actor.email) if actor else "A workspace manager",
+        role=role, role_label=services.ROLE_LABELS.get(role, "Member"),
+        title=title, department=department, url="/dashboard")
     return True, f"Added {email}."
 
 

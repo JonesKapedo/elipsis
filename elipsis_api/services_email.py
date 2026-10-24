@@ -1,141 +1,250 @@
-"""Email notification service using SendGrid/SES."""
+"""Transactional email delivery with Resend, SendGrid, or AWS SES."""
 
 from __future__ import annotations
 
+import asyncio
 import os
 
-# Email service selection
-EMAIL_SERVICE = os.getenv("EMAIL_SERVICE", "sendgrid")  # sendgrid or ses
+import httpx
 
-# SendGrid configuration
-SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
-SENDGRID_FROM_EMAIL = os.getenv("SENDGRID_FROM_EMAIL", "noreply@elipsis.ai")
-SENDGRID_FROM_NAME = os.getenv("SENDGRID_FROM_NAME", "Elipsis")
+DEFAULT_FROM_EMAIL = "noreply@elipsis.ai"
+DEFAULT_FROM_NAME = "Elipsis"
+RESEND_ENDPOINT = "https://api.resend.com/emails"
 
-# AWS SES configuration
-AWS_SES_ACCESS_KEY = os.getenv("AWS_SES_ACCESS_KEY")
-AWS_SES_SECRET_KEY = os.getenv("AWS_SES_SECRET_KEY")
-AWS_SES_REGION = os.getenv("AWS_SES_REGION", "us-east-1")
-AWS_SES_FROM_EMAIL = os.getenv("AWS_SES_FROM_EMAIL", "noreply@elipsis.ai")
 
-# Initialize clients
-sendgrid_client = None
-ses_client = None
+def _env(name: str, default: str = "") -> str:
+    return (os.getenv(name) or default).strip()
 
-if EMAIL_SERVICE == "sendgrid" and SENDGRID_API_KEY:
-    try:
-        from sendgrid import SendGridAPIClient
-        
-        sendgrid_client = SendGridAPIClient(SENDGRID_API_KEY)
-    except ImportError:
-        print("[elipsis] SendGrid not installed. Run: pip install sendgrid")
 
-elif EMAIL_SERVICE == "ses" and AWS_SES_ACCESS_KEY:
-    try:
-        import boto3
-        
-        ses_client = boto3.client(
-            'ses',
-            aws_access_key_id=AWS_SES_ACCESS_KEY,
-            aws_secret_access_key=AWS_SES_SECRET_KEY,
-            region_name=AWS_SES_REGION
-        )
-    except ImportError:
-        print("[elipsis] boto3 not installed. Run: pip install boto3")
+def email_provider() -> str:
+    """Pick an explicit provider, then auto-detect from configured keys."""
+    explicit = _env("EMAIL_SERVICE").lower()
+    if explicit in {"resend", "sendgrid", "ses"}:
+        return explicit
+    if _env("RESEND_API_KEY"):
+        return "resend"
+    if _env("SENDGRID_API_KEY"):
+        return "sendgrid"
+    if _env("AWS_SES_ACCESS_KEY") and _env("AWS_SES_SECRET_KEY"):
+        return "ses"
+    return "resend"
+
+
+def from_email() -> str:
+    generic = _env("EMAIL_FROM_EMAIL")
+    if generic:
+        return generic
+    provider = email_provider()
+    if provider == "sendgrid":
+        return _env("SENDGRID_FROM_EMAIL", DEFAULT_FROM_EMAIL)
+    if provider == "ses":
+        return _env("AWS_SES_FROM_EMAIL", DEFAULT_FROM_EMAIL)
+    return _env("RESEND_FROM_EMAIL", DEFAULT_FROM_EMAIL)
+
+
+def from_name() -> str:
+    generic = _env("EMAIL_FROM_NAME")
+    if generic:
+        return generic
+    if email_provider() == "sendgrid":
+        return _env("SENDGRID_FROM_NAME", DEFAULT_FROM_NAME)
+    return DEFAULT_FROM_NAME
+
+
+def from_header() -> str:
+    address = from_email()
+    name = from_name()
+    return f"{name} <{address}>" if name else address
+
+
+def reply_to() -> str | None:
+    return _env("EMAIL_REPLY_TO") or None
 
 
 def is_email_configured() -> bool:
-    """Check if email service is configured."""
-    return (sendgrid_client is not None) or (ses_client is not None)
+    """True when a supported provider has enough credentials to send."""
+    provider = email_provider()
+    if provider == "resend":
+        return bool(_env("RESEND_API_KEY"))
+    if provider == "sendgrid":
+        return bool(_env("SENDGRID_API_KEY"))
+    if provider == "ses":
+        return bool(_env("AWS_SES_ACCESS_KEY") and _env("AWS_SES_SECRET_KEY"))
+    return False
 
 
 async def send_email(
     to_email: str,
     subject: str,
     html_content: str,
-    text_content: str | None = None
+    text_content: str | None = None,
 ) -> bool:
-    """
-    Send email using configured service.
-    
-    Args:
-        to_email: Recipient email address
-        subject: Email subject
-        html_content: HTML email body
-        text_content: Plain text fallback (optional)
-    
-    Returns:
-        True if sent successfully
-    """
+    """Send one transactional email. Never raises into a request handler."""
+    to_email = (to_email or "").strip()
+    if not to_email or "@" not in to_email:
+        print("[elipsis] Email skipped: invalid recipient", flush=True)
+        return False
     if not is_email_configured():
-        print(f"[elipsis] Email not configured. Would send to {to_email}: {subject}")
+        print(f"[elipsis] Email not configured. Would send to {to_email}: {subject}",
+              flush=True)
         return False
-    
     try:
-        if sendgrid_client:
+        provider = email_provider()
+        if provider == "resend":
+            return await _send_via_resend(to_email, subject, html_content, text_content)
+        if provider == "sendgrid":
             return await _send_via_sendgrid(to_email, subject, html_content, text_content)
-        elif ses_client:
-            return await _send_via_ses(to_email, subject, html_content, text_content)
-    except Exception as e:
-        print(f"[elipsis] Email send failed: {e}")
+        return await _send_via_ses(to_email, subject, html_content, text_content)
+    except Exception as exc:  # noqa: BLE001
+        print(f"[elipsis] Email send failed: {exc}", flush=True)
         return False
-    
-    return False
 
 
-async def _send_via_sendgrid(
+def send_email_sync(
     to_email: str,
     subject: str,
     html_content: str,
-    text_content: str | None
+    text_content: str | None = None,
 ) -> bool:
-    """Send email via SendGrid."""
+    """Synchronous variant for non-async admin and webhook routes."""
+    to_email = (to_email or "").strip()
+    if not to_email or "@" not in to_email:
+        return False
+    if not is_email_configured():
+        print(f"[elipsis] Email not configured. Would send to {to_email}: {subject}",
+              flush=True)
+        return False
     try:
-        from sendgrid.helpers.mail import Mail
-        
-        message = Mail(
-            from_email=(SENDGRID_FROM_EMAIL, SENDGRID_FROM_NAME),
-            to_emails=to_email,
-            subject=subject,
-            html_content=html_content,
-            plain_text_content=text_content or html_content
-        )
-        
-        response = sendgrid_client.send(message)
-        return response.status_code in [200, 201, 202]
-        
-    except Exception as e:
-        print(f"[elipsis] SendGrid error: {e}")
+        provider = email_provider()
+        if provider == "resend":
+            return _send_via_resend_sync(to_email, subject, html_content, text_content)
+        if provider == "sendgrid":
+            return _send_via_sendgrid_sync(to_email, subject, html_content, text_content)
+        return _send_via_ses_sync(to_email, subject, html_content, text_content)
+    except Exception as exc:  # noqa: BLE001
+        print(f"[elipsis] Email send failed: {exc}", flush=True)
         return False
 
 
-async def _send_via_ses(
-    to_email: str,
-    subject: str,
-    html_content: str,
-    text_content: str | None
-) -> bool:
-    """Send email via AWS SES."""
-    try:
-        body = {
-            'Html': {'Data': html_content, 'Charset': 'UTF-8'}
-        }
-        if text_content:
-            body['Text'] = {'Data': text_content, 'Charset': 'UTF-8'}
-        
-        ses_client.send_email(
-            Source=AWS_SES_FROM_EMAIL,
-            Destination={'ToAddresses': [to_email]},
-            Message={
-                'Subject': {'Data': subject, 'Charset': 'UTF-8'},
-                'Body': body
-            }
+def _resend_payload(to_email: str, subject: str, html_content: str,
+                    text_content: str | None) -> dict:
+    payload = {
+        "from": from_header(),
+        "to": [to_email],
+        "subject": subject,
+        "html": html_content,
+        "text": text_content or html_content,
+    }
+    if reply_to():
+        payload["reply_to"] = reply_to()
+    return payload
+
+
+async def _send_via_resend(to_email: str, subject: str, html_content: str,
+                           text_content: str | None) -> bool:
+    headers = {
+        "Authorization": f"Bearer {_env('RESEND_API_KEY')}",
+        "Content-Type": "application/json",
+    }
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        response = await client.post(
+            RESEND_ENDPOINT,
+            json=_resend_payload(to_email, subject, html_content, text_content),
+            headers=headers,
         )
-        return True
-        
-    except Exception as e:
-        print(f"[elipsis] SES error: {e}")
+    if response.status_code not in {200, 201, 202}:
+        print(f"[elipsis] Resend error {response.status_code}: {response.text[:500]}",
+              flush=True)
         return False
+    return True
+
+
+def _send_via_resend_sync(to_email: str, subject: str, html_content: str,
+                          text_content: str | None) -> bool:
+    headers = {
+        "Authorization": f"Bearer {_env('RESEND_API_KEY')}",
+        "Content-Type": "application/json",
+    }
+    with httpx.Client(timeout=10.0) as client:
+        response = client.post(
+            RESEND_ENDPOINT,
+            json=_resend_payload(to_email, subject, html_content, text_content),
+            headers=headers,
+        )
+    if response.status_code not in {200, 201, 202}:
+        print(f"[elipsis] Resend error {response.status_code}: {response.text[:500]}",
+              flush=True)
+        return False
+    return True
+
+
+def _sendgrid_message(to_email: str, subject: str, html_content: str,
+                      text_content: str | None):
+    from sendgrid.helpers.mail import Mail
+
+    return Mail(
+        from_email=(from_email(), from_name()),
+        to_emails=to_email,
+        subject=subject,
+        html_content=html_content,
+        plain_text_content=text_content or html_content,
+    )
+
+
+async def _send_via_sendgrid(to_email: str, subject: str, html_content: str,
+                             text_content: str | None) -> bool:
+    from sendgrid import SendGridAPIClient
+
+    message = _sendgrid_message(to_email, subject, html_content, text_content)
+    client = SendGridAPIClient(_env("SENDGRID_API_KEY"))
+    response = await asyncio.to_thread(client.send, message)
+    return response.status_code in {200, 201, 202}
+
+
+def _send_via_sendgrid_sync(to_email: str, subject: str, html_content: str,
+                            text_content: str | None) -> bool:
+    from sendgrid import SendGridAPIClient
+
+    message = _sendgrid_message(to_email, subject, html_content, text_content)
+    response = SendGridAPIClient(_env("SENDGRID_API_KEY")).send(message)
+    return response.status_code in {200, 201, 202}
+
+
+def _ses_body(html_content: str, text_content: str | None) -> dict:
+    body = {"Html": {"Data": html_content, "Charset": "UTF-8"}}
+    if text_content:
+        body["Text"] = {"Data": text_content, "Charset": "UTF-8"}
+    return body
+
+
+def _ses_client():
+    import boto3
+
+    return boto3.client(
+        "ses",
+        aws_access_key_id=_env("AWS_SES_ACCESS_KEY"),
+        aws_secret_access_key=_env("AWS_SES_SECRET_KEY"),
+        region_name=_env("AWS_SES_REGION", "us-east-1"),
+    )
+
+
+def _send_via_ses_sync(to_email: str, subject: str, html_content: str,
+                       text_content: str | None) -> bool:
+    _ses_client().send_email(
+        Source=from_email(),
+        Destination={"ToAddresses": [to_email]},
+        Message={
+            "Subject": {"Data": subject, "Charset": "UTF-8"},
+            "Body": _ses_body(html_content, text_content),
+        },
+    )
+    return True
+
+
+async def _send_via_ses(to_email: str, subject: str, html_content: str,
+                        text_content: str | None) -> bool:
+    return await asyncio.to_thread(
+        _send_via_ses_sync, to_email, subject, html_content, text_content)
 
 
 # Email templates

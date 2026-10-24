@@ -352,7 +352,8 @@ def invite_page(organization_id: int, request: Request,
 
 
 @router.post("/company/{organization_id}/invite")
-def invite_create(organization_id: int, email: str = Form(""), role: str = Form("manager"),
+def invite_create(organization_id: int, request: Request,
+                  email: str = Form(""), role: str = Form("manager"),
                   title: str = Form(""), department: str = Form(""),
                   note: str = Form(""), days: int = Form(7), max_uses: int = Form(1),
                   user=Depends(get_current_user), db: Session = Depends(get_db)):
@@ -370,8 +371,25 @@ def invite_create(organization_id: int, email: str = Form(""), role: str = Form(
         department=department, note=note, days=days, max_uses=max_uses)
     if invite is None:
         return _msg(f"/company/{org.id}/invite", "error", error or "Could not create invite.")
-    return _msg(f"/company/{org.id}/invite", "message",
-                "Invite link ready. Copy it and send it privately.")
+    emailed = False
+    if invite.email:
+        from elipsis_api.services_email_events import send_event_sync
+        emailed = send_event_sync(
+            invite.email, "invite",
+            name=invite.email,
+            org_name=org.name,
+            inviter_name=user.name or user.email,
+            role=invite.role,
+            role_label=services.ROLE_LABELS.get(invite.role or "manager", "Member"),
+            title=invite.title,
+            department=invite.department,
+            expires_at=invite.expires_at,
+            note=invite.note,
+            url=f"{str(request.base_url).rstrip('/')}/invite/{invite.token}",
+        )
+    message = ("Invite emailed. The private link is also ready below."
+               if emailed else "Invite link ready. Copy it and send it privately.")
+    return _msg(f"/company/{org.id}/invite", "message", message)
 
 
 @router.post("/company/{organization_id}/invite/{invite_id}/revoke")
@@ -465,15 +483,19 @@ async def invite_accept(token: str, request: Request,
     services_success.record_acceptance(
         db, account, document="terms",
         version=services_success.LEGAL_VERSION, request=request)
-    from elipsis_api.services_email import is_email_configured, send_email
+    from elipsis_api.services_email import is_email_configured
+    from elipsis_api.services_email_events import send_event
     if is_email_configured():
         account.email_verified = False
         account.verification_token = secrets.token_urlsafe(32)
         db.commit()
         base = str(request.base_url).rstrip("/")
-        await send_email(
-            account.email, "Verify your Elipsis email",
-            f'<p>Confirm your email: <a href="{base}/verify-email?token={account.verification_token}">Verify email</a></p>')
+        await send_event(
+            account.email, "welcome", name=account.name or "there",
+            user_type=account.user_type,
+            user_type_label=(account.user_type or "client").title(),
+            url=f"{base}/verify-email?token={account.verification_token}",
+        )
     ok, message = services_room.accept_invite(db, invite, account)
     if not ok:
         return templates.TemplateResponse(request, "invite_accept.html", {

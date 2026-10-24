@@ -77,15 +77,18 @@ async def signup(request: Request,
     services_success.record_acceptance(
         db, account, document="terms",
         version=services_success.LEGAL_VERSION, request=request)
-    from elipsis_api.services_email import is_email_configured, send_email
+    from elipsis_api.services_email import is_email_configured
+    from elipsis_api.services_email_events import send_event
     if is_email_configured():
         account.email_verified = False
         account.verification_token = secrets.token_urlsafe(32)
         db.commit()
         base = str(request.base_url).rstrip("/")
-        await send_email(
-            account.email, "Verify your Elipsis email",
-            f'<p>Confirm your email: <a href="{base}/verify-email?token={account.verification_token}">Verify email</a></p>',
+        await send_event(
+            account.email, "welcome", name=account.name or "there",
+            user_type=account.user_type,
+            user_type_label=(account.user_type or "client").title(),
+            url=f"{base}/verify-email?token={account.verification_token}",
         )
     token = services.create_session(db, account.id)
     destination = "/marketplace/apply" if (account.user_type or "") == "bidder" else "/setup"
@@ -143,12 +146,13 @@ async def forgot_password(request: Request, email: str = Form(...),
             datetime.now(UTC).replace(tzinfo=None) + timedelta(hours=1)
         ).isoformat(timespec="seconds")
         db.commit()
-        from elipsis_api.services_email import is_email_configured, send_email
+        from elipsis_api.services_email import is_email_configured
+        from elipsis_api.services_email_events import send_event
         if is_email_configured():
             base = str(request.base_url).rstrip("/")
-            await send_email(
-                user.email, "Reset your Elipsis password",
-                f'<p>Reset your password: <a href="{base}/reset-password?token={user.reset_token}">Choose a new password</a>. The link expires in one hour.</p>',
+            await send_event(
+                user.email, "password_reset", name=user.name or "there",
+                url=f"{base}/reset-password?token={user.reset_token}",
             )
         else:
             print(f"[elipsis] password reset requested for {user.email} but no email "

@@ -346,6 +346,25 @@ def _payment_matches(payment: models.Payment, verified: dict) -> bool:
     return True
 
 
+def _payment_description(db: Session, payment: models.Payment) -> str:
+    if payment.purpose in {"pro", "premium"}:
+        cycle = "annual" if payment.billing_cycle == "annual" else "monthly"
+        return f"Premium {cycle} pass"
+    if payment.purpose == "assessment" and payment.related_id:
+        assessment = db.get(models.Assessment, payment.related_id)
+        org = (db.get(models.Organization, assessment.organization_id)
+               if assessment is not None else None)
+        return f"Full Assessment for {org.name}" if org else "Full Assessment"
+    if payment.purpose == "bidder_plan":
+        plan = premium.BIDDER_PLANS.get(payment.billing_cycle or "")
+        return f"Bidder {plan['label']} plan" if plan else "Bidder subscription"
+    if payment.purpose == "switch_topup":
+        return "Three-switch top-up"
+    if payment.purpose == "physical":
+        return "Physical assessment request"
+    return "Elipsis payment"
+
+
 def _apply_payment(db: Session, payment: models.Payment, verified: dict) -> bool:
     """Idempotently mark a payment paid and grant the matching entitlement."""
     if payment.status == "success":
@@ -416,7 +435,14 @@ def _apply_payment(db: Session, payment: models.Payment, verified: dict) -> bool
                 start_date=now.isoformat(timespec="seconds"),
                 end_date=bidder.subscription_expires_at,
                 payment_reference=payment.reference, status="active"))
+    description = _payment_description(db, payment)
+    destination = _payment_destination(payment)
+    amount = f"${(payment.amount_minor or 0) / 100:,.2f} {payment.currency or premium.CURRENCY}"
     db.commit()
+    from elipsis_api.services_email_events import send_user_event_sync
+    send_user_event_sync(
+        db, payment.user_id, "payment_receipt", description=description,
+        amount=amount, reference=payment.reference, url=destination)
     return True
 
 
@@ -542,6 +568,23 @@ def _update_provider_subscription(db: Session, data: dict, status: str,
         ).isoformat(timespec="seconds")
     row.updated_at = _billing_now()
     db.commit()
+    parsed = premium.plan_for_code(row.plan_code)
+    if parsed is not None:
+        purpose, cycle = parsed
+        plan_info = (premium.BIDDER_PLANS.get(cycle) if purpose == "bidder_plan"
+                     else premium.plan(cycle))
+        plan_label = plan_info.get("label") if plan_info else "Elipsis subscription"
+    else:
+        plan_label = "Elipsis subscription"
+    from elipsis_api.services_email_events import send_user_event_sync
+    if grace:
+        send_user_event_sync(
+            db, row.user_id, "payment_failed", plan=plan_label,
+            grace_until=row.grace_until, url="/pro")
+    elif cancel:
+        send_user_event_sync(
+            db, row.user_id, "subscription_cancelled", plan=plan_label,
+            access_until=row.current_period_end or row.grace_until, url="/pro")
 
 
 def _payment_destination(payment: models.Payment) -> str:
