@@ -30,6 +30,7 @@ from elipsis_api.services_auth import (  # noqa: F401
     build_segments,
     create_session,
     delete_session,
+    ensure_supabase_admin,
     live_scores,
     question_dicts,
     register_user,

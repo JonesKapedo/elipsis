@@ -162,6 +162,7 @@ async def lifespan(_app: FastAPI):
         db = SessionLocal()
         try:
             services.seed(db)
+            services.ensure_supabase_admin(db)
             runtime_state.set_seed(True, None)
         finally:
             db.close()

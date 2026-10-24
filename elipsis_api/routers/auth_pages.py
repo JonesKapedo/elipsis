@@ -8,7 +8,15 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from elipsis_api import auth_extra, models, ratelimit, security, services, services_success
+from elipsis_api import (
+    auth_extra,
+    models,
+    ratelimit,
+    services,
+    services_auth,
+    services_success,
+    supabase_auth,
+)
 from elipsis_api.config import SESSION_COOKIE
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, safe_next, templates
@@ -66,6 +74,14 @@ async def signup(request: Request,
              "form": form, "signup_type": form["user_type"],
              "total_questions": _question_count(db) or 63},
             status_code=400)
+    except (supabase_auth.SupabaseConfigurationError,
+            supabase_auth.SupabaseUnavailable) as exc:
+        return templates.TemplateResponse(
+            request, "signup.html",
+            {"user": None, "error": str(exc),
+             "form": form, "signup_type": form["user_type"],
+             "total_questions": _question_count(db) or 63},
+            status_code=503)
     except Exception as exc:  # noqa: BLE001
         print(f"[elipsis] signup failed: {exc}", flush=True)
         return templates.TemplateResponse(
@@ -102,7 +118,25 @@ def login_resilient(request: Request, email: str = Form(...), password: str = Fo
                     next: str = Form(""),
                     db: Session = Depends(get_db)):
     ratelimit.enforce(request, "login", limit=10, window=60)
-    account = auth_extra.authenticate_resilient(db, email, password)
+    try:
+        account = auth_extra.authenticate_resilient(db, email, password)
+    except supabase_auth.EmailNotConfirmed as exc:
+        return templates.TemplateResponse(
+            request, "login.html",
+            {"user": None, "error": str(exc),
+             "email": (email or "").strip().lower(),
+             "next": safe_next(next) or "",
+             "total_questions": _question_count(db) or 63},
+            status_code=403)
+    except (supabase_auth.SupabaseConfigurationError,
+            supabase_auth.SupabaseUnavailable) as exc:
+        return templates.TemplateResponse(
+            request, "login.html",
+            {"user": None, "error": str(exc),
+             "email": (email or "").strip().lower(),
+             "next": safe_next(next) or "",
+             "total_questions": _question_count(db) or 63},
+            status_code=503)
     nxt = safe_next(next) or ""
     if account is None:
         return templates.TemplateResponse(
@@ -197,10 +231,14 @@ def reset_password(request: Request, token: str = Form(...),
             {"user": None, "token": token,
              "error": "Password must be at least 8 characters."},
             status_code=400)
-    user.password_hash = security.hash_password(password)
-    user.reset_token = None
-    user.reset_expires_at = None
-    db.commit()
+    try:
+        services_auth.set_password(db, user, password)
+    except (supabase_auth.SupabaseConfigurationError,
+            supabase_auth.SupabaseUnavailable) as exc:
+        return templates.TemplateResponse(
+            request, "reset_password.html",
+            {"user": None, "token": token, "error": str(exc)},
+            status_code=503)
     from elipsis_api import session_auth
     session_auth.revoke_user_sessions(db, user.id)
     return RedirectResponse("/login?reset=1", status_code=303)

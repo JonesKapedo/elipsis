@@ -15,10 +15,11 @@ from elipsis_api import (
     models,
     paystack,
     premium,
-    security,
     services,
+    services_auth,
     services_success,
     services_webhooks,
+    supabase_auth,
 )
 from elipsis_api.config import BILLING_ENABLED
 from elipsis_api.database import get_db
@@ -750,15 +751,17 @@ def settings_password(current_password: str = Form(""), new_password: str = Form
                       user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
-    if not security.verify_password(current_password, user.password_hash):
-        return RedirectResponse("/settings?password=current", status_code=303)
-    if len(new_password or "") < 8:
-        return RedirectResponse("/settings?password=short", status_code=303)
     if new_password != confirm_password:
         return RedirectResponse("/settings?password=mismatch", status_code=303)
-    user.password_hash = security.hash_password(new_password)
-    db.commit()
-    return RedirectResponse("/settings?password=changed", status_code=303)
+    if len(new_password or "") < 8:
+        return RedirectResponse("/settings?password=short", status_code=303)
+    try:
+        outcome = services_auth.change_password(
+            db, user, current_password, new_password)
+    except (supabase_auth.SupabaseConfigurationError,
+            supabase_auth.SupabaseUnavailable):
+        return RedirectResponse("/settings?password=unavailable", status_code=303)
+    return RedirectResponse(f"/settings?password={outcome}", status_code=303)
 
 
 @router.post("/settings/webhooks")

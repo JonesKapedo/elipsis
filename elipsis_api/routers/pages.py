@@ -21,6 +21,7 @@ from elipsis_api import (
     services_room,
     services_success,
     services_webhooks,
+    supabase_auth,
 )
 from elipsis_api.config import BILLING_ENABLED, SESSION_COOKIE
 from elipsis_api.database import get_db
@@ -356,7 +357,23 @@ def login(request: Request, email: str = Form(...), password: str = Form(...),
           db: Session = Depends(get_db)):
     from elipsis_api import auth_extra
     from elipsis_api.deps import safe_next
-    account = auth_extra.authenticate_resilient(db, email, password)
+    try:
+        account = auth_extra.authenticate_resilient(db, email, password)
+    except supabase_auth.EmailNotConfirmed as exc:
+        return templates.TemplateResponse(
+            request, "login.html", {"user": None, "error": str(exc),
+                                    "email": email.strip().lower(),
+                                    "next": safe_next(next) or "",
+                                    "total_questions": _question_count(db)},
+            status_code=403)
+    except (supabase_auth.SupabaseConfigurationError,
+            supabase_auth.SupabaseUnavailable) as exc:
+        return templates.TemplateResponse(
+            request, "login.html", {"user": None, "error": str(exc),
+                                    "email": email.strip().lower(),
+                                    "next": safe_next(next) or "",
+                                    "total_questions": _question_count(db)},
+            status_code=503)
     nxt = safe_next(next) or ""
     if account is None:
         return templates.TemplateResponse(

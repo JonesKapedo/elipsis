@@ -10,6 +10,7 @@
   {% if password_message == 'current' %}<div class="flash err">The current password is incorrect.</div>{% endif %}
   {% if password_message == 'short' %}<div class="flash err">Use at least eight characters for the new password.</div>{% endif %}
   {% if password_message == 'mismatch' %}<div class="flash err">The new passwords do not match.</div>{% endif %}
+  {% if password_message == 'unavailable' %}<div class="flash err">Password changes are temporarily unavailable. Try again shortly.</div>{% endif %}
   {% if company_saved %}<div class="flash ok">Company workspace settings saved.</div>{% endif %}
   {% if company_error %}<div class="flash err">{{ company_error }}</div>{% endif %}
 </section>

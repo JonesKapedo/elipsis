@@ -19,6 +19,7 @@ from elipsis_api import (
     services_ops,
     services_room,
     services_success,
+    supabase_auth,
 )
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
@@ -480,6 +481,12 @@ async def invite_accept(token: str, request: Request,
             "user": None, "invite": invite, "org": org, "error": str(exc),
             "form": {"name": name, "email": email}, "departments": departments.DEPARTMENTS,
         }, status_code=400)
+    except (supabase_auth.SupabaseConfigurationError,
+            supabase_auth.SupabaseUnavailable) as exc:
+        return templates.TemplateResponse(request, "invite_accept.html", {
+            "user": None, "invite": invite, "org": org, "error": str(exc),
+            "form": {"name": name, "email": email}, "departments": departments.DEPARTMENTS,
+        }, status_code=503)
     services_success.record_acceptance(
         db, account, document="terms",
         version=services_success.LEGAL_VERSION, request=request)

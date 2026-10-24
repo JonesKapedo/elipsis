@@ -21,6 +21,9 @@ Do not point Vercel at the Telegram bot or at the incomplete React SPA under `fr
 | `ELIPSIS_SECRET_KEY` | **Yes** | Long random string used to sign session cookies. If absent in production, sessions use a per-process random secret (users are logged out on cold start) and the error is reported in health detail. |
 | `ELIPSIS_ADMIN_EMAIL` | Recommended | First admin when the users table is empty. Default: `admin@elipsis.local` |
 | `ELIPSIS_ADMIN_PASSWORD` | **Yes** | If absent in production, the default admin is not seeded; sign-up remains available. |
+| `SUPABASE_URL` | **Yes** | Project URL from Supabase → Project Settings → API. |
+| `SUPABASE_ANON_KEY` | **Yes** | Public anon key used only by the server to verify email/password sign-ins. |
+| `SUPABASE_SERVICE_ROLE_KEY` | **Yes** | Server-only admin key used to create users and update passwords. Never expose it to the browser. |
 | `ELIPSIS_ENV` | **Yes** | Set to `production` (Vercel also sets `VERCEL`). |
 | `PAYSTACK_SECRET_KEY` / `PAYSTACK_PUBLIC_KEY` | **Yes** | Real keys. The in-app dummy checkout is disabled in production. |
 | `ELIPSIS_ALLOWED_ORIGINS` | Optional | Comma-separated extra origins for CORS/CSRF. Same-origin works without it. |
@@ -39,7 +42,7 @@ Use any managed Postgres (Neon, Supabase, Vercel Postgres, RDS). This project is
 ELIPSIS_DATABASE_URL='postgresql://...' alembic upgrade head
 ```
 
-The current head adds editable assumptions, evidence attachments, action-plan ownership/status/phone, campaign review tables, review dates, share-view analytics, the organisation audit trail, saved views, notification read state, digests, and signed webhook endpoints.
+The current head adds Supabase identity links for existing accounts. Passwords are verified by Supabase Auth; organisations, assessments, and reports remain in Postgres.
 
 The app still seeds the question bank and first administrator on cold start. Future schema changes belong in `alembic/versions/`; do not edit production tables by hand.
 
@@ -81,7 +84,19 @@ billing, or handoff to work there.
 - [ ] `ELIPSIS_DATABASE_URL` — managed Postgres with `sslmode=require`
 - [ ] `ELIPSIS_SECRET_KEY` — long random value, unique to production
 - [ ] `ELIPSIS_ADMIN_EMAIL` and `ELIPSIS_ADMIN_PASSWORD` — first admin only
+- [ ] `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` — Supabase Auth
 - [ ] `ELIPSIS_PUBLIC_URL` — the real public origin, no trailing slash
+
+### Supabase Auth
+
+1. Create a Supabase project and copy the project URL, anon key, and service-role key.
+2. Add them to Vercel for Production, Preview, and Development.
+3. Apply the migration so `users.supabase_id` exists.
+4. The first admin is linked to Supabase automatically on startup when
+   `ELIPSIS_ADMIN_PASSWORD` is present. Existing users are linked on their next
+   successful password sign-in.
+5. Password reset and verification still use this app's email templates. Do not
+   enable Supabase "Confirm email" unless you also configure SMTP in Supabase.
 
 ### Transactional email (Resend)
 

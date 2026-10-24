@@ -219,6 +219,7 @@ class User(Base):
     name: Mapped[str | None] = mapped_column(String)
     role: Mapped[str | None] = mapped_column(String, default="client")
     password_hash: Mapped[str] = mapped_column(String, nullable=False)
+    supabase_id: Mapped[str | None] = mapped_column(String, unique=True, index=True)
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
     # New marketplace fields
     user_type: Mapped[str | None] = mapped_column(String, default="client")

@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from constants import BRAND_NAME, INDEX_NAME, scale_options
-from elipsis_api import models, schemas, services
+from elipsis_api import models, schemas, services, supabase_auth
 from elipsis_api.config import DATABASE_URL, SESSION_COOKIE
 from elipsis_api.database import get_db, ping_db
 from elipsis_api.services_marketplace import (
@@ -199,7 +199,8 @@ async def register(request: Request, response: Response, db: Session = Depends(g
         name = data.get("name")
         user_type = data.get("user_type", "client")
         
-        user = services.register_user(db, email, password, name, user_type)
+        user = services.register_user(
+            db, email, password, name, user_type, allow_bidder=True)
         old = request.cookies.get(SESSION_COOKIE)
         if old:
             services.delete_session(db, old)
@@ -229,6 +230,10 @@ async def register(request: Request, response: Response, db: Session = Depends(g
         }
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except supabase_auth.SupabaseConfigurationError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except supabase_auth.SupabaseUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @router.post("/auth/login", response_model=schemas.LoginOut)
@@ -236,7 +241,14 @@ def login(payload: schemas.LoginIn, request: Request, response: Response,
           db: Session = Depends(get_db)):
     from elipsis_api import ratelimit
     ratelimit.enforce(request, "login", limit=10, window=60)
-    user = services.authenticate(db, payload.email, payload.password)
+    try:
+        user = services.authenticate(db, payload.email, payload.password)
+    except supabase_auth.EmailNotConfirmed as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except supabase_auth.SupabaseConfigurationError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except supabase_auth.SupabaseUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     if user is None:
         raise HTTPException(status_code=401, detail="Incorrect email or password")
     old = request.cookies.get(SESSION_COOKIE)

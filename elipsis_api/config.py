@@ -165,6 +165,18 @@ PORT = int(_setting("ELIPSIS_PORT", "TURBINEZ_PORT", "8001"))
 SESSION_COOKIE = "elipsis_session"
 MARKETPLACE_ENABLED = os.getenv("ELIPSIS_MARKETPLACE_ENABLED", "0").strip().lower() in {"1", "true", "yes"}
 
+SUPABASE_URL = (os.getenv("SUPABASE_URL") or "").strip().rstrip("/")
+SUPABASE_ANON_KEY = (os.getenv("SUPABASE_ANON_KEY") or "").strip()
+SUPABASE_SERVICE_ROLE_KEY = (os.getenv("SUPABASE_SERVICE_ROLE_KEY") or "").strip()
+SUPABASE_AUTH_CONFIGURED = bool(
+    SUPABASE_URL and SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY)
+SUPABASE_AUTH_REQUIRED = is_production()
+if SUPABASE_AUTH_REQUIRED and not SUPABASE_AUTH_CONFIGURED:
+    CONFIG_ERRORS.append(
+        "Supabase Auth is required in production. Set SUPABASE_URL, "
+        "SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY."
+    )
+
 
 def _flag(name: str, default: str = "1") -> bool:
     return os.getenv(name, default).strip().lower() in {"1", "true", "yes", "on"}
