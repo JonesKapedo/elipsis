@@ -1,8 +1,8 @@
 # Elipsis web platform — the FastAPI app that Vercel deploys.
 #
-# Vercel's Python runtime installs THIS file automatically for the serverless
-# function, so it must describe the web platform and not the Telegram bot.
-# (The bot's dependencies live in requirements-bot.txt.)
+# Vercel builds from pyproject.toml; keep this file in sync for local installs.
+# It must describe the web platform and not the Telegram bot. (The bot's
+# dependencies live in requirements-bot.txt.)
 fastapi==0.142.2
 uvicorn==0.54.0
 sqlalchemy==2.1.2
