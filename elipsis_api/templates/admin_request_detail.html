@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}{{ request_row.title }} · Request desk{% endblock %}
+{% block content %}
+
+<section class="dash-hero">
+  <div>
+    <p class="eyebrow">Request desk</p>
+    <h1>{{ request_row.title }}</h1>
+    <p class="lede">
+      Review the scope, verify the bids, and award only when the client has chosen a partner.
+    </p>
+  </div>
+  <a class="btn ghost" href="/admin/requests">Back to queue</a>
+</section>
+{% include "_admin_tabs.html" %}
+
+{% if error %}<div class="flash err" role="alert">{{ error }}</div>{% endif %}
+{% if ok %}<div class="flash ok" role="status">{{ ok }}</div>{% endif %}
+
+<section class="kpis">
+  <div class="kpi">
+    <span class="kpi-lb">Status</span>
+    <b style="font-size:1.25rem;">
+      {% if request_row.status == 'approved' %}<span class="tag ok">Live</span>
+      {% elif request_row.status == 'pending_review' %}<span class="tag warn">Pending</span>
+      {% elif request_row.status == 'awarded' %}<span class="tag ok">Awarded</span>
+      {% elif request_row.status == 'rejected' %}<span class="tag">Rejected</span>
+      {% else %}<span class="tag">{{ request_row.status|capitalize }}</span>{% endif %}
+    </b>
+  </div>
+  <div class="kpi">
+    <span class="kpi-lb">Bids</span>
+    <b>{{ bids|length }}</b>
+  </div>
+  <div class="kpi">
+    <span class="kpi-lb">Switches left</span>
+    <b>{{ (request_row.switches_granted or 3) - (request_row.switches_used or 0) }}</b>
+  </div>
+  <div class="kpi accent">
+    <span class="kpi-lb">Client</span>
+    <b style="font-size:1rem;">{{ client.name if client else (organization.name if organization else '—') }}</b>
+  </div>
+</section>
+
+<section class="block">
+  <div class="block-head"><h3>Scope</h3></div>
+  <table class="table">
+    <tbody>
+      <tr><th>Organisation</th><td>{{ organization.name if organization else '—' }}</td></tr>
+      <tr><th>Contact</th><td>{{ client.email if client else (organization.contact_email if organization else '—') }}</td></tr>
+      <tr><th>Budget</th><td>{{ request_row.budget_range or '—' }}</td></tr>
+      <tr><th>Deadline</th><td>{{ request_row.deadline or '—' }}</td></tr>
+      <tr><th>Location</th><td>{{ request_row.location or '—' }}</td></tr>
+      <tr><th>Description</th><td>{{ request_row.description or request_row.message or '—' }}</td></tr>
+      <tr><th>Expectations</th><td>{{ request_row.expectations or '—' }}</td></tr>
+      <tr><th>Specifications</th><td>{{ request_row.specifications or '—' }}</td></tr>
+      <tr><th>Contact preference</th><td>{{ request_row.contact_preference or '—' }}</td></tr>
+      <tr><th>Submitted</th><td class="muted small">{{ request_row.created_at or '—' }}</td></tr>
+    </tbody>
+  </table>
+  {% if documents %}
+  <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:1rem;">
+    {% for doc in documents %}
+    <a class="btn ghost sm" href="/marketplace/documents/{{ doc.id }}">{{ doc.filename or doc.file_name }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+
+<section class="block">
+  <div class="block-head">
+    <h3>Bids</h3>
+    {% if request_row.status == 'pending_review' %}
+    <form method="post" action="/admin/requests/{{ request_row.id }}/publish">
+      <button class="btn sm" type="submit">Publish request</button>
+    </form>
+    {% endif %}
+  </div>
+
+  {% if bids %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Partner</th>
+        <th>Proposal</th>
+        <th class="num">Cost</th>
+        <th>Timeline</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in bids %}
+      {% set bid = item.row %}
+      <tr>
+        <td>
+          <strong>{{ item.bidder_name }}</strong>
+          <div class="muted small">{{ item.verification }}{% if not item.subscribed %} · subscription inactive{% endif %}</div>
+        </td>
+        <td class="small" style="max-width:28rem;">{{ bid.proposal }}</td>
+        <td class="num">{{ bid.estimated_cost if bid.estimated_cost is not none else '—' }}</td>
+        <td>{{ bid.timeline or '—' }}</td>
+        <td>
+          {% if request_row.preferred_bid_id == bid.id %}<span class="tag warn">Client preference</span>{% endif %}
+          {% if bid.status == 'approved' %}<span class="tag ok">Approved</span>
+          {% elif bid.status == 'pending_review' %}<span class="tag warn">Pending</span>
+          {% elif bid.status == 'awarded' %}<span class="tag ok">Awarded</span>
+          {% elif bid.status == 'not_selected' %}<span class="tag">Not selected</span>
+          {% elif bid.status == 'rejected' %}<span class="tag">Rejected</span>
+          {% else %}<span class="tag">{{ bid.status|capitalize }}</span>{% endif %}
+        </td>
+        <td>
+          <div style="display:flex;flex-wrap:wrap;gap:0.35rem;">
+            {% if bid.status == 'pending_review' %}
+            <form method="post" action="/admin/requests/{{ request_row.id }}/bids/{{ bid.id }}/approve">
+              <button class="btn sm" type="submit">Approve</button>
+            </form>
+            <form method="post" action="/admin/requests/{{ request_row.id }}/bids/{{ bid.id }}/reject"
+                  onsubmit="var reason=prompt('Reason for rejecting this bid'); if(reason===null) return false; this.querySelector('[name=reason]').value=reason; return true;">
+              <input type="hidden" name="reason" value="">
+              <button class="btn danger sm" type="submit">Reject</button>
+            </form>
+            {% elif bid.status == 'approved' and request_row.status in ('approved', 'awarded') %}
+            <form method="post" action="/admin/requests/{{ request_row.id }}/award/{{ bid.id }}"
+                  onsubmit="return confirm('Award this request to {{ item.bidder_name|e }}? The other approved bids will be marked not selected.');">
+              <button class="btn sm" type="submit">Award</button>
+            </form>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No bids yet. Verified partners can bid once the request is live.</p>
+  {% endif %}
+</section>
+
+<section class="block">
+  <div class="block-head"><h3>Conversations</h3><span class="tag">{{ conversations|length }}</span></div>
+  {% if conversations %}
+  <table class="table">
+    <thead><tr><th>Opened</th><th>Status</th><th>Admin involved</th><th>Outcome</th><th></th></tr></thead>
+    <tbody>
+      {% for conv in conversations %}
+      <tr>
+        <td>{{ conv.opened_at }}</td>
+        <td>{{ conv.status|title }}</td>
+        <td>{% if conv.admin_involved %}<span class="tag warn">Yes</span>{% else %}No{% endif %}</td>
+        <td>{{ (conv.outcome or '—')|replace('_', ' ')|title }}</td>
+        <td>{% if conv.admin_involved %}<a class="btn ghost sm" href="/marketplace/conversations/{{ conv.id }}">Open</a>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="muted">No conversation has opened. An award creates one.</p>{% endif %}
+</section>
+
+<section class="block">
+  <div class="block-head"><h3>Handoffs</h3><span class="tag">{{ handoffs|length }}</span></div>
+  {% if handoffs %}
+  <table class="table">
+    <thead><tr><th>Created</th><th>Partner</th><th>Status</th><th>Expires</th><th>Used</th></tr></thead>
+    <tbody>
+      {% for item in handoffs %}
+      <tr><td>{{ item.created_at }}</td><td>{{ item.partner or '—' }}</td><td>{{ item.status }}</td><td>{{ item.expires_at }}</td><td>{{ item.used_at or '—' }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="muted">No partner handoffs created.</p>{% endif %}
+</section>
+
+<section class="model-panel">
+  <h3>Governance note</h3>
+  <p>
+    The client records a preference among approved bids; the award is performed here to confirm it. Only approved bids by
+    verified, subscribed partners can be awarded. The award opens the private conversation and releases contact details.
+  </p>
+</section>
+
+{% endblock %}

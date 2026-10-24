@@ -182,8 +182,8 @@
         <td><strong>{{ r.title }}</strong></td>
         <td class="muted">{{ r.org_name }}</td>
         <td>
-          {% if r.status == 'published' %}<span class="tag ok">Live</span>
-          {% elif r.status == 'pending' %}<span class="tag warn">Pending</span>
+          {% if r.status == 'approved' %}<span class="tag ok">Live</span>
+          {% elif r.status == 'pending_review' %}<span class="tag warn">Pending</span>
           {% elif r.status == 'rejected' %}<span class="tag">Closed</span>
           {% else %}<span class="tag">{{ r.status|capitalize }}</span>{% endif %}
         </td>

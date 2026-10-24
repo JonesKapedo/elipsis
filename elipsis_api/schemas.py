@@ -229,8 +229,23 @@ class SampleReportOut(BaseModel):
 
 class MarketplaceRequestIn(BaseModel):
     organization_id: int | None = None
+    assessment_id: int | None = None
     title: str = Field(..., min_length=3, max_length=160)
     description: str | None = None
+    expectations: str | None = None
+    specifications: str | None = None
+    contact_preference: str | None = None
     budget_range: str | None = None
     deadline: str | None = None
     location: str | None = None
+
+
+class BidSubmissionIn(BaseModel):
+    proposal: str = Field(..., min_length=10)
+    estimated_cost: float = Field(..., ge=0)
+    timeline: str = Field(..., min_length=1, max_length=120)
+    roadmap_document_id: int | None = None
+
+
+class PreferredBidIn(BaseModel):
+    bid_id: int

@@ -4,14 +4,13 @@
 
 <section class="dash-hero">
   <div>
-    <p class="eyebrow">Marketplace request</p>
+    <p class="eyebrow">Premium implementation request</p>
     <h1>{{ request_row.title }}</h1>
     <p class="lede">
-      {% if organization %}
-        {{ organization.name }}{% if organization.industry %} · {{ organization.industry }}{% endif %}
-        {% if organization.city or organization.country %}
-          · {{ [organization.city, organization.country]|select|join(', ') }}
-        {% endif %}
+      {{ organization_name }}
+      {% if organization and organization.industry %} · {{ organization.industry }}{% endif %}
+      {% if organization and (organization.city or organization.country) %}
+        · {{ [organization.city, organization.country]|select|join(', ') }}
       {% endif %}
     </p>
   </div>
@@ -21,21 +20,64 @@
 <section class="kpis">
   <div class="kpi">
     <span class="kpi-lb">Status</span>
-    <b>{{ request_row.status|capitalize }}</b>
+    <b>{{ request_row.status|replace('_', ' ')|title }}</b>
   </div>
   <div class="kpi">
-    <span class="kpi-lb">Bids</span>
+    <span class="kpi-lb">Approved bids</span>
     <b>{{ bid_count }}</b>
   </div>
   <div class="kpi accent">
-    <span class="kpi-lb">Documents</span>
-    <b>{{ documents|length }}</b>
+    <span class="kpi-lb">Access</span>
+    <b>{% if can_view_full %}Full brief{% else %}Teaser{% endif %}</b>
   </div>
 </section>
 
+{% if preferred_saved %}
+<div class="flash ok" role="status">Your preferred partner is recorded. The Elipsis team will confirm the award and open the conversation.</div>
+{% endif %}
+{% if topup_saved %}
+<div class="flash ok" role="status">Three additional partner switches are now available.</div>
+{% endif %}
+{% if request.query_params.get('switch_error') %}
+<div class="flash err" role="status">{{ request.query_params.get('switch_error') }}</div>
+{% endif %}
+{% if conversation %}
+<div class="flash ok" role="status">
+  Private conversation is {% if conversation.status == 'open' %}open{% else %}closed{% endif %}.
+  <a href="/marketplace/conversations/{{ conversation.id }}">Open conversation →</a>
+</div>
+{% endif %}
+
+{% if not can_view_full %}
 <section class="block">
-  <div class="block-head"><h3>Brief</h3></div>
-  <p style="white-space:pre-wrap;line-height:1.6;">{{ request_row.message or 'No description provided.' }}</p>
+  <div class="block-head"><h3>Request summary</h3></div>
+  <p style="white-space:pre-wrap;line-height:1.6;">{{ request_row.description or request_row.message or 'A verified client is looking for an implementation partner.' }}</p>
+  <p class="muted small">Scope, documents, budget, and contact details are private to approved implementation partners.</p>
+  {% if not user %}
+  <a class="btn" href="/login">Sign in as a verified partner</a>
+  {% elif is_bidder %}
+  <p class="muted">Your bidder account must be verified and subscribed to view the full brief.</p>
+  {% else %}
+  <p class="muted">This brief is available to verified implementation partners.</p>
+  {% endif %}
+</section>
+{% else %}
+<section class="block">
+  <div class="block-head">
+    <h3>Brief</h3>
+    {% if organization and can_view_contact %}
+    <span class="tag">{{ organization.contact_email or organization.contact_phone or 'Contact after award' }}</span>
+    {% endif %}
+  </div>
+  <p style="white-space:pre-wrap;line-height:1.6;">{{ request_row.description or request_row.message or 'No description provided.' }}</p>
+  {% if request_row.expectations %}
+  <h4 style="margin-top:1.5rem;">Expected outcome</h4>
+  <p class="muted" style="white-space:pre-wrap;">{{ request_row.expectations }}</p>
+  {% endif %}
+  {% if request_row.specifications %}
+  <h4 style="margin-top:1.5rem;">Specifications</h4>
+  <p class="muted" style="white-space:pre-wrap;">{{ request_row.specifications }}</p>
+  {% endif %}
   {% if request_row.requirements %}
   <h4 style="margin-top:1.5rem;">Requirements</h4>
   <p class="muted" style="white-space:pre-wrap;">{{ request_row.requirements }}</p>
@@ -47,18 +89,122 @@
   <div class="block-head"><h3>Documents</h3></div>
   <ul>
     {% for d in documents %}
-    <li>{{ d.file_name }}{% if d.file_url %} — <a href="{{ d.file_url }}" target="_blank" rel="noopener">Open</a>{% endif %}</li>
+    <li><a href="/marketplace/documents/{{ d.id }}">{{ d.filename or d.file_name or 'Document' }}</a></li>
     {% endfor %}
   </ul>
 </section>
 {% endif %}
 
+{% if bids %}
+<section class="block">
+  <div class="block-head"><h3>Bids</h3></div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Partner</th>
+        <th>Proposal</th>
+        <th class="num">Cost</th>
+        <th>Timeline</th>
+        <th>Status</th>
+        {% if can_choose_partner %}<th></th>{% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in bids %}
+      {% set bid = item.row %}
+      <tr>
+        <td>
+          <strong>{{ item.bidder_name }}</strong>
+          {% if item.preferred %}<div><span class="tag warn">Your preference</span></div>{% endif %}
+        </td>
+        <td class="small" style="max-width:28rem;">{{ bid.proposal or bid.message }}</td>
+        <td class="num">{{ bid.estimated_cost if bid.estimated_cost is not none else (bid.proposed_cost if bid.proposed_cost is not none else '—') }}</td>
+        <td>{{ bid.timeline or bid.proposed_timeline or '—' }}</td>
+        <td>
+          {% if bid.status == 'approved' %}<span class="tag ok">Approved</span>
+          {% elif bid.status == 'pending_review' %}<span class="tag warn">Under review</span>
+          {% elif bid.status == 'awarded' %}<span class="tag ok">Awarded</span>
+          {% elif bid.status == 'not_selected' %}<span class="tag">Not selected</span>
+          {% elif bid.status == 'rejected' %}<span class="tag">Not approved</span>
+          {% else %}<span class="tag">{{ bid.status|capitalize }}</span>{% endif %}
+        </td>
+        {% if can_choose_partner %}
+        <td>
+          {% if bid.status == 'approved' and not item.preferred %}
+          <form method="post" action="/marketplace/{{ request_row.id }}/preferred">
+            <input type="hidden" name="bid_id" value="{{ bid.id }}">
+            <button class="btn sm" type="submit">Choose</button>
+          </form>
+          {% endif %}
+        </td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if can_choose_partner %}
+  <p class="muted small">Choosing a partner records your preference; the Elipsis team confirms the award and opens your private conversation.</p>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if is_owner and request_row.status == 'awarded' %}
+<section class="block">
+  <div class="block-head">
+    <h3>Switch partner</h3>
+    <span class="tag">{{ switches_remaining }} switch{{ '' if switches_remaining == 1 else 'es' }} left</span>
+  </div>
+  {% if can_switch %}
+  <table class="table">
+    <thead><tr><th>Approved partner</th><th>Proposal</th><th class="num">Cost</th><th></th></tr></thead>
+    <tbody>
+      {% for item in switch_candidates %}
+      <tr>
+        <td>{{ item.bidder_name }}</td>
+        <td class="small">{{ item.row.proposal or item.row.message or '—' }}</td>
+        <td class="num">{{ item.row.estimated_cost if item.row.estimated_cost is not none else '—' }}</td>
+        <td>
+          <form method="post" action="/marketplace/{{ request_row.id }}/switch" onsubmit="return confirm('Switch to this partner? The current conversation will close.')">
+            <input type="hidden" name="bid_id" value="{{ item.row.id }}">
+            <button class="btn sm" type="submit">Switch</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="muted small">Switching closes the current conversation and uses one switch. The request itself is not recreated.</p>
+  {% elif switches_remaining <= 0 %}
+  <p class="muted">No switches remain. Add three more for $24.50.</p>
+  <form method="post" action="/marketplace/{{ request_row.id }}/topup">
+    <button class="btn" type="submit">Add three switches · $24.50</button>
+  </form>
+  {% else %}
+  <p class="muted">No other approved, active partner is available to switch to.</p>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if is_owner and request_row.status in ['awarded', 'closed'] %}
+<section class="block">
+  <div class="block-head"><h3>Implementation handoff</h3></div>
+  <p class="muted">Create a short-lived, single-use handoff to Great Turbinez, the trusted implementation partner. Only the sanitised assessment summary and brief are sent.</p>
+  <form method="post" action="/marketplace/{{ request_row.id }}/handoff">
+    <button class="btn" type="submit">Continue with Great Turbinez →</button>
+  </form>
+</section>
+{% endif %}
+
 <section class="model-panel">
   <h3>Next step</h3>
-  <p>
-    Qualified providers with an active subscription can bid via the API. Full bid forms in the product UI are part of the next frontend phase.
-    Until then, contact operations if you are an approved partner.
-  </p>
+  {% if can_bid %}
+  <p>This request is open for bids. Submit a short message, a roadmap document, your timeline, and your price.</p>
+  {% elif is_owner %}
+  <p>Your request is with the review team. Approved bids will appear here.</p>
+  {% else %}
+  <p>Only verified, subscribed implementation partners can bid. Contact the Elipsis team if your account needs review.</p>
+  {% endif %}
 </section>
+{% endif %}
 
 {% endblock %}

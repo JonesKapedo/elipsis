@@ -3,132 +3,101 @@
 {% block content %}
 <section class="hero">
   <p class="eyebrow">PRICING</p>
-  <h1>Pay for operating clarity, not a consulting calendar.</h1>
-  <p class="lede">Start with a free diagnostic. When the numbers are useful, choose the plan
-  that matches how many operating units you need to run. Every plan includes the full
-  {{ INDEX_NAME }}, the costed constraint, and a plan your team can execute.</p>
+  <h1>Start with the diagnosis. Pay for the decision.</h1>
+  <p class="lede">See your {{ INDEX_NAME }}, the constraints holding the business back, and the first
+  90-day plan. Then decide whether to implement with Great Turbinez or publish the work to verified partners.</p>
 </section>
 
 <section class="pricing-grid">
   <article class="price-card">
-    <p class="eyebrow">Diagnostic</p>
-    <h2>See your number</h2>
-    <p class="price">Free</p>
-    <p class="muted">One company · one operating unit · no card required</p>
+    <p class="eyebrow">Free diagnostic</p>
+    <h2>See the number</h2>
+    <p class="price">$0</p>
+    <p class="muted">One company · one operating unit · no card</p>
     <ul class="price-list">
       <li>Full 63-question logistics diagnostic</li>
-      <li>{{ INDEX_NAME }} with maturity band</li>
+      <li>{{ INDEX_NAME }} and maturity band</li>
       <li>Top three constraints, ranked</li>
-      <li>Sample 90-day action plan</li>
-      <li class="muted">On-screen results only — no PDF, team links, or extra companies</li>
+      <li>Sample 90-day plan</li>
+      <li class="muted">On-screen only. No export, full 36-metric report, or implementation request.</li>
     </ul>
     <a class="btn ghost" href="/signup">Start free →</a>
   </article>
 
   <article class="price-card featured">
-    <p class="eyebrow">Premium workspace</p>
-    <h2>Run the diagnostic as a team</h2>
+    <p class="eyebrow">Full Assessment</p>
+    <h2>Own the operating picture</h2>
     <p class="price">${{ premium_plans.monthly.price }} <small>/ month</small></p>
-    <p class="muted">or ${{ premium_plans.annual.price }} / year · one payment, no auto-charge</p>
+    <p class="muted">or ${{ premium_plans.annual.price }} / year · or $49 once for one assessment</p>
     <ul class="price-list">
-      <li>Multiple companies under one account</li>
-      <li>Department team questionnaires with aggregated results</li>
-      <li>Download PDF, Excel, and JSON board packs</li>
-      <li>Print-ready report and read-only share links</li>
-      <li>Unlimited re-scores and movement history</li>
+      <li>Full {{ INDEX_NAME }}, confidence, and 36 metrics</li>
+      <li>Costed constraints and financial assumptions</li>
+      <li>90-day plan with owners, dates, dependencies, and KPIs</li>
+      <li>PDF, Excel, JSON, and board pack</li>
+      <li>Read-only share links and team annotations</li>
+      <li>One implementation request with three partner introductions</li>
+      <li>Unlimited switches with an active subscription</li>
     </ul>
-    <a class="btn" href="/pro">See Premium →</a>
+    <a class="btn" href="/pro">Unlock Full Assessment →</a>
   </article>
 
   <article class="price-card">
-    <p class="eyebrow">Pilot</p>
-    <h2>Prove it once</h2>
-    <p class="price">$1,500 <small>one-time</small></p>
-    <p class="muted">For teams that want a reviewed baseline before committing</p>
+    <p class="eyebrow">Implementation</p>
+    <h2>Turn the plan into change</h2>
+    <p class="price">No platform fee</p>
+    <p class="muted">Work directly with a delivery partner</p>
     <ul class="price-list">
-      <li>Everything in Premium</li>
-      <li>Facilitated executive review (90 minutes)</li>
-      <li>Board-ready PDF and spreadsheet pack</li>
-      <li>Costed 90-day plan with owners and dates</li>
-      <li>One re-score after 90 days</li>
+      <li>Request implementation from Great Turbinez, our trusted partner</li>
+      <li>Or publish the brief to verified implementation companies</li>
+      <li>Assessment summary attached automatically</li>
+      <li>Admin-reviewed requests, bids, and introductions</li>
+      <li>Private conversation after an award</li>
+      <li>No commission on the implementation contract</li>
     </ul>
-    <a class="btn" href="/contact">Book a pilot →</a>
-  </article>
-
-  <article class="price-card featured">
-    <p class="eyebrow">Operator</p>
-    <h2>Run the rhythm</h2>
-    <p class="price">$490 <small>/ month</small></p>
-    <p class="muted">For a single company keeping operating evidence current</p>
-    <ul class="price-list">
-      <li>Everything in Premium</li>
-      <li>Up to 5 operating units, unlimited re-scores</li>
-      <li>Operating ledger, action plan, compliance calendar</li>
-      <li>5 team seats with role-based access</li>
-      <li>Quarterly review pack and movement history</li>
-      <li>Cancel before renewal; export everything</li>
-    </ul>
-    <a class="btn" href="/signup">Choose Operator →</a>
-  </article>
-
-  <article class="price-card">
-    <p class="eyebrow">Portfolio</p>
-    <h2>Compare the group</h2>
-    <p class="price">From $1,900 <small>/ month</small></p>
-    <p class="muted">For multi-site operators and groups that need one standard</p>
-    <ul class="price-list">
-      <li>Everything in Premium</li>
-      <li>Up to 20 operating units and multiple companies</li>
-      <li>Cross-unit benchmarks and portfolio heatmap</li>
-      <li>Unlimited seats and delegated administration</li>
-      <li>ERP, spreadsheet, and webhook connections</li>
-      <li>Named onboarding and priority support</li>
-    </ul>
-    <a class="btn ghost" href="/contact">Talk to us →</a>
+    <a class="btn ghost" href="/marketplace">Explore the marketplace →</a>
   </article>
 </section>
 
-<p class="muted small" style="margin-top:-1rem">List prices are in USD. Premium is billed through
-Paystack as a monthly or annual pass. Operator and Portfolio are invoiced separately.</p>
+<p class="muted small" style="margin-top:-1rem">Prices are in USD. Subscriptions renew through
+Paystack and can be cancelled before renewal. Existing Premium customers keep their current access
+until expiry. A switch top-up is ${{ '%.2f'|format(24.50) }} for three additional introductions.</p>
 
 <section class="block">
-  <h2>Why this pricing holds up</h2>
-  <p class="lede">The fee is tied to the decision you are making, not to the number of logins.
-  Here is the arithmetic a finance lead should apply before buying.</p>
+  <h2>Why this structure holds up</h2>
   <div class="steps">
     <article class="step-card">
       <span class="step-n">01</span>
-      <h4>One consultant day, not fourteen weeks</h4>
-      <p class="muted">A credible operations review usually costs more than the Pilot. The Pilot
-      gives you the same baseline, a costed constraint, and a plan you own — in one working session.</p>
+      <h4>The diagnosis is free</h4>
+      <p class="muted">You see your own number before paying. The paid report is for the decision,
+      the board pack, and the implementation brief — not for access to the score.</p>
     </article>
     <article class="step-card">
       <span class="step-n">02</span>
-      <h4>Less than an hour of labour per employee</h4>
-      <p class="muted">For a 100-person operator, Operator costs about $5 per employee per month.
-      If the work removes one hour of avoidable rework per employee per month, the plan pays for itself.</p>
+      <h4>One assessment, one clear price</h4>
+      <p class="muted">$49 unlocks a single full assessment and three partner introductions. No
+      consulting calendar, no hidden implementation mark-up.</p>
     </article>
     <article class="step-card">
       <span class="step-n">03</span>
-      <h4>The cost of one unresolved constraint</h4>
-      <p class="muted">One repeatedly delayed dispatch, one idle vehicle, or one late invoice run
-      usually costs more than the annual plan. The diagnostic tells you which one is actually happening.</p>
+      <h4>Subscriptions are for operators</h4>
+      <p class="muted">Teams running repeated reviews get unlimited assessments, unlimited
+      switches, exports, and collaboration for ${{ premium_plans.monthly.price }} a month.</p>
     </article>
     <article class="step-card">
       <span class="step-n">04</span>
-      <h4>No lock-in</h4>
-      <p class="muted">Start free. Buy the Pilot only after you have seen your own numbers.
-      Leave before renewal and keep every report and export. Pricing should survive that test.</p>
+      <h4>Implementation is not marked up</h4>
+      <p class="muted">Elipsis does not take a commission. Partners pay for verified access to
+      serious briefs. The implementation contract is between you and the partner.</p>
     </article>
   </div>
 </section>
 
 <section class="block">
-  <h3>What every paid plan includes</h3>
+  <h3>What the Full Assessment includes</h3>
   <div class="steps">
     <article class="step-card"><h4>{{ INDEX_NAME }}</h4><p class="muted">One weighted score across seven operating pillars, with a maturity band and confidence level.</p></article>
     <article class="step-card"><h4>Costed constraint</h4><p class="muted">The friction is priced from your headcount and labour assumptions, with every assumption printed.</p></article>
-    <article class="step-card"><h4>90-day plan</h4><p class="muted">Named actions, owners, due dates, and a review cadence — not a list of recommendations.</p></article>
+    <article class="step-card"><h4>90-day plan</h4><p class="muted">Named actions, owners, due dates, dependencies, and review cadence — not a list of recommendations.</p></article>
     <article class="step-card"><h4>Board-ready evidence</h4><p class="muted">PDF, spreadsheet, and a read-only share link that a board, bank, or partner can review.</p></article>
   </div>
 </section>
@@ -137,24 +106,24 @@ Paystack as a monthly or annual pass. Operator and Portfolio are invoiced separa
   <h3>Questions buyers actually ask</h3>
   <div class="steps">
     <article class="step-card">
-      <h4>Why not charge per user?</h4>
-      <p class="muted">Because the value comes from one shared operating picture, not from restricting access.
-      Seats are generous on purpose; the plan scales with operating units.</p>
+      <h4>Why is the one-time assessment cheaper than a subscription?</h4>
+      <p class="muted">Because it covers one assessment and three introductions. A subscription is
+      for teams that re-score regularly and need unlimited implementation switches.</p>
     </article>
     <article class="step-card">
-      <h4>We are small. Is $490 a month realistic?</h4>
-      <p class="muted">If the business is below 25 staff, start with the free diagnostic or the Pilot.
-      Move to Operator only when you are running recurring reviews and need the ledger.</p>
+      <h4>What happens after three introductions?</h4>
+      <p class="muted">You can buy a top-up for three more at half the one-time assessment price.
+      Subscribers do not need top-ups.</p>
+    </article>
+    <article class="step-card">
+      <h4>Do you take a cut of implementation work?</h4>
+      <p class="muted">No. Partners pay a subscription for verified access. Elipsis does not charge
+      a commission on the work you agree with them.</p>
     </article>
     <article class="step-card">
       <h4>What if the diagnosis finds little?</h4>
       <p class="muted">Then you have saved the cost of a consulting engagement. The free diagnostic
       is designed to answer that question before you pay.</p>
-    </article>
-    <article class="step-card">
-      <h4>Do you work outside your first market?</h4>
-      <p class="muted">Yes. The framework is operating-model based, not country specific. We invoice
-      in local currency where required and support English delivery today.</p>
     </article>
   </div>
 </section>

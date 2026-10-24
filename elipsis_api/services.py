@@ -60,14 +60,23 @@ from elipsis_api.services_ext import (
     run_guided_demo as run_guided_demo,
 )
 
+ADMIN_ROLES = {"admin", "super_admin"}
+
 
 def is_admin(user) -> bool:
     if user is None:
         return False
-    if (getattr(user, "role", "") or "") == "admin":
+    if (getattr(user, "role", "") or "").lower() in ADMIN_ROLES:
+        return True
+    if getattr(user, "is_admin", False):
         return True
     admin_email = (os.getenv("ELIPSIS_ADMIN_EMAIL") or DEFAULT_ADMIN_EMAIL).lower()
     return (getattr(user, "email", "") or "").lower() == admin_email
+
+
+def is_super_admin(user) -> bool:
+    return bool(user is not None and
+                (getattr(user, "role", "") or "").lower() == "super_admin")
 
 
 def user_prefs(db: Session, user) -> models.UserPref:

@@ -20,20 +20,12 @@ from elipsis_api import (
     services_success,
     services_webhooks,
 )
+from elipsis_api.config import BILLING_ENABLED
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
 from elipsis_api.narrative import company_portrait
 
 router = APIRouter()
-
-PACKAGES = {
-    "discovery": ("Discovery sweep", 180_000,
-                  "One site, five days. Map the procedures that actually run, name the ones worth automating, and leave a written starting picture."),
-    "mapping": ("Procedure mapping", 420_000,
-                "Two to three weeks. Walk every core flow, time the handoffs, and produce an automation-bearing map leadership can fund."),
-    "programme": ("Transformation programme", 950_000,
-                  "Six to eight weeks. Full sweep plus a sequenced build plan, control design, and a board pack tied to the Elipsis Index."),
-}
 
 
 def _prefs(db: Session, user) -> models.UserPref:
@@ -287,6 +279,8 @@ def pro_checkout(request: Request, billing: str = Form("annual"),
                  user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
+    if not BILLING_ENABLED:
+        return RedirectResponse("/pricing?billing=unavailable", status_code=303)
     cycle = "annual" if billing == "annual" else "monthly"
     amount = premium.amount_minor(cycle)
     ref = paystack.new_reference("PRE")
@@ -299,53 +293,22 @@ def pro_checkout(request: Request, billing: str = Form("annual"),
     data = paystack.initialize(
         user.email, amount, ref, f"{base}/pay/return/{ref}",
         {"purpose": "premium", "billing": cycle, "price_usd": premium.plan(cycle)["price"]},
-        currency=premium.CURRENCY)
+        currency=premium.CURRENCY, plan_code=premium.requester_plan_code(cycle))
     return RedirectResponse(data["authorization_url"], status_code=303)
 
 
 @router.get("/physical")
-def physical_page(request: Request, user=Depends(get_current_user), db: Session = Depends(get_db)):
+def physical_page(request: Request, user=Depends(get_current_user)):
     if user is None:
         return login_redirect()
-    return RedirectResponse("/pro", status_code=303)
+    return RedirectResponse("/marketplace/requests/new", status_code=303)
 
 
 @router.post("/physical")
-def physical_request(request: Request, company_name: str = Form(...), package: str = Form(...),
-                     sites: str = Form("1"), notes: str = Form(""),
-                     organization_id: str = Form(""),
-                     user=Depends(get_current_user), db: Session = Depends(get_db)):
+def physical_request(user=Depends(get_current_user)):
     if user is None:
         return login_redirect()
-    spec = PACKAGES.get(package)
-    if spec is None:
-        return RedirectResponse("/pro", status_code=303)
-    label, amount, _ = spec
-    site_n = int(sites) if sites.strip().isdigit() else 1
-    amount = amount + max(0, site_n - 1) * 60_000
-    row = models.PhysicalRequest(
-        user_id=user.id,
-        organization_id=int(organization_id) if organization_id.strip().isdigit() else None,
-        company_name=company_name.strip()[:160],
-        package=package,
-        amount_kes=amount,
-        sites=site_n,
-        notes=notes.strip() or None,
-        status="awaiting_payment",
-    )
-    db.add(row)
-    db.commit()
-    db.refresh(row)
-    ref = paystack.new_reference("PHY")
-    db.add(models.Payment(user_id=user.id, reference=ref, purpose="physical",
-                          amount_kes=amount, currency="KES", amount_minor=amount * 100,
-                          related_id=row.id, status="pending"))
-    db.commit()
-    base = str(request.base_url).rstrip("/")
-    data = paystack.initialize(user.email, amount * 100, ref, f"{base}/pay/return/{ref}",
-                               {"purpose": "physical", "request_id": row.id, "package": label},
-                               currency="KES")
-    return RedirectResponse(data["authorization_url"], status_code=303)
+    return RedirectResponse("/marketplace/requests/new", status_code=303)
 
 
 @router.get("/pay/dummy/{reference}")
@@ -411,13 +374,185 @@ def _apply_payment(db: Session, payment: models.Payment, verified: dict) -> bool
         req = db.get(models.PhysicalRequest, payment.related_id)
         if req:
             req.status = "open_bid"
+    if payment.purpose == "assessment" and payment.related_id:
+        assessment = db.get(models.Assessment, payment.related_id)
+        if assessment is not None:
+            purchase = db.scalar(select(models.AssessmentPurchase).where(
+                models.AssessmentPurchase.assessment_id == assessment.id))
+            if purchase is None:
+                db.add(models.AssessmentPurchase(
+                    user_id=payment.user_id, assessment_id=assessment.id,
+                    source="one_time", payment_reference=payment.reference,
+                    switches_granted=premium.SWITCH_TOPUP_COUNT, active=True))
+            else:
+                purchase.user_id = payment.user_id
+                purchase.payment_reference = payment.reference
+                purchase.active = True
+    if payment.purpose == "switch_topup" and payment.related_id:
+        req = db.get(models.PhysicalAssessmentRequest, payment.related_id)
+        if req is not None:
+            req.switches_granted = (req.switches_granted or 3) + premium.SWITCH_TOPUP_COUNT
+            req.topup_count = (req.topup_count or 0) + 1
+    if payment.purpose == "bidder_plan" and payment.related_id:
+        bidder = db.get(models.BidderCompany, payment.related_id)
+        plan_info = premium.BIDDER_PLANS.get(payment.billing_cycle or "")
+        if bidder is not None and plan_info is not None:
+            now = datetime.now(UTC).replace(tzinfo=None)
+            start = now
+            existing = None
+            if bidder.subscription_expires_at:
+                try:
+                    existing = datetime.fromisoformat(bidder.subscription_expires_at)
+                except ValueError:
+                    existing = None
+            if existing and existing > now and bidder.subscription_status == "active":
+                start = existing
+            bidder.subscription_tier = payment.billing_cycle
+            bidder.subscription_status = "active"
+            bidder.subscription_expires_at = (
+                start + timedelta(days=plan_info["days"])).isoformat(timespec="seconds")
+            db.add(models.Subscription(
+                bidder_company_id=bidder.id, tier=payment.billing_cycle,
+                start_date=now.isoformat(timespec="seconds"),
+                end_date=bidder.subscription_expires_at,
+                payment_reference=payment.reference, status="active"))
     db.commit()
     return True
+
+
+def _billing_now() -> str:
+    return datetime.now(UTC).replace(tzinfo=None).isoformat(timespec="seconds")
+
+
+def _billing_email(data: dict) -> str:
+    customer = data.get("customer") or {}
+    return (customer.get("email") or data.get("email") or "").strip().lower()
+
+
+def _billing_plan(data: dict) -> tuple[str, str] | None:
+    plan = data.get("plan") or {}
+    code = plan.get("plan_code") if isinstance(plan, dict) else plan
+    code = code or data.get("plan_code") or ""
+    return premium.plan_for_code(code)
+
+
+def _provider_charge(db: Session, data: dict) -> bool:
+    """Grant access for a renewal charge that has no local Payment row."""
+    parsed = _billing_plan(data)
+    if parsed is None:
+        return False
+    purpose, cycle = parsed
+    email = _billing_email(data)
+    user = db.scalar(select(models.User).where(func.lower(models.User.email) == email))
+    if user is None:
+        return False
+    plan_info = (premium.BIDDER_PLANS.get(cycle) if purpose == "bidder_plan"
+                 else premium.plan(cycle))
+    if plan_info is None:
+        return False
+    amount = data.get("amount")
+    currency = (data.get("currency") or premium.CURRENCY).upper()
+    if currency != premium.CURRENCY:
+        return False
+    if amount is not None and int(amount) < int(plan_info["price"] * 100):
+        return False
+    reference = data.get("reference") or ""
+    if not reference:
+        return False
+    related_id = None
+    if purpose == "bidder_plan":
+        bidder = db.scalar(select(models.BidderCompany).where(
+            models.BidderCompany.user_id == user.id))
+        if bidder is None:
+            return False
+        related_id = bidder.id
+    payment = models.Payment(
+        user_id=user.id, reference=reference, purpose=purpose, amount_kes=0,
+        currency=premium.CURRENCY, amount_minor=int(amount or plan_info["price"] * 100),
+        billing_cycle=cycle, related_id=related_id, status="pending")
+    db.add(payment)
+    db.flush()
+    verified = {
+        "status": "success", "reference": reference,
+        "amount": payment.amount_minor, "currency": premium.CURRENCY,
+    }
+    return _apply_payment(db, payment, verified)
+
+
+def _billing_subscription_row(db: Session, code: str):
+    return db.scalar(select(models.BillingSubscription).where(
+        models.BillingSubscription.provider_subscription_code == code))
+
+
+def _record_provider_subscription(db: Session, data: dict) -> None:
+    code = data.get("subscription_code") or ""
+    if not code:
+        return
+    parsed = _billing_plan(data)
+    if parsed is None:
+        return
+    purpose, _cycle = parsed
+    email = _billing_email(data)
+    user = db.scalar(select(models.User).where(func.lower(models.User.email) == email))
+    if user is None:
+        return
+    plan = data.get("plan") or {}
+    plan_code = plan.get("plan_code") if isinstance(plan, dict) else (plan or "")
+    row = _billing_subscription_row(db, code)
+    if row is None:
+        row = models.BillingSubscription(
+            user_id=user.id, plan_code=plan_code or "",
+            provider_subscription_code=code, provider_email_token=data.get("email_token"),
+            status="active", current_period_start=_billing_now(),
+            current_period_end=data.get("next_payment_date"),
+            created_at=_billing_now(), updated_at=_billing_now())
+        db.add(row)
+    else:
+        row.user_id = user.id
+        row.plan_code = plan_code or row.plan_code
+        row.provider_email_token = data.get("email_token") or row.provider_email_token
+        row.status = "active"
+        row.updated_at = _billing_now()
+    if purpose == "bidder_plan":
+        bidder = db.scalar(select(models.BidderCompany).where(
+            models.BidderCompany.user_id == user.id))
+        row.bidder_company_id = bidder.id if bidder else row.bidder_company_id
+    db.commit()
+
+
+def _update_provider_subscription(db: Session, data: dict, status: str,
+                                  cancel: bool = False, grace: bool = False) -> None:
+    code = data.get("subscription_code") or ""
+    subscription = data.get("subscription") or {}
+    if not code and isinstance(subscription, dict):
+        code = subscription.get("subscription_code") or ""
+    if not code:
+        return
+    row = _billing_subscription_row(db, code)
+    if row is None:
+        _record_provider_subscription(db, data)
+        row = _billing_subscription_row(db, code)
+    if row is None:
+        return
+    row.status = status
+    row.cancel_at_period_end = cancel
+    if grace:
+        row.grace_until = (
+            datetime.now(UTC).replace(tzinfo=None) + timedelta(days=3)
+        ).isoformat(timespec="seconds")
+    row.updated_at = _billing_now()
+    db.commit()
 
 
 def _payment_destination(payment: models.Payment) -> str:
     if payment.purpose in {"pro", "premium"}:
         return "/pro?upgraded=1"
+    if payment.purpose == "assessment" and payment.related_id:
+        return f"/assessment/{payment.related_id}/results?unlocked=1"
+    if payment.purpose == "switch_topup" and payment.related_id:
+        return f"/marketplace/{payment.related_id}?topup=1"
+    if payment.purpose == "bidder_plan":
+        return "/marketplace/partner?subscribed=1"
     return "/company"
 
 
@@ -451,37 +586,45 @@ async def paystack_webhook(request: Request, db: Session = Depends(get_db)):
         event = json.loads(raw.decode())
     except (ValueError, UnicodeDecodeError):
         return JSONResponse({"detail": "invalid payload"}, status_code=400)
-    if event.get("event") != "charge.success":
-        return JSONResponse({"status": "ignored"})
+    name = event.get("event")
     data = event.get("data") or {}
-    reference = data.get("reference") or ""
-    payment = db.scalar(select(models.Payment).where(
-        models.Payment.reference == reference))
-    if payment is None:
-        return JSONResponse({"status": "ignored"})
-    verified = {
-        "status": "success",
-        "reference": reference,
-        "amount": data.get("amount"),
-        "currency": data.get("currency"),
-    }
-    if not _apply_payment(db, payment, verified):
-        return JSONResponse({"detail": "payment mismatch"}, status_code=400)
-    return JSONResponse({"status": "ok"})
+    if name == "charge.success":
+        reference = data.get("reference") or ""
+        payment = db.scalar(select(models.Payment).where(
+            models.Payment.reference == reference))
+        if payment is None:
+            if _provider_charge(db, data):
+                return JSONResponse({"status": "ok"})
+            return JSONResponse({"status": "ignored"})
+        verified = {
+            "status": "success",
+            "reference": reference,
+            "amount": data.get("amount"),
+            "currency": data.get("currency"),
+        }
+        if not _apply_payment(db, payment, verified):
+            return JSONResponse({"detail": "payment mismatch"}, status_code=400)
+        return JSONResponse({"status": "ok"})
+    if name == "subscription.create":
+        _record_provider_subscription(db, data)
+        return JSONResponse({"status": "ok"})
+    if name == "subscription.not_renew":
+        _update_provider_subscription(db, data, "active", cancel=True)
+        return JSONResponse({"status": "ok"})
+    if name == "subscription.disable":
+        _update_provider_subscription(db, data, "cancelled", cancel=True)
+        return JSONResponse({"status": "ok"})
+    if name == "invoice.payment_failed":
+        _update_provider_subscription(db, data, "attention", grace=True)
+        return JSONResponse({"status": "ok"})
+    return JSONResponse({"status": "ignored"})
 
 
 @router.get("/bids")
-def bids(request: Request, user=Depends(get_current_user), db: Session = Depends(get_db)):
+def bids(user=Depends(get_current_user)):
     if user is None:
         return login_redirect()
-    if not services.is_pro_user(db, user):
-        return RedirectResponse("/pro?locked=bids", status_code=303)
-    rows = list(db.scalars(select(models.PhysicalRequest).where(
-        models.PhysicalRequest.status == "open_bid").order_by(models.PhysicalRequest.id.desc())))
-    mine = {r.id for r in rows if r.user_id == user.id}
-    return templates.TemplateResponse(request, "bids.html", {
-        "user": user, "rows": rows, "packages": PACKAGES, "mine": mine, "is_admin": _is_admin(user),
-    })
+    return RedirectResponse("/marketplace", status_code=303)
 
 
 @router.get("/settings")

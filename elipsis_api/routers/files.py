@@ -74,7 +74,8 @@ async def upload_request_document(
             filename=file_data["filename"],
             file_url=file_data["file_url"],
             file_type=file_data["file_type"],
-            file_size=file_data["file_size"]
+            file_size=file_data["file_size"],
+            s3_key=file_data.get("s3_key"),
         )
         
         db.add(document)
@@ -159,7 +160,8 @@ async def upload_multiple_documents(
                 filename=file_data["filename"],
                 file_url=file_data["file_url"],
                 file_type=file_data["file_type"],
-                file_size=file_data["file_size"]
+                file_size=file_data["file_size"],
+                s3_key=file_data.get("s3_key"),
             )
             db.add(document)
             documents.append(document)
@@ -204,9 +206,10 @@ def delete_document(
                 detail="Permission denied"
             )
     
-    # Extract S3 key from URL
-    if "s3.amazonaws.com" in document.file_url:
+    s3_key = document.s3_key
+    if not s3_key and "s3.amazonaws.com" in (document.file_url or ""):
         s3_key = document.file_url.split(".amazonaws.com/")[1]
+    if s3_key:
         delete_file_from_s3(s3_key)
     
     db.delete(document)

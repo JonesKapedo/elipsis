@@ -12,6 +12,7 @@ from elipsis_api import (
     departments,
     logistics,
     models,
+    paystack,
     premium,
     schemas,
     services,
@@ -21,7 +22,7 @@ from elipsis_api import (
     services_success,
     services_webhooks,
 )
-from elipsis_api.config import SESSION_COOKIE
+from elipsis_api.config import BILLING_ENABLED, SESSION_COOKIE
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
 from elipsis_api.sample import SAMPLE_ORG, sample_result
@@ -658,6 +659,34 @@ async def assessment_submit(assessment_id: int, request: Request,
     return RedirectResponse(f"/assessment/{assessment_id}/results", status_code=303)
 
 
+@router.post("/assessment/{assessment_id}/checkout")
+def assessment_checkout(assessment_id: int, request: Request,
+                        user=Depends(get_current_user), db: Session = Depends(get_db)):
+    if not BILLING_ENABLED:
+        return RedirectResponse("/pricing?billing=unavailable", status_code=303)
+    if user is None:
+        return login_redirect()
+    assessment = _owned_assessment(db, user, assessment_id)
+    if assessment is None:
+        return _not_found(request, user)
+    from elipsis_api.services_marketplace import assessment_is_unlocked
+    if assessment_is_unlocked(db, user.id, assessment_id):
+        return RedirectResponse(f"/assessment/{assessment_id}/results", status_code=303)
+    ref = paystack.new_reference("ASM")
+    amount = int(premium.FULL_ASSESSMENT_USD * 100)
+    db.add(models.Payment(
+        user_id=user.id, reference=ref, purpose="assessment", amount_kes=0,
+        currency=premium.CURRENCY, amount_minor=amount, billing_cycle="one_time",
+        related_id=assessment_id, status="pending"))
+    db.commit()
+    base = str(request.base_url).rstrip("/")
+    data = paystack.initialize(
+        user.email, amount, ref, f"{base}/pay/return/{ref}",
+        {"purpose": "assessment", "assessment_id": assessment_id,
+         "price_usd": premium.FULL_ASSESSMENT_USD}, currency=premium.CURRENCY)
+    return RedirectResponse(data["authorization_url"], status_code=303)
+
+
 @router.get("/assessment/{assessment_id}/results")
 def assessment_results(assessment_id: int, request: Request,
                        user=Depends(get_current_user), db: Session = Depends(get_db)):
@@ -679,11 +708,14 @@ def assessment_results(assessment_id: int, request: Request,
     delta = None
     if previous is not None and previous.readiness_index is not None:
         delta = round((result.get("readiness_index") or 0) - previous.readiness_index, 1)
+    from elipsis_api.services_marketplace import assessment_is_unlocked
+    report_unlocked = assessment_is_unlocked(db, user.id, assessment_id)
     return templates.TemplateResponse(
         request, "results.html",
         {"user": user, "assessment": assessment, "result": result, "org": org,
          "organization": org, "department": dept,
          "company_context": services.company_context(org),
+         "report_unlocked": report_unlocked,
          "share_url": share_url, "shared": token,
          "benchmark": benchmarks.cohort_benchmark(
              db, org, score=result.get("readiness_index")),
@@ -719,6 +751,7 @@ def assessment_pillar(assessment_id: int, code: str, request: Request,
         {"user": user, "assessment": assessment, "result": result,
          "organization": org, "department": dept,
          "benchmark": benchmarks.cohort_benchmark(db, org),
+         "report_unlocked": True,
          "is_pro": services.company_is_pro(db, assessment.organization_id, user),
          "focus_pillar": code.upper()})
 

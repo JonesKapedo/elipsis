@@ -9,10 +9,19 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from elipsis_api import models
+from elipsis_api.config import BILLING_ENABLED
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user
+from elipsis_api.premium import BIDDER_PLANS
 from elipsis_api.query_utils import isoformat
-from elipsis_api.services_marketplace import get_bidder_company, is_bidder_subscribed
+from elipsis_api.services_marketplace import (
+    bidder_slug,
+    bidder_verification_label,
+    get_bidder_company,
+    is_active_bidder,
+    is_bidder_subscribed,
+    now_iso,
+)
 
 router = APIRouter(prefix="/bidder", tags=["bidder"])
 
@@ -86,6 +95,13 @@ def get_bidder_shop(
         "subscription_status": bidder.subscription_status,
         "subscription_tier": bidder.subscription_tier,
         "subscription_expires": isoformat(bidder.subscription_expires_at),
+        "verification_status": bidder.verification_status,
+        "verification_label": bidder_verification_label(bidder.verification_status),
+        "verification_notes": bidder.verification_notes,
+        "verified_at": isoformat(bidder.verified_at),
+        "partner_tier": bidder.partner_tier,
+        "pinned_rank": bidder.pinned_rank,
+        "can_bid": is_active_bidder(db, current_user.id),
         "portfolio": [
             {
                 "id": p.id,
@@ -148,6 +164,7 @@ def update_bidder_shop(
         bidder = models.BidderCompany(
             user_id=current_user.id,
             company_name=company_name,
+            slug=bidder_slug(db, company_name),
             description=description,
             services_offered=services_offered,
             website=website,
@@ -156,11 +173,16 @@ def update_bidder_shop(
             years_in_business=years_in_business,
             team_size=team_size,
             subscription_status="inactive",
+            verification_status="submitted",
+            verification_submitted_at=now_iso(),
+            partner_tier="standard",
         )
         db.add(bidder)
     else:
         # Update existing
         bidder.company_name = company_name
+        if not bidder.slug:
+            bidder.slug = bidder_slug(db, company_name, bidder.id)
         bidder.description = description
         bidder.services_offered = services_offered
         bidder.website = website
@@ -176,6 +198,8 @@ def update_bidder_shop(
         "id": bidder.id,
         "company_name": bidder.company_name,
         "subscription_status": bidder.subscription_status,
+        "verification_status": bidder.verification_status,
+        "verification_label": bidder_verification_label(bidder.verification_status),
         "message": "Shop profile updated successfully"
     }
 
@@ -305,12 +329,15 @@ def get_subscription_status(
         "status": bidder.subscription_status,
         "expires": isoformat(bidder.subscription_expires_at),
         "days_remaining": days_remaining,
+        "verification_status": bidder.verification_status,
+        "verification_label": bidder_verification_label(bidder.verification_status),
+        "can_bid": is_active_bidder(db, current_user.id),
     }
 
 
 @router.post("/subscription/activate")
 def activate_subscription(
-    tier: str = "monthly",  # monthly, quarterly, yearly
+    tier: str = "monthly",  # monthly, six_months, yearly
     payment_reference: str | None = None,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
@@ -318,9 +345,12 @@ def activate_subscription(
     """
     Activate or renew subscription (after payment).
     
-    - **tier**: monthly, quarterly, or yearly
+    - **tier**: monthly, six_months, or yearly
     - **payment_reference**: Payment transaction reference
     """
+    if not BILLING_ENABLED:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Billing is not enabled")
     if current_user.user_type != "bidder":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -354,19 +384,21 @@ def activate_subscription(
             or verified.get("reference") != payment_reference):
         raise HTTPException(status_code=402, detail="Payment has not succeeded")
 
-    # Calculate expiration based on tier
-    now = datetime.now()
-    if tier == "monthly":
-        expires = now + timedelta(days=30)
-    elif tier == "quarterly":
-        expires = now + timedelta(days=90)
-    elif tier == "yearly":
-        expires = now + timedelta(days=365)
-    else:
+    plan = BIDDER_PLANS.get(tier)
+    if plan is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid tier. Choose: monthly, quarterly, or yearly"
+            detail="Invalid tier. Choose: monthly, six_months, or yearly",
         )
+    if not verified.get("dummy"):
+        if (verified.get("currency") or "").upper() != "USD":
+            raise HTTPException(status_code=402, detail="Payment currency must be USD")
+        if int(verified.get("amount") or 0) < int(plan["price"] * 100):
+            raise HTTPException(status_code=402, detail="Payment amount does not cover this plan")
+
+    # Calculate expiration based on tier
+    now = datetime.now()
+    expires = now + timedelta(days=plan["days"])
     
     # Update subscription
     bidder.subscription_tier = tier

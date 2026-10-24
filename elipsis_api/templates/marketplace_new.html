@@ -13,25 +13,43 @@
   {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
   {% if not orgs %}
   <p class="muted">You need an organisation first. <a href="/start">Start an assessment</a> to create one.</p>
+  {% elif not assessments %}
+  <p class="muted">Complete a Full Assessment before requesting implementation. <a href="/pricing">See what is included</a>.</p>
   {% else %}
   <form method="post" action="/marketplace/requests/new" class="stack">
     {% if orgs|length > 1 %}
     <label>Organisation
       <select name="organization_id" required>
         {% for org in orgs %}
-        <option value="{{ org.id }}">{{ org.name }}</option>
+        <option value="{{ org.id }}" {% if form.organization_id|string == org.id|string %}selected{% endif %}>{{ org.name }}</option>
         {% endfor %}
       </select>
     </label>
     {% else %}
     <input type="hidden" name="organization_id" value="{{ orgs[0].id }}">
     {% endif %}
+    <label>Assessment
+      <select name="assessment_id" required>
+        <option value="">Choose the assessment behind this request</option>
+        {% for a in assessments %}
+        <option value="{{ a.id }}" {% if form.assessment_id|string == a.id|string %}selected{% endif %}>
+          {{ a.started_at or 'Assessment' }} · Index {{ '%.1f'|format(a.readiness_index or 0) }} · {{ a.maturity_band or 'In progress' }}
+        </option>
+        {% endfor %}
+      </select>
+    </label>
     <label>Title
       <input name="title" required minlength="3" maxlength="160"
              value="{{ form.title if form else '' }}" placeholder="Automate finance reconciliation">
     </label>
     <label>Scope
       <textarea name="description" rows="6" placeholder="Current process, pain points, and what success looks like.">{{ form.description if form else '' }}</textarea>
+    </label>
+    <label>Expected outcome
+      <textarea name="expectations" rows="3" placeholder="The measurable result you need.">{{ form.expectations if form else '' }}</textarea>
+    </label>
+    <label>Specifications and constraints
+      <textarea name="specifications" rows="4" placeholder="Systems, sites, integrations, compliance, or delivery constraints.">{{ form.specifications if form else '' }}</textarea>
     </label>
     <label>Budget range
       <input name="budget_range" value="{{ form.budget_range if form else '' }}" placeholder="USD 25,000 – 100,000">

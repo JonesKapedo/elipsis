@@ -46,6 +46,40 @@ def _seed_admin(db: Session):
                        password_hash=security.hash_password(password)))
 
 
+def _seed_trusted_partner(db: Session):
+    """Seed the trusted implementation partner profile without special bidding rights."""
+    email = os.getenv("ELIPSIS_TURBINEZ_EMAIL", "partners@greatturbinez.com")
+    company = db.scalar(select(models.BidderCompany).where(
+        models.BidderCompany.company_name == "Great Turbinez"))
+    if company is not None:
+        if not company.slug:
+            company.slug = "great-turbinez"
+        if not company.partner_tier:
+            company.partner_tier = "trusted"
+        if not company.pinned_rank:
+            company.pinned_rank = 1
+        return
+    user = db.scalar(select(models.User).where(models.User.email == email))
+    if user is None:
+        user = models.User(
+            email=email, name="Great Turbinez", role="bidder", user_type="bidder",
+            password_hash=security.hash_password(security.new_token()),
+            email_verified=True, is_admin=False)
+        db.add(user)
+        db.flush()
+    db.add(models.BidderCompany(
+        user_id=user.id, company_name="Great Turbinez", slug="great-turbinez",
+        location="Nairobi, Kenya",
+        services_offered="Operations automation, systems integration, implementation delivery",
+        description=("Trusted Elipsis implementation partner for operations automation, "
+                     "workflow integration, and 90-day delivery."),
+        website="https://great-turbinez.vercel.app",
+        verification_status="approved",
+        verification_submitted_at=_now(), verified_at=_now(),
+        partner_tier="trusted", pinned_rank=1, rating=0, completed_jobs=0,
+        subscription_status="inactive"))
+
+
 def seed(db: Session):
     bank = db.scalar(select(models.Questionnaire).where(
         models.Questionnaire.code == QUESTIONNAIRE["code"]))
@@ -86,6 +120,7 @@ def seed(db: Session):
 
     if db.scalar(select(models.User)) is None:
         _seed_admin(db)
+    _seed_trusted_partner(db)
 
     db.commit()
     return bank

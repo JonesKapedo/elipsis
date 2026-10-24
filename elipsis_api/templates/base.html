@@ -54,6 +54,7 @@
       <a href="/operations" class="nav-item{% if path.startswith('/operations') %} active{% endif %}"{% if path.startswith('/operations') %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">▤</span> Operations</a>
       <a href="/company" class="nav-item{% if path.startswith('/company') or path == '/audit' %} active{% endif %}"{% if path.startswith('/company') or path == '/audit' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">▣</span> Company</a>
       <a href="/marketplace" class="nav-item{% if path.startswith('/marketplace') %} active{% endif %}"{% if path.startswith('/marketplace') %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◈</span> Marketplace <span class="nav-note">{% if (user.role or '') == 'admin' or user.is_admin %}admin{% else %}locked{% endif %}</span></a>
+      {% if (user.user_type or '') == 'bidder' %}<a href="/marketplace/partner" class="nav-item{% if path.startswith('/marketplace/partner') %} active{% endif %}"><span class="nav-icon" aria-hidden="true">◇</span> Partner console</a>{% endif %}
 
       {% if (user.role or '') == 'admin' or user.is_admin %}
       <p class="nav-group-label">Admin</p>

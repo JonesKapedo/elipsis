@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Partner console · Marketplace{% endblock %}
+{% block content %}
+<section class="dash-hero">
+  <div>
+    <p class="eyebrow">Implementation partner</p>
+    <h1>{{ bidder.company_name if bidder else 'Partner console' }}</h1>
+    <p class="lede">Verification is reviewed by Elipsis. An active subscription unlocks full briefs and bidding.</p>
+  </div>
+  <a class="btn ghost" href="/marketplace/apply">← Application</a>
+</section>
+
+{% if subscribed %}<div class="flash ok">Subscription activated. Full briefs and bidding are now available.</div>{% endif %}
+{% if error %}<div class="flash err">{{ error }}</div>{% endif %}
+
+{% if not bidder %}
+<section class="block">
+  <h3>No application yet</h3>
+  <p class="muted">Submit your company for verification first.</p>
+  <a class="btn" href="/marketplace/apply">Apply as a partner</a>
+</section>
+{% else %}
+<section class="kpis">
+  <div class="kpi"><span class="kpi-lb">Verification</span><b>{{ bidder.verification_status|replace('_', ' ')|title }}</b></div>
+  <div class="kpi"><span class="kpi-lb">Subscription</span><b>{% if active %}Active{% else %}Inactive{% endif %}</b></div>
+  <div class="kpi"><span class="kpi-lb">Plan</span><b>{{ (bidder.subscription_tier or '—')|replace('_', ' ')|title }}</b></div>
+  <div class="kpi"><span class="kpi-lb">Expires</span><b>{{ bidder.subscription_expires_at or '—' }}</b></div>
+</section>
+
+<section class="block">
+  <div class="block-head"><h3>Subscription</h3>{% if active %}<span class="tag ok">Active</span>{% endif %}</div>
+  {% if bidder.verification_status != 'approved' %}
+  <p class="muted">Your application is {{ bidder.verification_status|replace('_', ' ')|title|lower }}. Subscriptions open after approval.</p>
+  {% elif not billing_enabled %}
+  <p class="muted">Billing is currently unavailable. Please try again later.</p>
+  {% else %}
+  <div class="pricing-grid">
+    {% for key, plan in plans.items() %}
+    <article class="price-card{% if key == 'yearly' %} featured{% endif %}">
+      <p class="eyebrow">{{ plan.label }}</p>
+      <p class="price">${{ plan.price }}</p>
+      <p class="muted small">{{ plan.days }} days of verified bidding access.</p>
+      <form method="post" action="/marketplace/partner/subscribe">
+        <input type="hidden" name="tier" value="{{ key }}">
+        <button class="btn" type="submit">{% if active %}Extend{% else %}Subscribe{% endif %}</button>
+      </form>
+    </article>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+
+<section class="block">
+  <div class="block-head"><h3>Verification documents</h3><span class="tag">{{ documents|length }}</span></div>
+  {% if documents %}
+  <ul class="price-list">
+    {% for doc in documents %}<li>{{ doc.document_type|replace('_', ' ')|title }} · {{ doc.filename }} · {{ doc.uploaded_at }}</li>{% endfor %}
+  </ul>
+  {% else %}<p class="muted small">No documents uploaded.</p>{% endif %}
+  <p class="muted small">Upload or replace documents from the application page.</p>
+</section>
+{% endif %}
+{% endblock %}

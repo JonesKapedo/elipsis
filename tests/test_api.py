@@ -144,9 +144,10 @@ def test_pricing_is_global_and_utility_priced():
     with TestClient(app) as fresh:
         page = fresh.get("/pricing")
     assert page.status_code == 200
-    assert "$490" in page.text and "$1,500" in page.text
-    assert "Why this pricing holds up" in page.text
-    assert "List prices are in USD" in page.text
+    assert "$49" in page.text and "$29" in page.text and "$380" in page.text
+    assert "Why this structure holds up" in page.text
+    assert "Prices are in USD" in page.text
+    assert "$1,500" not in page.text
     assert "Kenya" not in page.text
 
 
@@ -840,7 +841,7 @@ def test_premium_checkout_and_dummy_return_grant_access():
             "default_department": "Operations"}, follow_redirects=False)
         page = fresh.get("/pro")
         assert page.status_code == 200
-        assert "$39" in page.text and "$390" in page.text
+        assert "$29" in page.text and "$380" in page.text
         checkout = fresh.post("/pro/checkout", data={"billing": "monthly"},
                               follow_redirects=False)
         assert checkout.status_code == 303

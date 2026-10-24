@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Bidder verification · Admin{% endblock %}
+{% block content %}
+
+<section class="dash-hero">
+  <div>
+    <p class="eyebrow">Operations</p>
+    <h1>Bidder verification</h1>
+    <p class="lede">
+      Only verified, subscribed partners can bid. Approve the companies that can deliver, and keep the marketplace signal high.
+    </p>
+  </div>
+  <a class="btn ghost" href="/marketplace">View marketplace</a>
+</section>
+{% include "_admin_tabs.html" %}
+
+{% if error %}<div class="flash err" role="alert">{{ error }}</div>{% endif %}
+{% if ok %}<div class="flash ok" role="status">{{ ok }}</div>{% endif %}
+
+<section class="block">
+  <div class="block-head"><h3>Bidder companies</h3></div>
+  {% if bidders %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Company</th>
+        <th>Owner</th>
+        <th>Verification</th>
+        <th>Subscription</th>
+        <th>Partner tier</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in bidders %}
+      {% set bidder = item.row %}
+      <tr>
+        <td>
+          <strong>{{ bidder.company_name }}</strong>
+          <div class="muted small">{{ bidder.slug or '—' }}{% if bidder.website %} · {{ bidder.website }}{% endif %}</div>
+          {% if bidder.verification_notes %}<div class="muted small">{{ bidder.verification_notes }}</div>{% endif %}
+          {% if item.documents %}<div class="muted small">Docs: {% for doc in item.documents %}<a href="{{ doc.file_url }}" target="_blank" rel="noopener">{{ doc.document_type|replace('_', ' ')|title }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</div>{% endif %}
+        </td>
+        <td>
+          {{ item.owner.name if item.owner else '—' }}
+          <div class="muted small">{{ item.owner.email if item.owner else '' }}</div>
+        </td>
+        <td>
+          {% if bidder.verification_status == 'approved' %}<span class="tag ok">{{ item.verification }}</span>
+          {% elif bidder.verification_status in ('submitted', 'more_info') %}<span class="tag warn">{{ item.verification }}</span>
+          {% else %}<span class="tag">{{ item.verification }}</span>{% endif %}
+        </td>
+        <td>
+          {% if bidder.subscription_status == 'active' %}<span class="tag ok">Active</span>
+          {% else %}<span class="tag">{{ bidder.subscription_status or 'inactive'|capitalize }}</span>{% endif %}
+          <div class="muted small">{{ bidder.subscription_tier or '—' }}{% if bidder.subscription_expires_at %} · {{ bidder.subscription_expires_at }}{% endif %}</div>
+        </td>
+        <td>{{ bidder.partner_tier or 'standard' }}{% if bidder.pinned_rank %} · pinned #{{ bidder.pinned_rank }}{% endif %}</td>
+        <td>
+          <form method="post" action="/admin/bidders/{{ bidder.id }}/verify" style="display:flex;flex-wrap:wrap;gap:0.35rem;align-items:center;">
+            <select name="decision" class="input sm" aria-label="Verification decision">
+              <option value="approved"{% if bidder.verification_status == 'approved' %} selected{% endif %}>Approve</option>
+              <option value="more_info"{% if bidder.verification_status == 'more_info' %} selected{% endif %}>More info</option>
+              <option value="rejected"{% if bidder.verification_status == 'rejected' %} selected{% endif %}>Reject</option>
+            </select>
+            <input class="input sm" type="text" name="notes" placeholder="Note" maxlength="500">
+            <button class="btn sm" type="submit">Save</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No bidder companies yet.</p>
+  {% endif %}
+</section>
+
+{% endblock %}

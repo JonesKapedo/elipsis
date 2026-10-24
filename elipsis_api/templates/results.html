@@ -17,7 +17,7 @@
   {% if previous %}&nbsp;&middot;&nbsp; <span class="tag {{ 'ok' if (delta or 0) >= 0 else 'warn' }}">Movement {{ '%+.1f'|format(delta or 0) }} vs previous</span>{% endif %}
   {% if assessment.review_due_at %}&nbsp;&middot;&nbsp; <span class="tag">Review due {{ assessment.review_due_at }}</span>{% endif %}</p>
   <div class="hero-actions" style="margin-top:0.75rem">
-    {% if is_pro %}
+    {% if report_unlocked %}
     <a class="btn" href="/assessment/{{ assessment.id }}/report.pdf">Download PDF <span class="premium-tag">Premium</span></a>
     <a class="btn ghost" href="/assessment/{{ assessment.id }}/report">Print / board pack</a>
     <a class="btn ghost" href="/assessment/{{ assessment.id }}/export.xlsx">Excel</a>
@@ -38,7 +38,7 @@
     {% endif %}
     <a class="btn ghost" href="/start">New assessment</a>
   </div>
-  {% if not is_pro %}
+  {% if not report_unlocked %}
   <div class="premium-note">
     <span class="crown" title="Premium">{% include "partials/crown.svg" %}</span>
     <p><strong>Premium turns this result into a board pack.</strong> Download PDF, Excel, or JSON, print a clean report, share a read-only link, and send the questionnaire to your team.</p>
@@ -139,7 +139,7 @@
   </article>
   <article class="block" id="share-links">
     <h3>Shared links</h3>
-    {% if is_pro %}
+    {% if report_unlocked %}
     <form method="post" action="/assessment/{{ assessment.id }}/share" class="filter-bar">
       <input name="label" placeholder="Label (e.g. Board pack)" maxlength="120" style="flex:1 1 160px">
       <select name="days" aria-label="Expiry">
@@ -219,6 +219,26 @@
   </div>
 </section>
 
+{% if not report_unlocked %}
+<section class="block premium-note">
+  <span class="crown" title="Premium">{% include "partials/crown.svg" %}</span>
+  <h3>Your free diagnostic</h3>
+  <p><strong>You scored {{ '%.1f'|format(result.readiness_index) }}/100 · {{ result.maturity_band }} · {{ result.confidence_band }} confidence.</strong></p>
+  <p class="muted">Your top three constraints:</p>
+  <ol class="opp">
+    {% for o in result.top_opportunities[:3] %}<li>{{ o }}</li>{% else %}<li class="muted">No constraints triggered.</li>{% endfor %}
+  </ol>
+  <p class="muted">Unlock the Full Assessment for the complete 36-metric report, costed friction analysis, 90-day roadmap, exports, and one implementation request with three bidder introductions.</p>
+  <div class="hero-actions">
+    <form method="post" action="/assessment/{{ assessment.id }}/checkout">
+      <button class="btn" type="submit">Unlock Full Assessment · $49</button>
+    </form>
+    <a class="btn ghost" href="/pro?locked=reports">Subscribe for unlimited assessments</a>
+  </div>
+</section>
+{% endif %}
+
+{% if report_unlocked %}
 <section class="kpis">
   <div class="kpi accent"><span>Annual savings potential</span><b>{{ result.financial.annual_savings|money }}</b></div>
   <div class="kpi"><span>Indicative investment</span><b>{{ result.financial.investment|money }}</b></div>
@@ -377,5 +397,6 @@
     </tbody>
   </table>
 </section>
+{% endif %}
 {% endif %}
 {% endblock %}

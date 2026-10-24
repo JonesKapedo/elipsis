@@ -286,6 +286,21 @@ def notification_centre(request: Request, user=Depends(get_current_user),
     for note in notes:
         note["fingerprint"] = services_ops.notification_fingerprint(note)
         note["read"] = note["fingerprint"] in read
+    marketplace = db.scalars(select(models.MarketplaceNotification).where(
+        models.MarketplaceNotification.user_id == user.id
+    ).order_by(models.MarketplaceNotification.id.desc()).limit(50)).all()
+    for row in marketplace:
+        notes.append({
+            "kind": "marketplace",
+            "severity": "warn" if row.event in {
+                "bidder.rejected", "bidder.more_info", "conversation.closed",
+                "request.rejected", "bid.rejected"} else "info",
+            "title": row.title,
+            "detail": row.body or row.event.replace(".", " "),
+            "url": row.url or "/marketplace",
+            "fingerprint": f"marketplace:{row.id}",
+            "read": row.read_at is not None or f"marketplace:{row.id}" in read,
+        })
     prefs = _prefs(db, user)
     return templates.TemplateResponse(request, "notifications.html", {
         "user": user, "notifications": notes, "prefs": prefs,
@@ -301,6 +316,18 @@ async def notification_read(request: Request, user=Depends(get_current_user),
     form = await request.form()
     fingerprints = [str(v) for v in form.getlist("fingerprint")]
     services_ops.mark_notifications_read(db, user, fingerprints)
+    from elipsis_api.services_marketplace import now_iso
+    for fingerprint in fingerprints:
+        if not fingerprint.startswith("marketplace:"):
+            continue
+        try:
+            note_id = int(fingerprint.split(":", 1)[1])
+        except ValueError:
+            continue
+        row = db.get(models.MarketplaceNotification, note_id)
+        if row is not None and row.user_id == user.id and row.read_at is None:
+            row.read_at = now_iso()
+    db.commit()
     return RedirectResponse("/notifications?read=1", status_code=303)
 
 

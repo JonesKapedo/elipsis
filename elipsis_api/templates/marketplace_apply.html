@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Apply as an implementation partner{% endblock %}
+{% block content %}
+<section class="dash-hero">
+  <div>
+    <p class="eyebrow">Partner verification</p>
+    <h1>Apply as an implementation partner</h1>
+    <p class="lede">Verification is manual. Approved companies need an active bidder subscription to see full briefs and bid.</p>
+  </div>
+  <a class="btn ghost" href="/marketplace/companies">← Partner directory</a>
+</section>
+
+{% if request.query_params.get('submitted') %}<div class="flash ok">Application submitted. The Elipsis team will review it.</div>{% endif %}
+{% if request.query_params.get('doc') %}<div class="flash ok">Document uploaded for verification.</div>{% endif %}
+{% if request.query_params.get('error') %}<div class="flash err">{{ request.query_params.get('error') }}</div>{% endif %}
+{% if error %}<div class="flash err">{{ error }}</div>{% endif %}
+
+{% if not is_bidder %}
+<section class="block">
+  <h3>A partner account is required</h3>
+  <p class="muted">You are signed in as a client account. Partner applications use a separate bidder account so marketplace permissions stay separate.</p>
+  <a class="btn" href="/signup?type=bidder">Create a partner account</a>
+</section>
+{% else %}
+<section class="block">
+  {% if bidder %}
+  <div class="block-head"><h3>Application status</h3><span class="tag">{{ bidder.verification_status|replace('_', ' ')|title }}</span></div>
+  {% if bidder.verification_notes %}<p class="muted">{{ bidder.verification_notes }}</p>{% endif %}
+  <p><a class="btn ghost sm" href="/marketplace/partner">Open partner console →</a></p>
+  {% endif %}
+  <form method="post" action="/marketplace/apply" class="stack">
+    <label>Company name <input name="company_name" maxlength="160" required value="{{ bidder.company_name if bidder else '' }}"></label>
+    <label>What you deliver <textarea name="description" rows="4" maxlength="4000">{{ bidder.description if bidder else '' }}</textarea></label>
+    <label>Services <textarea name="services_offered" rows="3" maxlength="4000" placeholder="e.g. workflow automation, systems integration, dispatch optimisation">{{ bidder.services_offered if bidder else '' }}</textarea></label>
+    <label>Website <input name="website" maxlength="300" value="{{ bidder.website if bidder else '' }}"></label>
+    <label>Contact email <input name="contact_email" type="email" maxlength="200" value="{{ bidder.contact_email if bidder else user.email }}"></label>
+    <div class="filter-bar">
+      <label>Years in business <input name="years_in_business" inputmode="numeric" value="{{ bidder.years_in_business if bidder and bidder.years_in_business else '' }}"></label>
+      <label>Team size <input name="team_size" inputmode="numeric" value="{{ bidder.team_size if bidder and bidder.team_size else '' }}"></label>
+    </div>
+    <button class="btn" type="submit">Submit for verification</button>
+    <p class="muted small">Contact details stay private. Buyers reach you through an awarded request conversation.</p>
+  </form>
+</section>
+
+<section class="block">
+  <h3>Verification documents</h3>
+  <p class="muted small">Upload company registration, insurance, certifications, or references. Documents are private and visible only to Elipsis reviewers.</p>
+  {% if documents %}
+  <ul class="price-list">
+    {% for doc in documents %}
+    <li>{{ doc.document_type|replace('_', ' ')|title }} · {{ doc.filename }} · {{ doc.uploaded_at }}</li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="muted small">No documents uploaded yet.</p>{% endif %}
+  {% if s3_configured %}
+  <form method="post" action="/marketplace/apply/documents" enctype="multipart/form-data" class="filter-bar">
+    <select name="document_type" aria-label="Document type">
+      <option value="business_registration">Business registration</option>
+      <option value="insurance">Insurance</option>
+      <option value="certification">Certification</option>
+      <option value="reference">Client reference</option>
+      <option value="other">Other</option>
+    </select>
+    <input type="file" name="file" required aria-label="Verification document">
+    <button class="btn sm" type="submit">Upload document</button>
+  </form>
+  {% else %}<p class="muted small">Document upload is unavailable until object storage is configured.</p>{% endif %}
+</section>
+{% endif %}
+{% endblock %}
