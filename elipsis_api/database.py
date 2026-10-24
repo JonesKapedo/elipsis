@@ -11,7 +11,18 @@ from elipsis_api.config import DATABASE_URL
 
 
 def _build_engine(url: str):
-    """Create an engine, with a visible degraded fallback in production."""
+    """Create an engine; only development may fall back to SQLite.
+
+    Production must keep the configured Postgres engine even when the first
+    connection fails. Falling back would send the next sign-up to an ephemeral
+    file while the operator thinks the real database is in use.
+    """
+    from elipsis_api.config import (
+        _postgres_usable,
+        _sqlite_url,
+        is_production,
+    )
+
     is_sqlite = url.startswith("sqlite")
     connect_args: dict = {}
     engine_kwargs: dict = {"future": True, "pool_pre_ping": True}
@@ -20,39 +31,39 @@ def _build_engine(url: str):
         connect_args["check_same_thread"] = False
         connect_args["timeout"] = 15
     else:
-        # Fail fast on serverless — never hang cold start waiting for Neon.
-        connect_args["connect_timeout"] = 5
+        # Neon can need a few seconds to wake from scale-to-zero.
+        connect_args["connect_timeout"] = int(
+            os.getenv("ELIPSIS_DB_CONNECT_TIMEOUT", "10")
+        )
         engine_kwargs["pool_recycle"] = 280
         engine_kwargs["pool_size"] = int(os.getenv("ELIPSIS_DB_POOL_SIZE", "5"))
         engine_kwargs["max_overflow"] = int(os.getenv("ELIPSIS_DB_MAX_OVERFLOW", "10"))
         engine_kwargs["pool_timeout"] = 10
 
-    try:
-        eng = create_engine(url, connect_args=connect_args, **engine_kwargs)
-        # Quick connectivity check for non-sqlite so we fall back early.
-        if not is_sqlite:
-            with eng.connect() as conn:
-                conn.execute(text("SELECT 1"))
+    eng = create_engine(url, connect_args=connect_args, **engine_kwargs)
+    if is_sqlite or is_production():
         return eng, url
-    except Exception as exc:  # noqa: BLE001
-        from elipsis_api.config import CONFIG_ERRORS
-        CONFIG_ERRORS.append(
-            f"database engine init failed ({exc.__class__.__name__}: {exc})")
-        print(
-            f"[elipsis] engine init failed ({exc.__class__.__name__}: {exc}) "
-            "-> falling back to ephemeral SQLite",
-            flush=True,
-        )
-        from elipsis_api.config import _sqlite_url
 
-        fallback = _sqlite_url()
-        eng = create_engine(
-            fallback,
-            connect_args={"check_same_thread": False, "timeout": 15},
-            future=True,
-            pool_pre_ping=True,
-        )
-        return eng, fallback
+    if _postgres_usable(url):
+        return eng, url
+
+    from elipsis_api.config import CONFIG_ERRORS
+
+    message = (
+        "PostgreSQL is unreachable in development; falling back to SQLite. "
+        "Production will refuse this fallback."
+    )
+    CONFIG_ERRORS.append(message)
+    print(f"[elipsis] {message}", flush=True)
+    fallback = _sqlite_url()
+    eng.dispose()
+    fallback_engine = create_engine(
+        fallback,
+        connect_args={"check_same_thread": False, "timeout": 15},
+        future=True,
+        pool_pre_ping=True,
+    )
+    return fallback_engine, fallback
 
 
 engine, ACTIVE_DATABASE_URL = _build_engine(DATABASE_URL)

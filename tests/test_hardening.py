@@ -118,15 +118,22 @@ def test_marketplace_is_locked_while_coming_soon(app_client):
     assert "closed" in page.text.lower()
 
 
-def test_production_degrades_visibly_without_postgres_or_secret(monkeypatch):
+def test_production_requires_a_durable_database_and_secret(monkeypatch):
     from elipsis_api import config, security
 
     monkeypatch.setenv("VERCEL", "1")
-    monkeypatch.delenv("ELIPSIS_DATABASE_URL", raising=False)
-    monkeypatch.delenv("TURBINEZ_DATABASE_URL", raising=False)
+    for name in (
+        "ELIPSIS_DATABASE_URL",
+        "NEON_DATABASE_URL",
+        "POSTGRES_URL",
+        "POSTGRES_PRISMA_URL",
+        "DATABASE_URL",
+        "TURBINEZ_DATABASE_URL",
+    ):
+        monkeypatch.delenv(name, raising=False)
     monkeypatch.setattr(config, "CONFIG_ERRORS", [])
-    assert config.resolve_database_url().startswith("sqlite")
-    assert config.CONFIG_ERRORS
+    with pytest.raises(config.DatabaseConfigurationError, match="No database"):
+        config.resolve_database_url()
 
     monkeypatch.delenv("ELIPSIS_SECRET_KEY", raising=False)
     monkeypatch.delenv("TURBINEZ_SECRET_KEY", raising=False)

@@ -46,27 +46,30 @@ def _sqlite_url() -> str:
 
 
 def _postgres_usable(url: str) -> bool:
-    """True when psycopg is installed and the database answers within 3s."""
+    """True when psycopg is installed and the database answers quickly."""
     try:
         import psycopg  # noqa: F401  # type: ignore[import-not-found]
     except ImportError:
         print(
-            "[elipsis] PostgreSQL configured but psycopg is not installed "
-            "-> falling back to SQLite",
+            "[elipsis] PostgreSQL configured but psycopg is not installed",
             flush=True,
         )
         return False
     try:
         from sqlalchemy import create_engine, text
 
+        timeout = int(os.getenv("ELIPSIS_DB_PROBE_TIMEOUT", "10"))
         probe = create_engine(
             url,
             pool_pre_ping=True,
-            connect_args={"connect_timeout": 3},
+            connect_args={"connect_timeout": timeout},
         )
-        with probe.connect() as conn:
-            conn.execute(text("SELECT 1"))
-        return True
+        try:
+            with probe.connect() as conn:
+                conn.execute(text("SELECT 1"))
+            return True
+        finally:
+            probe.dispose()
     except Exception as exc:  # noqa: BLE001
         detail = (
             str(exc).strip().splitlines()[0]
@@ -74,8 +77,7 @@ def _postgres_usable(url: str) -> bool:
             else exc.__class__.__name__
         )
         print(
-            f"[elipsis] PostgreSQL configured but unreachable ({detail}) "
-            "-> falling back to SQLite",
+            f"[elipsis] PostgreSQL configured but unreachable ({detail})",
             flush=True,
         )
         return False
@@ -85,46 +87,68 @@ def is_production() -> bool:
     return bool(os.getenv("VERCEL")) or os.getenv("ELIPSIS_ENV", "").lower() == "production"
 
 
+class DatabaseConfigurationError(RuntimeError):
+    """Raised when production has no durable database configured."""
+
+
 CONFIG_ERRORS: list[str] = []
 
 
-def _degraded(reason: str) -> str:
-    """Keep the public site online while making the misconfiguration loud.
-
-    Production still refuses to *write* to a throwaway database silently: the
-    health endpoint reports degraded, the server logs the error, and the
-    operator must set a real PostgreSQL URL. We only fall back so a missing env
-    var produces a readable site instead of an opaque FUNCTION_INVOCATION_FAILED.
-    """
-    message = (
-        f"{reason} Running on ephemeral SQLite; data will NOT survive a cold "
-        "start. Set ELIPSIS_DATABASE_URL to a reachable PostgreSQL URL."
+def _database_url_from_env() -> str:
+    """First configured database URL, including common Vercel/Neon names."""
+    names = (
+        "ELIPSIS_DATABASE_URL",
+        "NEON_DATABASE_URL",
+        "POSTGRES_URL",
+        "POSTGRES_PRISMA_URL",
+        "DATABASE_URL",
+        "TURBINEZ_DATABASE_URL",
     )
-    if message not in CONFIG_ERRORS:
-        CONFIG_ERRORS.append(message)
-    print(f"[elipsis] DEGRADED: {message}", flush=True)
-    return _sqlite_url()
+    for name in names:
+        value = os.getenv(name)
+        if value and value.strip():
+            return value
+    return ""
+
+
+def _sqlite_allowed_in_production() -> bool:
+    return os.getenv("ELIPSIS_ALLOW_SQLITE_IN_PRODUCTION", "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
 
 
 def resolve_database_url() -> str:
-    """Use Postgres when configured; degrade visibly instead of crashing."""
-    url = os.getenv("ELIPSIS_DATABASE_URL") or os.getenv("TURBINEZ_DATABASE_URL")
+    """Resolve a durable database URL, failing closed in production.
+
+    A serverless deployment must never write accounts into an ephemeral SQLite
+    file. If production is missing a Postgres URL, raise so the operator sees a
+    real deployment error instead of silently losing every sign-up on the next
+    cold start.
+    """
+    url = _database_url_from_env().strip().strip('"').strip("'")
     if not url:
-        if is_production():
-            return _degraded("ELIPSIS_DATABASE_URL is not set.")
+        if is_production() and not _sqlite_allowed_in_production():
+            raise DatabaseConfigurationError(
+                "No database configured. Set ELIPSIS_DATABASE_URL (or "
+                "DATABASE_URL / POSTGRES_URL / NEON_DATABASE_URL) to a Neon "
+                "PostgreSQL connection string."
+            )
         return _sqlite_url()
-    url = url.strip().strip('"').strip("'")
-    if url.startswith(("postgres://", "postgresql://")):
-        if _postgres_usable(url):
-            return url
-        if is_production():
-            return _degraded("ELIPSIS_DATABASE_URL is configured but unreachable.")
-        print("[elipsis] development fallback: PostgreSQL unreachable -> SQLite",
-              flush=True)
-        return _sqlite_url()
-    if is_production():
-        return _degraded(
-            "ELIPSIS_DATABASE_URL is not a PostgreSQL URL.")
+
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url[len("postgres://"):]
+
+    if url.startswith(("postgresql://", "postgresql+psycopg://")):
+        return url
+
+    if is_production() and not _sqlite_allowed_in_production():
+        raise DatabaseConfigurationError(
+            f"Production database URL must be PostgreSQL, got scheme "
+            f"{url.split('://', 1)[0]!r}."
+        )
     return url
 
 
