@@ -22,9 +22,12 @@ def signup_form(request: Request, user=Depends(get_current_user),
                 db: Session = Depends(get_db)):
     if user is not None:
         return RedirectResponse("/dashboard", status_code=303)
+    signup_type = request.query_params.get("type", "client")
+    if signup_type not in {"client", "bidder"}:
+        signup_type = "client"
     return templates.TemplateResponse(
         request, "signup.html",
-        {"user": user, "error": None, "form": None,
+        {"user": user, "error": None, "form": None, "signup_type": signup_type,
          "total_questions": _question_count(db) or 63})
 
 
@@ -44,13 +47,15 @@ async def signup(request: Request,
         return templates.TemplateResponse(
             request, "signup.html",
             {"user": None, "error": "Accept the terms to create an account.",
-             "form": form, "total_questions": _question_count(db) or 63},
+             "form": form, "signup_type": form["user_type"],
+             "total_questions": _question_count(db) or 63},
             status_code=400)
     if password != password2:
         return templates.TemplateResponse(
             request, "signup.html",
             {"user": None, "error": "Passwords do not match.",
-             "form": form, "total_questions": _question_count(db) or 63},
+             "form": form, "signup_type": form["user_type"],
+             "total_questions": _question_count(db) or 63},
             status_code=400)
     try:
         account = auth_extra.register_user(db, email, password, name=name, user_type=form["user_type"])
@@ -58,14 +63,16 @@ async def signup(request: Request,
         return templates.TemplateResponse(
             request, "signup.html",
             {"user": None, "error": str(exc),
-             "form": form, "total_questions": _question_count(db) or 63},
+             "form": form, "signup_type": form["user_type"],
+             "total_questions": _question_count(db) or 63},
             status_code=400)
     except Exception as exc:  # noqa: BLE001
         print(f"[elipsis] signup failed: {exc}", flush=True)
         return templates.TemplateResponse(
             request, "signup.html",
             {"user": None, "error": "Could not create account. Please try again.",
-             "form": form, "total_questions": _question_count(db) or 63},
+             "form": form, "signup_type": form["user_type"],
+             "total_questions": _question_count(db) or 63},
             status_code=500)
     services_success.record_acceptance(
         db, account, document="terms",
@@ -81,7 +88,8 @@ async def signup(request: Request,
             f'<p>Confirm your email: <a href="{base}/verify-email?token={account.verification_token}">Verify email</a></p>',
         )
     token = services.create_session(db, account.id)
-    response = RedirectResponse("/setup", status_code=303)
+    destination = "/marketplace/apply" if (account.user_type or "") == "bidder" else "/setup"
+    response = RedirectResponse(destination, status_code=303)
     _set_session_cookie(response, token)
     return response
 

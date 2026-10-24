@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Admin handoffs{% endblock %}
+{% block content %}
+<section class="head"><p class="eyebrow">Admin</p><h1>Partner handoffs</h1><p class="muted">Short-lived, single-use handoffs. The summary is fetched server-to-server.</p></section>
+<section class="block">
+  {% if handoffs %}
+  <table class="table">
+    <thead><tr><th>Request</th><th>Client</th><th>Partner</th><th>Status</th><th>Expires</th><th>Used</th></tr></thead>
+    <tbody>
+      {% for item in handoffs %}
+      <tr>
+        <td><a href="/admin/requests/{{ item.row.request_id }}">{{ item.request.title if item.request else item.row.request_id }}</a></td>
+        <td>{{ item.client.email if item.client else item.row.user_id }}</td>
+        <td>{{ item.row.partner or '—' }}</td>
+        <td>{{ item.row.status }}</td>
+        <td>{{ item.row.expires_at }}</td>
+        <td>{{ item.row.used_at or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="muted">No handoffs yet.</p>{% endif %}
+</section>
+{% endblock %}

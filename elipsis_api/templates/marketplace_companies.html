@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Implementation partners · Marketplace{% endblock %}
+{% block content %}
+<section class="dash-hero">
+  <div>
+    <p class="eyebrow">Verified implementation partners</p>
+    <h1>Implementation companies</h1>
+    <p class="lede">Verified delivery partners for assessment follow-through. Contact happens on Elipsis, never through public phone numbers or email addresses.</p>
+  </div>
+  <a class="btn ghost" href="/marketplace">← Marketplace</a>
+</section>
+
+{% if companies %}
+<section class="company-grid">
+  {% for item in companies %}
+  {% set c = item.row %}
+  <article class="block company-card{% if item.pinned %} is-pinned{% endif %}">
+    <div class="block-head">
+      <div>
+        <p class="eyebrow">{% if item.pinned %}Trusted partner{% else %}Verified implementation partner{% endif %}</p>
+        <h2><a href="/marketplace/companies/{{ item.slug }}">{{ c.company_name }}</a></h2>
+      </div>
+      {% if c.pinned_rank %}<span class="tag warn">Pinned</span>{% endif %}
+    </div>
+    <p class="muted">{{ c.description or 'Verified implementation partner on Elipsis.' }}</p>
+    <p class="small"><strong>Services:</strong> {{ c.services_offered or 'Implementation and operations improvement' }}</p>
+    <p class="small"><strong>Location:</strong> {{ c.location or 'Global' }}{% if c.years_in_business %} · {{ c.years_in_business }} years{% endif %}</p>
+    <p class="small"><strong>Status:</strong> {% if item.active %}<span class="tag ok">Available to bid</span>{% else %}<span class="tag">Directory listing</span>{% endif %}
+      {% if c.rating %} · Rating {{ '%.1f'|format(c.rating) }}{% endif %}
+      {% if c.completed_jobs %} · {{ c.completed_jobs }} completed jobs{% endif %}</p>
+    <a class="btn ghost sm" href="/marketplace/companies/{{ item.slug }}">View profile →</a>
+  </article>
+  {% endfor %}
+</section>
+{% else %}
+<section class="block"><p class="muted">Verified partner profiles are being reviewed.</p></section>
+{% endif %}
+
+<section class="model-panel">
+  <h3>Deliver implementation with Elipsis</h3>
+  <p class="muted small">Implementation companies apply for verification, then maintain an active bidder subscription to receive full briefs and submit bids.</p>
+  <a class="btn ghost" href="/marketplace/apply">Apply as an implementation partner</a>
+</section>
+{% endblock %}

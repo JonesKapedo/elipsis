@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Implementation conversation · Marketplace{% endblock %}
+{% block content %}
+<section class="dash-hero">
+  <div>
+    <p class="eyebrow">Private implementation conversation</p>
+    <h1>{{ request_row.title if request_row else 'Implementation request' }}</h1>
+    <p class="lede">{{ requester.name or requester.email }} · {{ bidder.name or bidder.email }}</p>
+  </div>
+  <a class="btn ghost" href="/marketplace/{{ conversation.request_id }}">← Request</a>
+</section>
+
+{% if error %}<div class="flash err">{{ error }}</div>{% endif %}
+{% if ok %}<div class="flash ok">{{ ok }}</div>{% endif %}
+
+<section class="kpis">
+  <div class="kpi"><span class="kpi-lb">Status</span><b>{{ conversation.status|title }}</b></div>
+  <div class="kpi"><span class="kpi-lb">Reply window</span><b>{% if conversation.status == 'open' %}Closes {{ conversation.closes_at }}{% else %}{{ conversation.closed_at or 'Closed' }}{% endif %}</b></div>
+  <div class="kpi"><span class="kpi-lb">Admin</span><b>{% if conversation.admin_involved %}Involved{% else %}Not involved{% endif %}</b></div>
+  <div class="kpi"><span class="kpi-lb">Outcome</span><b>{{ (conversation.outcome or 'Not recorded')|replace('_', ' ')|title }}</b></div>
+</section>
+
+<section class="block">
+  <div class="block-head"><h3>Messages</h3><span class="tag">{{ messages|length }}</span></div>
+  <div class="conversation-thread">
+    {% for message in messages %}
+    <article class="note-card">
+      <div>
+        <strong>
+          {% if message.sender_id == conversation.requester_id %}Client
+          {% elif message.sender_id == conversation.bidder_user_id %}Partner
+          {% elif message.is_admin %}Elipsis admin
+          {% else %}Participant{% endif %}
+          {% if message.is_admin %}<span class="tag warn">Admin</span>{% endif %}
+        </strong>
+        <p style="white-space:pre-wrap;">{{ message.body }}</p>
+        <small>{{ message.created_at }}</small>
+      </div>
+    </article>
+    {% else %}
+    <p class="muted">No messages yet. Start with a short introduction and the next concrete step.</p>
+    {% endfor %}
+  </div>
+</section>
+
+{% if conversation.status == 'open' and participant %}
+<section class="block">
+  <h3>Reply</h3>
+  <form method="post" action="/marketplace/conversations/{{ conversation.id }}/messages" class="stack">
+    <textarea name="body" rows="4" maxlength="4000" required placeholder="Share the next step, ask a question, or confirm scope."></textarea>
+    <button class="btn" type="submit">Send message</button>
+  </form>
+  <p class="muted small">The reply window resets to 24 hours after each message. Messages are visible to both parties and to an involved admin.</p>
+</section>
+{% elif conversation.status == 'open' and is_admin %}
+<section class="block">
+  <h3>Admin note</h3>
+  <form method="post" action="/marketplace/conversations/{{ conversation.id }}/messages" class="stack">
+    <textarea name="body" rows="4" maxlength="4000" required placeholder="Add a neutral clarification for both parties."></textarea>
+    <button class="btn" type="submit">Post as Elipsis admin</button>
+  </form>
+</section>
+{% endif %}
+
+{% if participant and not conversation.admin_involved %}
+<section class="block">
+  <h3>Involve Elipsis admin</h3>
+  <p class="muted small">Use this when you need platform help. Both parties will see that an admin was invited.</p>
+  <form method="post" action="/marketplace/conversations/{{ conversation.id }}/involve-admin" class="stack">
+    <input name="reason" maxlength="500" placeholder="What do you need help with?">
+    <button class="btn ghost" type="submit">Invite admin</button>
+  </form>
+</section>
+{% endif %}
+
+{% if participant and conversation.status == 'closed' %}
+<section class="block">
+  <h3>Record outcome</h3>
+  <p class="muted small">Elipsis records the introduction outcome. It does not create or claim a contract between the parties.</p>
+  <form method="post" action="/marketplace/conversations/{{ conversation.id }}/outcome" class="filter-bar">
+    <select name="outcome" aria-label="Outcome" required>
+      <option value="">Choose an outcome</option>
+      <option value="agreement">Agreement reached</option>
+      <option value="no_agreement">No agreement</option>
+      <option value="no_response">No response</option>
+      <option value="closed_unconfirmed">Closed, unconfirmed</option>
+    </select>
+    <button class="btn sm" type="submit">Save outcome</button>
+  </form>
+</section>
+{% endif %}
+
+<section class="model-panel">
+  <h3>Accountability</h3>
+  <p class="muted small">Elipsis is an assessment and introduction platform, not a party to implementation contracts. For introductions and conversations conducted on Elipsis, we will investigate reported platform misuse and enforce our platform terms. We are not responsible for work, payments, or agreements made outside the platform or after a conversation closes.</p>
+</section>
+{% endblock %}

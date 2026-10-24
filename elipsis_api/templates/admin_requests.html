@@ -37,9 +37,10 @@
   <div class="block-head">
     <h3>Active queue</h3>
     <div class="head-actions">
-      <a class="btn ghost sm" href="/admin/requests?status=pending">Pending</a>
-      <a class="btn ghost sm" href="/admin/requests?status=published">Published</a>
-      <a class="btn ghost sm" href="/admin/requests">All active</a>
+      <a class="btn ghost sm" href="/admin/requests?status=pending_review">Pending</a>
+      <a class="btn ghost sm" href="/admin/requests?status=approved">Published</a>
+      <a class="btn ghost sm" href="/admin/requests?status=awarded">Awarded</a>
+      <a class="btn ghost sm" href="/admin/requests">All types</a>
     </div>
   </div>
 
@@ -57,10 +58,10 @@
       </tr>
     </thead>
     <tbody>
-      {% for r in requests %}
+      {% for r in active %}
       <tr>
         <td>
-          <strong>{{ r.title }}</strong>
+          <strong><a href="/admin/requests/{{ r.id }}">{{ r.title }}</a></strong>
           <div class="muted small">{{ (r.message or '')[:80] }}{% if (r.message or '')|length > 80 %}…{% endif %}</div>
         </td>
         <td>
@@ -72,8 +73,9 @@
           {% endif %}
         </td>
         <td>
-          {% if r.status == 'published' %}<span class="tag ok">Live</span>
-          {% elif r.status == 'pending' %}<span class="tag warn">Pending</span>
+          {% if r.status == 'approved' %}<span class="tag ok">Live</span>
+          {% elif r.status == 'pending_review' %}<span class="tag warn">Pending</span>
+          {% elif r.status == 'awarded' %}<span class="tag ok">Awarded</span>
           {% elif r.status == 'rejected' %}<span class="tag">Rejected</span>
           {% else %}<span class="tag">{{ r.status|capitalize }}</span>{% endif %}
         </td>
@@ -81,7 +83,8 @@
         <td class="muted small">{{ r.published_at or r.created_at or '—' }}</td>
         <td>
           <div style="display:flex;flex-wrap:wrap;gap:0.35rem;">
-            {% if r.status in ['pending', 'verified'] %}
+            <a class="btn ghost sm" href="/admin/requests/{{ r.id }}">Review</a>
+            {% if r.status == 'pending_review' %}
             <form method="post" action="/admin/requests/{{ r.id }}/publish" style="display:inline;">
               <button class="btn sm" type="submit">Publish</button>
             </form>
@@ -123,7 +126,7 @@
       {% for r in history %}
       <tr>
         <td>
-          <strong>{{ r.title }}</strong>
+          <strong><a href="/admin/requests/{{ r.id }}">{{ r.title }}</a></strong>
           <div class="muted small">{{ (r.message or '')[:60] }}{% if (r.message or '')|length > 60 %}…{% endif %}</div>
         </td>
         <td class="muted">
@@ -131,7 +134,7 @@
         </td>
         <td>
           {% if r.status == 'rejected' %}<span class="tag">Rejected</span>
-          {% elif r.status == 'completed' %}<span class="tag ok">Completed</span>
+          {% elif r.status == 'closed' %}<span class="tag ok">Completed</span>
           {% else %}<span class="tag">{{ r.status|capitalize }}</span>{% endif %}
         </td>
         <td class="num">{{ r.bid_count }}</td>

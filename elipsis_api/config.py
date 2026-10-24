@@ -137,3 +137,13 @@ HOST = _setting("ELIPSIS_HOST", "TURBINEZ_HOST", "127.0.0.1")
 PORT = int(_setting("ELIPSIS_PORT", "TURBINEZ_PORT", "8001"))
 SESSION_COOKIE = "elipsis_session"
 MARKETPLACE_ENABLED = os.getenv("ELIPSIS_MARKETPLACE_ENABLED", "0").strip().lower() in {"1", "true", "yes"}
+
+
+def _flag(name: str, default: str = "1") -> bool:
+    return os.getenv(name, default).strip().lower() in {"1", "true", "yes", "on"}
+
+
+MESSAGING_ENABLED = _flag("ELIPSIS_MESSAGING_ENABLED")
+BILLING_ENABLED = _flag("ELIPSIS_BILLING_ENABLED")
+HANDOFF_ENABLED = _flag("ELIPSIS_HANDOFF_ENABLED")
+VERIFICATION_ENABLED = _flag("ELIPSIS_VERIFICATION_ENABLED")

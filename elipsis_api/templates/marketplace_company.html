@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ company.company_name }} · Implementation partner{% endblock %}
+{% block content %}
+<section class="dash-hero">
+  <div>
+    <p class="eyebrow">{% if pinned %}Trusted implementation partner{% else %}Verified implementation partner{% endif %}</p>
+    <h1>{{ company.company_name }}</h1>
+    <p class="lede">{{ company.description or 'Verified implementation partner on Elipsis.' }}</p>
+  </div>
+  <a class="btn ghost" href="/marketplace/companies">← All partners</a>
+</section>
+
+<section class="kpis">
+  <div class="kpi"><span class="kpi-lb">Verification</span><b>Verified</b></div>
+  <div class="kpi"><span class="kpi-lb">Availability</span><b>{% if active %}Available to bid{% else %}Directory listing{% endif %}</b></div>
+  <div class="kpi"><span class="kpi-lb">Completed jobs</span><b>{{ company.completed_jobs or 0 }}</b></div>
+  <div class="kpi"><span class="kpi-lb">Rating</span><b>{% if company.rating %}{{ '%.1f'|format(company.rating) }}{% else %}—{% endif %}</b></div>
+</section>
+
+<section class="block">
+  <h3>Profile</h3>
+  <p><strong>Services:</strong> {{ company.services_offered or 'Implementation and operations improvement' }}</p>
+  <p><strong>Location:</strong> {{ company.location or 'Global' }}</p>
+  <p><strong>Years in business:</strong> {{ company.years_in_business or '—' }}</p>
+  <p><strong>Team size:</strong> {{ company.team_size or '—' }}</p>
+  {% if company.website %}<p><strong>Website:</strong> <a href="{{ company.website }}" rel="noopener nofollow" target="_blank">{{ company.website }}</a></p>{% endif %}
+  <p class="muted small">Contact details are shared only inside an awarded implementation request. Elipsis does not publish partner email addresses or phone numbers.</p>
+</section>
+
+<section class="model-panel">
+  <h3>Work with this partner</h3>
+  <p class="muted small">Publish an implementation request to the marketplace or choose Great Turbinez in the request handoff.</p>
+  <a class="btn" href="/marketplace/requests/new">Create an implementation request</a>
+</section>
+{% endblock %}

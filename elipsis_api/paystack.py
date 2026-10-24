@@ -46,7 +46,8 @@ def new_reference(prefix: str = "ELP") -> str:
 
 
 def initialize(email: str, amount_minor: int, reference: str, callback_url: str,
-               metadata: dict | None = None, currency: str = "USD") -> dict:
+               metadata: dict | None = None, currency: str = "USD",
+               plan_code: str | None = None) -> dict:
     """Initialize a checkout. Amount is already in the currency subunit (cents)."""
     ensure_configured()
     payload = {
@@ -57,6 +58,8 @@ def initialize(email: str, amount_minor: int, reference: str, callback_url: str,
         "callback_url": callback_url,
         "metadata": metadata or {},
     }
+    if plan_code:
+        payload["plan"] = plan_code
     if is_dummy():
         return {
             "authorization_url": f"/pay/dummy/{reference}",

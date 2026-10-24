@@ -41,7 +41,7 @@
       <span class="mark" aria-hidden="true">{{ BRAND_MARK }}</span>
       <div>
         <strong>{{ BRAND_NAME }}</strong>
-        <span class="muted">New company account</span>
+        <span class="muted">{% if signup_type == 'bidder' %}New implementation partner account{% else %}New company account{% endif %}</span>
       </div>
     </div>
 
@@ -53,7 +53,7 @@
     {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
 
     <form method="post" action="/signup" class="stack" novalidate>
-      <input type="hidden" name="user_type" value="client">
+      <input type="hidden" name="user_type" value="{{ signup_type|default('client') }}">
       <label for="name">Full name
         <input id="name" name="name" required maxlength="120" placeholder="Alex Morgan"
                value="{{ form.name if form else '' }}" autocomplete="name" autofocus>

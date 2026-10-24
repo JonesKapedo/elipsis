@@ -95,3 +95,20 @@
 @media (max-width:520px){
   .footer-grid{grid-template-columns:1fr}
 }
+
+.company-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;margin:1.4rem 0}
+.company-card{display:flex;flex-direction:column;gap:.35rem;margin:0 !important}
+.company-card h2{margin:.1rem 0 .3rem;font-size:1.25rem}
+.company-card h2 a{color:inherit;text-decoration:none}
+.company-card h2 a:hover{color:var(--accent)}
+.company-card .btn{margin-top:auto;align-self:flex-start}
+.company-card.is-pinned{border-color:rgba(180,83,9,.35);box-shadow:0 0 0 1px rgba(180,83,9,.1),var(--shadow-sm)}
+.conversation-thread{display:flex;flex-direction:column;gap:.65rem;margin-top:.8rem}
+.conversation-thread .note-card{width:min(88%,46rem)}
+.conversation-thread .note-card:nth-child(even){align-self:flex-end;background:var(--panel2,#f7f3ec)}
+.conversation-thread article strong{display:flex;align-items:center;gap:.4rem;font-size:.86rem}
+@media (max-width:640px){
+  .company-grid{grid-template-columns:1fr}
+  .conversation-thread .note-card{width:100%}
+  .company-card .btn{align-self:stretch;text-align:center}
+}

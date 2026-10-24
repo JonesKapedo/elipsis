@@ -43,7 +43,7 @@
     <article class="pcard">
       <div class="pcard-top">
         <div>
-          <h4 style="margin:0 0 0.35rem;">{{ r.title }}</h4>
+          <h4 style="margin:0 0 0.35rem;"><span class="crown" title="Premium request">{% include "partials/crown.svg" %}</span> {{ r.title }}</h4>
           <span class="pcard-w">
             {% if r.organization %}{{ r.organization.name }}{% else %}Organisation{% endif %}
             {% if r.organization and r.organization.company_size %}
@@ -51,7 +51,7 @@
             {% endif %}
           </span>
         </div>
-        <span class="tag ok">{{ r.status|capitalize }}</span>
+        <span class="tag ok">{{ r.status|replace('_', ' ')|title }}</span>
       </div>
       <p class="muted small" style="margin:0.75rem 0;">
         {{ (r.message or r.requirements or 'No summary provided.')[:220] }}{% if (r.message or r.requirements or '')|length > 220 %}…{% endif %}
@@ -65,7 +65,7 @@
         {% endif %}
         <span>{{ r.bid_count }} bid{% if r.bid_count != 1 %}s{% endif %}</span>
       </div>
-      <a class="btn sm" href="/marketplace/{{ r.id }}">View details</a>
+      <a class="btn sm" href="/marketplace/{{ r.id }}">{% if r.can_view_full %}View full brief{% else %}View teaser{% endif %}</a>
     </article>
     {% endfor %}
   </div>

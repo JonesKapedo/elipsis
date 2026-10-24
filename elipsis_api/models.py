@@ -342,6 +342,7 @@ class BidderCompany(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
     company_name: Mapped[str] = mapped_column(String, nullable=False)
+    slug: Mapped[str | None] = mapped_column(String, unique=True)
     location: Mapped[str | None] = mapped_column(String)
     services_offered: Mapped[str | None] = mapped_column(Text)
     rate_card: Mapped[str | None] = mapped_column(Text)
@@ -354,9 +355,19 @@ class BidderCompany(Base):
     subscription_status: Mapped[str | None] = mapped_column(String, default="inactive")
     subscription_tier: Mapped[str | None] = mapped_column(String)
     subscription_expires_at: Mapped[str | None] = mapped_column(String)
+    verification_status: Mapped[str | None] = mapped_column(String, default="submitted")
+    verification_submitted_at: Mapped[str | None] = mapped_column(String)
+    verified_at: Mapped[str | None] = mapped_column(String)
+    verified_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    verification_notes: Mapped[str | None] = mapped_column(Text)
+    partner_tier: Mapped[str | None] = mapped_column(String, default="standard")
+    pinned_rank: Mapped[int | None] = mapped_column(Integer)
+    rating: Mapped[float | None] = mapped_column(Float, default=0)
+    completed_jobs: Mapped[int | None] = mapped_column(Integer, default=0)
+    logo_url: Mapped[str | None] = mapped_column(String)
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
 
-    user: Mapped["User"] = relationship()
+    user: Mapped["User"] = relationship(foreign_keys=[user_id])
 
 
 class BidderPortfolio(Base):
@@ -381,17 +392,35 @@ class PhysicalAssessmentRequest(Base):
     organization_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("organizations.id"), nullable=False)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    assessment_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("assessments.id"))
     title: Mapped[str] = mapped_column(String, nullable=False)
     message: Mapped[str | None] = mapped_column(Text)
     description: Mapped[str | None] = mapped_column(Text)
     requirements: Mapped[str | None] = mapped_column(Text)
+    summary_snapshot: Mapped[str | None] = mapped_column(Text)
+    expectations: Mapped[str | None] = mapped_column(Text)
+    specifications: Mapped[str | None] = mapped_column(Text)
+    contact_preference: Mapped[str | None] = mapped_column(String)
     budget_range: Mapped[str | None] = mapped_column(String)
     deadline: Mapped[str | None] = mapped_column(String)
     location: Mapped[str | None] = mapped_column(String)
-    status: Mapped[str | None] = mapped_column(String, default="pending")
+    status: Mapped[str | None] = mapped_column(String, default="pending_review")
     payment_status: Mapped[str | None] = mapped_column(String, default="unpaid")
     payment_amount: Mapped[float | None] = mapped_column(Float)
     admin_notes: Mapped[str | None] = mapped_column(Text)
+    reviewed_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    reviewed_at: Mapped[str | None] = mapped_column(String)
+    rejection_reason: Mapped[str | None] = mapped_column(Text)
+    preferred_bid_id: Mapped[int | None] = mapped_column(Integer)
+    preferred_at: Mapped[str | None] = mapped_column(String)
+    awarded_bid_id: Mapped[int | None] = mapped_column(Integer)
+    awarded_at: Mapped[str | None] = mapped_column(String)
+    switches_used: Mapped[int | None] = mapped_column(Integer, default=0)
+    switches_granted: Mapped[int | None] = mapped_column(Integer, default=3)
+    topup_count: Mapped[int | None] = mapped_column(Integer, default=0)
+    closed_at: Mapped[str | None] = mapped_column(String)
+    close_reason: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
     verified_at: Mapped[str | None] = mapped_column(String)
     verified_by_admin: Mapped[bool | None] = mapped_column(Boolean, default=False)
@@ -399,7 +428,7 @@ class PhysicalAssessmentRequest(Base):
     completed_at: Mapped[str | None] = mapped_column(String)
 
     organization: Mapped["Organization"] = relationship()
-    user: Mapped["User"] = relationship()
+    user: Mapped["User"] = relationship(foreign_keys=[user_id])
 
 
 class RequestDocument(Base):
@@ -431,11 +460,155 @@ class BidSubmission(Base):
     estimated_cost: Mapped[float | None] = mapped_column(Float)
     proposed_timeline: Mapped[str | None] = mapped_column(String)
     proposed_cost: Mapped[float | None] = mapped_column(Float)
-    status: Mapped[str | None] = mapped_column(String, default="submitted")
+    roadmap_document_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("request_documents.id"))
+    status: Mapped[str | None] = mapped_column(String, default="pending_review")
+    admin_reviewed_by: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id"))
+    admin_reviewed_at: Mapped[str | None] = mapped_column(String)
+    admin_notes: Mapped[str | None] = mapped_column(Text)
+    awarded_at: Mapped[str | None] = mapped_column(String)
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
 
     request: Mapped["PhysicalAssessmentRequest"] = relationship()
     bidder_company: Mapped["BidderCompany"] = relationship()
+
+
+class AssessmentPurchase(Base):
+    """A paid unlock for one full assessment."""
+    __tablename__ = "assessment_purchases"
+    __table_args__ = (
+        UniqueConstraint("assessment_id", name="uq_assessment_purchase_assessment"),
+        Index("ix_assessment_purchases_user", "user_id"),
+    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    assessment_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("assessments.id"), nullable=False)
+    source: Mapped[str | None] = mapped_column(String, default="one_time")
+    payment_reference: Mapped[str | None] = mapped_column(String)
+    switches_granted: Mapped[int | None] = mapped_column(Integer, default=3)
+    active: Mapped[bool | None] = mapped_column(Boolean, default=True)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class BidderVerificationDocument(Base):
+    """Private document supporting a bidder verification review."""
+    __tablename__ = "bidder_verification_documents"
+    __table_args__ = (Index("ix_bidder_verification_documents_company",
+                            "bidder_company_id"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    bidder_company_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("bidder_companies.id"), nullable=False)
+    document_type: Mapped[str | None] = mapped_column(String)
+    filename: Mapped[str | None] = mapped_column(String)
+    file_url: Mapped[str | None] = mapped_column(String)
+    s3_key: Mapped[str | None] = mapped_column(String)
+    uploaded_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class BillingSubscription(Base):
+    """Provider-backed recurring subscription for requesters or bidders."""
+    __tablename__ = "billing_subscriptions"
+    __table_args__ = (
+        Index("ix_billing_subscriptions_user", "user_id"),
+        Index("ix_billing_subscriptions_bidder", "bidder_company_id"),
+        Index("ix_billing_subscriptions_status", "status"),
+    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    organization_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("organizations.id"))
+    bidder_company_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("bidder_companies.id"))
+    plan_code: Mapped[str] = mapped_column(String, nullable=False)
+    provider: Mapped[str | None] = mapped_column(String, default="paystack")
+    provider_subscription_code: Mapped[str | None] = mapped_column(String)
+    provider_email_token: Mapped[str | None] = mapped_column(String)
+    status: Mapped[str | None] = mapped_column(String, default="pending")
+    current_period_start: Mapped[str | None] = mapped_column(String)
+    current_period_end: Mapped[str | None] = mapped_column(String)
+    cancel_at_period_end: Mapped[bool | None] = mapped_column(Boolean, default=False)
+    grace_until: Mapped[str | None] = mapped_column(String)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+    updated_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class MarketplaceConversation(Base):
+    """Private requester-bidder conversation opened by an award."""
+    __tablename__ = "marketplace_conversations"
+    __table_args__ = (
+        UniqueConstraint("bid_id", name="uq_marketplace_conversation_bid"),
+        Index("ix_marketplace_conversations_request", "request_id"),
+        Index("ix_marketplace_conversations_requester", "requester_id"),
+        Index("ix_marketplace_conversations_bidder", "bidder_user_id"),
+    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    request_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("physical_assessment_requests.id"), nullable=False)
+    bid_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("bid_submissions.id"), nullable=False)
+    requester_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False)
+    bidder_user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False)
+    status: Mapped[str | None] = mapped_column(String, default="open")
+    admin_involved: Mapped[bool | None] = mapped_column(Boolean, default=False)
+    opened_at: Mapped[str | None] = mapped_column(String, default=_now)
+    last_message_at: Mapped[str | None] = mapped_column(String, default=_now)
+    closes_at: Mapped[str | None] = mapped_column(String)
+    closed_at: Mapped[str | None] = mapped_column(String)
+    close_reason: Mapped[str | None] = mapped_column(String)
+    outcome: Mapped[str | None] = mapped_column(String)
+
+
+class ConversationMessage(Base):
+    """Message inside a marketplace conversation."""
+    __tablename__ = "conversation_messages"
+    __table_args__ = (Index("ix_conversation_messages_conversation",
+                            "conversation_id", "created_at"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    conversation_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("marketplace_conversations.id"), nullable=False)
+    sender_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    is_admin: Mapped[bool | None] = mapped_column(Boolean, default=False)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class MarketplaceHandoff(Base):
+    """Single-use signed handoff from a request to an external partner."""
+    __tablename__ = "marketplace_handoffs"
+    __table_args__ = (
+        UniqueConstraint("jti", name="uq_marketplace_handoff_jti"),
+        Index("ix_marketplace_handoffs_request", "request_id"),
+        Index("ix_marketplace_handoffs_expires", "expires_at"),
+    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    jti: Mapped[str] = mapped_column(String, nullable=False)
+    request_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("physical_assessment_requests.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    partner: Mapped[str | None] = mapped_column(String, default="great_turbinez")
+    status: Mapped[str | None] = mapped_column(String, default="created")
+    expires_at: Mapped[str] = mapped_column(String, nullable=False)
+    used_at: Mapped[str | None] = mapped_column(String)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class MarketplaceNotification(Base):
+    """Persistent in-app notification for marketplace events."""
+    __tablename__ = "marketplace_notifications"
+    __table_args__ = (Index("ix_marketplace_notifications_user",
+                            "user_id", "read_at"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    event: Mapped[str] = mapped_column(String, nullable=False)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    body: Mapped[str | None] = mapped_column(Text)
+    url: Mapped[str | None] = mapped_column(String)
+    read_at: Mapped[str | None] = mapped_column(String)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
 
 
 class BidderFeedback(Base):

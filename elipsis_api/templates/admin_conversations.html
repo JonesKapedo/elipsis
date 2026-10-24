@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Admin conversations{% endblock %}
+{% block content %}
+<section class="head"><p class="eyebrow">Admin</p><h1>Marketplace conversations</h1><p class="muted">Admin access is limited to conversations where involvement was requested.</p></section>
+<section class="block">
+  {% if conversations %}
+  <table class="table">
+    <thead><tr><th>Request</th><th>Status</th><th>Admin involved</th><th>Last message</th><th>Outcome</th><th></th></tr></thead>
+    <tbody>
+      {% for item in conversations %}
+      <tr>
+        <td>{{ item.request.title if item.request else item.row.request_id }}</td>
+        <td>{{ item.row.status|title }}</td>
+        <td>{% if item.row.admin_involved %}<span class="tag warn">Yes</span>{% else %}No{% endif %}</td>
+        <td>{{ item.row.last_message_at or '—' }}</td>
+        <td>{{ (item.row.outcome or '—')|replace('_', ' ')|title }}</td>
+        <td>{% if item.row.admin_involved %}<a class="btn ghost sm" href="/marketplace/conversations/{{ item.row.id }}">Open</a>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="muted">No conversations yet.</p>{% endif %}
+</section>
+{% endblock %}
