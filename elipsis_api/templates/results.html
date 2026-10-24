@@ -69,6 +69,19 @@
   {% endif %}
 </section>
 
+<section class="headline">
+  <div class="gauge">
+    <div class="gauge-num">{{ '%.1f'|format(result.readiness_index) }}<span>/100</span></div>
+    <div class="gauge-label">{{ INDEX_SHORT }}</div>
+  </div>
+  <div class="headline-meta">
+    <p class="band">{{ result.maturity_band }}</p>
+    <p class="muted">Organisation score {{ '%.1f'|format(result.organisation_score) }}
+    &nbsp;&middot;&nbsp; {{ CONFIDENCE_NAME }} {{ '%.1f'|format(result.confidence_index) }}
+    ({{ result.confidence_band }})</p>
+  </div>
+</section>
+
 {% if logistics %}
 <section class="block">
   <div class="block-head">
@@ -205,19 +218,6 @@
   </div>
 </section>
 {% endif %}
-
-<section class="headline">
-  <div class="gauge">
-    <div class="gauge-num">{{ '%.1f'|format(result.readiness_index) }}<span>/100</span></div>
-    <div class="gauge-label">{{ INDEX_SHORT }}</div>
-  </div>
-  <div class="headline-meta">
-    <p class="band">{{ result.maturity_band }}</p>
-    <p class="muted">Organisation score {{ '%.1f'|format(result.organisation_score) }}
-    &nbsp;&middot;&nbsp; {{ CONFIDENCE_NAME }} {{ '%.1f'|format(result.confidence_index) }}
-    ({{ result.confidence_band }})</p>
-  </div>
-</section>
 
 {% if not report_unlocked %}
 <section class="block premium-note">

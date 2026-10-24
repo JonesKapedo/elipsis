@@ -1,5 +1,7 @@
 {% set authed = user is defined and user %}
 {% set path = request.url.path %}
+{% set assess_active = path.startswith('/assessments') or path.startswith('/assessment/') or path.startswith('/compare') or path.startswith('/trends') or path.startswith('/benchmarks') %}
+{% set company_active = path.startswith('/company') or path == '/audit' %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,13 +9,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ BRAND_NAME }}{% endblock %}</title>
   <meta name="description" content="{% block description %}{{ BRAND_NAME }} turns plain-English operating answers into a scored readiness index, a costed constraint, and a 90-day action plan for logistics and field-operations companies.{% endblock %}">
-  <meta name="theme-color" content="#0a1628">
+  <meta name="theme-color" content="#0b1220">
   <meta name="color-scheme" content="light">
   <link rel="icon" type="image/svg+xml" href="/static/brand/elipsis-mark.svg">
   <link rel="apple-touch-icon" href="/static/brand/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="{{ BRAND_NAME }}">
   <meta property="og:title" content="{{ self.title() }}">
@@ -32,39 +34,67 @@
   <link rel="stylesheet" href="/static/motion.css?v=20261022a">
   <link rel="stylesheet" href="/static/app.css?v=20261022a">
   <link rel="stylesheet" href="/static/premium.css?v=20261022a">
+  <link rel="stylesheet" href="/static/design.css?v=20261024a">
   {% block head %}{% endblock %}
 </head>
-<body class="{% block body_class %}{% endblock %} {% if authed %}app-shell{% endif %}">
+<body class="{% block body_class %}{% endblock %} {% if authed %}app-shell{% else %}marketing{% endif %}">
 <a class="skip" href="#main">Skip to content</a>
 
+<svg xmlns="http://www.w3.org/2000/svg" class="sr-only" aria-hidden="true">
+  <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="i-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6v3H9z"/><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><path d="M8 11h8M8 15h6"/></symbol>
+  <symbol id="i-check-square" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="m8 12 3 3 5-6"/></symbol>
+  <symbol id="i-activity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v17M15 9h4a1 1 0 0 1 1 1v11M4 21h17"/><path d="M8 7h3M8 11h3M8 15h3"/></symbol>
+  <symbol id="i-briefcase" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-4v-.09A1.7 1.7 0 0 0 9 19.35a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.63 15a1.7 1.7 0 0 0-1.56-1.03H3v-4h.09A1.7 1.7 0 0 0 4.65 9a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.63h.02A1.7 1.7 0 0 0 10 3.09V3h4v.09A1.7 1.7 0 0 0 15 4.65a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.37 9v.02A1.7 1.7 0 0 0 20.91 10H21v4h-.09A1.7 1.7 0 0 0 19.4 15z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.7 9a2.4 2.4 0 0 1 4.7.6c0 1.6-2.4 1.9-2.4 3.7"/><path d="M12 17h.01"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-admin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+</svg>
+
 {% if authed %}
-<div class="app-layout">
-  <aside class="app-sidebar" id="app-sidebar" aria-label="Workspace navigation">
+<div class="app-layout app">
+  <aside class="app-sidebar sidebar" id="app-sidebar" aria-label="Workspace navigation">
     <div class="sidebar-brand">
       <a href="/dashboard" class="brand-lockup" aria-label="{{ BRAND_NAME }} overview">
         <img src="/static/brand/elipsis-logo-light.svg" alt="{{ BRAND_NAME }}" class="brand-img brand-img-light">
       </a>
-      <button type="button" class="sidebar-close" id="sidebar-close" aria-label="Close menu">×</button>
+      <button type="button" class="sidebar-close" id="sidebar-close" aria-label="Close menu"><svg class="icon"><use href="#i-close"/></svg></button>
     </div>
-    <nav class="sidebar-nav">
-      <p class="nav-group-label">Your company</p>
-      <a href="/dashboard" class="nav-item{% if path == '/dashboard' %} active{% endif %}"{% if path == '/dashboard' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◉</span> Overview</a>
-      <a href="/assessments" class="nav-item{% if path.startswith('/assessments') or path.startswith('/assessment/') or path.startswith('/compare') or path.startswith('/trends') or path.startswith('/benchmarks') %} active{% endif %}"{% if path.startswith('/assessments') or path.startswith('/assessment/') or path.startswith('/compare') or path.startswith('/trends') or path.startswith('/benchmarks') %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">☰</span> Assessments</a>
-      <a href="/actions" class="nav-item{% if path == '/actions' %} active{% endif %}"{% if path == '/actions' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">✓</span> Action plan{% if notifications %}<span class="nav-badge">{{ notifications|length }}</span>{% endif %}</a>
-      <a href="/operations" class="nav-item{% if path.startswith('/operations') %} active{% endif %}"{% if path.startswith('/operations') %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">▤</span> Operations</a>
-      <a href="/company" class="nav-item{% if path.startswith('/company') or path == '/audit' %} active{% endif %}"{% if path.startswith('/company') or path == '/audit' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">▣</span> Company</a>
-      <a href="/marketplace" class="nav-item{% if path.startswith('/marketplace') %} active{% endif %}"{% if path.startswith('/marketplace') %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◈</span> Marketplace <span class="nav-note">{% if (user.role or '') == 'admin' or user.is_admin %}admin{% else %}locked{% endif %}</span></a>
-      {% if (user.user_type or '') == 'bidder' %}<a href="/marketplace/partner" class="nav-item{% if path.startswith('/marketplace/partner') %} active{% endif %}"><span class="nav-icon" aria-hidden="true">◇</span> Partner console</a>{% endif %}
-
-      {% if (user.role or '') == 'admin' or user.is_admin %}
-      <p class="nav-group-label">Admin</p>
-      <a href="/admin" class="nav-item{% if path.startswith('/admin') %} active{% endif %}"{% if path.startswith('/admin') %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◎</span> Admin</a>
-      {% endif %}
-
-      <p class="nav-group-label">Account</p>
-      <a href="/settings" class="nav-item{% if path == '/settings' %} active{% endif %}"{% if path == '/settings' %} aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">⚙</span> Settings</a>
-      <a href="/logout" class="nav-item nav-danger"><span class="nav-icon" aria-hidden="true">→</span> Sign out</a>
-    </nav>
+    <div class="sidebar-scroll">
+      <nav class="sidebar-nav">
+        <div class="nav-group">
+          <p class="nav-group-label">Workspace</p>
+          <a href="/dashboard" class="nav-item{% if path == '/dashboard' %} active{% endif %}"{% if path == '/dashboard' %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-grid"/></svg><span>Overview</span></a>
+          <a href="/assessments" class="nav-item{% if assess_active %} active{% endif %}"{% if assess_active %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-clipboard"/></svg><span>Assessments</span></a>
+          <a href="/actions" class="nav-item{% if path == '/actions' %} active{% endif %}"{% if path == '/actions' %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-check-square"/></svg><span>Action plan</span>{% if notifications %}<span class="nav-badge">{{ notifications|length }}</span>{% endif %}</a>
+          <a href="/operations" class="nav-item{% if path.startswith('/operations') %} active{% endif %}"{% if path.startswith('/operations') %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-activity"/></svg><span>Operations</span></a>
+        </div>
+        <div class="nav-group">
+          <p class="nav-group-label">Commercial</p>
+          <a href="/marketplace" class="nav-item{% if path.startswith('/marketplace') and not path.startswith('/marketplace/partner') %} active{% endif %}"><svg class="icon"><use href="#i-briefcase"/></svg><span>Marketplace</span><span class="nav-note">{% if (user.role or '') == 'admin' or user.is_admin %}admin{% else %}locked{% endif %}</span></a>
+          {% if (user.user_type or '') == 'bidder' %}<a href="/marketplace/partner" class="nav-item{% if path.startswith('/marketplace/partner') %} active{% endif %}"><svg class="icon"><use href="#i-users"/></svg><span>Partner desk</span></a>{% endif %}
+        </div>
+        <div class="nav-group">
+          <p class="nav-group-label">Account</p>
+          <a href="/company" class="nav-item{% if company_active %} active{% endif %}"{% if company_active %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-building"/></svg><span>Company</span></a>
+          <a href="/settings" class="nav-item{% if path == '/settings' %} active{% endif %}"{% if path == '/settings' %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-settings"/></svg><span>Settings</span></a>
+          {% if (user.role or '') == 'admin' or user.is_admin %}
+          <a href="/admin" class="nav-item{% if path.startswith('/admin') %} active{% endif %}"{% if path.startswith('/admin') %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-admin"/></svg><span>Admin</span></a>
+          {% endif %}
+          <a href="/logout" class="nav-item nav-danger"><svg class="icon"><use href="#i-logout"/></svg><span>Sign out</span></a>
+        </div>
+      </nav>
+    </div>
     <div class="sidebar-user">
       <div class="user-avatar">{{ (user.name or user.email or 'EL')[:2]|upper }}</div>
       <div class="user-meta">
@@ -74,44 +104,53 @@
     </div>
   </aside>
   <div class="sidebar-backdrop" id="sidebar-backdrop" aria-hidden="true"></div>
-  <div class="app-main">
-    <header class="app-topbar no-print">
+  <div class="app-main main">
+    <header class="app-topbar topbar no-print">
       <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Open menu" aria-controls="app-sidebar" aria-expanded="false">
-        <span></span><span></span><span></span>
+        <svg class="icon"><use href="#i-menu"/></svg>
       </button>
-      <form class="topbar-search" action="/search" method="get" role="search">
-        <span class="search-icon" aria-hidden="true">⌕</span>
-        <input type="search" name="q" placeholder="Search assessments, actions, teams…" aria-label="Search your company" value="{{ q if q is defined else '' }}" autocomplete="off">
+      <a class="org-switch" href="/company">
+        <svg class="icon"><use href="#i-building"/></svg>
+        <span>{{ company.name if company is defined and company else 'Workspace' }}</span>
+        <svg class="icon chev"><use href="#i-chevron"/></svg>
+      </a>
+      <form class="topbar-search top-search" action="/search" method="get" role="search">
+        <svg class="icon"><use href="#i-search"/></svg>
+        <input type="search" name="q" placeholder="Search assessments, actions, people" aria-label="Search your company" value="{{ q if q is defined else '' }}" autocomplete="off">
         <kbd aria-hidden="true">/</kbd>
       </form>
-      <div class="topbar-actions">
+      <div class="topbar-actions top-actions">
         <button type="button" class="cmd-trigger" id="cmd-trigger" aria-haspopup="dialog" aria-controls="cmdk">
-          <span class="cmd-trigger-label">Commands</span><kbd>⌘K</kbd>
+          <svg class="icon"><use href="#i-search"/></svg><span class="cmd-trigger-label">Commands</span><kbd>⌘K</kbd>
         </button>
-        <a class="topbar-bell" href="/help" aria-label="Help centre">?</a>
+        <a class="topbar-bell" href="/help" aria-label="Help centre"><svg class="icon"><use href="#i-help"/></svg></a>
         <a class="topbar-bell" href="/notifications" aria-label="Notifications">
-          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path></svg>
+          <svg class="icon"><use href="#i-bell"/></svg>
           {% if notifications %}<span class="topbar-bell-dot">{{ notifications|length }}</span>{% endif %}
         </a>
-        <a class="btn sm" href="/start">New assessment</a>
+        <span class="top-divider"></span>
+        <a class="btn primary sm" href="/start"><svg class="icon"><use href="#i-plus"/></svg><span>New assessment</span></a>
+        <a class="top-avatar" href="/settings" aria-label="Account settings">{{ (user.name or user.email or 'EL')[:2]|upper }}</a>
       </div>
     </header>
-    <main id="main" class="app-content">
+    <main id="main" class="app-content content">
 {% else %}
-<header class="pub-header no-print">
-  <a class="brand-lockup" href="/" aria-label="{{ BRAND_NAME }} home">
-    <img src="/static/brand/elipsis-logo.svg" alt="{{ BRAND_NAME }}" class="brand-img">
-  </a>
-  <button type="button" class="pub-menu" id="pub-menu-toggle" aria-expanded="false" aria-controls="pub-nav" aria-label="Open navigation">☰</button>
-  <nav class="pub-nav" id="pub-nav" aria-label="Primary">
-    <a href="/methodology"{% if path == '/methodology' %} aria-current="page"{% endif %}>Method</a>
-    <a href="/pricing"{% if path == '/pricing' %} aria-current="page"{% endif %}>Pricing</a>
-    <a href="/partners"{% if path == '/partners' %} aria-current="page"{% endif %}>Partners</a>
-    <a href="/sample"{% if path == '/sample' %} aria-current="page"{% endif %}>Sample</a>
-    <a href="/help"{% if path.startswith('/help') %} aria-current="page"{% endif %}>Help</a>
-    <a class="pill" href="/signup">Start free</a>
-    <a href="/login">Sign in</a>
-  </nav>
+<header class="mk-header pub-header no-print">
+  <div class="mk-header-inner">
+    <a class="mk-brand" href="/" aria-label="{{ BRAND_NAME }} home">
+      <img src="/static/brand/elipsis-logo.svg" alt="{{ BRAND_NAME }}">
+    </a>
+    <button type="button" class="pub-menu mk-menu" id="pub-menu-toggle" aria-expanded="false" aria-controls="pub-nav" aria-label="Open navigation"><svg class="icon"><use href="#i-menu"/></svg></button>
+    <nav class="pub-nav mk-nav" id="pub-nav" aria-label="Primary">
+      <a href="/methodology"{% if path == '/methodology' %} aria-current="page"{% endif %}>Method</a>
+      <a href="/pricing"{% if path == '/pricing' %} aria-current="page"{% endif %}>Pricing</a>
+      <a href="/partners"{% if path == '/partners' %} aria-current="page"{% endif %}>Partners</a>
+      <a href="/sample"{% if path == '/sample' %} aria-current="page"{% endif %}>Sample report</a>
+      <a href="/help"{% if path.startswith('/help') %} aria-current="page"{% endif %}>Help</a>
+      <a class="signin" href="/login">Sign in</a>
+      <a class="btn primary" href="/signup">Run free assessment <svg class="icon"><use href="#i-arrow"/></svg></a>
+    </nav>
+  </div>
 </header>
 <main id="main" class="pub-main">
 {% endif %}
@@ -124,20 +163,21 @@
 </div>
 {% else %}
 </main>
-<footer class="pub-footer no-print">
-  <div class="foot-inner">
-    <div class="foot-brand">
-      <img src="/static/brand/elipsis-logo.svg" alt="{{ BRAND_NAME }}" class="brand-img">
+<footer class="mk-footer pub-footer no-print">
+  <div class="mk-footer-inner">
+    <div class="mk-footer-brand">
+      <img src="/static/brand/elipsis-logo.svg" alt="{{ BRAND_NAME }}">
       <p>{{ BRAND_TAGLINE }} Built for logistics and field-operations companies worldwide.</p>
     </div>
-    <nav class="foot-links" aria-label="Company">
+    <nav class="mk-footer-nav" aria-label="Company">
       <a href="/methodology">Method</a>
       <a href="/pricing">Pricing</a>
       <a href="/partners">Partners</a>
       <a href="/use-cases">Use cases</a>
+      <a href="/sample">Sample report</a>
       <a href="/changelog">Changelog</a>
     </nav>
-    <nav class="foot-links" aria-label="Trust">
+    <nav class="mk-footer-nav" aria-label="Trust">
       <a href="/trust">Trust centre</a>
       <a href="/security">Security</a>
       <a href="/privacy">Privacy</a>
@@ -145,13 +185,13 @@
       <a href="/dpa">DPA</a>
       <a href="/subprocessors">Subprocessors</a>
     </nav>
-    <nav class="foot-links" aria-label="Service">
+    <nav class="mk-footer-nav" aria-label="Service">
       <a href="/status">Status</a>
       <a href="/help">Help</a>
       <a href="/support">Support</a>
       <a href="/accessibility">Accessibility</a>
     </nav>
-    <span class="foot-note">No consultants required. No black box. Assumptions printed.</span>
+    <span class="mk-footer-note">No consultants required. No black box. Assumptions printed.</span>
   </div>
 </footer>
 {% endif %}
@@ -161,7 +201,7 @@
   <div class="cmdk-panel">
     <h2 id="cmdk-title" class="sr-only">Command palette</h2>
     <div class="cmdk-head">
-      <span class="cmdk-icon" aria-hidden="true">⌕</span>
+      <svg class="icon"><use href="#i-search"/></svg>
       <input id="cmdk-input" type="search" placeholder="Search or jump to…" aria-label="Search commands" autocomplete="off">
       <kbd>esc</kbd>
     </div>

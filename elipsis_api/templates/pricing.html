@@ -1,139 +1,142 @@
 {% extends "base.html" %}
 {% block title %}Pricing{% endblock %}
 {% block content %}
-<section class="hero">
-  <p class="eyebrow">PRICING</p>
-  <h1>Start with the diagnosis. Pay for the decision.</h1>
-  <p class="lede">See your {{ INDEX_NAME }}, the constraints holding the business back, and the first
-  90-day plan. Then decide whether to implement with Great Turbinez or publish the work to verified partners.</p>
+<section class="mk-wrap mk-section" style="padding-top:64px">
+  <div class="mk-section-head">
+    <p class="mk-eyebrow">Pricing</p>
+    <h2>Start with the diagnosis. Pay for the decision.</h2>
+    <p class="section-lede">See your {{ INDEX_NAME }}, the constraints holding the business back, and the first 90-day plan. Then decide whether to implement with Great Turbinez or publish the work to verified partners.</p>
+  </div>
+
+  <div class="mk-pricing">
+    <article class="mk-price">
+      <p class="price-label">Free diagnostic</p>
+      <h3>$0</h3>
+      <p class="price-note">One company · one operating unit · no card</p>
+      <ul>
+        <li>Full 63-question logistics diagnostic</li>
+        <li>{{ INDEX_NAME }} and maturity band</li>
+        <li>Top three constraints, ranked</li>
+        <li>Sample 90-day plan</li>
+        <li>On-screen only. No export or full report.</li>
+      </ul>
+      <a class="btn secondary" href="/signup">Start free</a>
+    </article>
+
+    <article class="mk-price featured">
+      <p class="price-label">Full Assessment</p>
+      <h3>$49 <small>once</small></h3>
+      <p class="price-note">One assessment · three partner introductions</p>
+      <ul>
+        <li>Full {{ INDEX_NAME }}, confidence, and 36 metrics</li>
+        <li>Costed constraints and financial assumptions</li>
+        <li>90-day plan with owners, dates, and KPIs</li>
+        <li>PDF, Excel, JSON, and board pack</li>
+        <li>Read-only share links and team annotations</li>
+        <li>One implementation request with three introductions</li>
+      </ul>
+      <a class="btn" href="/pro">Unlock Full Assessment <svg class="icon"><use href="#i-arrow"/></svg></a>
+    </article>
+
+    <article class="mk-price">
+      <p class="price-label">Operator subscription</p>
+      <h3>${{ premium_plans.monthly.price }} <small>/ month</small></h3>
+      <p class="price-note">Or ${{ premium_plans.annual.price }} / year · cancel before renewal</p>
+      <ul>
+        <li>Unlimited assessments and switches</li>
+        <li>Exports, board packs, and sharing</li>
+        <li>Team collaboration and annotations</li>
+        <li>Operating rhythm reviews</li>
+        <li>Existing Premium access continues until expiry</li>
+      </ul>
+      <a class="btn secondary" href="/pro">Start subscription</a>
+    </article>
+  </div>
+  <p class="mk-price-note">Prices are in USD. Subscriptions renew through Paystack and can be cancelled before renewal. A switch top-up is ${{ '%.2f'|format(24.50) }} for three additional introductions.</p>
 </section>
 
-<section class="pricing-grid">
-  <article class="price-card">
-    <p class="eyebrow">Free diagnostic</p>
-    <h2>See the number</h2>
-    <p class="price">$0</p>
-    <p class="muted">One company · one operating unit · no card</p>
-    <ul class="price-list">
-      <li>Full 63-question logistics diagnostic</li>
-      <li>{{ INDEX_NAME }} and maturity band</li>
-      <li>Top three constraints, ranked</li>
-      <li>Sample 90-day plan</li>
-      <li class="muted">On-screen only. No export, full 36-metric report, or implementation request.</li>
-    </ul>
-    <a class="btn ghost" href="/signup">Start free →</a>
-  </article>
-
-  <article class="price-card featured">
-    <p class="eyebrow">Full Assessment</p>
-    <h2>Own the operating picture</h2>
-    <p class="price">${{ premium_plans.monthly.price }} <small>/ month</small></p>
-    <p class="muted">or ${{ premium_plans.annual.price }} / year · or $49 once for one assessment</p>
-    <ul class="price-list">
-      <li>Full {{ INDEX_NAME }}, confidence, and 36 metrics</li>
-      <li>Costed constraints and financial assumptions</li>
-      <li>90-day plan with owners, dates, dependencies, and KPIs</li>
-      <li>PDF, Excel, JSON, and board pack</li>
-      <li>Read-only share links and team annotations</li>
-      <li>One implementation request with three partner introductions</li>
-      <li>Unlimited switches with an active subscription</li>
-    </ul>
-    <a class="btn" href="/pro">Unlock Full Assessment →</a>
-  </article>
-
-  <article class="price-card">
-    <p class="eyebrow">Implementation</p>
-    <h2>Turn the plan into change</h2>
-    <p class="price">No platform fee</p>
-    <p class="muted">Work directly with a delivery partner</p>
-    <ul class="price-list">
-      <li>Request implementation from Great Turbinez, our trusted partner</li>
-      <li>Or publish the brief to verified implementation companies</li>
-      <li>Assessment summary attached automatically</li>
-      <li>Admin-reviewed requests, bids, and introductions</li>
-      <li>Private conversation after an award</li>
-      <li>No commission on the implementation contract</li>
-    </ul>
-    <a class="btn ghost" href="/marketplace">Explore the marketplace →</a>
-  </article>
+<section class="mk-wrap mk-section">
+  <div class="mk-section-head">
+    <p class="mk-eyebrow">Implementation</p>
+    <h2>Turn the plan into change. No platform commission.</h2>
+    <p class="section-lede">Request implementation from Great Turbinez, our trusted partner, or publish the brief to verified implementation companies. The assessment summary is attached automatically.</p>
+  </div>
+  <div class="mk-cards">
+    <article class="mk-card">
+      <p class="card-num">01 / DIRECT</p>
+      <h3>Work with Great Turbinez</h3>
+      <p>Send the brief directly to our trusted implementation partner. The scope, constraints, and assumptions travel with it.</p>
+    </article>
+    <article class="mk-card">
+      <p class="card-num">02 / MARKETPLACE</p>
+      <h3>Publish to verified partners</h3>
+      <p>Publish the brief to implementation companies, review bids, and choose the team that fits the work.</p>
+    </article>
+    <article class="mk-card">
+      <p class="card-num">03 / NO MARK-UP</p>
+      <h3>The contract stays between you</h3>
+      <p>Elipsis does not take a commission on the implementation contract. Partners pay for verified access to serious briefs.</p>
+    </article>
+  </div>
+  <div class="mk-hero-actions">
+    <a class="btn" href="/marketplace">Explore the marketplace <svg class="icon"><use href="#i-arrow"/></svg></a>
+    <a class="btn secondary" href="/partners">How partners work</a>
+  </div>
 </section>
 
-<p class="muted small" style="margin-top:-1rem">Prices are in USD. Subscriptions renew through
-Paystack and can be cancelled before renewal. Existing Premium customers keep their current access
-until expiry. A switch top-up is ${{ '%.2f'|format(24.50) }} for three additional introductions.</p>
-
-<section class="block">
-  <h2>Why this structure holds up</h2>
-  <div class="steps">
-    <article class="step-card">
-      <span class="step-n">01</span>
-      <h4>The diagnosis is free</h4>
-      <p class="muted">You see your own number before paying. The paid report is for the decision,
-      the board pack, and the implementation brief — not for access to the score.</p>
+<section class="mk-wrap mk-section">
+  <div class="mk-section-head">
+    <p class="mk-eyebrow">Why this structure holds up</p>
+    <h2>You see the output before you see an invoice.</h2>
+  </div>
+  <div class="mk-workflow">
+    <article class="mk-step">
+      <p class="step-n">01 / DIAGNOSIS</p>
+      <h3>The diagnosis is free</h3>
+      <p>You see your own number before paying. The paid report is for the decision, the board pack, and the implementation brief — not for access to the score.</p>
     </article>
-    <article class="step-card">
-      <span class="step-n">02</span>
-      <h4>One assessment, one clear price</h4>
-      <p class="muted">$49 unlocks a single full assessment and three partner introductions. No
-      consulting calendar, no hidden implementation mark-up.</p>
+    <article class="mk-step">
+      <p class="step-n">02 / FULL ASSESSMENT</p>
+      <h3>One assessment, one clear price</h3>
+      <p>$49 unlocks a single full assessment and three partner introductions. No consulting calendar and no hidden implementation mark-up.</p>
     </article>
-    <article class="step-card">
-      <span class="step-n">03</span>
-      <h4>Subscriptions are for operators</h4>
-      <p class="muted">Teams running repeated reviews get unlimited assessments, unlimited
-      switches, exports, and collaboration for ${{ premium_plans.monthly.price }} a month.</p>
-    </article>
-    <article class="step-card">
-      <span class="step-n">04</span>
-      <h4>Implementation is not marked up</h4>
-      <p class="muted">Elipsis does not take a commission. Partners pay for verified access to
-      serious briefs. The implementation contract is between you and the partner.</p>
+    <article class="mk-step">
+      <p class="step-n">03 / SUBSCRIPTION</p>
+      <h3>For teams that re-score</h3>
+      <p>Operators running repeated reviews get unlimited assessments, unlimited switches, exports, and collaboration for ${{ premium_plans.monthly.price }} a month.</p>
     </article>
   </div>
 </section>
 
-<section class="block">
-  <h3>What the Full Assessment includes</h3>
-  <div class="steps">
-    <article class="step-card"><h4>{{ INDEX_NAME }}</h4><p class="muted">One weighted score across seven operating pillars, with a maturity band and confidence level.</p></article>
-    <article class="step-card"><h4>Costed constraint</h4><p class="muted">The friction is priced from your headcount and labour assumptions, with every assumption printed.</p></article>
-    <article class="step-card"><h4>90-day plan</h4><p class="muted">Named actions, owners, due dates, dependencies, and review cadence — not a list of recommendations.</p></article>
-    <article class="step-card"><h4>Board-ready evidence</h4><p class="muted">PDF, spreadsheet, and a read-only share link that a board, bank, or partner can review.</p></article>
+<section class="mk-wrap mk-section">
+  <div class="mk-section-head">
+    <p class="mk-eyebrow">Questions buyers actually ask</p>
+    <h2>The commercial model, without the fog.</h2>
   </div>
-</section>
-
-<section class="block">
-  <h3>Questions buyers actually ask</h3>
-  <div class="steps">
-    <article class="step-card">
-      <h4>Why is the one-time assessment cheaper than a subscription?</h4>
-      <p class="muted">Because it covers one assessment and three introductions. A subscription is
-      for teams that re-score regularly and need unlimited implementation switches.</p>
+  <div class="mk-cards">
+    <article class="mk-card">
+      <p class="card-num">01 / ONE-TIME</p>
+      <h3>Why is the assessment cheaper than a subscription?</h3>
+      <p>Because it covers one assessment and three introductions. A subscription is for teams that re-score regularly and need unlimited implementation switches.</p>
     </article>
-    <article class="step-card">
-      <h4>What happens after three introductions?</h4>
-      <p class="muted">You can buy a top-up for three more at half the one-time assessment price.
-      Subscribers do not need top-ups.</p>
+    <article class="mk-card">
+      <p class="card-num">02 / TOP-UP</p>
+      <h3>What happens after three introductions?</h3>
+      <p>You can buy a top-up for three more at ${{ '%.2f'|format(24.50) }}. Subscribers do not need top-ups.</p>
     </article>
-    <article class="step-card">
-      <h4>Do you take a cut of implementation work?</h4>
-      <p class="muted">No. Partners pay a subscription for verified access. Elipsis does not charge
-      a commission on the work you agree with them.</p>
-    </article>
-    <article class="step-card">
-      <h4>What if the diagnosis finds little?</h4>
-      <p class="muted">Then you have saved the cost of a consulting engagement. The free diagnostic
-      is designed to answer that question before you pay.</p>
+    <article class="mk-card">
+      <p class="card-num">03 / COMMISSION</p>
+      <h3>Do you take a cut of implementation work?</h3>
+      <p>No. Partners pay a subscription for verified access. Elipsis does not charge a commission on the work you agree with them.</p>
     </article>
   </div>
 </section>
 
-<section class="cta-panel">
+<section class="mk-wrap mk-cta">
   <h2>See the output before you see an invoice.</h2>
-  <p class="lede">Open a completed sample report generated by the same engine your live diagnostics use.</p>
-  <div class="hero-actions" style="justify-content:center">
-    <a class="btn big" href="/sample">View sample report →</a>
-    <a class="btn ghost big" href="/signup">Start free →</a>
+  <div class="actions">
+    <a class="btn primary" href="/sample">View sample report <svg class="icon"><use href="#i-arrow"/></svg></a>
+    <a class="btn secondary" href="/signup">Start free</a>
   </div>
 </section>
 {% endblock %}
