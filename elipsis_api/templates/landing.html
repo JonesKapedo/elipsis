@@ -1,203 +1,241 @@
 {% extends "base.html" %}
-{% block title %}See what friction is costing you{% endblock %}
+{% block title %}Know where your operations lose money{% endblock %}
+{% block description %}{{ BRAND_NAME }} turns {{ total_questions }} plain-English answers into a scored readiness index, a costed operating constraint, and a 90-day action plan for logistics and field-operations companies.{% endblock %}
 {% block content %}
-<section class="hero hero-pro">
-  <div class="hero-grid">
-    <div class="hero-copy">
-      <div class="hero-badge">For logistics and field-operations companies · 10–1,000 staff</div>
-      <h1>Find the money hidden in your operations.</h1>
-      <p class="lede">{{ BRAND_NAME }} turns {{ total_questions }} plain-English answers into a scored readiness index, a costed constraint, and a 90-day action plan with owners and dates. Built for freight forwarders, transport operators, warehouses, distributors, and field-service businesses — from single-site operators to multi-country groups.</p>
-      <div class="hero-actions">
-        <a class="btn big" href="/signup">Start your free assessment →</a>
-        <a class="btn ghost big" href="/sample">See a full sample report</a>
-      </div>
-      <ul class="hero-trust">
-        <li>No consultants required</li>
-        <li>~25 minutes end-to-end</li>
-        <li>Assumptions printed and editable</li>
-        <li>Board pack (PDF + Excel) and 90-day plan</li>
-      </ul>
+<section class="mk-wrap mk-hero">
+  <div>
+    <p class="mk-eyebrow">Operating clarity for logistics teams</p>
+    <h1>Know where your operations lose money.</h1>
+    <p class="lede">{{ BRAND_NAME }} turns {{ total_questions }} plain-English answers into a readiness index, a costed operating constraint, and a 90-day plan with owners and dates. Built for freight forwarders, transport operators, warehouses, distributors, and field-service businesses.</p>
+    <div class="mk-hero-actions">
+      <a class="btn primary" href="/signup">Run a free assessment <svg class="icon"><use href="#i-arrow"/></svg></a>
+      <a class="btn secondary" href="/sample">Open the sample report</a>
     </div>
-    <aside class="hero-visual" aria-label="Illustrative readiness scorecard">
-      <div class="hv-top">
-        <span class="hv-live"><i></i> Live readiness</span>
-        <span class="hv-chip">Sample</span>
-      </div>
-      <div class="hv-score">
-        <div class="hv-ring" style="--pct:62.4%"><span>62.4<small>/ 100</small></span></div>
-        <div class="hv-summary">
-          <span class="hv-band">Emerging</span>
-          <p>Strong intent, uneven process ownership. Three fixes in dispatch and order-to-cash carry most of the upside.</p>
+    <div class="mk-trust">
+      <span><svg class="icon"><use href="#i-check-square"/></svg> No consultants required</span>
+      <span><svg class="icon"><use href="#i-check-square"/></svg> ~25 minutes</span>
+      <span><svg class="icon"><use href="#i-check-square"/></svg> Assumptions printed</span>
+    </div>
+  </div>
+
+  <div class="mk-product" aria-label="Illustrative Elipsis operating overview">
+    <div class="mk-product-top"><i></i><i></i><i></i><span class="addr">app.elipsis / overview</span></div>
+    <div class="mk-mini">
+      <div class="mk-mini-side">
+        <div class="mk-mini-brand"><i></i> Elipsis</div>
+        <div class="mk-mini-nav">
+          <span class="active"><i></i> Overview</span>
+          <span><i></i> Assessments</span>
+          <span><i></i> Action plan</span>
+          <span><i></i> Operations</span>
+          <span><i></i> Marketplace</span>
+          <span><i></i> Company</span>
         </div>
       </div>
-      <div class="hv-metrics">
-        <div><span>Annual savings</span><b>{{ CURRENCY }} 1.8M</b></div>
-        <div><span>Payback</span><b>5.2 mo</b></div>
-        <div><span>ROI</span><b>212%</b></div>
+      <div class="mk-mini-main">
+        <div class="mk-mini-head"><b>Operating overview</b><span>ILLUSTRATIVE</span></div>
+        <div class="mk-mini-strip">
+          <div><span>Index</span><b>62.4</b></div>
+          <div><span>Constraint</span><b style="font-size:9px;line-height:1.2">Dispatch</b></div>
+          <div><span>Exposure</span><b>{{ CURRENCY }} 184k</b></div>
+          <div><span>Execution</span><b>68%</b></div>
+        </div>
+        <div class="mk-mini-grid">
+          <div class="mk-mini-panel">
+            <h5>Needs attention</h5>
+            <div class="mk-mini-row"><span class="dot"></span><span class="ln"></span><span class="val"></span></div>
+            <div class="mk-mini-row"><span class="dot" style="background:#f5a623"></span><span class="ln short"></span><span class="val"></span></div>
+            <div class="mk-mini-row"><span class="dot" style="background:#b42318"></span><span class="ln"></span><span class="val"></span></div>
+            <div class="mk-mini-row"><span class="dot" style="background:#f5a623"></span><span class="ln"></span><span class="val"></span></div>
+          </div>
+          <div class="mk-mini-panel">
+            <h5>Operating lanes</h5>
+            <div class="mk-mini-lane weak"><div class="lane-line"><span>Dispatch</span><b>58</b></div><div class="bar"><i style="width:58%"></i></div></div>
+            <div class="mk-mini-lane"><div class="lane-line"><span>Warehouse</span><b>65</b></div><div class="bar"><i style="width:65%"></i></div></div>
+            <div class="mk-mini-lane"><div class="lane-line"><span>Line-haul</span><b>66</b></div><div class="bar"><i style="width:66%"></i></div></div>
+            <div class="mk-mini-lane"><div class="lane-line"><span>Finance</span><b>55</b></div><div class="bar"><i style="width:55%"></i></div></div>
+          </div>
+        </div>
       </div>
-      <div class="hv-pillars">
-        <div class="hv-pillar"><span>Operations</span><div class="hv-track"><i style="width:74%"></i></div></div>
-        <div class="hv-pillar"><span>Data</span><div class="hv-track"><i style="width:58%"></i></div></div>
-        <div class="hv-pillar"><span>People</span><div class="hv-track"><i style="width:66%"></i></div></div>
-        <div class="hv-pillar"><span>Finance</span><div class="hv-track"><i style="width:49%"></i></div></div>
-      </div>
-      <div class="hv-foot">
-        <span>Illustrative output — not a customer claim</span>
-        <a href="/sample" style="color:#f5b301;font-weight:700">Open sample →</a>
-      </div>
-    </aside>
+    </div>
   </div>
 </section>
 
-<section class="stats">
-  <div><b>7</b><span>intelligence pillars</span></div>
-  <div><b>36</b><span>executive metrics</span></div>
-  <div><b>{{ total_questions }}</b><span>plain questions</span></div>
-  <div><b>3</b><span>roadmap horizons</span></div>
+<div class="mk-wrap">
+  <div class="mk-stats">
+    <div class="mk-stat"><b>7</b><span>intelligence pillars</span></div>
+    <div class="mk-stat"><b>36</b><span>executive metrics</span></div>
+    <div class="mk-stat"><b>{{ total_questions }}</b><span>plain-English questions</span></div>
+    <div class="mk-stat"><b>90</b><span>day action plan</span></div>
+  </div>
+</div>
+
+<section class="mk-wrap mk-section">
+  <div class="mk-section-head">
+    <p class="mk-eyebrow">Built for the operating reality</p>
+    <h2>Made for the people who own the number.</h2>
+    <p class="section-lede">Not a generic maturity survey. The questions and the cost model are built around how freight, fleet, warehouse, cash, and compliance work actually move through a logistics business.</p>
+  </div>
+  <div class="mk-cards">
+    <article class="mk-card">
+      <p class="card-num">01 / FORWARDING</p>
+      <h3>Freight forwarders</h3>
+      <p>Clearance handoffs, document chasing, customer updates, and exception handling across the trade corridor.</p>
+      <svg class="icon"><use href="#i-activity"/></svg>
+    </article>
+    <article class="mk-card">
+      <p class="card-num">02 / TRANSPORT</p>
+      <h3>Transport operators</h3>
+      <p>Dispatch, proof of delivery, fuel and maintenance visibility, driver communication, and fleet utilisation.</p>
+      <svg class="icon"><use href="#i-clipboard"/></svg>
+    </article>
+    <article class="mk-card">
+      <p class="card-num">03 / WAREHOUSING</p>
+      <h3>Warehouses &amp; distributors</h3>
+      <p>Stock accuracy, receiving, picking, returns, and the order-to-cash follow-up that decides margin.</p>
+      <svg class="icon"><use href="#i-building"/></svg>
+    </article>
+  </div>
 </section>
 
-<section class="block showcase">
-  <div class="showcase-grid">
+<section class="mk-wrap mk-section">
+  <div class="mk-section-head">
+    <p class="mk-eyebrow">From answers to an operating plan</p>
+    <h2>One clear workflow. No black box.</h2>
+    <p class="section-lede">You see the score before you pay. Every number carries its assumption. Every action carries an owner and a date.</p>
+  </div>
+  <div class="mk-workflow">
+    <article class="mk-step">
+      <p class="step-n">01 / DIAGNOSE</p>
+      <h3>Answer in plain English</h3>
+      <p>Short sections, autosaved. No 60-page questionnaire and no consultant in the room.</p>
+    </article>
+    <article class="mk-step">
+      <p class="step-n">02 / PRICE</p>
+      <h3>See the constraint</h3>
+      <p>Get one readiness index, the first constraint, the annual exposure, and the assumptions behind it.</p>
+    </article>
+    <article class="mk-step">
+      <p class="step-n">03 / ACT</p>
+      <h3>Run the 90 days</h3>
+      <p>Assign owners, track due dates, export the board pack, and re-score the lane when the work is done.</p>
+    </article>
+  </div>
+</section>
+
+<section class="mk-wrap">
+  <div class="mk-report">
     <div>
-      <p class="eyebrow">WHAT YOU WALK AWAY WITH</p>
-      <h2 style="border:0;padding:0;margin:.3rem 0 .8rem">A number your board can track — and the story behind it.</h2>
-      <ul class="price-list">
-        <li><strong>{{ INDEX_NAME }}</strong> — one score, seven weighted pillars</li>
-        <li>Annual savings potential in {{ CURRENCY }}, with assumptions printed</li>
-        <li>Pain points ranked by severity and impact</li>
-        <li>Quick wins → process automation → AI enablement</li>
-        <li>Department comparison across your organisation</li>
-      </ul>
-      <div class="hero-actions">
-        <a class="btn" href="/signup">Create free account</a>
-        <a class="btn ghost" href="/methodology">How scoring works</a>
+      <p class="mk-eyebrow" style="color:#f5c46a">Sample output</p>
+      <h2>A number your board can track — and the story behind it.</h2>
+      <p>The sample report shows the readiness index, the costed constraint, the 90-day plan, and the assumptions. Open it before you create an account.</p>
+      <a class="btn" href="/sample">Open the sample report <svg class="icon"><use href="#i-arrow"/></svg></a>
+    </div>
+    <div class="mk-report-card" aria-label="Illustrative sample report summary">
+      <div class="rc-top">
+        <div><span>Operating report</span><b>Illustrative company</b></div>
+        <div class="rc-score"><b>62.4</b><em>EMERGING</em></div>
+      </div>
+      <div class="rc-rows">
+        <div class="rc-row"><span>First constraint</span><b>Dispatch handoffs</b></div>
+        <div class="rc-row"><span>Annual exposure</span><b>{{ CURRENCY }} 184,000</b></div>
+        <div class="rc-row"><span>Confidence</span><b>82%</b></div>
+        <div class="rc-row"><span>90-day actions</span><b>25</b></div>
+        <div class="rc-row"><span>Prepared</span><b>Sample</b></div>
       </div>
     </div>
-    <div class="showcase-card">
-      <p class="eyebrow">SAMPLE INDEX</p>
-      <div class="gauge-num">62.4<span>/100</span></div>
-      <p class="band">Emerging</p>
-      <div class="showcase-metrics">
-        <div><span>Annual savings</span><b>USD 1.8M</b></div>
-        <div><span>Payback</span><b>5.2 mo</b></div>
-        <div><span>ROI</span><b>212%</b></div>
-      </div>
-      <a class="btn ghost full" href="/sample" style="margin-top:1rem">Open full sample →</a>
-    </div>
   </div>
+  <p class="mk-price-note">Sample values are illustrative. They are not customer claims and do not predict your result.</p>
 </section>
 
-<section class="block">
-  <p class="eyebrow">WHO IT IS FOR</p>
-  <h2 style="border:0;padding:0;margin:.3rem 0 .8rem">Made for the operator, not the head office deck.</h2>
-  <div class="pillars">
-    <article class="pillar-card"><h4>Freight forwarders</h4><p class="muted">Clearance handoffs, document chasing, customer updates and exception handling.</p></article>
-    <article class="pillar-card"><h4>Transport operators</h4><p class="muted">Dispatch, proof of delivery, fuel and maintenance visibility, driver communication.</p></article>
-    <article class="pillar-card"><h4>Warehouses & distributors</h4><p class="muted">Stock accuracy, receiving, picking, returns and order-to-cash follow-up.</p></article>
+<section class="mk-wrap mk-section">
+  <div class="mk-section-head">
+    <p class="mk-eyebrow">Seven pillars, one score</p>
+    <h2>One operating picture, weighted for what drives return.</h2>
+    <p class="section-lede">Every answer feeds at least one pillar. Weights reflect how much each area typically drives automation ROI — so the {{ INDEX_NAME }} is useful, not decorative.</p>
   </div>
-  <p class="muted">Typical starting point: 10–1,000 staff, from a single site to a multi-country network. Smaller teams can use the free diagnostic; larger groups can standardise every operating unit on the same index.</p>
-</section>
-
-<section class="block">
-  <p class="eyebrow">WHY LOGISTICS</p>
-  <h2 style="border:0;padding:0;margin:.3rem 0 .8rem">The same operating problem, in every market.</h2>
-  <p class="lede">Our first reference market was Kenya. That is where we tested the questions, the scoring, and the cost model against real logistics operations. The framework is not country-specific: dispatch, warehouse, cash, and compliance constraints behave the same way in every trade corridor.</p>
-  <table class="table">
-    <thead><tr><th>First-market reference</th><th>Value</th><th>Source</th></tr></thead>
-    <tbody>
-      {% for p in reference_points %}
-      <tr><td>{{ p.label }}<br><span class="muted">{{ p.note }}</span></td><td><strong>{{ p.value }}</strong></td><td class="muted">{{ p.source }}</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  <p class="muted">These describe our first market, not claims about Elipsis customers. Savings in your report are estimates and must be validated against your payroll.</p>
-</section>
-
-<section id="what">
-  <h2>Seven pillars, one score</h2>
-  <p class="lede">Every answer feeds at least one pillar. Weights reflect how much each area typically drives automation ROI — so the index is useful, not decorative.</p>
-  <div class="pillars">
+  <div class="mk-cards">
     {% for code, label, weight, objective in PILLARS %}
-    <article class="pillar-card">
-      <span class="tag-code">{{ code }}</span>
-      <h4>{{ label }}</h4>
-      <p class="muted">{{ objective }}</p>
-      <p class="weight">Weight {{ (weight * 100)|round|int }}%</p>
+    <article class="mk-card">
+      <p class="card-num">{{ code }} / {{ (weight * 100)|round|int }}% WEIGHT</p>
+      <h3>{{ label }}</h3>
+      <p>{{ objective }}</p>
     </article>
     {% endfor %}
   </div>
 </section>
 
-<section>
-  <h2>How an assessment works</h2>
-  <div class="steps">
-    <article class="step-card">
-      <span class="step-n">1</span>
-      <h4>Answer in plain English</h4>
-      <p class="muted">Short segments. Autosave. Live scores as you go — no 60-page questionnaire.</p>
-    </article>
-    <article class="step-card">
-      <span class="step-n">2</span>
-      <h4>See the full model</h4>
-      <p class="muted">Index, 36 metrics, friction cost, and a three-horizon roadmap ordered by return.</p>
-    </article>
-    <article class="step-card">
-      <span class="step-n">3</span>
-      <h4>Share and act</h4>
-      <p class="muted">Email a tracked read-only link, export the board pack, assign the first 90 days, and watch movement over time.</p>
-    </article>
+<section class="mk-wrap mk-section">
+  <div class="mk-section-head">
+    <p class="mk-eyebrow">First-market reference</p>
+    <h2>The framework was tested against real logistics operations.</h2>
+    <p class="section-lede">Our first reference market was Kenya. The framework is not country-specific: dispatch, warehouse, cash, and compliance constraints behave the same way in every trade corridor.</p>
   </div>
+  <table class="table">
+    <thead><tr><th>First-market reference</th><th>Value</th><th>Source</th></tr></thead>
+    <tbody>
+      {% for p in reference_points %}
+      <tr><td>{{ p.label }}<br><span class="muted small">{{ p.note }}</span></td><td><strong>{{ p.value }}</strong></td><td class="muted">{{ p.source }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="mk-price-note">These describe our first market, not claims about Elipsis customers. Savings in your report are estimates and must be validated against your payroll.</p>
 </section>
 
-<section>
-  <h2>Built for the people accountable for the number</h2>
-  <div class="steps">
-    <article class="step-card">
-      <span class="step-n">CO</span>
-      <h4>Chief Operating Officers</h4>
-      <p class="muted">Quantify friction across units and defend the automation budget with a single index the board can track quarter to quarter.</p>
+<section class="mk-wrap mk-section">
+  <div class="mk-section-head">
+    <p class="mk-eyebrow">Clear pricing</p>
+    <h2>Start with the diagnosis. Pay for the decision.</h2>
+    <p class="section-lede">The free diagnostic shows your number. The full assessment gives you the board pack, the costed constraint, and the implementation brief.</p>
+  </div>
+  <div class="mk-pricing">
+    <article class="mk-price">
+      <p class="price-label">Free diagnostic</p>
+      <h3>$0</h3>
+      <p class="price-note">One company · one operating unit · no card</p>
+      <ul>
+        <li>Full {{ total_questions }}-question diagnostic</li>
+        <li>{{ INDEX_NAME }} and maturity band</li>
+        <li>Top three constraints</li>
+        <li>Sample 90-day plan</li>
+      </ul>
+      <a class="btn secondary" href="/signup">Start free</a>
     </article>
-    <article class="step-card">
-      <span class="step-n">TR</span>
-      <h4>Transformation leads</h4>
-      <p class="muted">Replace opinion-led roadmaps with pillar scores, ranked pain points, and a three-horizon plan ordered by return.</p>
+    <article class="mk-price featured">
+      <p class="price-label">Full Assessment</p>
+      <h3>$49 <small>once</small></h3>
+      <p class="price-note">One assessment · three partner introductions</p>
+      <ul>
+        <li>Full 36-metric report and confidence</li>
+        <li>Costed constraints and printed assumptions</li>
+        <li>Board pack, Excel, JSON, and PDF</li>
+        <li>Read-only share links</li>
+        <li>One implementation request</li>
+      </ul>
+      <a class="btn" href="/pro">Get the full report</a>
     </article>
-    <article class="step-card">
-      <span class="step-n">FD</span>
-      <h4>Finance &amp; strategy</h4>
-      <p class="muted">Costed savings, payback, and ROI with assumptions printed — challengeable in the room, not hidden in a model.</p>
+    <article class="mk-price">
+      <p class="price-label">Operator subscription</p>
+      <h3>$29 <small>/ month</small></h3>
+      <p class="price-note">Or $380 / year · cancel before renewal</p>
+      <ul>
+        <li>Unlimited assessments</li>
+        <li>Unlimited implementation switches</li>
+        <li>Exports and board packs</li>
+        <li>Team collaboration</li>
+        <li>Operating rhythm reviews</li>
+      </ul>
+      <a class="btn secondary" href="/pro">Start subscription</a>
     </article>
   </div>
+  <p class="mk-price-note">Prices are in USD. Implementation partners have separate plans from $39/month. Elipsis does not take a commission on implementation work.</p>
 </section>
 
-<section>
-  <h2>From diagnosis to an operating rhythm</h2>
-  <div class="steps">
-    <article class="step-card">
-      <span class="step-n">AB</span>
-      <h4>Action plan</h4>
-      <p class="muted">Every 90-day action in one place: owners, due dates, blockers, completion rate, and overdue alerts.</p>
-    </article>
-    <article class="step-card">
-      <span class="step-n">TR</span>
-      <h4>Trends and reviews</h4>
-      <p class="muted">Schedule re-assessments, see movement against the previous score, and compare departments over time.</p>
-    </article>
-    <article class="step-card">
-      <span class="step-n">AT</span>
-      <h4>Team and audit trail</h4>
-      <p class="muted">Invite teammates, control organisation access, and keep a timestamped record of evidence, shares, and plan changes.</p>
-    </article>
-  </div>
-</section>
-
-<section class="cta-panel">
-  <p class="eyebrow" style="color:#fbbf24">READY WHEN YOU ARE</p>
-  <h2>Find out what friction is costing you.</h2>
-  <p class="lede">Create a free account, run an assessment in under half an hour, and walk into your next leadership meeting with numbers — not opinions.</p>
-  <div class="hero-actions" style="justify-content:center">
-    <a class="btn big" href="/signup">Start free assessment →</a>
-    <a class="btn ghost big" href="/login">I already have an account</a>
+<section class="mk-wrap mk-cta">
+  <h2>See the output before you see an invoice.</h2>
+  <div class="actions">
+    <a class="btn primary" href="/sample">Open the sample report <svg class="icon"><use href="#i-arrow"/></svg></a>
+    <a class="btn secondary" href="/signup">Run a free assessment</a>
   </div>
 </section>
 {% endblock %}

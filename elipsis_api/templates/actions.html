@@ -81,17 +81,18 @@
 <section class="block">
   <div class="block-head">
     <h3>All actions</h3>
-    <form method="get" action="/actions" class="filter-bar" style="margin:0">
-      <select name="status" onchange="this.form.submit()">
-        {% for key, label in [('open','Open'),('all','All'),('not_started','Not started'),('in_progress','In progress'),('blocked','Blocked'),('done','Done')] %}
-        <option value="{{ key }}" {% if status == key %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-      </select>
-      <input type="search" name="owner" value="{{ owner }}" placeholder="Filter by owner">
-      <label class="muted small"><input type="checkbox" name="overdue" value="1" {% if overdue %}checked{% endif %}> Overdue only</label>
-      <button class="btn sm ghost" type="submit">Filter</button>
-    </form>
   </div>
+
+  <form method="get" action="/actions" class="filter-bar" style="margin-bottom:.8rem">
+    <select name="status" onchange="this.form.submit()">
+      {% for key, label in [('open','Open'),('all','All'),('not_started','Not started'),('in_progress','In progress'),('blocked','Blocked'),('done','Done')] %}
+      <option value="{{ key }}" {% if status == key %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <input type="search" name="owner" value="{{ owner }}" placeholder="Filter by owner">
+    <label class="muted small"><input type="checkbox" name="overdue" value="1" {% if overdue %}checked{% endif %}> Overdue only</label>
+    <button class="btn sm ghost" type="submit">Filter</button>
+  </form>
 
   <form id="bulk-form" method="post" action="/actions/bulk" class="filter-bar" style="margin-bottom:.8rem">
     <label class="muted small"><input type="checkbox" data-check-all="bulk-form"> Select all</label>
