@@ -1,124 +1,373 @@
 {% extends "base.html" %}
-{% block title %}Companies{% endblock %}
+{% block title %}Company home{% endblock %}
 {% block content %}
-<section class="head company-head">
-  <p class="eyebrow">COMPANIES</p>
-  <h1>One operating view per company.</h1>
-  <p class="lede">Profiles hold the context behind every score, benchmark, and action plan. Keep them current as the business changes.</p>
-  <div class="hero-actions">
-    {% if rows %}
-    <a class="btn" href="/setup?new=1">Add a company <span class="crown" title="Premium">{% include "partials/crown.svg" %}</span></a>
-    {% endif %}
-    <a class="btn ghost" href="/audit">Open audit trail</a>
+
+{% if focus %}
+{% set org = focus.org %}
+{% set ctx = focus.context %}
+{% set pulse = focus.pulse %}
+<section class="company-home-head">
+  <div class="company-identity">
+    <span class="company-monogram">{{ org.name[:2]|upper }}</span>
+    <div class="company-identity-copy">
+      <p class="eyebrow">Company home · {{ ctx.sector }}</p>
+      <h1>{{ org.name }}</h1>
+      <p class="company-subline">
+        <span>{{ ctx.location }}</span>
+        <span>{{ ctx.size }}{% if ctx.employees %} · {{ ctx.employees }} people{% endif %}</span>
+        <span>{{ ctx.revenue }}</span>
+      </p>
+    </div>
   </div>
-  {% if limited %}
-  <div class="flash err">Additional companies are a Premium feature. Upgrade to keep separate operating profiles under one account.</div>
-  {% endif %}
+  <div class="company-head-score">
+    <div class="pulse-block {{ pulse.band }}">
+      <span>Operating pulse</span>
+      <strong>{{ pulse.score }}<small>/100</small></strong>
+      <em>{{ pulse.band }}</em>
+    </div>
+    <div class="company-head-actions">
+      <a class="btn primary" href="/start?org={{ org.id }}">New diagnostic</a>
+      <a class="btn ghost" href="/setup?org={{ org.id }}">Update profile</a>
+      <a class="btn ghost" href="/company/{{ org.id }}">Operating desk</a>
+    </div>
+  </div>
 </section>
 
-{% for row in rows %}
-<article class="block company-card" id="org-{{ row.org.id }}">
-  <div class="row-between company-card-head">
-    <div>
-      <p class="eyebrow">{% if loop.index > 1 %}<span class="crown" title="Premium company">{% include "partials/crown.svg" %}</span> {% endif %}{{ row.context.sector }}</p>
-      <h2>{{ row.org.name }}</h2>
-      <p class="muted">{% if row.context.location != 'Footprint not set' %}{{ row.context.location }}{% endif %}{% if row.org.employee_count %} · {{ row.org.employee_count }} people{% endif %}{% if row.org.revenue_band %} · {{ row.org.revenue_band }}{% endif %}</p>
-    </div>
-    <div class="company-profile-score">
-      <div class="company-pulse-mini {{ row.pulse.band }}"><strong>{{ row.pulse.score }}</strong><span>pulse</span></div>
-      <div class="company-profile-score">
-        <strong>{{ row.context.completeness.percent }}%</strong>
-        <span>profile complete</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="meter"><span style="width:{{ row.context.completeness.percent }}%"></span></div>
-  {% if not row.context.completeness.is_complete %}
-  <p class="muted small">{{ row.context.completeness.missing|length }} optional details still missing. A fuller profile sharpens benchmarks and cost estimates.</p>
-  {% endif %}
-
-  <div class="company-strip">
-    <div><span>Sector</span><strong>{{ row.context.sector }}</strong></div>
-    <div><span>Scale</span><strong>{{ row.context.size }}</strong></div>
-    <div><span>Revenue</span><strong>{{ row.context.revenue }}</strong></div>
-    <div><span>Footprint</span><strong>{{ row.context.location }}</strong></div>
-  </div>
-
-  <div class="hero-actions company-actions">
-    <a class="btn" href="/company/{{ row.org.id }}">Open workspace <span class="tag">{{ row.pulse.score }}/100</span></a>
-    <a class="btn ghost" href="/start?org={{ row.org.id }}">Start a diagnostic</a>
-    <a class="btn ghost" href="{% if row.company_pro %}/start?org={{ row.org.id }}&amp;method=team{% else %}/pro?locked=team{% endif %}">Ask the team{% if not row.company_pro %} <span class="crown" title="Premium">{% include "partials/crown.svg" %}</span>{% endif %}</a>
-    <a class="btn ghost" href="/setup?org={{ row.org.id }}">Update profile</a>
-    <a class="btn ghost" href="/dashboard?org={{ row.org.id }}">Dashboard</a>
-    <a class="btn ghost" href="/trends?org={{ row.org.id }}">Trends</a>
-    <a class="btn ghost" href="/company/{{ row.org.id }}/team">Team · {{ row.members }}</a>
-  </div>
-
-  {% if row.portrait %}
-  <div class="company-insight">
-    <p class="tag ok">{{ row.portrait.posture }}</p>
-    <h3>What the profile says</h3>
-    <p>{{ row.portrait.structure }}</p>
-    <ul>{% for line in row.portrait.pillar_lines %}<li>{{ line }}</li>{% endfor %}</ul>
-    <p>{{ row.portrait.leverage }}</p>
-    {% if row.latest %}<p><a class="text-link" href="/assessment/{{ row.latest.id }}/results">Open latest report →</a></p>{% endif %}
-  </div>
+<div class="company-home-toolbar">
+  {% if peers %}
+  <form method="get" action="/company" class="company-view-switch">
+    <label for="company-view">Viewing company</label>
+    <select id="company-view" name="org" onchange="this.form.submit()">
+      <option value="{{ org.id }}" selected>{{ org.name }}</option>
+      {% for row in peers %}<option value="{{ row.org.id }}">{{ row.org.name }}</option>{% endfor %}
+    </select>
+  </form>
   {% else %}
-  <p class="muted company-empty">No completed diagnostic yet. Start with one informed view, or send a department questionnaire to the people who know the work best.</p>
+  <span class="company-toolbar-note">Single company workspace</span>
   {% endif %}
+  <div class="company-toolbar-links">
+    <a href="/actions?org={{ org.id }}">Action plan</a>
+    <a href="/trends?org={{ org.id }}">Trends</a>
+    <a href="/company/{{ org.id }}/team">Team</a>
+    <a href="/company/{{ org.id }}/decisions">Decisions</a>
+  </div>
+</div>
 
-  {% if row.campaigns %}
-  <h3>Team questionnaires</h3>
-  <ul class="campaign-list">
-    {% for c in row.campaigns %}
-    <li>
-      <div>
-        <strong>{{ c.question_set or c.title }}</strong>
-        <span class="muted">{{ c.completed }}{% if c.min_respondents %} / {{ c.min_respondents }}{% endif %} responses · {{ c.contact_mode or 'optional' }}</span>
-      </div>
-      <div class="campaign-list-actions">
-        <span class="status-pill {{ 'ok' if c.status == 'reported' else 'watch' }}">{{ c.status }}</span>
-        <a class="text-link" href="/company/campaign/{{ c.token }}">Open</a>
-      </div>
-    </li>
-    {% endfor %}
-  </ul>
-  {% endif %}
+{% if limited %}
+<div class="flash err">Additional companies are a Premium feature. Upgrade to keep separate operating profiles under one account.</div>
+{% endif %}
 
-  {% if row.assessments %}
-  <h3>Diagnostics</h3>
-  <table class="table">
-    <thead><tr><th>Scope</th><th>Status</th><th>Score</th><th></th></tr></thead>
-    <tbody>
-    {% for a in row.assessments %}
-    <tr>
-      <td>{{ a.department or 'Company-wide' }}</td>
-      <td>{{ a.status }}</td>
-      <td>{% if a.readiness_index is not none %}{{ '%.1f'|format(a.readiness_index) }}{% else %}—{% endif %}</td>
-      <td><a href="/assessment/{{ a.id }}/results">Open</a></td>
-    </tr>
+<section class="company-kpis">
+  <div class="company-kpi">
+    <span>Readiness</span>
+    <strong>{{ '%.1f'|format(pulse.latest_score) if pulse.latest_score else '—' }}</strong>
+    <small>Latest completed diagnostic</small>
+  </div>
+  <div class="company-kpi">
+    <span>Open actions</span>
+    <strong>{{ pulse.actions.total - pulse.actions.done }}</strong>
+    <small>{{ pulse.actions.done }} complete of {{ pulse.actions.total }}</small>
+  </div>
+  <div class="company-kpi {{ 'is-risk' if pulse.actions.overdue else '' }}">
+    <span>Overdue</span>
+    <strong>{{ pulse.actions.overdue }}</strong>
+    <small>{{ 'Needs a decision' if pulse.actions.overdue else 'Nothing overdue' }}</small>
+  </div>
+  <div class="company-kpi">
+    <span>Team</span>
+    <strong>{{ focus.members }}</strong>
+    <small>{{ 'members active' if focus.members else 'Invite the operators' }}</small>
+  </div>
+  <div class="company-kpi">
+    <span>Questionnaires</span>
+    <strong>{{ focus.campaigns|length }}</strong>
+    <small>{{ 'live and closed' if focus.campaigns else 'No team collections yet' }}</small>
+  </div>
+  <div class="company-kpi">
+    <span>Profile</span>
+    <strong>{{ ctx.completeness.percent }}%</strong>
+    <small>{{ 'Complete' if ctx.completeness.is_complete else (ctx.completeness.missing|length ~ ' details missing') }}</small>
+  </div>
+</section>
+
+<div class="company-home-grid">
+  <div class="company-home-main">
+    <section class="block company-picture-block">
+      <div class="block-head">
+        <div>
+          <p class="eyebrow">Operating picture</p>
+          <h2>What is moving the score</h2>
+        </div>
+        <a class="btn ghost sm" href="/company/{{ org.id }}/desk">Open operating desk</a>
+      </div>
+      <div class="company-picture">
+        <div class="picture-score">
+          <div class="picture-score-top">
+            <span>Pulse</span>
+            <strong>{{ pulse.score }}</strong>
+          </div>
+          <div class="pulse-segments" aria-hidden="true">
+            {% for i in range(10) %}<i class="{{ 'on' if i < (pulse.score / 10)|round(0, 'ceil')|int else '' }}"></i>{% endfor %}
+          </div>
+          <p>{{ pulse.band|capitalize }} operating position. Weighted across readiness, execution, people, evidence, and compliance.</p>
+        </div>
+        <div class="component-list">
+          {% for c in pulse.components %}
+          <div class="component-row">
+            <div class="component-line">
+              <span>{{ c.label }}</span>
+              <b>{{ c.value }}</b>
+            </div>
+            <div class="component-track"><i style="width:{{ c.value }}%"></i></div>
+            <small>{{ c.note }} · {{ c.weight }}% weight</small>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <div class="company-two-col">
+      <section class="block">
+        <div class="block-head">
+          <div>
+            <p class="eyebrow">Trajectory</p>
+            <h2>Readiness movement</h2>
+          </div>
+          <a class="btn ghost sm" href="/trends?org={{ org.id }}">All trends</a>
+        </div>
+        {% if focus.overview.trend %}
+        <div class="company-trend">
+          {% for t in focus.overview.trend %}
+          <div class="company-trend-col">
+            <span class="company-trend-value">{{ '%.1f'|format(t.value) }}</span>
+            <i style="height:{{ [8, (t.value * 0.62)|int + 8]|min }}px"></i>
+            <small>{{ t.label[5:10] if t.label else '—' }}</small>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="company-empty-inline">
+          <p>No completed diagnostics yet. The first baseline sets the trajectory.</p>
+          <a class="btn sm" href="/start?org={{ org.id }}">Start baseline</a>
+        </div>
+        {% endif %}
+      </section>
+
+      <section class="block">
+        <div class="block-head">
+          <div>
+            <p class="eyebrow">Latest report</p>
+            <h2>Binding constraint</h2>
+          </div>
+          {% if focus.latest %}<a class="btn ghost sm" href="/assessment/{{ focus.latest.id }}/results">Open report</a>{% endif %}
+        </div>
+        {% if focus.portrait %}
+        <div class="constraint-score">
+          <strong>{{ '%.1f'|format(focus.latest.readiness_index) }}</strong>
+          <span>{{ focus.portrait.posture }}</span>
+        </div>
+        {% if focus.pillars %}
+        <div class="constraint-pillars">
+          {% for p in focus.pillars[:3] %}
+          <div class="constraint-pillar">
+            <div class="row-between"><span>{{ p.label }}</span><b>{{ '%.0f'|format(p.score) }}</b></div>
+            <div class="component-track"><i style="width:{{ p.score }}%"></i></div>
+          </div>
+          {% endfor %}
+        </div>
+        <p class="muted small">Lowest scoring lanes first. The full report explains the constraint and the sequenced 90-day plan.</p>
+        {% endif %}
+        {% else %}
+        <div class="company-empty-inline">
+          <p>No completed diagnostic. Run the first assessment to uncover the binding constraint.</p>
+          <a class="btn sm" href="/start?org={{ org.id }}">Start diagnostic</a>
+        </div>
+        {% endif %}
+      </section>
+    </div>
+
+    <section class="block">
+      <div class="block-head">
+        <div>
+          <p class="eyebrow">Assessments</p>
+          <h2>Diagnostics across the company</h2>
+        </div>
+        <div class="head-actions">
+          <a class="btn ghost sm" href="/assessments?org={{ org.id }}">All assessments</a>
+          <a class="btn sm" href="/start?org={{ org.id }}">New</a>
+        </div>
+      </div>
+      {% if focus.assessments %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Scope</th><th>Status</th><th>Score</th><th>Started</th><th></th></tr></thead>
+          <tbody>
+          {% for a in focus.assessments[:8] %}
+          <tr>
+            <td><strong>{{ a.department or 'Company-wide' }}</strong></td>
+            <td><span class="tag {{ 'ok' if a.status == 'completed' else 'warn' }}">{{ a.status|replace('_',' ') }}</span></td>
+            <td class="mono">{{ '%.1f'|format(a.readiness_index) if a.readiness_index is not none else '—' }}</td>
+            <td class="muted small">{{ (a.started_at or '—')[:10] }}</td>
+            <td><a href="{% if a.status == 'completed' %}/assessment/{{ a.id }}/results{% else %}/assessment/{{ a.id }}{% endif %}">{% if a.status == 'completed' %}Report{% else %}Continue{% endif %}</a></td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="company-empty-inline">
+        <p><strong>No diagnostics yet.</strong> Start company-wide, or send a department questionnaire first.</p>
+        <a class="btn sm" href="/start?org={{ org.id }}">Start diagnostic</a>
+      </div>
+      {% endif %}
+    </section>
+
+    <section class="block">
+      <div class="block-head">
+        <div>
+          <p class="eyebrow">Team intelligence</p>
+          <h2>Questionnaires and response coverage</h2>
+        </div>
+        <a class="btn ghost sm" href="/company/{{ org.id }}">Open workspace</a>
+      </div>
+      {% if focus.campaigns %}
+      <div class="campaign-list">
+        {% for c in focus.campaigns[:6] %}
+        <a class="campaign-row" href="/company/campaign/{{ c.token }}">
+          <div class="campaign-row-main">
+            <strong>{{ c.question_set or c.title or 'Team questionnaire' }}</strong>
+            <span>{{ c.completed }}{% if c.min_respondents %} of {{ c.min_respondents }} required{% endif %} responses{% if c.deadline %} · due {{ c.deadline[:10] }}{% endif %}</span>
+          </div>
+          <div class="campaign-row-side">
+            <span class="tag {{ 'ok' if c.status == 'reported' else 'warn' }}">{{ c.status }}</span>
+            <span class="campaign-progress"><i style="width:{{ [100, (c.completed * 100 / c.min_respondents if c.min_respondents else 0)]|min }}%"></i></span>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="company-empty-inline">
+        <p><strong>No team questionnaires.</strong> Collect the floor view before the next leadership diagnostic.</p>
+        <a class="btn sm ghost" href="/start?org={{ org.id }}&amp;method=team">Ask the team</a>
+      </div>
+      {% endif %}
+    </section>
+  </div>
+
+  <aside class="company-home-side">
+    <section class="block">
+      <div class="block-head">
+        <div>
+          <p class="eyebrow">Next moves</p>
+          <h2>Finish the highest-value work</h2>
+        </div>
+      </div>
+      <ol class="next-move-list">
+        {% if not ctx.completeness.is_complete %}
+        <li><a href="/setup?org={{ org.id }}"><span>01</span><div><strong>Complete the company profile</strong><small>{{ ctx.completeness.missing|length }} details improve benchmarks and cost estimates.</small></div></a></li>
+        {% endif %}
+        {% if not focus.latest %}
+        <li><a href="/start?org={{ org.id }}"><span>02</span><div><strong>Run the first diagnostic</strong><small>Establish the baseline before changing the operating model.</small></div></a></li>
+        {% else %}
+        <li><a href="/assessment/{{ focus.latest.id }}/results"><span>02</span><div><strong>Review the latest report</strong><small>See the constraint, assumptions, and 90-day sequence.</small></div></a></li>
+        {% endif %}
+        {% if pulse.actions.overdue %}
+        <li><a href="/actions?org={{ org.id }}&amp;status=open&amp;overdue=1"><span>03</span><div><strong>Clear {{ pulse.actions.overdue }} overdue action{% if pulse.actions.overdue != 1 %}s{% endif %}</strong><small>Overdue work weakens the operating pulse fastest.</small></div></a></li>
+        {% elif focus.campaigns %}
+        <li><a href="/company/{{ org.id }}"><span>03</span><div><strong>Check questionnaire coverage</strong><small>{{ focus.campaigns|length }} collection{% if focus.campaigns|length != 1 %}s{% endif %} in the workspace.</small></div></a></li>
+        {% else %}
+        <li><a href="/actions?org={{ org.id }}"><span>03</span><div><strong>Assign the next action</strong><small>Turn the latest report into owned, dated work.</small></div></a></li>
+        {% endif %}
+        {% if focus.members < 2 %}
+        <li><a href="/company/{{ org.id }}/team"><span>04</span><div><strong>Invite the operating team</strong><small>Managers and supervisors make the evidence usable.</small></div></a></li>
+        {% endif %}
+      </ol>
+    </section>
+
+    <section class="block">
+      <div class="block-head">
+        <div>
+          <p class="eyebrow">Company profile</p>
+          <h2>Operating context</h2>
+        </div>
+        <a class="btn ghost sm" href="/setup?org={{ org.id }}">Edit</a>
+      </div>
+      <dl class="company-facts">
+        <div><dt>Legal name</dt><dd>{{ ctx.legal_name or 'Not set' }}</dd></div>
+        <div><dt>Industry</dt><dd>{{ ctx.industry }}</dd></div>
+        <div><dt>Primary services</dt><dd>{{ ctx.primary_services or 'Not set' }}</dd></div>
+        <div><dt>Systems</dt><dd>{{ ctx.systems_used or 'Not set' }}</dd></div>
+        <div><dt>Operating sites</dt><dd>{{ ctx.operating_sites or 'Not set' }}</dd></div>
+        <div><dt>Website</dt><dd>{% if ctx.website %}<a href="{{ ctx.website }}" target="_blank" rel="noopener">{{ ctx.website }}</a>{% else %}Not set{% endif %}</dd></div>
+      </dl>
+      <div class="profile-meter">
+        <div class="row-between"><span>Profile completeness</span><b>{{ ctx.completeness.percent }}%</b></div>
+        <div class="component-track"><i style="width:{{ ctx.completeness.percent }}%"></i></div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-head">
+        <div>
+          <p class="eyebrow">Activity</p>
+          <h2>Recent movement</h2>
+        </div>
+      </div>
+      {% if focus.activity %}
+      <div class="company-activity">
+        {% for event in focus.activity %}
+        <div class="company-activity-row">
+          <span class="dot"></span>
+          <div><strong>{{ event.action|replace('.', ' ') }}</strong><small>{{ event.detail or event.actor }}</small><em>{{ event.at[:16]|replace('T', ' ') }}</em></div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="muted small">No recorded activity yet. Reports, actions, and team changes appear here.</p>
+      {% endif %}
+    </section>
+
+    <section class="block company-shortcuts">
+      <p class="eyebrow">Workspace</p>
+      <div class="shortcut-list">
+        <a href="/actions?org={{ org.id }}"><span>Action plan</span><strong>{{ pulse.actions.total - pulse.actions.done }} open</strong></a>
+        <a href="/operations?org={{ org.id }}"><span>Operations</span><strong>Evidence</strong></a>
+        <a href="/assessments?org={{ org.id }}"><span>Assessments</span><strong>{{ focus.assessments|length }} total</strong></a>
+        <a href="/trends?org={{ org.id }}"><span>Trends</span><strong>Movement</strong></a>
+        <a href="/company/{{ org.id }}/team"><span>Team</span><strong>{{ focus.members }}</strong></a>
+        <a href="/company/{{ org.id }}/decisions"><span>Decisions</span><strong>Log</strong></a>
+      </div>
+    </section>
+  </aside>
+</div>
+
+{% if peers %}
+<section class="block company-peers">
+  <div class="block-head">
+    <div><p class="eyebrow">Portfolio</p><h2>Other companies</h2></div>
+    <a class="btn ghost sm" href="/setup?new=1">Add a company</a>
+  </div>
+  <div class="company-peer-grid">
+    {% for row in peers %}
+    <a class="company-peer" href="/company?org={{ row.org.id }}">
+      <span class="company-monogram sm">{{ row.org.name[:2]|upper }}</span>
+      <div><strong>{{ row.org.name }}</strong><small>{{ row.context.sector }} · pulse {{ row.pulse.score }}</small></div>
+      <span class="tag {{ 'ok' if row.pulse.score >= 75 else 'warn' if row.pulse.score >= 50 else 'err' }}">{{ row.pulse.band }}</span>
+    </a>
     {% endfor %}
-    </tbody>
-  </table>
-  {% endif %}
-</article>
+  </div>
+</section>
+{% endif %}
+
 {% else %}
 <section class="block company-empty-state">
+  <p class="eyebrow">Company home</p>
   <h2>Set up your first company</h2>
-  <p class="muted">The profile gives every diagnostic its context: sector, scale, geography, services, and systems. Only the company name is required to begin.</p>
-  <a class="btn big" href="/setup?next=assessment">Set up company →</a>
-</section>
-{% endfor %}
-
-{% if rows and not is_pro %}
-<section class="block premium-company">
-  <span class="crown large" title="Premium">{% include "partials/crown.svg" %}</span>
-  <div>
-    <h2>Run more than one company</h2>
-    <p class="muted">Premium keeps separate profiles, diagnostics, team questionnaires, and reports under one account.</p>
+  <p class="muted">The company profile gives every diagnostic its context: sector, scale, geography, services, and systems. It becomes the home for every score, action, questionnaire, and report.</p>
+  <div class="hero-actions">
+    <a class="btn primary big" href="/setup?next=assessment">Set up company</a>
+    <a class="btn ghost" href="/sample">See a sample report</a>
   </div>
-  <a class="btn" href="/pro">See Premium →</a>
 </section>
 {% endif %}
 {% endblock %}

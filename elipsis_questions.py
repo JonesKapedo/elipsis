@@ -73,8 +73,8 @@ QUESTIONS: list[dict[str, Any]] = [
          why="Every step adds waiting time and another chance for something to go wrong.",
          weight=4, evidence_required=False),
     dict(code="Q05", scale="approvals", subdomain="WFL",
-         text="How many different people must approve something before it can move on?",
-         why="Too many approvals is the most common reason work takes far longer than it should.",
+         text="How many different people must approve something before it can move on to the next stage?",
+         why="Too many approvals is the most common reason work takes far longer than it should despite being a security measure.",
          weight=5, evidence_required=True),
     dict(code="Q06", scale="waiting_less", subdomain="WFL",
          text="When a job waits for the next person to act, how much of the total time "

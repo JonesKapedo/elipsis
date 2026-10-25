@@ -3,140 +3,200 @@
 {% block content %}
 <section class="head settings-head">
   <p class="eyebrow">SETTINGS</p>
-  <h1>Account, defaults, and integrations.</h1>
-  <p class="lede">Keep your professional details current, choose what a new diagnostic should default to, and manage the systems that receive operating events.</p>
+  <h1>Workspace settings</h1>
+  <p class="lede">Account details, operating defaults, alerts, interface choices, security, and the company identity used across reports and board packs.</p>
   {% if saved %}<div class="flash ok">Settings saved.</div>{% endif %}
   {% if password_message == 'changed' %}<div class="flash ok">Password changed. Use the new password the next time you sign in.</div>{% endif %}
   {% if password_message == 'current' %}<div class="flash err">The current password is incorrect.</div>{% endif %}
   {% if password_message == 'short' %}<div class="flash err">Use at least eight characters for the new password.</div>{% endif %}
   {% if password_message == 'mismatch' %}<div class="flash err">The new passwords do not match.</div>{% endif %}
   {% if password_message == 'unavailable' %}<div class="flash err">Password changes are temporarily unavailable. Try again shortly.</div>{% endif %}
-  {% if company_saved %}<div class="flash ok">Company workspace settings saved.</div>{% endif %}
+  {% if company_saved %}<div class="flash ok">Company identity saved.</div>{% endif %}
   {% if company_error %}<div class="flash err">{{ company_error }}</div>{% endif %}
 </section>
 
-<div class="settings-layout">
-  <nav class="settings-nav block" aria-label="Settings sections">
-    <a href="#profile">Profile</a>
-    <a href="#defaults">Operating defaults</a>
-    <a href="#notifications">Notifications</a>
-    <a href="#appearance">Appearance</a>
-    <a href="#security">Security</a>
-    <a href="#company">Company identity</a>
-    <a href="#integrations">Integrations</a>
-    <a href="/account/data">Data and privacy</a>
-  </nav>
+<div class="settings-shell">
+  <aside class="settings-rail">
+    <div class="settings-account-card">
+      <span class="user-avatar">{{ (user.name or user.email or 'EL')[:2]|upper }}</span>
+      <div>
+        <strong>{{ user.name or 'Operator' }}</strong>
+        <span>{{ user.email }}</span>
+      </div>
+      <span class="tag">{{ organizations|length }} {% if organizations|length == 1 %}company{% else %}companies{% endif %}</span>
+    </div>
+    <nav class="settings-nav" aria-label="Settings sections">
+      <a href="#profile"><span>01</span>Account &amp; profile</a>
+      <a href="#defaults"><span>02</span>Workspace defaults</a>
+      <a href="#notifications"><span>03</span>Notifications</a>
+      <a href="#interface"><span>04</span>Interface</a>
+      <a href="#security"><span>05</span>Security</a>
+      <a href="#company"><span>06</span>Company identity</a>
+      <a href="#integrations"><span>07</span>Integrations</a>
+    </nav>
+    <div class="settings-rail-foot">
+      <p>Data, legal records, and export</p>
+      <a class="text-link" href="/account/data">Open data &amp; privacy</a>
+    </div>
+  </aside>
 
   <div class="settings-main">
-    <form method="post" action="/settings" class="block settings-block" id="profile">
-      <div class="section-label"><span>01</span><div><h2>Profile</h2><p>Used on reports, team questionnaires, and board packs.</p></div></div>
-      <div class="form-grid">
-        <label class="field">Full name
-          <input name="name" maxlength="120" value="{{ user.name or '' }}" autocomplete="name">
-        </label>
-        <label class="field">Work email
-          <input value="{{ user.email }}" disabled>
-        </label>
-        <label class="field">Role
-          <input name="job_title" maxlength="120" value="{{ prefs.job_title or '' }}" placeholder="e.g. Operations Director" autocomplete="organization-title">
-        </label>
-        <label class="field">Phone
-          <input name="phone" maxlength="40" value="{{ prefs.phone or '' }}" placeholder="+254 …" autocomplete="tel">
-        </label>
-        <label class="field">Landing page
-          <select name="landing_page">
-            {% for value, label in [('/dashboard','Overview'),('/assessments','Assessments'),('/actions','Action plan'),('/company','Company'),('/operations','Operations')] %}
-            <option value="{{ value }}" {% if (prefs.landing_page or '/dashboard') == value %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
-        </label>
-        <label class="field wide">Short bio
-          <textarea name="bio" rows="2" maxlength="500" placeholder="What you own in the operating system.">{{ prefs.bio or '' }}</textarea>
-        </label>
-        <label class="field">Default department
-          <select name="default_department">
-            <option value="">No default</option>
-            {% for d in departments %}
-            <option value="{{ d.label }}" {% if prefs.default_department == d.label %}selected{% endif %}>{{ d.label }}</option>
-            {% endfor %}
-            <option value="Whole company" {% if prefs.default_department == 'Whole company' %}selected{% endif %}>Whole company</option>
-          </select>
-        </label>
-        <label class="field">Default company
-          <select name="default_organization_id">
-            <option value="">No default</option>
-            {% for org in organizations %}
-            <option value="{{ org.id }}" {% if prefs.default_organization_id == org.id %}selected{% endif %}>{{ org.name }}</option>
-            {% endfor %}
-          </select>
-        </label>
-      </div>
+    <form method="post" action="/settings" class="settings-form">
+      <section class="block settings-section" id="profile">
+        <header class="settings-section-head">
+          <span class="settings-num">01</span>
+          <div><h2>Account &amp; profile</h2><p>Used on reports, team questionnaires, and board packs.</p></div>
+        </header>
+        <div class="settings-grid">
+          <label class="field">Full name
+            <input name="name" maxlength="120" value="{{ user.name or '' }}" autocomplete="name">
+          </label>
+          <label class="field">Work email
+            <input value="{{ user.email }}" disabled>
+            <span class="field-note">Managed by your sign-in provider.</span>
+          </label>
+          <label class="field">Role
+            <input name="job_title" maxlength="120" value="{{ prefs.job_title or '' }}" placeholder="e.g. Operations Director" autocomplete="organization-title">
+          </label>
+          <label class="field">Phone
+            <input name="phone" maxlength="40" value="{{ prefs.phone or '' }}" placeholder="+254 …" autocomplete="tel">
+          </label>
+          <label class="field settings-wide">Short bio
+            <textarea name="bio" rows="3" maxlength="500" placeholder="What you own in the operating system.">{{ prefs.bio or '' }}</textarea>
+            <span class="field-note">{{ (prefs.bio or '')|length }}/500 characters</span>
+          </label>
+        </div>
+      </section>
 
-      <div class="section-label" id="notifications"><span>02</span><div><h2>Notifications and rhythm</h2><p>Choose what interrupts you and when the team digest should land.</p></div></div>
-      <div class="form-grid">
-        <label class="field field-check">
-          <input type="checkbox" name="notify_email" value="1" {% if prefs.notify_email %}checked{% endif %}>
-          <span>Email me when a team questionnaire reaches its minimum or an action becomes overdue.</span>
-        </label>
-        <label class="field field-check">
-          <input type="checkbox" name="notify_team" value="1" {% if prefs.notify_team is none or prefs.notify_team %}checked{% endif %}>
-          <span>Include team invitations, room posts, and member changes in my digest.</span>
-        </label>
-        <label class="field field-check">
-          <input type="checkbox" name="notify_reports" value="1" {% if prefs.notify_reports is none or prefs.notify_reports %}checked{% endif %}>
-          <span>Include new reports, annotations, and review dates in my digest.</span>
-        </label>
-        <label class="field field-check">
-          <input type="checkbox" name="notify_actions" value="1" {% if prefs.notify_actions is none or prefs.notify_actions %}checked{% endif %}>
-          <span>Include overdue actions and decisions in my digest.</span>
-        </label>
-        <label class="field">Digest day
-          <select name="digest_day">
-            {% for day in ['monday','tuesday','wednesday','thursday','friday'] %}<option value="{{ day }}" {% if (prefs.digest_day or 'monday') == day %}selected{% endif %}>{{ day|capitalize }}</option>{% endfor %}
-          </select>
-        </label>
-        <label class="field">Quiet hours
-          <input name="quiet_hours" maxlength="40" value="{{ prefs.quiet_hours or '' }}" placeholder="e.g. 18:30–07:00">
-        </label>
-        <label class="field">Timezone
-          <select name="timezone">
-            {% for value, label in timezone_choices %}
-            <option value="{{ value }}" {% if (prefs.timezone or 'UTC') == value %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
-        </label>
-      </div>
+      <section class="block settings-section" id="defaults">
+        <header class="settings-section-head">
+          <span class="settings-num">02</span>
+          <div><h2>Workspace defaults</h2><p>What opens first and which company context new work should use.</p></div>
+        </header>
+        <div class="settings-grid">
+          <label class="field">Default company
+            <select name="default_organization_id">
+              <option value="">No default</option>
+              {% for org in organizations %}
+              <option value="{{ org.id }}" {% if prefs.default_organization_id == org.id %}selected{% endif %}>{{ org.name }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label class="field">Default department
+            <select name="default_department">
+              <option value="">No default</option>
+              {% for d in departments %}
+              <option value="{{ d.label }}" {% if prefs.default_department == d.label %}selected{% endif %}>{{ d.label }}</option>
+              {% endfor %}
+              <option value="Whole company" {% if prefs.default_department == 'Whole company' %}selected{% endif %}>Whole company</option>
+            </select>
+          </label>
+          <label class="field">Landing page
+            <select name="landing_page">
+              {% for value, label in [('/company','Company home'),('/dashboard','Overview'),('/assessments','Assessments'),('/actions','Action plan'),('/operations','Operations')] %}
+              <option value="{{ value }}" {% if (prefs.landing_page or '/dashboard') == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            <span class="field-note">Company home is the recommended starting point.</span>
+          </label>
+          <label class="field">Timezone
+            <select name="timezone">
+              {% for value, label in timezone_choices %}
+              <option value="{{ value }}" {% if (prefs.timezone or 'UTC') == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            <span class="field-note">Due times use this timezone; audit records stay in UTC.</span>
+          </label>
+        </div>
+      </section>
 
-      <div class="section-label" id="appearance"><span>03</span><div><h2>Appearance</h2><p>Small adjustments for legibility and motion sensitivity.</p></div></div>
-      <div class="form-grid">
-        <label class="field">Diamond mark
-          <input name="symbol" maxlength="2" value="{{ prefs.symbol or 'E' }}">
-        </label>
-        <label class="field">Motion
-          <select name="motion">
-            <option value="on" {% if prefs.motion != 'off' %}selected{% endif %}>On — subtle transitions</option>
-            <option value="off" {% if prefs.motion == 'off' %}selected{% endif %}>Off — reduce motion</option>
-          </select>
-        </label>
-        <label class="field">Density
-          <select name="density">
-            <option value="comfortable" {% if prefs.density != 'compact' %}selected{% endif %}>Comfortable</option>
-            <option value="compact" {% if prefs.density == 'compact' %}selected{% endif %}>Compact</option>
-          </select>
-        </label>
-      </div>
+      <section class="block settings-section" id="notifications">
+        <header class="settings-section-head">
+          <span class="settings-num">03</span>
+          <div><h2>Notifications</h2><p>Choose what reaches you and when the operating digest lands.</p></div>
+        </header>
+        <div class="switch-stack">
+          <label class="switch-row">
+            <span class="switch-copy"><strong>Questionnaire and overdue alerts</strong><small>Email me when a questionnaire reaches its minimum or an action becomes overdue.</small></span>
+            <span class="switch"><input type="checkbox" name="notify_email" value="1" {% if prefs.notify_email %}checked{% endif %}><span class="switch-track" aria-hidden="true"></span></span>
+          </label>
+          <label class="switch-row">
+            <span class="switch-copy"><strong>Team activity</strong><small>Invitations, room posts, and member changes in the digest.</small></span>
+            <span class="switch"><input type="checkbox" name="notify_team" value="1" {% if prefs.notify_team is none or prefs.notify_team %}checked{% endif %}><span class="switch-track" aria-hidden="true"></span></span>
+          </label>
+          <label class="switch-row">
+            <span class="switch-copy"><strong>Reports and reviews</strong><small>New reports, annotations, and review dates in the digest.</small></span>
+            <span class="switch"><input type="checkbox" name="notify_reports" value="1" {% if prefs.notify_reports is none or prefs.notify_reports %}checked{% endif %}><span class="switch-track" aria-hidden="true"></span></span>
+          </label>
+          <label class="switch-row">
+            <span class="switch-copy"><strong>Overdue decisions</strong><small>Overdue actions and decisions included in the digest.</small></span>
+            <span class="switch"><input type="checkbox" name="notify_actions" value="1" {% if prefs.notify_actions is none or prefs.notify_actions %}checked{% endif %}><span class="switch-track" aria-hidden="true"></span></span>
+          </label>
+        </div>
+        <div class="settings-grid settings-grid-spaced">
+          <label class="field">Digest day
+            <select name="digest_day">
+              {% for day in ['monday','tuesday','wednesday','thursday','friday'] %}<option value="{{ day }}" {% if (prefs.digest_day or 'monday') == day %}selected{% endif %}>{{ day|capitalize }}</option>{% endfor %}
+            </select>
+          </label>
+          <label class="field">Quiet hours
+            <input name="quiet_hours" maxlength="40" value="{{ prefs.quiet_hours or '' }}" placeholder="e.g. 18:30–07:00">
+            <span class="field-note">No digest delivery during this window.</span>
+          </label>
+        </div>
+      </section>
 
-      <div class="settings-submit">
-        <p class="muted small">These preferences apply to this account on every device. Support due times use the saved timezone; audit records keep UTC.</p>
-        <button class="btn" type="submit">Save settings</button>
+      <section class="block settings-section" id="interface">
+        <header class="settings-section-head">
+          <span class="settings-num">04</span>
+          <div><h2>Interface</h2><p>The workspace uses the deep operations skin. Adjust density, motion, and your mark.</p></div>
+        </header>
+        <div class="theme-preview">
+          <div class="theme-swatch">
+            <span class="theme-swatch-deep"></span>
+            <span class="theme-swatch-panel"></span>
+            <span class="theme-swatch-gold"></span>
+          </div>
+          <div>
+            <strong>Deep operations</strong>
+            <p>Low-glare canvas, layered panels, amber signal colour. Built for long operating sessions.</p>
+          </div>
+          <span class="tag ok">Active</span>
+        </div>
+        <div class="settings-grid settings-grid-spaced">
+          <label class="field">Diamond mark
+            <input name="symbol" maxlength="2" value="{{ prefs.symbol or 'E' }}">
+            <span class="field-note">One or two characters shown in compact company marks.</span>
+          </label>
+          <label class="field">Motion
+            <select name="motion">
+              <option value="on" {% if prefs.motion != 'off' %}selected{% endif %}>On — subtle transitions</option>
+              <option value="off" {% if prefs.motion == 'off' %}selected{% endif %}>Off — reduce motion</option>
+            </select>
+          </label>
+          <label class="field">Density
+            <select name="density">
+              <option value="comfortable" {% if prefs.density != 'compact' %}selected{% endif %}>Comfortable</option>
+              <option value="compact" {% if prefs.density == 'compact' %}selected{% endif %}>Compact</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <div class="settings-savebar">
+        <p class="muted small">Preferences apply to this account on every device.</p>
+        <button class="btn primary" type="submit">Save changes</button>
       </div>
     </form>
 
-    <section class="block settings-block" id="security">
-      <div class="section-label"><span>04</span><div><h2>Security</h2><p>Change the password used for this account.</p></div></div>
+    <section class="block settings-section" id="security">
+      <header class="settings-section-head">
+        <span class="settings-num">05</span>
+        <div><h2>Security</h2><p>Change the password used for this account and review legal records.</p></div>
+      </header>
       <form method="post" action="/settings/password" class="stack">
-        <div class="form-grid">
-          <label class="field">Current password
+        <div class="settings-grid">
+          <label class="field settings-wide">Current password
             <input type="password" name="current_password" autocomplete="current-password" required>
           </label>
           <label class="field">New password
@@ -146,23 +206,31 @@
             <input type="password" name="confirm_password" minlength="8" autocomplete="new-password" required>
           </label>
         </div>
-        <button class="btn" type="submit">Change password</button>
+        <div class="settings-section-foot">
+          <p class="muted small">Terms v{{ legal.current_version }}: {{ 'accepted' if legal.terms_accepted else 'not recorded' }}. Privacy: {{ 'acknowledged' if legal.privacy_accepted else 'not recorded' }}. <a href="/account/data">Review data and legal records</a>.</p>
+          <button class="btn" type="submit">Change password</button>
+        </div>
       </form>
-      <hr>
-      <p class="muted small">Terms v{{ legal.current_version }}: {{ 'accepted' if legal.terms_accepted else 'not recorded' }}. Privacy: {{ 'acknowledged' if legal.privacy_accepted else 'not recorded' }}. <a href="/account/data">Review data and legal records</a>.</p>
     </section>
 
-    <section class="block settings-block" id="company">
-      <div class="section-label"><span>05</span><div><h2>Company identity</h2><p>Report colour, cover note, footer, and the operating rhythm for each company you manage.</p></div></div>
+    <section class="block settings-section" id="company">
+      <header class="settings-section-head">
+        <span class="settings-num">06</span>
+        <div><h2>Company identity</h2><p>Report accent, cover note, footer, and operating rhythm for each company you manage.</p></div>
+      </header>
       {% if managed_orgs %}
       {% for org in managed_orgs %}
       <details class="settings-details company-brand-card" {% if loop.first %}open{% endif %}>
-        <summary><span class="member-avatar sm" style="--room-accent:{{ branding[org.id].accent }}">{{ org.name[:2]|upper }}</span> {{ org.name }}</summary>
+        <summary>
+          <span class="member-avatar sm" style="--room-accent:{{ branding[org.id].accent }}">{{ org.name[:2]|upper }}</span>
+          <span class="company-brand-summary"><strong>{{ org.name }}</strong><small>{{ org.industry or 'Company' }} · report identity</small></span>
+          <span class="tag watch">{{ 'huddle ' ~ (org.huddle_day or 'monday')|capitalize }}</span>
+        </summary>
         <form method="post" action="/company/{{ org.id }}/settings" class="stack">
           <input type="hidden" name="next" value="/settings">
-          <div class="form-grid">
+          <div class="settings-grid">
             <label class="field">Report accent
-              <input type="color" name="accent_color" value="{{ branding[org.id].accent }}">
+              <span class="color-field"><input type="color" name="accent_color" value="{{ branding[org.id].accent }}"><code>{{ branding[org.id].accent }}</code></span>
             </label>
             <label class="field">Week starts
               <select name="week_start"><option value="monday" {% if (org.week_start or 'monday') == 'monday' %}selected{% endif %}>Monday</option><option value="sunday" {% if org.week_start == 'sunday' %}selected{% endif %}>Sunday</option></select>
@@ -175,20 +243,26 @@
             </label>
           </div>
           <label class="field">Report cover note
-            <textarea name="report_cover_note" rows="2" maxlength="2000" placeholder="One line that frames the operating picture for the board.">{{ org.report_cover_note or '' }}</textarea>
+            <textarea name="report_cover_note" rows="3" maxlength="2000" placeholder="One line that frames the operating picture for the board.">{{ org.report_cover_note or '' }}</textarea>
           </label>
           <label class="field">Report footer
             <input name="report_footer" maxlength="240" value="{{ org.report_footer or '' }}" placeholder="Confidential — {{ org.name }} leadership">
           </label>
-          <button class="btn sm" type="submit">Save company identity</button>
+          <div class="settings-section-foot">
+            <p class="muted small">Appears on exported board packs and shared reports.</p>
+            <button class="btn sm" type="submit">Save company identity</button>
+          </div>
         </form>
       </details>
       {% endfor %}
       {% else %}<p class="muted small">You need to own or manage a company to change report branding and huddle settings.</p>{% endif %}
     </section>
 
-    <section class="block settings-block" id="integrations">
-      <div class="section-label"><span>06</span><div><h2>Integrations</h2><p>Signed webhooks for ERP, WMS, and operations workflows.</p></div></div>
+    <section class="block settings-section" id="integrations">
+      <header class="settings-section-head">
+        <span class="settings-num">07</span>
+        <div><h2>Integrations</h2><p>Signed webhooks for ERP, WMS, and operations workflows.</p></div>
+      </header>
       {% if webhook_message %}
       <div class="flash {{ 'err' if webhook_message in ['invalid','denied'] else 'ok' }}">{{ webhook_message|replace('_',' ') }}</div>
       {% endif %}
@@ -212,20 +286,24 @@
         </table>
       </div>
       {% else %}
-      <p class="muted small">No endpoints yet. Add one to receive action and questionnaire events.</p>
+      <div class="settings-empty-inline">
+        <div><strong>No endpoints yet</strong><p class="muted small">Add one to receive action and questionnaire events.</p></div>
+      </div>
       {% endif %}
       {% if organizations %}
       <details class="settings-details" {% if not webhooks %}open{% endif %}>
-        <summary>Add an endpoint</summary>
+        <summary><strong>Add an endpoint</strong><span class="muted small">Signed delivery with retry history</span></summary>
         <form method="post" action="/settings/webhooks" class="stack">
-          <label class="field">Company
-            <select name="organization_id">
-              {% for org in organizations %}<option value="{{ org.id }}">{{ org.name }}</option>{% endfor %}
-            </select>
-          </label>
-          <label class="field">Endpoint URL
-            <input name="url" type="url" placeholder="https://ops.example.com/hooks/elipsis" required>
-          </label>
+          <div class="settings-grid">
+            <label class="field">Company
+              <select name="organization_id">
+                {% for org in organizations %}<option value="{{ org.id }}">{{ org.name }}</option>{% endfor %}
+              </select>
+            </label>
+            <label class="field settings-wide">Endpoint URL
+              <input name="url" type="url" placeholder="https://ops.example.com/hooks/elipsis" required>
+            </label>
+          </div>
           <fieldset class="check-grid">
             <legend>Events</legend>
             {% for event in events %}
@@ -237,7 +315,7 @@
       </details>
       {% endif %}
       {% if deliveries %}
-      <h3>Recent deliveries</h3>
+      <div class="settings-subhead"><h3>Recent deliveries</h3><span class="muted small">Latest 20 attempts</span></div>
       <div class="table-wrap">
         <table class="table">
           <thead><tr><th>Event</th><th>Status</th><th>Code</th><th>When</th></tr></thead>

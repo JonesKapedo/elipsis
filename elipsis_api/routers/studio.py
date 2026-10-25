@@ -161,11 +161,13 @@ def company_setup_save(request: Request,
 def my_company(request: Request, user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
-    from elipsis_api import analytics
+    from elipsis_api import analytics, services_room
+    prefs = _prefs(db, user)
     rows = []
     for org in _owned_orgs(db, user):
         overview = services.company_overview(db, org)
         portrait, insight, latest = None, None, None
+        pillars, financial = [], {}
         if overview["latest"]:
             latest = db.get(models.Assessment, overview["latest"]["id"])
             _, result = services.compute(db, latest.id)
@@ -173,6 +175,17 @@ def my_company(request: Request, user=Depends(get_current_user), db: Session = D
                 dept = db.get(models.Department, latest.department_id) if latest.department_id else None
                 portrait = company_portrait(org, dept, result)
                 insight = analytics.build(result)
+                raw_pillars = result.get("pillars") or []
+                if isinstance(raw_pillars, dict):
+                    from constants import PILLAR_LABELS
+                    pillars = [{"code": code, "label": PILLAR_LABELS.get(code, code), "score": score}
+                               for code, score in raw_pillars.items()]
+                else:
+                    pillars = [{"code": p.get("code"), "label": p.get("label") or p.get("code"),
+                                "score": p.get("score")} for p in raw_pillars if isinstance(p, dict)]
+                pillars = sorted([p for p in pillars if p.get("score") is not None],
+                                 key=lambda p: float(p["score"]))
+                financial = result.get("financial") or {}
         camps = []
         try:
             for c in db.scalars(select(models.CollectCampaign).where(
@@ -190,20 +203,30 @@ def my_company(request: Request, user=Depends(get_current_user), db: Session = D
                 })
         except Exception:
             camps = []
-        from elipsis_api import services_room
         rows.append({
             "org": org, "context": services.company_context(org),
             "overview": overview, "portrait": portrait, "insight": insight,
             "latest": latest, "assessments": overview["rows"],
+            "pillars": pillars, "financial": financial,
             "spark": analytics.sparkline([t["value"] for t in overview["trend"]]),
             "editing": request.query_params.get("edit") == str(org.id),
             "campaigns": camps,
             "pulse": services_room.pulse(db, org.id),
             "members": len(services_room.member_rows(db, org.id)),
             "company_pro": services.company_is_pro(db, org.id, user),
+            "activity": services_room.activity(db, org.id, limit=6),
         })
+    focus_id = request.query_params.get("org", "")
+    focus = next((row for row in rows if str(row["org"].id) == focus_id), None)
+    if focus is None and prefs.default_organization_id:
+        focus = next((row for row in rows if row["org"].id == prefs.default_organization_id), None)
+    if focus is None and rows:
+        focus = rows[0]
     return templates.TemplateResponse(request, "company.html", {
-        "user": user, "rows": rows, "prefs": _prefs(db, user),
+        "user": user, "rows": rows, "focus": focus,
+        "company": focus["org"] if focus else None,
+        "peers": [row for row in rows if focus is None or row["org"].id != focus["org"].id],
+        "prefs": prefs,
         "is_pro": services.is_pro_user(db, user),
         "departments": departments.DEPARTMENTS,
         "limited": request.query_params.get("limit") == "1",
@@ -682,9 +705,13 @@ def settings(request: Request, user=Depends(get_current_user), db: Session = Dep
     ).order_by(models.WebhookDelivery.id.desc()).limit(20))) if hooks else []
     organizations = services.list_organizations(db, org_ids)
     managed = [org for org in organizations if services.can_manage_org(db, user, org.id)]
+    prefs = _prefs(db, user)
+    company = next((org for org in organizations if org.id == prefs.default_organization_id), None)
+    if company is None and organizations:
+        company = organizations[0]
     from elipsis_api import services_room
     return templates.TemplateResponse(request, "settings.html", {
-        "user": user, "prefs": _prefs(db, user), "webhooks": hooks,
+        "user": user, "prefs": prefs, "company": company, "webhooks": hooks,
         "deliveries": deliveries, "events": sorted(services_webhooks.ALLOWED_EVENTS),
         "organizations": organizations, "managed_orgs": managed,
         "branding": {org.id: services_room.branding(org) for org in managed},
