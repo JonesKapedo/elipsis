@@ -9,8 +9,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ BRAND_NAME }}{% endblock %}</title>
   <meta name="description" content="{% block description %}{{ BRAND_NAME }} turns plain-English operating answers into a scored readiness index, a costed constraint, and a 90-day action plan for logistics and field-operations companies.{% endblock %}">
-  <meta name="theme-color" content="#0b1220">
-  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="{% if authed %}#070d16{% else %}#f7f5f0{% endif %}">
+  <meta name="color-scheme" content="{% if authed %}dark{% else %}light{% endif %}">
   <link rel="icon" type="image/svg+xml" href="/static/brand/elipsis-mark.svg">
   <link rel="apple-touch-icon" href="/static/brand/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,7 +34,7 @@
   <link rel="stylesheet" href="/static/motion.css?v=20261022a">
   <link rel="stylesheet" href="/static/app.css?v=20261022a">
   <link rel="stylesheet" href="/static/premium.css?v=20261022a">
-  <link rel="stylesheet" href="/static/design.css?v=20261024a">
+  <link rel="stylesheet" href="/static/design.css?v=20261024e">
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %} {% if authed %}app-shell{% else %}marketing{% endif %}">
@@ -74,6 +74,7 @@
       <nav class="sidebar-nav">
         <div class="nav-group">
           <p class="nav-group-label">Workspace</p>
+          <a href="/company" class="nav-item{% if company_active %} active{% endif %}"{% if company_active %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-building"/></svg><span>Company home</span></a>
           <a href="/dashboard" class="nav-item{% if path == '/dashboard' %} active{% endif %}"{% if path == '/dashboard' %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-grid"/></svg><span>Overview</span></a>
           <a href="/assessments" class="nav-item{% if assess_active %} active{% endif %}"{% if assess_active %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-clipboard"/></svg><span>Assessments</span></a>
           <a href="/actions" class="nav-item{% if path == '/actions' %} active{% endif %}"{% if path == '/actions' %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-check-square"/></svg><span>Action plan</span>{% if notifications %}<span class="nav-badge">{{ notifications|length }}</span>{% endif %}</a>
@@ -86,7 +87,6 @@
         </div>
         <div class="nav-group">
           <p class="nav-group-label">Account</p>
-          <a href="/company" class="nav-item{% if company_active %} active{% endif %}"{% if company_active %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-building"/></svg><span>Company</span></a>
           <a href="/settings" class="nav-item{% if path == '/settings' %} active{% endif %}"{% if path == '/settings' %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-settings"/></svg><span>Settings</span></a>
           {% if (user.role or '') == 'admin' or user.is_admin %}
           <a href="/admin" class="nav-item{% if path.startswith('/admin') %} active{% endif %}"{% if path.startswith('/admin') %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-admin"/></svg><span>Admin</span></a>
