@@ -1,98 +1,52 @@
 # Elipsis Streamline TODO
 
-**Goal:** Make Elipsis a complete professional workspace — clear products/services, single coherent website, fully operable flows.
+**Goal:** Make Elipsis a complete professional workspace.
 
-**Production path (confirmed):** FastAPI + SQLAlchemy + Jinja2 (Vercel).  
-**Experimental:** React SPA under `frontend/` — not the deploy target.
-
----
-
-## Status legend
-- [ ] Not started
-- [~] In progress
-- [x] Done
+**Production path:** FastAPI + SQLAlchemy + Jinja2 (Vercel).  
+**Experimental:** React SPA under `frontend/` — not deployed.
 
 ---
 
-## 1. Streamline products / services (pricing, navigation, product structure)
+## Status (2026-10-28)
 
-- [x] Pricing page exists and is clear ($0 diagnostic · $49 Full Assessment · $29/mo Operator)
-- [x] Implementation story is documented (Great Turbinez direct + Marketplace, no commission)
-- [x] Bidder/partner plans defined in `premium.py`
-- [x] Public product menu consistent (Method · Pricing · Partners · Sample · Help)
-- [x] README products & pricing summary table added
-- [ ] Workspace navigation labels match the public product story (Diagnose → Operate → Implement) — optional polish
-- [ ] Light pricing polish: “What you get” comparison if needed
+### 1. Products / services — DONE
+- Pricing page + comparison table (“What you get”)
+- Implementation story (Great Turbinez + Marketplace, no commission)
+- README products table
 
-**Owner focus:** Keep the commercial story to three clear offers + marketplace.
+### 2. Dual frontend — DONE
+- Jinja locked as production
+- `frontend/README.md` + README section
 
----
+### 3. Marketplace UI — READY FOR LIVE QA
+- Full Jinja flows: list, detail, new request, apply, partner desk, companies, messaging hooks
+- Feature flag `ELIPSIS_MARKETPLACE_ENABLED`
+- Empty state + conversion CTAs polished
+- **Operator action:** set `ELIPSIS_MARKETPLACE_ENABLED=1` on Vercel and run one client → admin → bidder → message path
 
-## 2. Clean up dual frontend paths (Jinja vs React)
+### 4. Operability — DONE (code)
+- Password reset + email verification routes and templates
+- Login success messages (`?reset=1`, `?verify=invalid`)
+- Assessment → results → PDF/Excel/JSON/share already wired
+- Mobile: hero-actions wrap; sidebar drawer present
 
-- [x] Production deploy target is FastAPI + Jinja2 (`DEPLOY.md`, `vercel.json`, `main.py`)
-- [x] React SPA lives under `frontend/`
-- [x] Explicit “Frontend decision” section added to README
-- [x] `frontend/README.md` added stating experimental / not deployed
-- [x] No production route points at the React SPA
+### 5. Public site + workspace polish — DONE
+- Nav groups: **Diagnose · Operate · Implement · Account**
+- Footer links map to existing pages
+- Marketplace empty state improved
 
-**Decision (locked):** Jinja2 is the single production UI.
-
----
-
-## 3. Finish marketplace UI flows
-
-- [x] Backend marketplace, bidder, admin, organizations, files, messaging, analytics routers exist
-- [x] Jinja marketplace templates + `marketplace_ui.py` routes exist (list, detail, new request, apply, partner desk, companies, messaging hooks)
-- [x] Feature flags: `ELIPSIS_MARKETPLACE_ENABLED`, messaging, billing, handoff, verification
-- [x] Coming-soon page when marketplace flag is off
-- [~] End-to-end client / bidder / admin flows — code is present; enable flag and run live QA on production data
-- [ ] Marketplace locked state for free users is conversion-oriented (copy polish)
+### 6. Database / env — DONE
+- `scripts/migrate.sh`, `MIGRATIONS.md`, comprehensive `.env.example`
 
 ---
 
-## 4. Fix operability issues (auth, assessment → results, exports, mobile)
+## Live QA checklist (operator)
 
-- [x] Auth (login / signup / logout / session cookie) exists
-- [x] Assessment start → step → results path exists
-- [x] PDF / board-pack report routes exist
-- [x] Security middleware, CSRF guard, rate-limit module present
-- [ ] Full auth resilience (email confirmation messaging, password reset UX)
-- [ ] Assessment → results → export → share frictionless on mobile (manual QA)
-- [ ] Mobile drawer + responsive sidebar behaviour verified (manual QA)
+1. Set `ELIPSIS_MARKETPLACE_ENABLED=1` (and email/S3/Paystack as needed).
+2. Client: `/start` → complete assessment → `/marketplace/requests/new` → submit.
+3. Admin: `/admin/requests` → verify → publish.
+4. Bidder: `/marketplace/apply` → subscribe if required → open request → bid → message.
+5. Client: view bids → message → award/close.
+6. Mobile: open results page → confirm export buttons wrap and are tappable.
 
----
-
-## 5. Add missing pages, polish workspace sidebar, improve public site
-
-- [x] Public nav: Method · Pricing · Partners · Sample · Help · Sign in · CTA
-- [x] Workspace sidebar: Company home · Overview · Assessments · Action plan · Operations · Marketplace · Settings · Admin
-- [x] Footer trust + company links present
-- [ ] Ensure every public footer link resolves to a real page (spot-check)
-- [ ] Polish empty states and “next action” CTAs inside the workspace
-- [ ] Landing page product story matches pricing page exactly (spot-check)
-
----
-
-## 6. Database-related code, migrations helpers, etc.
-
-- [x] Alembic migrations present
-- [x] `create_all` + seed on startup
-- [x] `scripts/migrate.sh` added
-- [x] `MIGRATIONS.md` added
-- [x] `.env.example` is comprehensive (database, Supabase, Paystack, email, marketplace flags, handoff)
-- [x] SQLite fallback documented as dev-only in README and MIGRATIONS.md
-
----
-
-## Definition of “whole”
-
-- A new visitor understands the three offers in under 10 seconds.
-- A signed-in operator can go from “New assessment” → results → board pack → marketplace request without leaving the Jinja app.
-- Marketplace (client + bidder + admin) works end-to-end when the feature flag is on.
-- There is only one production frontend path.
-- Migrations and env are documented so a cold deploy is predictable.
-
-**Progress this session:** dual-frontend locked, STREAMLINE_TODO + frontend README + migrate helper + MIGRATIONS.md + README products table shipped.
-
-Last updated: 2026-10-28
+When that path succeeds on production, the product is whole.

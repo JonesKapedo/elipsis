@@ -28,13 +28,13 @@
   <meta name="twitter:title" content="{{ self.title() }}">
   <meta name="twitter:description" content="{{ self.description() }}">
   <meta name="twitter:image" content="{{ request.url_for('static', path='brand/og-banner.png') }}">
-  <link rel="stylesheet" href="/static/style.css?v=20261022a">
-  <link rel="stylesheet" href="/static/app-shell.css?v=20261022a">
-  <link rel="stylesheet" href="/static/extras.css?v=20261022a">
+  <link rel="stylesheet" href="/static/style.css?v=20261028b">
+  <link rel="stylesheet" href="/static/app-shell.css?v=20261028b">
+  <link rel="stylesheet" href="/static/extras.css?v=20261028b">
   <link rel="stylesheet" href="/static/motion.css?v=20261022a">
-  <link rel="stylesheet" href="/static/app.css?v=20261022a">
+  <link rel="stylesheet" href="/static/app.css?v=20261028b">
   <link rel="stylesheet" href="/static/premium.css?v=20261022a">
-  <link rel="stylesheet" href="/static/design.css?v=20261028a">
+  <link rel="stylesheet" href="/static/design.css?v=20261028b">
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %} {% if authed %}app-shell{% else %}marketing{% endif %}">
@@ -73,16 +73,19 @@
     <div class="sidebar-scroll">
       <nav class="sidebar-nav">
         <div class="nav-group">
-          <p class="nav-group-label">Workspace</p>
+          <p class="nav-group-label">Diagnose</p>
           <a href="/company" class="nav-item{% if company_active %} active{% endif %}"{% if company_active %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-building"/></svg><span>Company home</span></a>
           <a href="/dashboard" class="nav-item{% if path == '/dashboard' %} active{% endif %}"{% if path == '/dashboard' %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-grid"/></svg><span>Overview</span></a>
           <a href="/assessments" class="nav-item{% if assess_active %} active{% endif %}"{% if assess_active %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-clipboard"/></svg><span>Assessments</span></a>
+        </div>
+        <div class="nav-group">
+          <p class="nav-group-label">Operate</p>
           <a href="/actions" class="nav-item{% if path == '/actions' %} active{% endif %}"{% if path == '/actions' %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-check-square"/></svg><span>Action plan</span>{% if notifications %}<span class="nav-badge">{{ notifications|length }}</span>{% endif %}</a>
           <a href="/operations" class="nav-item{% if path.startswith('/operations') %} active{% endif %}"{% if path.startswith('/operations') %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-activity"/></svg><span>Operations</span></a>
         </div>
         <div class="nav-group">
-          <p class="nav-group-label">Commercial</p>
-          <a href="/marketplace" class="nav-item{% if path.startswith('/marketplace') and not path.startswith('/marketplace/partner') %} active{% endif %}"><svg class="icon"><use href="#i-briefcase"/></svg><span>Marketplace</span><span class="nav-note">{% if (user.role or '') == 'admin' or user.is_admin %}admin{% else %}locked{% endif %}</span></a>
+          <p class="nav-group-label">Implement</p>
+          <a href="/marketplace" class="nav-item{% if path.startswith('/marketplace') and not path.startswith('/marketplace/partner') %} active{% endif %}"><svg class="icon"><use href="#i-briefcase"/></svg><span>Marketplace</span><span class="nav-note">{% if (user.role or '') == 'admin' or user.is_admin %}admin{% else %}open{% endif %}</span></a>
           {% if (user.user_type or '') == 'bidder' %}<a href="/marketplace/partner" class="nav-item{% if path.startswith('/marketplace/partner') %} active{% endif %}"><svg class="icon"><use href="#i-users"/></svg><span>Partner desk</span></a>{% endif %}
         </div>
         <div class="nav-group">
@@ -214,7 +217,7 @@
   </div>
 </dialog>
 {% endif %}
-<script src="/static/app.js?v=20261022a" defer></script>
+<script src="/static/app.js?v=20261028b" defer></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>
