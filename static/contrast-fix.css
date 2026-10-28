@@ -1,0 +1,391 @@
+/* ==========================================================================
+   Elipsis contrast fix
+   Loaded LAST. Forces readable text on light content surfaces and keeps the
+   dark sidebar intact. Fixes white/light patches that made copy unreadable.
+   ========================================================================== */
+
+/* ---- Content area: always dark ink on light surfaces -------------------- */
+body.app-shell .app-content,
+body.app-shell .app-content * {
+  /* do not force color on every element — only set base + known problem classes */
+}
+
+body.app-shell .app-main {
+  background: #f5f6f7;
+  color: #151b26;
+}
+
+body.app-shell .app-content {
+  color: #151b26;
+}
+
+body.app-shell .app-content h1,
+body.app-shell .app-content h2,
+body.app-shell .app-content h3,
+body.app-shell .app-content h4,
+body.app-shell .app-content h5,
+body.app-shell .app-content strong,
+bodys.app-shell .app-content b {
+  color: #0f172a;
+}
+
+body.app-shell .app-content p,
+body.app-shell .app-content li,
+body.app-shell .app-content label,
+body.app-shell .app-content td,
+body.app-shell .app-content th {
+  color: #1e293b;
+}
+
+body.app-shell .app-content .muted,
+body.app-shell .app-content .lede,
+body.app-shell .app-content .section-lede,
+body.app-shell .app-content .price-note,
+body.app-shell .app-content .eyebrow,
+body.app-shell .app-content .kpi-lb,
+body.app-shell .app-content .pcard-w,
+body.app-shell .app-content .small {
+  color: #475569 !important;
+}
+
+/* Cards / blocks / panels — solid light surface + dark text */
+body.app-shell .block,
+body.app-shell .pcard,
+body.app-shell .card,
+body.app-shell .kpi,
+body.app-shell .stat-card,
+body.app-shell .chart-card,
+body.app-shell .click-card,
+body.app-shell .attention a,
+body.app-shell .empty-state,
+body.app-shell .premium-note,
+body.app-shell .auth-card,
+body.app-shell .mk-price,
+body.app-shell .mk-card,
+body.app-shell .mk-step {
+  background: #ffffff !important;
+  color: #151b26 !important;
+  border-color: #e2e8f0 !important;
+}
+
+body.app-shell .block h1,
+body.app-shell .block h2,
+body.app-shell .block h3,
+body.app-shell .block h4,
+body.app-shell .pcard h4,
+body.app-shell .card h3,
+body.app-shell .kpi b,
+body.app-shell .stat-card b {
+  color: #0f172a !important;
+}
+
+/* Topbar stays light with dark controls */
+body.app-shell .app-topbar {
+  background: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0;
+  color: #151b26;
+}
+
+body.app-shell .app-topbar input,
+body.app-shell .app-topbar button,
+body.app-shell .org-switch,
+body.app-shell .cmd-trigger {
+  color: #151b26 !important;
+  background: #ffffff;
+}
+
+body.app-shell .topbar-search input {
+  background: #ffffff !important;
+  color: #151b26 !important;
+  border-color: #e2e8f0;
+}
+
+body.app-shell .topbar-search input::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Forms */
+body.app-shell input,
+body.app-shell select,
+body.app-shell textarea {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+body.app-shell input::placeholder,
+body.app-shell textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+body.app-shell label {
+  color: #334155 !important;
+}
+
+/* Tables (pricing comparison, data tables) */
+body.app-shell table,
+body.app-shell .data-table {
+  background: #ffffff;
+  color: #151b26;
+  border-collapse: collapse;
+}
+
+body.app-shell table th,
+body.app-shell .data-table th {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 600;
+}
+
+body.app-shell table td,
+body.app-shell .data-table td {
+  background: #ffffff !important;
+  color: #1e293b !important;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+body.app-shell table tr:hover td {
+  background: #f8fafc !important;
+}
+
+/* Tags / pills on light surfaces */
+body.app-shell .tag,
+body.app-shell .pill {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border: 1px solid #e2e8f0;
+}
+
+body.app-shell .tag.ok,
+body.app-shell .pill.ok {
+  background: #ecfdf5 !important;
+  color: #047857 !important;
+  border-color: #a7f3d0 !important;
+}
+
+body.app-shell .tag.warn,
+body.app-shell .pill.warn {
+  background: #fffbeb !important;
+  color: #b45309 !important;
+  border-color: #fde68a !important;
+}
+
+body.app-shell .tag.bad,
+body.app-shell .pill.bad,
+body.app-shell .tag.err {
+  background: #fef2f2 !important;
+  color: #b91c1c !important;
+  border-color: #fecaca !important;
+}
+
+/* Flash / alerts */
+body.app-shell .flash,
+body.app-shell .error,
+body.app-shell [role="alert"] {
+  color: #151b26 !important;
+}
+
+body.app-shell .flash.ok {
+  background: #ecfdf5 !important;
+  border: 1px solid #a7f3d0 !important;
+  color: #065f46 !important;
+}
+
+body.app-shell .flash.err,
+body.app-shell .error {
+  background: #fef2f2 !important;
+  border: 1px solid #fecaca !important;
+  color: #991b1b !important;
+}
+
+/* Secondary / ghost buttons — dark text, not washed out */
+body.app-shell .btn.ghost,
+body.app-shell .btn.secondary,
+body.marketing .btn.ghost,
+body.marketing .btn.secondary {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1.5px solid #cbd5e1 !important;
+  box-shadow: none !important;
+}
+
+body.app-shell .btn.ghost:hover,
+body.app-shell .btn.secondary:hover,
+body.marketing .btn.ghost:hover,
+body.marketing .btn.secondary:hover {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #94a3b8 !important;
+}
+
+/* Primary buttons keep high contrast */
+body.app-shell .btn:not(.ghost):not(.secondary),
+body.marketing .btn.primary,
+body.marketing .btn:not(.ghost):not(.secondary) {
+  color: #ffffff !important;
+}
+
+/* Head / hero sections in workspace */
+body.app-shell .head,
+body.app-shell .dash-hero,
+body.app-shell .headline {
+  color: #151b26;
+}
+
+body.app-shell .head h1,
+body.app-shell .dash-hero h1,
+body.app-shell .headline .band {
+  color: #0f172a !important;
+}
+
+body.app-shell .gauge-num {
+  color: #0f172a !important;
+}
+
+body.app-shell .gauge-label,
+body.app-shell .gauge-num span {
+  color: #64748b !important;
+}
+
+/* Code / mono snippets */
+body.app-shell code {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  border: 1px solid #e2e8f0;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+
+/* Empty states */
+body.app-shell .empty-state p {
+  color: #475569 !important;
+}
+
+/* ---- Marketing pages: keep warm paper, force dark type ----------------- */
+body.marketing {
+  color: #14121a;
+}
+
+body.marketing .mk-wrap,
+body.marketing .mk-section,
+body.marketing .pub-main {
+  color: #14121a;
+}
+
+body.marketing h1,
+body.marketing h2,
+body.marketing h3 {
+  color: #14121a !important;
+}
+
+body.marketing .muted,
+body.marketing .section-lede,
+body.marketing .price-note,
+body.marketing .mk-eyebrow {
+  color: #4b5563 !important;
+}
+
+body.marketing .mk-price,
+body.marketing .mk-card,
+body.marketing .mk-step {
+  background: #fffcf7 !important;
+  color: #14121a !important;
+  border: 1px solid #e4dccb;
+}
+
+body.marketing .mk-price h3,
+body.marketing .mk-card h3,
+body.marketing .mk-step h3 {
+  color: #14121a !important;
+}
+
+body.marketing .mk-price ul li,
+body.marketing .mk-card p {
+  color: #3d3a45 !important;
+}
+
+body.marketing table th {
+  background: #f3efe6 !important;
+  color: #14121a !important;
+}
+
+body.marketing table td {
+  background: #fffcf7 !important;
+  color: #1e1b24 !important;
+}
+
+/* Auth panels */
+body.marketing .auth-panel,
+body.marketing .auth-card,
+body.marketing .auth-panel-inner {
+  color: #14121a;
+}
+
+body.marketing .auth-panel h2,
+body.marketing .auth-card h2 {
+  color: #14121a !important;
+}
+
+body.marketing .auth-form label {
+  color: #3d3a45 !important;
+}
+
+body.marketing .auth-form input {
+  background: #ffffff !important;
+  color: #14121a !important;
+  border-color: #d4c9b4 !important;
+}
+
+/* ---- Mobile: action rows wrap without overlapping text ----------------- */
+.hero-actions,
+.head .hero-actions,
+.dash-hero {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+@media (max-width: 720px) {
+  body.app-shell .app-content .btn,
+  body.app-shell .hero-actions .btn {
+    font-size: 0.85rem;
+  }
+
+  body.app-shell .kpi b {
+    font-size: 1.15rem;
+  }
+
+  body.app-shell .block,
+  body.app-shell .pcard {
+    padding: 1rem !important;
+  }
+}
+
+/* ---- Sidebar: keep high-contrast dark (do not lighten) ----------------- */
+body.app-shell .app-sidebar {
+  background: #0b1220 !important;
+  color: #c7d0de !important;
+}
+
+body.app-shell .app-sidebar .nav-item {
+  color: #c7d0de !important;
+}
+
+body.app-shell .app-sidebar .nav-item:hover,
+body.app-shell .app-sidebar .nav-item.active {
+  color: #ffffff !important;
+}
+
+body.app-shell .app-sidebar .nav-group-label {
+  color: #74839a !important;
+}
+
+body.app-shell .app-sidebar .user-meta strong {
+  color: #f8fafc !important;
+}
+
+body.app-shell .app-sidebar .user-meta span {
+  color: #94a3b8 !important;
+}

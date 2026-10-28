@@ -10,7 +10,7 @@
   <title>{% block title %}{{ BRAND_NAME }}{% endblock %}</title>
   <meta name="description" content="{% block description %}{{ BRAND_NAME }} turns plain-English operating answers into a scored readiness index, a costed constraint, and a 90-day action plan for logistics and field-operations companies.{% endblock %}">
   <meta name="theme-color" content="{% if authed %}#070d16{% else %}#f7f5f0{% endif %}">
-  <meta name="color-scheme" content="{% if authed %}dark{% else %}light{% endif %}">
+  <meta name="color-scheme" content="{% if authed %}dark light{% else %}light{% endif %}">
   <link rel="icon" type="image/svg+xml" href="/static/brand/elipsis-mark.svg">
   <link rel="apple-touch-icon" href="/static/brand/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,13 +28,14 @@
   <meta name="twitter:title" content="{{ self.title() }}">
   <meta name="twitter:description" content="{{ self.description() }}">
   <meta name="twitter:image" content="{{ request.url_for('static', path='brand/og-banner.png') }}">
-  <link rel="stylesheet" href="/static/style.css?v=20261028b">
-  <link rel="stylesheet" href="/static/app-shell.css?v=20261028b">
-  <link rel="stylesheet" href="/static/extras.css?v=20261028b">
+  <link rel="stylesheet" href="/static/style.css?v=20261028c">
+  <link rel="stylesheet" href="/static/app-shell.css?v=20261028c">
+  <link rel="stylesheet" href="/static/extras.css?v=20261028c">
   <link rel="stylesheet" href="/static/motion.css?v=20261022a">
-  <link rel="stylesheet" href="/static/app.css?v=20261028b">
-  <link rel="stylesheet" href="/static/premium.css?v=20261022a">
-  <link rel="stylesheet" href="/static/design.css?v=20261028b">
+  <link rel="stylesheet" href="/static/app.css?v=20261028c">
+  <link rel="stylesheet" href="/static/premium.css?v=20261028c">
+  <link rel="stylesheet" href="/static/design.css?v=20261028c">
+  <link rel="stylesheet" href="/static/contrast-fix.css?v=20261028c">
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %} {% if authed %}app-shell{% else %}marketing{% endif %}">
@@ -217,7 +218,7 @@
   </div>
 </dialog>
 {% endif %}
-<script src="/static/app.js?v=20261028b" defer></script>
+<script src="/static/app.js?v=20261028c" defer></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>
