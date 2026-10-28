@@ -8,6 +8,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from elipsis_api import (
+    analytics,
     benchmarks,
     departments,
     logistics,
@@ -288,6 +289,7 @@ def compare_org(organization_id: int, request: Request,
          "rows": comparison.get("rows") or [],
          "pillars": comparison.get("pillars") or [],
          "average": comparison.get("average"),
+         "rollup": comparison.get("rollup") or {},
          "organizations": services.list_organizations(
              db, services.visible_org_ids(db, user))})
 
@@ -731,6 +733,7 @@ def assessment_results(assessment_id: int, request: Request,
         request, "results.html",
         {"user": user, "assessment": assessment, "result": result, "org": org,
          "organization": org, "department": dept,
+         "analytics": analytics.build(result),
          "company_context": services.company_context(org),
          "report_unlocked": report_unlocked,
          "share_url": share_url, "shared": token,
@@ -767,6 +770,7 @@ def assessment_pillar(assessment_id: int, code: str, request: Request,
         request, "results.html",
         {"user": user, "assessment": assessment, "result": result,
          "organization": org, "department": dept,
+         "analytics": analytics.build(result),
          "benchmark": benchmarks.cohort_benchmark(db, org),
          "report_unlocked": True,
          "is_pro": services.company_is_pro(db, assessment.organization_id, user),

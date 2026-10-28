@@ -7,7 +7,7 @@ from typing import Any
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from constants import PILLAR_WEIGHTS
+from constants import PILLAR_LABELS, PILLAR_WEIGHTS
 from elipsis_api import models, security
 from elipsis_api.services_core import (
     DEMO_DEPARTMENTS,
@@ -160,6 +160,7 @@ def department_comparison(db: Session, organization_id: int) -> dict[str, Any]:
         }
         financial = db.scalar(select(models.FinancialModel).where(
             models.FinancialModel.assessment_id == assessment.id))
+        weakest = min(pillars.items(), key=lambda kv: kv[1])[0] if pillars else None
         units.append({
             "assessment_id": assessment.id,
             "department": dept_name or "Organisation-wide",
@@ -170,16 +171,36 @@ def department_comparison(db: Session, organization_id: int) -> dict[str, Any]:
             "completed_at": assessment.completed_at,
             "annual_savings": financial.annual_savings if financial else None,
             "payback_months": financial.payback_months if financial else None,
+            "investment": financial.investment if financial else None,
             "pillars": pillars,
+            "weakest_pillar": weakest,
+            "weakest_pillar_label": PILLAR_LABELS.get(weakest, weakest) if weakest else None,
         })
 
     scores = [u["readiness_index"] for u in units if u["readiness_index"] is not None]
     average = round(sum(scores) / len(scores), 1) if scores else None
+    ranked = [u for u in units if u["readiness_index"] is not None]
+    strongest = max(ranked, key=lambda u: u["readiness_index"]) if ranked else None
+    weakest_unit = min(ranked, key=lambda u: u["readiness_index"]) if ranked else None
+    rollup = {
+        "units": len(units),
+        "average": average,
+        "spread": (round(strongest["readiness_index"] - weakest_unit["readiness_index"], 1)
+                   if strongest and weakest_unit else None),
+        "strongest": strongest["department"] if strongest else None,
+        "strongest_score": strongest["readiness_index"] if strongest else None,
+        "weakest": weakest_unit["department"] if weakest_unit else None,
+        "weakest_score": weakest_unit["readiness_index"] if weakest_unit else None,
+        "total_savings": round(sum(u["annual_savings"] or 0 for u in units), 1),
+        "total_investment": round(sum(u["investment"] or 0 for u in units), 1),
+        "org_wide": next((u for u in units if u["department"] == "Organisation-wide"), None),
+    }
     return {
         "organization": org,
         "rows": units,
         "pillars": pillar_codes,
         "average": average,
+        "rollup": rollup,
     }
 
 

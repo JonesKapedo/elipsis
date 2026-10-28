@@ -39,11 +39,12 @@ def _org(db, name: str = "Acme Logistics") -> models.Organization:
     return org
 
 
-def test_admin_detection_covers_role_flag_and_env_email(db, monkeypatch):
+def test_admin_detection_uses_flag_type_and_env_email(db, monkeypatch):
     monkeypatch.setenv("ELIPSIS_ADMIN_EMAIL", "owner@example.com")
 
     assert permissions.is_admin(None) is False
-    assert permissions.is_admin(_user(db, "role@example.com", role="admin")) is True
+    assert permissions.is_admin(_user(db, "role@example.com", role="admin")) is False
+    assert permissions.is_admin(_user(db, "type@example.com", user_type="admin")) is True
     assert permissions.is_admin(_user(db, "flag@example.com", is_admin=True)) is True
     assert permissions.is_admin(_user(db, "owner@example.com")) is True
     assert permissions.is_admin(_user(db, "member@example.com")) is False
