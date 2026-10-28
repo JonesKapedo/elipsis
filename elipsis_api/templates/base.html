@@ -28,14 +28,16 @@
   <meta name="twitter:title" content="{{ self.title() }}">
   <meta name="twitter:description" content="{{ self.description() }}">
   <meta name="twitter:image" content="{{ request.url_for('static', path='brand/og-banner.png') }}">
-  <link rel="stylesheet" href="/static/style.css?v=20261028c">
-  <link rel="stylesheet" href="/static/app-shell.css?v=20261028c">
-  <link rel="stylesheet" href="/static/extras.css?v=20261028c">
+  <link rel="stylesheet" href="/static/style.css?v=20261028d">
+  <link rel="stylesheet" href="/static/app-shell.css?v=20261028d">
+  <link rel="stylesheet" href="/static/extras.css?v=20261028d">
   <link rel="stylesheet" href="/static/motion.css?v=20261022a">
-  <link rel="stylesheet" href="/static/app.css?v=20261028c">
-  <link rel="stylesheet" href="/static/premium.css?v=20261028c">
-  <link rel="stylesheet" href="/static/design.css?v=20261028c">
-  <link rel="stylesheet" href="/static/contrast-fix.css?v=20261028c">
+  <link rel="stylesheet" href="/static/app.css?v=20261028d">
+  <link rel="stylesheet" href="/static/premium.css?v=20261028d">
+  <link rel="stylesheet" href="/static/design.css?v=20261028d">
+  <link rel="stylesheet" href="/static/contrast-fix.css?v=20261028d">
+  <link rel="stylesheet" href="/static/theme.css?v=20261028d">
+  <link rel="stylesheet" href="/static/logistics-ui.css?v=20261028d">
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %} {% if authed %}app-shell{% else %}marketing{% endif %}">
@@ -218,7 +220,7 @@
   </div>
 </dialog>
 {% endif %}
-<script src="/static/app.js?v=20261028c" defer></script>
+<script src="/static/app.js?v=20261028d" defer></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>
