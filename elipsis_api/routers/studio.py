@@ -171,7 +171,7 @@ def my_company(request: Request, user=Depends(get_current_user), db: Session = D
             overview = {"latest": None, "rows": [], "trend": []}
         portrait, insight, latest = None, None, None
         pillars, financial = [], {}
-        if overview.get["latest"]:overview = services.company_overview(db, org)
+        if overview.get("latest"):
             latest = db.get(models.Assessment, overview["latest"]["id"])
             _, result = services.compute(db, latest.id)
             if result:
@@ -206,7 +206,7 @@ def my_company(request: Request, user=Depends(get_current_user), db: Session = D
                 })
         except Exception:
             camps = []
-            try:
+        try:
             spark = analytics.sparkline([t["value"] for t in overview.get("trend") or []])
         except Exception:
             spark = ""
