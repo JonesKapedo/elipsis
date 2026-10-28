@@ -1,6 +1,6 @@
 /* ==========================================================================
    Elipsis logistics UI upgrade
-   Loaded LAST. Readable surfaces, professional fields, corridor identity.
+   Loaded LAST. Uniform canvas theme — no stark white placeholders/tabs.
    ========================================================================== */
 
 :root {
@@ -8,58 +8,48 @@
   --ink-2: #1e293b;
   --muted: #475569;
   --muted-2: #64748b;
-  --line: #e2e8f0;
-  --line-strong: #cbd5e1;
-  --surface: #ffffff;
-  --canvas: #eef1f5;
-  --canvas-2: #f8fafc;
+  --line: #d8dee8;
+  --line-strong: #c5cedc;
+  --surface: #f4f6f9;
+  --canvas: #e8ecf2;
+  --canvas-2: #eef1f5;
   --asphalt: #0b1220;
   --amber: #f0a020;
   --amber-ink: #1a1200;
   --blue: #1d4ed8;
   --radius: 10px;
   --radius-sm: 8px;
-  --shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 10px 28px -18px rgba(11, 18, 32, 0.22);
-  --shadow-soft: 0 1px 0 rgba(15, 23, 42, 0.04);
-  --field-bg: #f8fafc;
-  --field-border: #d0d7e2;
-  --field-focus: rgba(29, 78, 216, 0.16);
+  --shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -16px rgba(11, 18, 32, 0.18);
+  --shadow-soft: 0 1px 0 rgba(15, 23, 42, 0.03);
+  --field-bg: #e8ecf2;
+  --field-border: #c5cedc;
+  --field-focus: rgba(29, 78, 216, 0.14);
+  --panel: #eef1f5;
 }
 
-/* ---- Readable app canvas ------------------------------------------------ */
 body.app-shell {
   background:
-    radial-gradient(1200px 500px at 100% -10%, rgba(240, 160, 32, 0.07), transparent 55%),
-    radial-gradient(900px 420px at -5% 0%, rgba(29, 78, 216, 0.05), transparent 50%),
+    radial-gradient(1200px 500px at 100% -10%, rgba(240, 160, 32, 0.06), transparent 55%),
+    radial-gradient(900px 420px at -5% 0%, rgba(29, 78, 216, 0.04), transparent 50%),
     var(--canvas) !important;
   color: var(--ink) !important;
 }
 
-body.app-shell .app-main {
-  background: transparent !important;
-  color: var(--ink) !important;
-}
-
-body.app-shell .app-content {
-  color: var(--ink) !important;
-}
+body.app-shell .app-main { background: transparent !important; color: var(--ink) !important; }
+body.app-shell .app-content { color: var(--ink) !important; }
 
 body.app-shell .app-content h1,
 body.app-shell .app-content h2,
 body.app-shell .app-content h3,
 body.app-shell .app-content h4,
 body.app-shell .app-content strong,
-body.app-shell .app-content b {
-  color: #0b1220 !important;
-}
+body.app-shell .app-content b { color: #0b1220 !important; }
 
 body.app-shell .app-content p,
 body.app-shell .app-content li,
 body.app-shell .app-content label,
 body.app-shell .app-content td,
-body.app-shell .app-content th {
-  color: #1e293b !important;
-}
+body.app-shell .app-content th { color: #1e293b !important; }
 
 body.app-shell .muted,
 body.app-shell .lede,
@@ -67,16 +57,14 @@ body.app-shell .section-lede,
 body.app-shell .eyebrow,
 body.app-shell .kpi-lb,
 body.app-shell .small,
-body.app-shell .price-note {
-  color: #475569 !important;
-}
+body.app-shell .price-note { color: #475569 !important; }
 
-/* ---- Topbar: control-tower strip ---------------------------------------- */
 body.app-shell .app-topbar {
-  background: rgba(255, 255, 255, 0.92) !important;
+  background: rgba(238, 241, 245, 0.94) !important;
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid #d8dee8 !important;
+  border-bottom: 1px solid var(--line) !important;
   box-shadow: var(--shadow-soft);
+  color: var(--ink) !important;
 }
 
 body.app-shell .org-switch,
@@ -98,11 +86,12 @@ body.app-shell .topbar-search input {
 
 body.app-shell .topbar-search input:focus {
   border-color: #93a4bd !important;
-  background: #fff !important;
+  background: var(--canvas-2) !important;
   box-shadow: 0 0 0 3px var(--field-focus) !important;
 }
 
-/* ---- Cards: freight-desk panels ----------------------------------------- */
+body.app-shell .topbar-search input::placeholder { color: #7b8aa0 !important; }
+
 body.app-shell .block,
 body.app-shell .pcard,
 body.app-shell .card,
@@ -113,37 +102,32 @@ body.app-shell .click-card,
 body.app-shell .empty-state,
 body.app-shell .premium-note,
 body.app-shell .settings-section,
-body.app-shell .settings-account-card {
-  background: #ffffff !important;
+body.app-shell .settings-account-card,
+body.app-shell .settings-rail,
+body.app-shell .settings-rail-foot,
+body.app-shell .settings-shell .settings-nav,
+body.app-shell .lane-card,
+body.app-shell .metric,
+body.app-shell .ops-metric,
+body.app-shell .ops-strip,
+body.app-shell .score-strip,
+body.app-shell .picture-score {
+  background: var(--panel) !important;
   color: var(--ink) !important;
-  border: 1px solid #dce3ee !important;
+  border: 1px solid var(--line) !important;
   border-radius: var(--radius) !important;
-  box-shadow: var(--shadow) !important;
+  box-shadow: var(--shadow-soft) !important;
 }
 
 body.app-shell .block::before,
-body.app-shell .pcard::before {
-  content: none;
-}
+body.app-shell .pcard::before { content: none; }
 
-/* Amber route accent on primary panels */
-body.app-shell .block > h2:first-child,
-body.app-shell .block > .block-head,
-body.app-shell .pcard > h3:first-child,
-body.app-shell .pcard > h4:first-child {
-  position: relative;
-}
-
-body.app-shell .kpi {
-  padding: 14px 16px !important;
-}
-
+body.app-shell .kpi { padding: 14px 16px !important; }
 body.app-shell .kpi b {
   color: #0b1220 !important;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
-
 body.app-shell .kpi-lb {
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -151,7 +135,6 @@ body.app-shell .kpi-lb {
   font-weight: 600 !important;
 }
 
-/* ---- Forms & assessment fields (no harsh rectangles) -------------------- */
 body.app-shell input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
 body.app-shell select,
 body.app-shell textarea,
@@ -162,7 +145,7 @@ body.marketing textarea {
   color: #0f172a !important;
   border: 1px solid var(--field-border) !important;
   border-radius: 10px !important;
-  box-shadow: inset 0 1px 1px rgba(15, 23, 42, 0.03) !important;
+  box-shadow: inset 0 1px 1px rgba(15, 23, 42, 0.04) !important;
   min-height: 40px;
   padding: 0.55rem 0.85rem !important;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
@@ -184,7 +167,7 @@ body.marketing select:focus,
 body.marketing textarea:focus {
   outline: none !important;
   border-color: #7c93b5 !important;
-  background: #ffffff !important;
+  background: var(--canvas-2) !important;
   box-shadow: 0 0 0 3px var(--field-focus) !important;
 }
 
@@ -192,7 +175,7 @@ body.app-shell input::placeholder,
 body.app-shell textarea::placeholder,
 body.marketing input::placeholder,
 body.marketing textarea::placeholder {
-  color: #7b8aa0 !important;
+  color: #6b7c92 !important;
   opacity: 1 !important;
   font-weight: 400 !important;
 }
@@ -202,10 +185,8 @@ body.marketing label {
   color: #334155 !important;
   font-weight: 500 !important;
   font-size: 12.5px !important;
-  letter-spacing: 0.01em;
 }
 
-/* Assessment answer options — soft chips, not wireframe boxes */
 body.app-shell .answer-option,
 body.app-shell .choice,
 body.app-shell .q-option,
@@ -221,13 +202,12 @@ body.app-shell .question-options label {
   gap: 10px !important;
   padding: 12px 14px !important;
   margin: 0 0 8px !important;
-  background: #f8fafc !important;
-  border: 1px solid #dce3ee !important;
+  background: var(--field-bg) !important;
+  border: 1px solid var(--field-border) !important;
   border-radius: 12px !important;
   color: #0f172a !important;
   box-shadow: none !important;
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
 
 body.app-shell .answer-option:hover,
@@ -240,9 +220,8 @@ body.app-shell .choice-card:hover,
 body.app-shell label.option:hover,
 body.app-shell .answers label:hover,
 body.app-shell .question-options label:hover {
-  background: #ffffff !important;
-  border-color: #b7c3d6 !important;
-  box-shadow: 0 4px 14px -10px rgba(15, 23, 42, 0.28) !important;
+  background: var(--canvas-2) !important;
+  border-color: #a8b6ca !important;
 }
 
 body.app-shell .answer-option:has(input:checked),
@@ -257,23 +236,23 @@ body.app-shell .answers label:has(input:checked),
 body.app-shell .question-options label:has(input:checked),
 body.app-shell .answer-option.is-selected,
 body.app-shell .choice.is-selected,
-body.app-shell .option.selected {
-  background: #fff8eb !important;
-  border-color: #e8b44a !important;
-  box-shadow: 0 0 0 3px rgba(240, 160, 32, 0.14) !important;
+body.app-shell .option.selected,
+body.app-shell .choice.selected {
+  background: #f3e6cc !important;
+  border-color: #d4a23a !important;
+  box-shadow: 0 0 0 2px rgba(240, 160, 32, 0.18) !important;
   color: #0b1220 !important;
 }
 
-/* Question card shell */
 body.app-shell .question,
 body.app-shell .q-card,
 body.app-shell .assess-q,
 body.app-shell .assessment-step,
 body.app-shell .step-card {
-  background: #ffffff !important;
-  border: 1px solid #dce3ee !important;
+  background: var(--panel) !important;
+  border: 1px solid var(--line) !important;
   border-radius: 14px !important;
-  box-shadow: var(--shadow) !important;
+  box-shadow: var(--shadow-soft) !important;
   padding: 18px 18px 16px !important;
   position: relative;
   overflow: hidden;
@@ -286,9 +265,7 @@ body.app-shell .assessment-step::before,
 body.app-shell .step-card::before {
   content: "";
   position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
+  left: 0; top: 0; bottom: 0;
   width: 3px;
   background: linear-gradient(180deg, var(--amber), #1d4ed8);
 }
@@ -299,21 +276,16 @@ body.app-shell .assess-q h3,
 body.app-shell .question h3 {
   color: #0b1220 !important;
   font-weight: 600 !important;
-  line-height: 1.35 !important;
 }
 
 body.app-shell .question-help,
 body.app-shell .q-help,
-body.app-shell .hint {
-  color: #64748b !important;
-  font-size: 12.5px !important;
-}
+body.app-shell .hint { color: #64748b !important; font-size: 12.5px !important; }
 
-/* Progress / lane strip */
 body.app-shell .progress,
 body.app-shell .assess-progress,
 body.app-shell .stepper {
-  background: #e8edf4 !important;
+  background: #d8dee8 !important;
   border-radius: 999px !important;
   overflow: hidden;
   height: 8px !important;
@@ -329,16 +301,95 @@ body.app-shell .bar-fill {
   border-radius: 999px !important;
 }
 
-/* ---- Buttons ------------------------------------------------------------ */
+/* Tabs: underline, no white plates */
+body.app-shell .workspace-tabs,
+body.app-shell .tabs,
+body.app-shell .tab-list,
+body.app-shell .segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  background: transparent !important;
+  border-bottom: 1px solid var(--line) !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+body.app-shell .workspace-tabs .tab,
+body.app-shell .tabs .tab,
+body.app-shell .tab-list .tab,
+body.app-shell a.tab,
+body.app-shell button.tab,
+body.app-shell .segmented button,
+body.app-shell .segmented a {
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 2px solid transparent !important;
+  border-radius: 0 !important;
+  color: #64748b !important;
+  box-shadow: none !important;
+  padding: 10px 12px !important;
+  font-weight: 500 !important;
+}
+
+body.app-shell .workspace-tabs .tab:hover,
+body.app-shell .tabs .tab:hover,
+body.app-shell a.tab:hover,
+body.app-shell button.tab:hover {
+  color: #0f172a !important;
+  background: transparent !important;
+}
+
+body.app-shell .workspace-tabs .tab[aria-current="page"],
+body.app-shell .workspace-tabs .tab.active,
+body.app-shell .tabs .tab.active,
+body.app-shell .tabs .tab[aria-current="page"],
+body.app-shell a.tab[aria-current="page"],
+body.app-shell a.tab.active,
+body.app-shell button.tab.active {
+  color: #0b1220 !important;
+  border-bottom-color: var(--amber) !important;
+  background: transparent !important;
+  font-weight: 600 !important;
+}
+
+body.app-shell .tab .count {
+  background: var(--field-bg) !important;
+  border: 1px solid var(--field-border) !important;
+  color: #475569 !important;
+}
+
+body.app-shell .settings-shell .settings-nav a {
+  background: transparent !important;
+  color: #475569 !important;
+  border-radius: 6px !important;
+}
+body.app-shell .settings-shell .settings-nav a:hover {
+  background: var(--field-bg) !important;
+  color: #0f172a !important;
+}
+body.app-shell .settings-shell .settings-nav a.active {
+  background: #e2e8f0 !important;
+  color: #0b1220 !important;
+}
+
 body.app-shell .btn.secondary,
 body.app-shell .btn.ghost,
 body.marketing .btn.secondary,
 body.marketing .btn.ghost {
-  background: #ffffff !important;
+  background: var(--field-bg) !important;
   color: #0f172a !important;
-  border: 1px solid #c5d0df !important;
+  border: 1px solid var(--field-border) !important;
   border-radius: var(--radius-sm) !important;
   box-shadow: none !important;
+}
+
+body.app-shell .btn.secondary:hover,
+body.app-shell .btn.ghost:hover,
+body.marketing .btn.secondary:hover,
+body.marketing .btn.ghost:hover {
+  background: var(--canvas-2) !important;
+  border-color: #a8b6ca !important;
 }
 
 body.app-shell .btn.primary,
@@ -347,78 +398,46 @@ body.marketing .btn.primary {
   color: #1a1200 !important;
   border: 1px solid #d99212 !important;
   border-radius: var(--radius-sm) !important;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.35) inset !important;
 }
 
-body.app-shell .btn.primary:hover,
-body.marketing .btn.primary:hover {
-  filter: brightness(1.03);
-}
+body.app-shell table,
+body.app-shell .data-table,
+body.app-shell .table { background: transparent !important; }
 
-/* ---- Tables ------------------------------------------------------------- */
 body.app-shell table th,
-body.app-shell .data-table th {
-  background: #f1f5f9 !important;
-  color: #0f172a !important;
-  border-bottom: 1px solid #e2e8f0 !important;
+body.app-shell .data-table th,
+body.app-shell .table th {
+  background: var(--field-bg) !important;
+  color: #475569 !important;
+  border-bottom: 1px solid var(--line) !important;
   font-size: 11px !important;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 body.app-shell table td,
-body.app-shell .data-table td {
-  background: #ffffff !important;
+body.app-shell .data-table td,
+body.app-shell .table td {
+  background: transparent !important;
   color: #1e293b !important;
-  border-bottom: 1px solid #eef2f7 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
 }
 
-/* ---- Marketing: corridor identity --------------------------------------- */
-body.marketing {
-  background:
-    radial-gradient(1000px 480px at 90% -5%, rgba(240, 160, 32, 0.08), transparent 50%),
-    linear-gradient(180deg, #f7f5f0 0%, #eef1f5 100%) !important;
-  color: #14121a !important;
+body.app-shell table tr:hover td,
+body.app-shell .table tbody tr:hover {
+  background: rgba(232, 236, 242, 0.65) !important;
 }
 
-body.marketing .mk-header,
-body.marketing .pub-header {
-  background: rgba(247, 245, 240, 0.9) !important;
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid #e4dccb !important;
+body.app-shell .tag,
+body.app-shell .pill {
+  background: var(--field-bg) !important;
+  color: #334155 !important;
+  border: 1px solid var(--field-border) !important;
+  border-radius: 999px !important;
 }
 
-body.marketing .mk-price,
-body.marketing .mk-card,
-body.marketing .mk-step,
-body.marketing .auth-card,
-body.marketing .auth-panel {
-  background: #fffcf7 !important;
-  border: 1px solid #e4dccb !important;
-  border-radius: 14px !important;
-  box-shadow: var(--shadow) !important;
-  color: #14121a !important;
-}
-
-body.marketing h1,
-body.marketing h2,
-body.marketing h3 {
-  color: #14121a !important;
-}
-
-body.marketing .muted,
-body.marketing .section-lede,
-body.marketing .mk-eyebrow {
-  color: #4b5563 !important;
-}
-
-/* Subtle lane motif under heroes */
-body.marketing .mk-hero,
-body.marketing .hero,
-body.app-shell .dash-hero,
-body.app-shell .head {
-  position: relative;
-}
+body.app-shell .empty-state { text-align: center; padding: 2rem 1.25rem !important; }
+body.app-shell .empty-state p { color: #64748b !important; max-width: 42ch; margin-inline: auto; }
 
 body.app-shell .dash-hero::after,
 body.app-shell .head::after {
@@ -431,29 +450,49 @@ body.app-shell .head::after {
   background: linear-gradient(90deg, var(--amber), transparent);
 }
 
-/* Tags */
-body.app-shell .tag,
-body.app-shell .pill {
-  background: #f1f5f9 !important;
-  color: #334155 !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 999px !important;
-  font-weight: 500 !important;
+body.marketing {
+  background:
+    radial-gradient(1000px 480px at 90% -5%, rgba(240, 160, 32, 0.07), transparent 50%),
+    linear-gradient(180deg, #f3efe6 0%, #e8ecf2 100%) !important;
+  color: #14121a !important;
 }
 
-/* Empty states */
-body.app-shell .empty-state {
-  text-align: center;
-  padding: 2rem 1.25rem !important;
+body.marketing .mk-header,
+body.marketing .pub-header {
+  background: rgba(243, 239, 230, 0.92) !important;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #e0d8c8 !important;
 }
 
-body.app-shell .empty-state p {
-  color: #64748b !important;
-  max-width: 42ch;
-  margin-inline: auto;
+body.marketing .mk-price,
+body.marketing .mk-card,
+body.marketing .mk-step,
+body.marketing .auth-card,
+body.marketing .auth-panel {
+  background: #f3efe6 !important;
+  border: 1px solid #e0d8c8 !important;
+  border-radius: 14px !important;
+  box-shadow: var(--shadow-soft) !important;
+  color: #14121a !important;
 }
 
-/* Dark theme coexistence */
+body.marketing h1,
+body.marketing h2,
+body.marketing h3 { color: #14121a !important; }
+
+body.marketing .muted,
+body.marketing .section-lede,
+body.marketing .mk-eyebrow { color: #4b5563 !important; }
+
+body.app-shell .app-content [style*="background: #fff"],
+body.app-shell .app-content [style*="background:#fff"],
+body.app-shell .app-content [style*="background: white"],
+body.app-shell .app-content [style*="background:white"],
+body.app-shell .app-content [style*="background: #ffffff"],
+body.app-shell .app-content [style*="background:#ffffff"] {
+  background: var(--panel) !important;
+}
+
 html[data-theme="dark"] body.app-shell {
   background:
     radial-gradient(1000px 420px at 100% 0%, rgba(240, 160, 32, 0.06), transparent 50%),
@@ -469,15 +508,26 @@ html[data-theme="dark"] body.app-shell .question,
 html[data-theme="dark"] body.app-shell .q-card,
 html[data-theme="dark"] body.app-shell .assess-q,
 html[data-theme="dark"] body.app-shell .assessment-step,
-html[data-theme="dark"] body.app-shell .step-card {
+html[data-theme="dark"] body.app-shell .step-card,
+html[data-theme="dark"] body.app-shell .settings-section,
+html[data-theme="dark"] body.app-shell .settings-account-card,
+html[data-theme="dark"] body.app-shell .settings-shell .settings-nav {
   background: #121a27 !important;
   color: #e8eef7 !important;
   border-color: #243044 !important;
 }
 
+html[data-theme="dark"] body.app-shell .app-topbar {
+  background: rgba(18, 26, 39, 0.94) !important;
+  border-bottom-color: #243044 !important;
+}
+
 html[data-theme="dark"] body.app-shell input:not([type="checkbox"]):not([type="radio"]),
 html[data-theme="dark"] body.app-shell select,
-html[data-theme="dark"] body.app-shell textarea {
+html[data-theme="dark"] body.app-shell textarea,
+html[data-theme="dark"] body.app-shell .org-switch,
+html[data-theme="dark"] body.app-shell .cmd-trigger,
+html[data-theme="dark"] body.app-shell .topbar-search input {
   background: #0e1624 !important;
   color: #e8eef7 !important;
   border-color: #334155 !important;
@@ -499,7 +549,22 @@ html[data-theme="dark"] body.app-shell .question-options label {
 html[data-theme="dark"] body.app-shell .answer-option:has(input:checked),
 html[data-theme="dark"] body.app-shell .choice:has(input:checked),
 html[data-theme="dark"] body.app-shell .option:has(input:checked),
-html[data-theme="dark"] body.app-shell .answers label:has(input:checked) {
+html[data-theme="dark"] body.app-shell .answers label:has(input:checked),
+html[data-theme="dark"] body.app-shell .choice.selected {
   background: rgba(240, 160, 32, 0.12) !important;
   border-color: #c9922a !important;
+}
+
+html[data-theme="dark"] body.app-shell .workspace-tabs .tab,
+html[data-theme="dark"] body.app-shell .tabs .tab,
+html[data-theme="dark"] body.app-shell a.tab {
+  color: #94a3b8 !important;
+  background: transparent !important;
+}
+
+html[data-theme="dark"] body.app-shell .workspace-tabs .tab[aria-current="page"],
+html[data-theme="dark"] body.app-shell .workspace-tabs .tab.active,
+html[data-theme="dark"] body.app-shell .tabs .tab.active {
+  color: #f8fafc !important;
+  border-bottom-color: var(--amber) !important;
 }
