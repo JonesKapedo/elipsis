@@ -165,10 +165,13 @@ def my_company(request: Request, user=Depends(get_current_user), db: Session = D
     prefs = _prefs(db, user)
     rows = []
     for org in _owned_orgs(db, user):
-        overview = services.company_overview(db, org)
+        try:
+            overview = services.company_overview(db, org)
+        except Exception:
+            overview = {"latest": None, "rows": [], "trend": []}
         portrait, insight, latest = None, None, None
         pillars, financial = [], {}
-        if overview["latest"]:
+        if overview.get["latest"]:overview = services.company_overview(db, org)
             latest = db.get(models.Assessment, overview["latest"]["id"])
             _, result = services.compute(db, latest.id)
             if result:
@@ -203,18 +206,37 @@ def my_company(request: Request, user=Depends(get_current_user), db: Session = D
                 })
         except Exception:
             camps = []
+            try:
+            spark = analytics.sparkline([t["value"] for t in overview.get("trend") or []])
+        except Exception:
+            spark = ""
+        try:
+            pulse = services_room.pulse(db, org.id)
+        except Exception:
+            pulse = {
+                "score": 0, "band": "watch", "components": [],
+                "latest_score": 0, "actions": {"total": 0, "done": 0, "overdue": 0},
+            }
+        try:
+            members = len(services_room.member_rows(db, org.id))
+        except Exception:
+            members = 0
+        try:
+            activity = services_room.activity(db, org.id, limit=6)
+        except Exception:
+            activity = []
         rows.append({
             "org": org, "context": services.company_context(org),
             "overview": overview, "portrait": portrait, "insight": insight,
-            "latest": latest, "assessments": overview["rows"],
+            "latest": latest, "assessments": overview.get("rows") or [],
             "pillars": pillars, "financial": financial,
-            "spark": analytics.sparkline([t["value"] for t in overview["trend"]]),
+            "spark": spark,
             "editing": request.query_params.get("edit") == str(org.id),
             "campaigns": camps,
-            "pulse": services_room.pulse(db, org.id),
-            "members": len(services_room.member_rows(db, org.id)),
+            "pulse": pulse,
+            "members": members,
             "company_pro": services.company_is_pro(db, org.id, user),
-            "activity": services_room.activity(db, org.id, limit=6),
+            "activity": activity,
         })
     focus_id = request.query_params.get("org", "")
     focus = next((row for row in rows if str(row["org"].id) == focus_id), None)
