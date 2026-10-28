@@ -26,7 +26,7 @@
       <span class="tag">{{ organizations|length }} {% if organizations|length == 1 %}company{% else %}companies{% endif %}</span>
     </div>
     <nav class="settings-nav" aria-label="Settings sections">
-      <a href="#profile"><span>01</span>Account &amp; profile</a>
+      <a href="#profile"><span>01</span>Account & profile</a>
       <a href="#defaults"><span>02</span>Workspace defaults</a>
       <a href="#notifications"><span>03</span>Notifications</a>
       <a href="#interface"><span>04</span>Interface</a>
@@ -36,7 +36,7 @@
     </nav>
     <div class="settings-rail-foot">
       <p>Data, legal records, and export</p>
-      <a class="text-link" href="/account/data">Open data &amp; privacy</a>
+      <a class="text-link" href="/account/data">Open data & privacy</a>
     </div>
   </aside>
 
@@ -45,7 +45,7 @@
       <section class="block settings-section" id="profile">
         <header class="settings-section-head">
           <span class="settings-num">01</span>
-          <div><h2>Account &amp; profile</h2><p>How you appear in the workspace and on shared reports.</p></div>
+          <div><h2>Account & profile</h2><p>How you appear in the workspace and on shared reports.</p></div>
         </header>
         <div class="settings-grid">
           <label class="field">Display name
@@ -78,7 +78,7 @@
           </label>
           <label class="field">Default company
             <select name="default_organization_id">
-              <option value="">—</option>
+              <option value="">No default</option>
               {% for org in organizations %}
               <option value="{{ org.id }}" {% if prefs.default_organization_id == org.id %}selected{% endif %}>{{ org.name }}</option>
               {% endfor %}
@@ -86,10 +86,11 @@
           </label>
           <label class="field">Default department
             <select name="default_department">
-              <option value="">—</option>
+              <option value="">No default</option>
               {% for d in departments %}
               <option value="{{ d.label }}" {% if prefs.default_department == d.label %}selected{% endif %}>{{ d.label }}</option>
               {% endfor %}
+              <option value="Whole company" {% if prefs.default_department == 'Whole company' %}selected{% endif %}>Whole company</option>
             </select>
           </label>
           <label class="field">Timezone
@@ -144,29 +145,27 @@
           <span class="settings-num">04</span>
           <div><h2>Interface</h2><p>Appearance, density, motion, and your compact mark.</p></div>
         </header>
-
         <p class="field-note" style="margin-bottom:0.5rem">Appearance</p>
         <div class="theme-chooser" role="radiogroup" aria-label="Colour theme">
-          <label class="theme-option{% if theme == 'light' %} is-active{% endif %}">
-            <input type="radio" name="theme" value="light" {% if theme == 'light' %}checked{% endif %}>
+          <label class="theme-option{% if (theme|default('system')) == 'light' %} is-active{% endif %}">
+            <input type="radio" name="theme" value="light" {% if (theme|default('system')) == 'light' %}checked{% endif %}>
             <div class="theme-mini light" aria-hidden="true"><span class="theme-mini-side"></span><span class="theme-mini-main"></span></div>
             <strong>Light</strong>
             <span>Bright canvas for daytime work and board sharing.</span>
           </label>
-          <label class="theme-option{% if theme == 'dark' %} is-active{% endif %}">
-            <input type="radio" name="theme" value="dark" {% if theme == 'dark' %}checked{% endif %}>
+          <label class="theme-option{% if (theme|default('system')) == 'dark' %} is-active{% endif %}">
+            <input type="radio" name="theme" value="dark" {% if (theme|default('system')) == 'dark' %}checked{% endif %}>
             <div class="theme-mini dark" aria-hidden="true"><span class="theme-mini-side"></span><span class="theme-mini-main"></span></div>
             <strong>Dark</strong>
             <span>Low-glare operations skin for long sessions.</span>
           </label>
-          <label class="theme-option{% if theme == 'system' %} is-active{% endif %}">
-            <input type="radio" name="theme" value="system" {% if theme == 'system' %}checked{% endif %}>
+          <label class="theme-option{% if (theme|default('system')) == 'system' %} is-active{% endif %}">
+            <input type="radio" name="theme" value="system" {% if (theme|default('system')) == 'system' %}checked{% endif %}>
             <div class="theme-mini system" aria-hidden="true"><span class="theme-mini-side"></span><span class="theme-mini-main"></span></div>
             <strong>System</strong>
             <span>Follow the device light or dark preference.</span>
           </label>
         </div>
-
         <div class="settings-grid settings-grid-spaced">
           <label class="field">Diamond mark
             <input name="symbol" maxlength="2" value="{{ prefs.symbol or 'E' }}" placeholder="E">
@@ -245,25 +244,24 @@
     <section class="block settings-section" id="integrations">
       <header class="settings-section-head">
         <span class="settings-num">07</span>
-        <div><h2>Integrations</h2><p>Outbound webhooks for operating events.</p></div>
+        <div><h2>Integrations</h2><p>Signed webhooks for ERP, WMS, and operations workflows.</p></div>
       </header>
+      {% if webhook_message %}
+      <div class="flash {{ 'err' if webhook_message in ['invalid','denied'] else 'ok' }}">{{ webhook_message|replace('_',' ') }}</div>
+      {% endif %}
       {% if webhooks %}
       <div class="table-wrap">
         <table class="table">
-          <thead><tr><th>URL</th><th>Company</th><th>Events</th><th>Actions</th></tr></thead>
+          <thead><tr><th>URL</th><th>Company</th><th>Events</th><th></th></tr></thead>
           <tbody>
-            {% for h in webhooks %}
+            {% for hook in webhooks %}
             <tr>
-              <td class="small">{{ h.url }}</td>
-              <td>{{ h.organization_id }}</td>
-              <td class="small">{{ h.events }}</td>
-              <td>
-                <form method="post" action="/settings/webhooks/{{ h.id }}/test" style="display:inline">
-                  <button class="btn ghost sm" type="submit">Test</button>
-                </form>
-                <form method="post" action="/settings/webhooks/{{ h.id }}/delete" style="display:inline">
-                  <button class="btn ghost sm" type="submit">Delete</button>
-                </form>
+              <td class="small">{{ hook.url }}</td>
+              <td>{{ hook.organization_id }}</td>
+              <td class="small">{{ hook.events }}</td>
+              <td class="table-actions">
+                <form method="post" action="/settings/webhooks/{{ hook.id }}/test"><button class="btn ghost sm" type="submit">Test</button></form>
+                <form method="post" action="/settings/webhooks/{{ hook.id }}/delete"><button class="btn ghost sm" type="submit">Delete</button></form>
               </td>
             </tr>
             {% endfor %}
@@ -274,9 +272,9 @@
       <p class="muted">No webhook endpoints yet.</p>
       {% endif %}
       {% if managed_orgs %}
-      <details style="margin-top:1rem">
+      <details class="settings-details" {% if not webhooks %}open{% endif %}>
         <summary><strong>Add endpoint</strong></summary>
-        <form method="post" action="/settings/webhooks" class="stack" style="margin-top:0.75rem">
+        <form method="post" action="/settings/webhooks" class="stack">
           <div class="settings-grid">
             <label class="field">Company
               <select name="organization_id">
