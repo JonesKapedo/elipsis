@@ -24,11 +24,18 @@ ROLE_LEVELS = {"viewer": 1, "analyst": 2, "supervisor": 3, "manager": 4, "owner"
 
 
 def is_admin(user) -> bool:
+    """Platform administrator check.
+
+    ``is_admin`` is the authoritative flag. ``user_type`` is the commercial
+    identity and may also be ``admin`` for API/legacy rows. The legacy
+    ``User.role`` column is no longer consulted for authorization; migration
+    ``a9b8c7d6e5f4`` backfills it into ``is_admin``.
+    """
     if user is None:
         return False
-    if (getattr(user, "role", "") or "").lower() in ADMIN_ROLES:
-        return True
     if getattr(user, "is_admin", False):
+        return True
+    if (getattr(user, "user_type", "") or "").lower() == "admin":
         return True
     admin_email = (os.getenv("ELIPSIS_ADMIN_EMAIL") or DEFAULT_ADMIN_EMAIL).lower()
     return (getattr(user, "email", "") or "").lower() == admin_email

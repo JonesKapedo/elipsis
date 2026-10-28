@@ -9,7 +9,7 @@
 <section class="head">
   <p class="eyebrow">{{ INDEX_NAME }}</p>
   <h1>{{ organization.name }}{% if department %} &mdash; {{ department.name }}{% endif %}</h1>
-  {% if company_context %}
+  {% if company_context is defined and company_context %}
   <p class="muted">{{ company_context.sector }} · {{ company_context.size }}{% if company_context.employees %} · {{ company_context.employees }} people{% endif %} · {{ company_context.location }} · {{ company_context.revenue }}</p>
   {% endif %}
   <p class="muted">Completed {{ assessment.completed_at or '' }} &nbsp;&middot;&nbsp;
@@ -51,14 +51,6 @@
     {% else %}{{ request.query_params.get('import') }} answers imported and rescored.{% endif %}
   </div>
   {% endif %}
-  <details class="block" style="margin-top:1rem">
-    <summary><strong>Import answers from CSV or XLSX</strong></summary>
-    <p class="muted small">Columns: <code>code</code>, <code>score</code> (0–4), optional <code>evidence</code>. <a href="/assessment/{{ assessment.id }}/import/template.csv">Download template</a>.</p>
-    <form method="post" action="/assessment/{{ assessment.id }}/import" enctype="multipart/form-data" class="filter-bar">
-      <input type="file" name="file" accept=".csv,.xlsx" required>
-      <button class="btn sm" type="submit">Import and rescore</button>
-    </form>
-  </details>
   {% if share_url %}
   <div class="block" style="margin-top:1rem">
     <h3>Emailable link ready</h3>
@@ -79,8 +71,261 @@
     <p class="muted">Organisation score {{ '%.1f'|format(result.organisation_score) }}
     &nbsp;&middot;&nbsp; {{ CONFIDENCE_NAME }} {{ '%.1f'|format(result.confidence_index) }}
     ({{ result.confidence_band }})</p>
+    {% if analytics is defined and analytics.actions %}
+    <p class="muted"><strong>The one thing to act on:</strong> {{ analytics.actions[0] }}</p>
+    {% endif %}
+    {% if report_unlocked and result.financial %}
+    <p class="muted"><strong>At stake:</strong> {{ result.financial.annual_savings|money }} annual savings potential
+      against {{ result.financial.investment|money }} indicative investment
+      (payback {{ '%.1f'|format(result.financial.payback_months) }} months).</p>
+    {% endif %}
   </div>
 </section>
+
+{% if report_unlocked %}
+<section class="kpis">
+  <div class="kpi accent"><span>Annual savings potential</span><b>{{ result.financial.annual_savings|money }}</b></div>
+  <div class="kpi"><span>Indicative investment</span><b>{{ result.financial.investment|money }}</b></div>
+  <div class="kpi"><span>ROI</span><b>{{ '%.0f'|format(result.financial.roi) }}%</b></div>
+  <div class="kpi"><span>Payback</span><b>{{ '%.1f'|format(result.financial.payback_months) }} mo</b></div>
+</section>
+
+<section class="block" id="constraints">
+  <div class="block-head">
+    <div>
+      <h3>Top three constraints</h3>
+      <p class="muted small" style="margin:.25rem 0 0">Ranked by impact. Fix these first; the rest of the report explains why.</p>
+    </div>
+    <a class="btn ghost sm" href="/assessment/{{ assessment.id }}/plan">Open the plan →</a>
+  </div>
+  <ol class="opp">
+    {% for o in result.top_opportunities[:3] %}
+    <li>{{ o }}</li>
+    {% else %}
+    <li class="muted">No constraints triggered. Keep the current cadence and re-assess at the next review.</li>
+    {% endfor %}
+  </ol>
+  {% if result.pain_points %}
+  <table class="table" style="margin-top:1rem">
+    <thead><tr><th>Severity</th><th>Where it shows up</th><th class="num">Impact</th><th>Detail</th></tr></thead>
+    <tbody>
+      {% for p in result.pain_points[:5] %}
+      <tr>
+        <td><span class="tag sev-{{ p.severity|lower }}">{{ p.severity }}</span></td>
+        <td>{{ p.title }}</td>
+        <td class="num">{{ '%.0f'|format(p.impact) }}%</td>
+        <td class="muted">{{ p.detail }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+
+<section class="block" id="cost">
+  <h3>What it costs if nothing changes</h3>
+  <div class="kpis">
+    <div class="kpi"><span>Current annual cost</span><b>{{ result.financial.current_cost|money }}</b></div>
+    <div class="kpi"><span>Projected annual cost</span><b>{{ result.financial.future_cost|money }}</b></div>
+    <div class="kpi accent"><span>Cost of inaction</span><b>{{ (result.financial.current_cost - result.financial.future_cost)|money }}</b></div>
+    <div class="kpi"><span>Annual savings potential</span><b>{{ result.financial.annual_savings|money }}</b></div>
+  </div>
+  <p class="muted">Financial figures are management estimates, not audited results. All inputs are listed under
+    <a href="#assumptions">Assumptions and method</a> and can be edited.</p>
+</section>
+
+<section class="block">
+  <h3>Implementation roadmap</h3>
+  <p class="muted">Three phases. Each action has an owner, a horizon, a complexity, and an expected return.</p>
+  {% for phase in result.roadmap %}
+  <div class="phase">
+    <div class="phase-head">
+      <h4>{{ phase.label }}</h4>
+      <span class="muted">{{ phase.horizon }} · {{ phase.count }} action{{ '' if phase.count == 1 else 's' }}</span>
+    </div>
+    <p class="muted">{{ phase.note }}</p>
+    {% if phase.items %}
+    <table class="table">
+      <thead><tr><th class="num">Priority</th><th>Recommendation</th><th>Technology</th>
+      <th>Complexity</th><th class="num">ROI</th><th>Pillar</th></tr></thead>
+      <tbody>
+        {% for r in phase['items'] %}
+        <tr>
+          <td class="num">{{ '%.0f'|format(r.priority) }}</td>
+          <td>{{ r.title }}</td>
+          <td>{{ r.technology }}</td>
+          <td>{{ r.complexity }}</td>
+          <td class="num">{{ '%.0f'|format(r.roi) }}%</td>
+          <td class="muted">{{ PILLAR_LABELS.get(r.pillar, r.pillar) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
+  {% endfor %}
+</section>
+
+<section class="block" id="department-view">
+  <div class="block-head">
+    <div>
+      <h3>Department view</h3>
+      <p class="muted small" style="margin:.25rem 0 0">This verdict belongs to {{ department.name if department else 'the whole organisation' }}. Department heads own the constraints that sit inside their unit.</p>
+    </div>
+    {% if organization %}<a class="btn ghost sm" href="/compare/{{ organization.id }}">Compare departments →</a>{% endif %}
+  </div>
+  <p class="muted">Use the comparison view to see which unit carries the largest gap and which constraint should move first.
+    {% if organization %}<a href="/actions">Assign the first action to its owner →</a>{% endif %}</p>
+</section>
+
+<section class="block" id="evidence-confidence">
+  <h3>Evidence and confidence</h3>
+  <p>The result is based on <strong>{{ result.answered }} of {{ result.total }}</strong> answered questions.
+    Confidence is <strong>{{ '%.1f'|format(result.confidence_index) }} ({{ result.confidence_band }})</strong>.
+    {% if previous %}Movement since the previous assessment is <strong>{{ '%+.1f'|format(delta or 0) }}</strong>.{% endif %}</p>
+  <p class="muted">Confidence rises with complete answers, attached operating evidence, and a follow-up assessment.
+    <a href="/assessment/{{ assessment.id }}/evidence">Add or review evidence →</a></p>
+</section>
+
+{% if benchmark or reference_points %}
+<section class="block" id="benchmarks">
+  <h3>Benchmarks</h3>
+  {% if benchmark and benchmark.available %}
+  <p>Peer median for {{ benchmark.industry }}{% if benchmark.band %} · {{ benchmark.band }}{% endif %}: <strong>{{ benchmark.median }}</strong> across {{ benchmark.sample }} completed assessments. Your score: <strong>{{ '%.1f'|format(result.readiness_index) }}</strong>{% if benchmark.percentile is not none %} · <strong>{{ benchmark.percentile }}th percentile</strong>{% endif %}.</p>
+  {% elif benchmark %}
+  <p class="muted">Peer comparison is suppressed until {{ benchmark.minimum }} comparable assessments exist (currently {{ benchmark.sample }}). This avoids identifying a single organisation.</p>
+  {% endif %}
+  <table class="table">
+    <thead><tr><th>Reference point</th><th>Value</th><th>Source</th></tr></thead>
+    <tbody>
+      {% for p in reference_points %}
+      <tr><td>{{ p.label }}<br><span class="muted">{{ p.note }}</span></td><td>{{ p.value }}</td><td class="muted">{{ p.source }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+<section class="block" id="assumptions">
+  <h3>Assumptions and method</h3>
+  {% if result.financial.assumptions %}
+  {% set a = result.financial.assumptions %}
+  <table class="table">
+    <tbody>
+      <tr><td>Staff in scope</td><td class="num">{{ a.staff }}</td></tr>
+      <tr><td>Blended hourly rate</td><td class="num">{{ CURRENCY }} {{ '%.0f'|format(a.hourly_rate) }}</td></tr>
+      <tr><td>Working hours / month</td><td class="num">{{ a.working_hours_per_month }}</td></tr>
+      <tr><td>Labour line</td><td class="num">{{ a.labour_line|money }}</td></tr>
+      <tr><td>Savings cap share</td><td class="num">{{ '%.0f'|format(a.max_savings_share * 100) }}%</td></tr>
+      <tr><td>Cap applied</td><td class="num">{{ 'yes' if a.capped else 'no' }}</td></tr>
+      <tr><td>Hours freed (modelled)</td><td class="num">{{ a.hours_freed }}</td></tr>
+    </tbody>
+  </table>
+  {% endif %}
+  <p class="muted">{{ method_note }} <a href="/assessment/{{ assessment.id }}/assumptions">Edit assumptions →</a></p>
+</section>
+
+<section class="block" id="implementation">
+  <h3>Implementation options</h3>
+  <div class="two-col">
+    <article>
+      <h4>Verified marketplace</h4>
+      <p class="muted">Publish a scoped request and compare bids from verified partners. Elipsis does not take a commission.</p>
+      <a class="btn ghost sm" href="/marketplace">Open marketplace →</a>
+    </article>
+    <article>
+      <h4>Trusted partner</h4>
+      <p class="muted">Hand the board pack to an implementation partner with the scope, evidence, and success measures already defined.</p>
+      <a class="btn ghost sm" href="/assessment/{{ assessment.id }}/plan">Build the brief →</a>
+    </article>
+  </div>
+</section>
+
+<section class="block" id="appendix">
+  <h3>Appendix: supporting diagnostics</h3>
+  <details>
+    <summary><strong>The seven intelligence pillars</strong></summary>
+    <div class="metrics" style="margin-top:.75rem">
+      {% for code, score in result.pillars.items() %}
+      <div class="metric">
+        <div class="metric-top"><span>{{ PILLAR_LABELS.get(code, code) }}</span><b>{{ '%.1f'|format(score) }}</b></div>
+        {{ bar(score) }}
+        <p class="weight">Weight {{ '%.0f'|format(PILLAR_WEIGHTS.get(code, 0) * 100) }}%</p>
+      </div>
+      {% endfor %}
+    </div>
+  </details>
+  <details>
+    <summary><strong>Executive metrics (36 indicators)</strong></summary>
+    <p class="muted">Risk metrics: higher means more exposure.</p>
+    {% for pcode, rows in result.metrics_by_pillar.items() %}
+    {% if rows %}
+    <h4>{{ PILLAR_LABELS.get(pcode, pcode) }}</h4>
+    <div class="metrics">
+      {% for m in rows %}
+      <div class="metric {{ 'is-risk' if m.kind == 'risk' }}">
+        <div class="metric-top"><span>{{ m.label }}</span><b>{{ '%.1f'|format(m.value) }}</b></div>
+        {{ bar(m.value) }}
+        <p class="reading muted">{{ m.reading }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endfor %}
+  </details>
+  <details>
+    <summary><strong>Subdomain scores</strong></summary>
+    <table class="table">
+      <thead><tr><th>Subdomain</th><th>Pillar</th><th class="num">Score</th><th></th></tr></thead>
+      <tbody>
+        {% for code, score in result.subdomains.items() %}
+        <tr>
+          <td><span class="qcode">{{ code }}</span>{{ SUBDOMAIN_LABELS.get(code, code) }}</td>
+          <td class="muted">{{ PILLAR_LABELS.get(SUBDOMAIN_PILLAR.get(code), '') }}</td>
+          <td class="num">{{ '%.1f'|format(score) }}</td>
+          <td class="barcol">{{ bar(score) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </details>
+  <details>
+    <summary><strong>Pain points</strong></summary>
+    <table class="table">
+      <thead><tr><th>Severity</th><th>Finding</th><th class="num">Impact</th><th>Detail</th></tr></thead>
+      <tbody>
+        {% for p in result.pain_points %}
+        <tr>
+          <td><span class="tag sev-{{ p.severity|lower }}">{{ p.severity }}</span></td>
+          <td>{{ p.title }}</td>
+          <td class="num">{{ '%.0f'|format(p.impact) }}%</td>
+          <td class="muted">{{ p.detail }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="muted">No pain points triggered.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </details>
+</section>
+{% else %}
+<section class="block premium-note">
+  <span class="crown" title="Premium">{% include "partials/crown.svg" %}</span>
+  <h3>Your free diagnostic</h3>
+  <p><strong>You scored {{ '%.1f'|format(result.readiness_index) }}/100 · {{ result.maturity_band }} · {{ result.confidence_band }} confidence.</strong></p>
+  <p class="muted">Your top three constraints:</p>
+  <ol class="opp">
+    {% for o in result.top_opportunities[:3] %}<li>{{ o }}</li>{% else %}<li class="muted">No constraints triggered.</li>{% endfor %}
+  </ol>
+  <p class="muted">Unlock the Full Assessment for the complete 36-metric report, costed friction analysis, 90-day roadmap, exports, and one implementation request with three bidder introductions.</p>
+  <div class="hero-actions">
+    <form method="post" action="/assessment/{{ assessment.id }}/checkout">
+      <button class="btn" type="submit">Unlock Full Assessment · $49</button>
+    </form>
+    <a class="btn ghost" href="/pro?locked=reports">Subscribe for unlimited assessments</a>
+  </div>
+</section>
+{% endif %}
 
 {% if logistics %}
 <section class="block">
@@ -219,184 +464,12 @@
 </section>
 {% endif %}
 
-{% if not report_unlocked %}
-<section class="block premium-note">
-  <span class="crown" title="Premium">{% include "partials/crown.svg" %}</span>
-  <h3>Your free diagnostic</h3>
-  <p><strong>You scored {{ '%.1f'|format(result.readiness_index) }}/100 · {{ result.maturity_band }} · {{ result.confidence_band }} confidence.</strong></p>
-  <p class="muted">Your top three constraints:</p>
-  <ol class="opp">
-    {% for o in result.top_opportunities[:3] %}<li>{{ o }}</li>{% else %}<li class="muted">No constraints triggered.</li>{% endfor %}
-  </ol>
-  <p class="muted">Unlock the Full Assessment for the complete 36-metric report, costed friction analysis, 90-day roadmap, exports, and one implementation request with three bidder introductions.</p>
-  <div class="hero-actions">
-    <form method="post" action="/assessment/{{ assessment.id }}/checkout">
-      <button class="btn" type="submit">Unlock Full Assessment · $49</button>
-    </form>
-    <a class="btn ghost" href="/pro?locked=reports">Subscribe for unlimited assessments</a>
-  </div>
-</section>
-{% endif %}
-
-{% if report_unlocked %}
-<section class="kpis">
-  <div class="kpi accent"><span>Annual savings potential</span><b>{{ result.financial.annual_savings|money }}</b></div>
-  <div class="kpi"><span>Indicative investment</span><b>{{ result.financial.investment|money }}</b></div>
-  <div class="kpi"><span>ROI</span><b>{{ '%.0f'|format(result.financial.roi) }}%</b></div>
-  <div class="kpi"><span>Payback</span><b>{{ '%.1f'|format(result.financial.payback_months) }} mo</b></div>
-</section>
-
-<section class="block">
-  <h3>The seven intelligence pillars</h3>
-  <div class="metrics">
-    {% for code, score in result.pillars.items() %}
-    <div class="metric">
-      <div class="metric-top"><span>{{ PILLAR_LABELS.get(code, code) }}</span><b>{{ '%.1f'|format(score) }}</b></div>
-      {{ bar(score) }}
-      <p class="weight">Weight {{ '%.0f'|format(PILLAR_WEIGHTS.get(code, 0) * 100) }}%</p>
-    </div>
-    {% endfor %}
-  </div>
-</section>
-
-<section class="block">
-  <h3>Executive metrics</h3>
-  <p class="muted">Thirty-six derived indicators. <b>Risk</b> metrics: higher means more exposure.</p>
-  {% for pcode, rows in result.metrics_by_pillar.items() %}
-  {% if rows %}
-  <h4>{{ PILLAR_LABELS.get(pcode, pcode) }}</h4>
-  <div class="metrics">
-    {% for m in rows %}
-    <div class="metric {{ 'is-risk' if m.kind == 'risk' }}">
-      <div class="metric-top"><span>{{ m.label }}</span><b>{{ '%.1f'|format(m.value) }}</b></div>
-      {{ bar(m.value) }}
-      <p class="reading muted">{{ m.reading }}</p>
-    </div>
-    {% endfor %}
-  </div>
-  {% endif %}
-  {% endfor %}
-</section>
-
-<section class="block">
-  <h3>Implementation roadmap</h3>
-  {% for phase in result.roadmap %}
-  <div class="phase">
-    <div class="phase-head">
-      <h4>{{ phase.label }}</h4>
-      <span class="muted">{{ phase.horizon }} · {{ phase.count }} action{{ '' if phase.count == 1 else 's' }}</span>
-    </div>
-    <p class="muted">{{ phase.note }}</p>
-    {% if phase.items %}
-    <table class="table">
-      <thead><tr><th class="num">Priority</th><th>Recommendation</th><th>Technology</th>
-      <th>Complexity</th><th class="num">ROI</th><th>Pillar</th></tr></thead>
-      <tbody>
-        {% for r in phase['items'] %}
-        <tr>
-          <td class="num">{{ '%.0f'|format(r.priority) }}</td>
-          <td>{{ r.title }}</td>
-          <td>{{ r.technology }}</td>
-          <td>{{ r.complexity }}</td>
-          <td class="num">{{ '%.0f'|format(r.roi) }}%</td>
-          <td class="muted">{{ PILLAR_LABELS.get(r.pillar, r.pillar) }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% endif %}
-  </div>
-  {% endfor %}
-</section>
-
-<section class="block">
-  <h3>Highest impact opportunities</h3>
-  <ol class="opp">
-    {% for o in result.top_opportunities %}<li>{{ o }}</li>{% else %}<li class="muted">None.</li>{% endfor %}
-  </ol>
-</section>
-
-<section class="block">
-  <h3>Subdomain scores</h3>
-  <table class="table">
-    <thead><tr><th>Subdomain</th><th>Pillar</th><th class="num">Score</th><th></th></tr></thead>
-    <tbody>
-      {% for code, score in result.subdomains.items() %}
-      <tr>
-        <td><span class="qcode">{{ code }}</span>{{ SUBDOMAIN_LABELS.get(code, code) }}</td>
-        <td class="muted">{{ PILLAR_LABELS.get(SUBDOMAIN_PILLAR.get(code), '') }}</td>
-        <td class="num">{{ '%.1f'|format(score) }}</td>
-        <td class="barcol">{{ bar(score) }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</section>
-
-<section class="block">
-  <h3>Pain points</h3>
-  <table class="table">
-    <thead><tr><th>Severity</th><th>Finding</th><th class="num">Impact</th><th>Detail</th></tr></thead>
-    <tbody>
-      {% for p in result.pain_points %}
-      <tr>
-        <td><span class="tag sev-{{ p.severity|lower }}">{{ p.severity }}</span></td>
-        <td>{{ p.title }}</td>
-        <td class="num">{{ '%.0f'|format(p.impact) }}%</td>
-        <td class="muted">{{ p.detail }}</td>
-      </tr>
-      {% else %}
-      <tr><td colspan="4" class="muted">No pain points triggered.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</section>
-
-<section class="block">
-  <h3>Financial impact</h3>
-  <div class="kpis">
-    <div class="kpi"><span>Current annual cost</span><b>{{ result.financial.current_cost|money }}</b></div>
-    <div class="kpi"><span>Projected annual cost</span><b>{{ result.financial.future_cost|money }}</b></div>
-    <div class="kpi accent"><span>Annual savings potential</span><b>{{ result.financial.annual_savings|money }}</b></div>
-    <div class="kpi"><span>Indicative investment</span><b>{{ result.financial.investment|money }}</b></div>
-    <div class="kpi"><span>Return on investment</span><b>{{ '%.0f'|format(result.financial.roi) }}%</b></div>
-    <div class="kpi"><span>Payback period</span><b>{{ '%.1f'|format(result.financial.payback_months) }} months</b></div>
-  </div>
-  {% if result.financial.assumptions %}
-  {% set a = result.financial.assumptions %}
-  <h4 style="margin-top:1.25rem">Assumptions (checkable) <a class="btn ghost sm" href="/assessment/{{ assessment.id }}/assumptions">Edit</a></h4>
-  <table class="table">
-    <tbody>
-      <tr><td>Staff in scope</td><td class="num">{{ a.staff }}</td></tr>
-      <tr><td>Blended hourly rate</td><td class="num">{{ CURRENCY }} {{ '%.0f'|format(a.hourly_rate) }}</td></tr>
-      <tr><td>Working hours / month</td><td class="num">{{ a.working_hours_per_month }}</td></tr>
-      <tr><td>Labour line</td><td class="num">{{ a.labour_line|money }}</td></tr>
-      <tr><td>Savings cap share</td><td class="num">{{ '%.0f'|format(a.max_savings_share * 100) }}%</td></tr>
-      <tr><td>Cap applied</td><td class="num">{{ 'yes' if a.capped else 'no' }}</td></tr>
-      <tr><td>Hours freed (modelled)</td><td class="num">{{ a.hours_freed }}</td></tr>
-    </tbody>
-  </table>
-  {% endif %}
-  <p class="muted">Financial figures are management estimates, not audited results. {{ method_note }}</p>
-</section>
-
-{% if benchmark or reference_points %}
-<section class="block">
-  <h3>Benchmark and reference points</h3>
-  {% if benchmark and benchmark.available %}
-  <p>Peer median for {{ benchmark.industry }}{% if benchmark.band %} · {{ benchmark.band }}{% endif %}: <strong>{{ benchmark.median }}</strong> across {{ benchmark.sample }} completed assessments. Your score: <strong>{{ '%.1f'|format(result.readiness_index) }}</strong>{% if benchmark.percentile is not none %} · <strong>{{ benchmark.percentile }}th percentile</strong>{% endif %}.</p>
-  {% elif benchmark %}
-  <p class="muted">Peer comparison is suppressed until {{ benchmark.minimum }} comparable assessments exist (currently {{ benchmark.sample }}). This avoids identifying a single organisation.</p>
-  {% endif %}
-  <table class="table">
-    <thead><tr><th>Reference point</th><th>Value</th><th>Source</th></tr></thead>
-    <tbody>
-      {% for p in reference_points %}
-      <tr><td>{{ p.label }}<br><span class="muted">{{ p.note }}</span></td><td>{{ p.value }}</td><td class="muted">{{ p.source }}</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</section>
-{% endif %}
-{% endif %}
+<details class="block">
+  <summary><strong>Import answers from CSV or XLSX</strong></summary>
+  <p class="muted small">Columns: <code>code</code>, <code>score</code> (0–4), optional <code>evidence</code>. <a href="/assessment/{{ assessment.id }}/import/template.csv">Download template</a>.</p>
+  <form method="post" action="/assessment/{{ assessment.id }}/import" enctype="multipart/form-data" class="filter-bar">
+    <input type="file" name="file" accept=".csv,.xlsx" required>
+    <button class="btn sm" type="submit">Import and rescore</button>
+  </form>
+</details>
 {% endblock %}

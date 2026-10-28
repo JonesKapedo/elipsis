@@ -2,6 +2,11 @@
 
 Version 1.0, 22 October 2026.
 
+> This document is retained as the original market read. For the current positioning,
+> target audience, peer analysis, competitive edges, gap assessment, and feature
+> sequence, see `docs/PLATFORM_MASTER_PLAN.md`, which supersedes this document for
+> positioning.
+
 ## Market read
 
 The logistics software market is crowded at the point of execution. Samsara, Motive, Geotab and Fleetio compete on telematics, fleet operations and maintenance. project44, Descartes and Manhattan compete on visibility, routing and supply-chain execution. SafetyCulture competes on frontline inspections and checklists. KPMG Atlas and similar advisory tools compete on maturity diagnostics.

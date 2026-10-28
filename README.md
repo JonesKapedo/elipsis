@@ -20,6 +20,17 @@ and three-phase roadmap. Telegram bot remains a separate acquisition channel.
 
 **Streamline work in progress** — see [`STREAMLINE_TODO.md`](STREAMLINE_TODO.md).
 
+## Documentation
+
+| Document | Purpose |
+| --- | --- |
+| [`docs/PLATFORM_MASTER_PLAN.md`](docs/PLATFORM_MASTER_PLAN.md) | Market, target audience, competitive position, gaps, recommendations, and feature sequence. Start here. |
+| [`docs/DAILY_OPERATIONS_TRANSFORMATION.md`](docs/DAILY_OPERATIONS_TRANSFORMATION.md) | Technical specification for the daily operating layer. |
+| [`docs/PLATFORM_UPGRADE_IMPLEMENTATION_GUIDE.md`](docs/PLATFORM_UPGRADE_IMPLEMENTATION_GUIDE.md) | Marketplace, entitlement, and handoff specification. |
+| [`docs/COMPETITIVE_EDGE.md`](docs/COMPETITIVE_EDGE.md) | Original market read. Superseded for positioning by the master plan. |
+| [`docs/SERVICE_DELIVERY_STANDARD.md`](docs/SERVICE_DELIVERY_STANDARD.md) | Published service commitments and SLAs. |
+| [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md) | Pre-deploy, migration, security, and smoke-test checklist. |
+
 ## Frontend decision (locked)
 
 | Layer | Technology | Deployed? |

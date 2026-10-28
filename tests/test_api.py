@@ -589,6 +589,8 @@ def test_compare_page_uses_the_selected_organisation(signed_in):
     assert page.status_code == 200
     assert "Guided Demo Co" in page.text
     assert "Unit rankings" in page.text
+    assert "Department roll-up" in page.text
+    assert "Constraint owner" in page.text
     assert "Choose an organisation" not in page.text
 
 

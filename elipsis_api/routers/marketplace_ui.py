@@ -6,7 +6,7 @@ from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import RedirectResponse
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from elipsis_api import models, paystack, services
@@ -67,13 +67,7 @@ def _not_found(request, user):
 
 
 def _admin_ok(user) -> bool:
-    if user is None:
-        return False
-    if services.is_admin(user):
-        return True
-    if getattr(user, "is_admin", False):
-        return True
-    return (getattr(user, "role", "") or "") == "admin"
+    return services.is_admin(user)
 
 
 @router.get("/marketplace")
@@ -711,7 +705,7 @@ def marketplace_conversation_message(conversation_id: int, request: Request,
     recipients = {conv.requester_id, conv.bidder_user_id}
     if conv.admin_involved:
         recipients.update(row.id for row in db.scalars(select(models.User).where(
-            or_(models.User.is_admin.is_(True), models.User.role.in_(("admin", "super_admin"))))).all())
+            models.User.is_admin.is_(True))).all())
     recipients.discard(user.id)
     for uid in recipients:
         notify_user(db, uid, "conversation.message", "New marketplace message",
@@ -746,7 +740,7 @@ def marketplace_involve_admin(conversation_id: int, request: Request,
         return _not_found(request, user)
     conv.admin_involved = True
     admins = db.scalars(select(models.User).where(
-        or_(models.User.is_admin.is_(True), models.User.role.in_(("admin", "super_admin"))))).all()
+        models.User.is_admin.is_(True))).all()
     for admin in admins:
         notify_user(db, admin.id, "conversation.admin_involved",
                     "Admin involvement requested",

@@ -104,7 +104,12 @@ def test_password_reset_revokes_sessions(app_client):
     assert _login(TestClient(app_client.app), email, "new-password-456").status_code == 303
 
 
-def test_marketplace_is_locked_while_coming_soon(app_client):
+def test_marketplace_is_locked_while_coming_soon(app_client, monkeypatch):
+    from elipsis_api.routers import marketplace as marketplace_api
+    from elipsis_api.routers import marketplace_ui
+
+    monkeypatch.setattr(marketplace_api, "MARKETPLACE_ENABLED", False)
+    monkeypatch.setattr(marketplace_ui, "MARKETPLACE_ENABLED", False)
     email = f"poster-{uuid.uuid4().hex[:10]}@example.com"
     client = TestClient(app_client.app)
     assert client.post("/api/v1/auth/register", json={

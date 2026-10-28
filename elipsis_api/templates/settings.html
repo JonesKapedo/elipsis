@@ -87,8 +87,8 @@
           <label class="field">Default department
             <select name="default_department">
               <option value="">—</option>
-              {% for code, label in departments.items() %}
-              <option value="{{ code }}" {% if prefs.default_department == code %}selected{% endif %}>{{ label }}</option>
+              {% for d in departments %}
+              <option value="{{ d.label }}" {% if prefs.default_department == d.label %}selected{% endif %}>{{ d.label }}</option>
               {% endfor %}
             </select>
           </label>
@@ -250,10 +250,22 @@
       {% if webhooks %}
       <div class="table-wrap">
         <table class="table">
-          <thead><tr><th>URL</th><th>Company</th><th>Events</th></tr></thead>
+          <thead><tr><th>URL</th><th>Company</th><th>Events</th><th>Actions</th></tr></thead>
           <tbody>
             {% for h in webhooks %}
-            <tr><td class="small">{{ h.url }}</td><td>{{ h.organization_id }}</td><td class="small">{{ h.events }}</td></tr>
+            <tr>
+              <td class="small">{{ h.url }}</td>
+              <td>{{ h.organization_id }}</td>
+              <td class="small">{{ h.events }}</td>
+              <td>
+                <form method="post" action="/settings/webhooks/{{ h.id }}/test" style="display:inline">
+                  <button class="btn ghost sm" type="submit">Test</button>
+                </form>
+                <form method="post" action="/settings/webhooks/{{ h.id }}/delete" style="display:inline">
+                  <button class="btn ghost sm" type="submit">Delete</button>
+                </form>
+              </td>
+            </tr>
             {% endfor %}
           </tbody>
         </table>

@@ -12,7 +12,7 @@ from constants import (
     INDEX_SHORT,
     PILLAR_LABELS,
 )
-from elipsis_api import analytics, models, services, services_room
+from elipsis_api import analytics, benchmarks, models, services, services_room
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
 from elipsis_api.narrative import company_portrait
@@ -60,6 +60,10 @@ def assessment_report(assessment_id: int, request: Request,
         "comparison_max": max([r.get("readiness_index") or 0 for r in comparison_rows] + [1]),
         "portrait": company_portrait(org, dept, result),
         "insight": analytics.build(result),
+        "benchmark": benchmarks.cohort_benchmark(
+            db, org, score=result.get("readiness_index")) if org else None,
+        "reference_points": benchmarks.REFERENCE_POINTS,
+        "method_note": benchmarks.METHOD_NOTE,
         "branding": services_room.branding(org),
     })
 
