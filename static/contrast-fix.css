@@ -4,12 +4,6 @@
    dark sidebar intact. Fixes white/light patches that made copy unreadable.
    ========================================================================== */
 
-/* ---- Content area: always dark ink on light surfaces -------------------- */
-body.app-shell .app-content,
-body.app-shell .app-content * {
-  /* do not force color on every element — only set base + known problem classes */
-}
-
 body.app-shell .app-main {
   background: #f5f6f7;
   color: #151b26;
@@ -25,7 +19,7 @@ body.app-shell .app-content h3,
 body.app-shell .app-content h4,
 body.app-shell .app-content h5,
 body.app-shell .app-content strong,
-bodys.app-shell .app-content b {
+body.app-shell .app-content b {
   color: #0f172a;
 }
 
@@ -122,7 +116,7 @@ body.app-shell label {
   color: #334155 !important;
 }
 
-/* Tables (pricing comparison, data tables) */
+/* Tables */
 body.app-shell table,
 body.app-shell .data-table {
   background: #ffffff;
@@ -149,7 +143,7 @@ body.app-shell table tr:hover td {
   background: #f8fafc !important;
 }
 
-/* Tags / pills on light surfaces */
+/* Tags / pills */
 body.app-shell .tag,
 body.app-shell .pill {
   background: #f1f5f9 !important;
@@ -199,7 +193,7 @@ body.app-shell .error {
   color: #991b1b !important;
 }
 
-/* Secondary / ghost buttons — dark text, not washed out */
+/* Secondary / ghost buttons */
 body.app-shell .btn.ghost,
 body.app-shell .btn.secondary,
 body.marketing .btn.ghost,
@@ -219,14 +213,14 @@ body.marketing .btn.secondary:hover {
   border-color: #94a3b8 !important;
 }
 
-/* Primary buttons keep high contrast */
+/* Primary buttons */
 body.app-shell .btn:not(.ghost):not(.secondary),
 body.marketing .btn.primary,
 body.marketing .btn:not(.ghost):not(.secondary) {
   color: #ffffff !important;
 }
 
-/* Head / hero sections in workspace */
+/* Head / hero */
 body.app-shell .head,
 body.app-shell .dash-hero,
 body.app-shell .headline {
@@ -248,7 +242,6 @@ body.app-shell .gauge-num span {
   color: #64748b !important;
 }
 
-/* Code / mono snippets */
 body.app-shell code {
   background: #f1f5f9 !important;
   color: #0f172a !important;
@@ -257,12 +250,11 @@ body.app-shell code {
   border-radius: 4px;
 }
 
-/* Empty states */
 body.app-shell .empty-state p {
   color: #475569 !important;
 }
 
-/* ---- Marketing pages: keep warm paper, force dark type ----------------- */
+/* Marketing */
 body.marketing {
   color: #14121a;
 }
@@ -315,7 +307,6 @@ body.marketing table td {
   color: #1e1b24 !important;
 }
 
-/* Auth panels */
 body.marketing .auth-panel,
 body.marketing .auth-card,
 body.marketing .auth-panel-inner {
@@ -337,7 +328,6 @@ body.marketing .auth-form input {
   border-color: #d4c9b4 !important;
 }
 
-/* ---- Mobile: action rows wrap without overlapping text ----------------- */
 .hero-actions,
 .head .hero-actions,
 .dash-hero {
@@ -363,7 +353,7 @@ body.marketing .auth-form input {
   }
 }
 
-/* ---- Sidebar: keep high-contrast dark (do not lighten) ----------------- */
+/* Sidebar stays dark */
 body.app-shell .app-sidebar {
   background: #0b1220 !important;
   color: #c7d0de !important;
