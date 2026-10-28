@@ -8,7 +8,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ BRAND_NAME }}{% endblock %}</title>
-  <meta name="description" content="{% block description %}{{ BRAND_NAME }} turns plain-English operating answers into a scored readiness index, a costed constraint, and a 90-day action plan for logistics and field-operations companies.{% endblock %}">
+  <meta name="description" content="{% block description %}{{ BRAND_NAME }} helps logistics and field-operations teams measure automation readiness, price the main operating constraint, and leave with a 90-day action plan.{% endblock %}">
   <meta name="theme-color" content="{% if authed %}#070d16{% else %}#f7f5f0{% endif %}">
   <meta name="color-scheme" content="{% if authed %}dark light{% else %}light{% endif %}">
   <link rel="icon" type="image/svg+xml" href="/static/brand/elipsis-mark.svg">
@@ -23,21 +23,22 @@
   <meta property="og:image" content="{{ request.url_for('static', path='brand/og-banner.png') }}">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="{{ BRAND_NAME }} — find the money hidden in operations">
+  <meta property="og:image:alt" content="{{ BRAND_NAME }} — find the bottleneck costing your operation">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{{ self.title() }}">
   <meta name="twitter:description" content="{{ self.description() }}">
   <meta name="twitter:image" content="{{ request.url_for('static', path='brand/og-banner.png') }}">
-  <link rel="stylesheet" href="/static/style.css?v=20261028d">
-  <link rel="stylesheet" href="/static/app-shell.css?v=20261028d">
-  <link rel="stylesheet" href="/static/extras.css?v=20261028d">
+  <link rel="stylesheet" href="/static/style.css?v=20261028f">
+  <link rel="stylesheet" href="/static/app-shell.css?v=20261028f">
+  <link rel="stylesheet" href="/static/extras.css?v=20261028f">
   <link rel="stylesheet" href="/static/motion.css?v=20261022a">
-  <link rel="stylesheet" href="/static/app.css?v=20261028d">
-  <link rel="stylesheet" href="/static/premium.css?v=20261028d">
-  <link rel="stylesheet" href="/static/design.css?v=20261028d">
-  <link rel="stylesheet" href="/static/contrast-fix.css?v=20261028d">
-  <link rel="stylesheet" href="/static/theme.css?v=20261028d">
-  <link rel="stylesheet" href="/static/logistics-ui.css?v=20261028d">
+  <link rel="stylesheet" href="/static/app.css?v=20261028f">
+  <link rel="stylesheet" href="/static/premium.css?v=20261028f">
+  <link rel="stylesheet" href="/static/design.css?v=20261028f">
+  <link rel="stylesheet" href="/static/contrast-fix.css?v=20261028f">
+  <link rel="stylesheet" href="/static/theme.css?v=20261028f">
+  <link rel="stylesheet" href="/static/logistics-ui.css?v=20261028f">
+  <link rel="stylesheet" href="/static/brand-scale.css?v=20261028f">
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %} {% if authed %}app-shell{% else %}marketing{% endif %}">
@@ -154,7 +155,7 @@
       <a href="/sample"{% if path == '/sample' %} aria-current="page"{% endif %}>Sample report</a>
       <a href="/help"{% if path.startswith('/help') %} aria-current="page"{% endif %}>Help</a>
       <a class="signin" href="/login">Sign in</a>
-      <a class="btn primary" href="/signup">Run free assessment <svg class="icon"><use href="#i-arrow"/></svg></a>
+      <a class="btn primary" href="/signup">Start free assessment <svg class="icon"><use href="#i-arrow"/></svg></a>
     </nav>
   </div>
 </header>
@@ -197,7 +198,7 @@
       <a href="/support">Support</a>
       <a href="/accessibility">Accessibility</a>
     </nav>
-    <span class="mk-footer-note">No consultants required. No black box. Assumptions printed.</span>
+    <span class="mk-footer-note">No consultants required. Assumptions printed with every number.</span>
   </div>
 </footer>
 {% endif %}
@@ -220,7 +221,7 @@
   </div>
 </dialog>
 {% endif %}
-<script src="/static/app.js?v=20261028d" defer></script>
+<script src="/static/app.js?v=20261028f" defer></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>
