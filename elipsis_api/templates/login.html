@@ -54,6 +54,12 @@
         <p>Sign in to continue your diagnostic, operating ledger, and action plan.</p>
       </div>
 
+      {% if request.query_params.get('reset') == '1' %}
+      <p class="flash ok" role="status">Password updated. Sign in with your new password.</p>
+      {% endif %}
+      {% if request.query_params.get('verify') == 'invalid' %}
+      <p class="error" role="alert">That verification link is invalid or has already been used. Sign in, or request a new link from support.</p>
+      {% endif %}
       {% if error %}
       <p class="error" role="alert">{{ error }}</p>
       {% endif %}

@@ -13,7 +13,7 @@
   {% if user %}
   <a class="btn" href="/marketplace/requests/new">Post a request</a>
   {% else %}
-  <a class="btn" href="/login">Sign in to participate</a>
+  <a class="btn" href="/login?next=/marketplace">Sign in to participate</a>
   {% endif %}
 </section>
 
@@ -70,7 +70,20 @@
     {% endfor %}
   </div>
   {% else %}
-  <p class="muted">No published requests right now. Check back soon, or create an account to submit your own.</p>
+  <div class="empty-state" style="padding:2rem 1rem;text-align:center">
+    <p class="muted" style="margin-bottom:1rem">No published requests right now.</p>
+    <p class="muted small" style="margin-bottom:1.25rem">When the marketplace is open, verified clients post briefs after an assessment. Partners bid in USD. Elipsis takes no commission on the implementation contract.</p>
+    <div class="hero-actions" style="justify-content:center;flex-wrap:wrap;gap:0.75rem">
+      {% if user %}
+      <a class="btn" href="/marketplace/requests/new">Post the first request</a>
+      <a class="btn ghost" href="/start">Run an assessment first</a>
+      {% else %}
+      <a class="btn" href="/signup">Create a free account</a>
+      <a class="btn ghost" href="/signup?type=bidder">Apply as a partner</a>
+      <a class="btn ghost" href="/sample">See a sample report</a>
+      {% endif %}
+    </div>
+  </div>
   {% endif %}
 </section>
 
