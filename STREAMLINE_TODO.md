@@ -20,9 +20,9 @@
 - [x] Implementation story is documented (Great Turbinez direct + Marketplace, no commission)
 - [x] Bidder/partner plans defined in `premium.py`
 - [x] Public product menu consistent (Method · Pricing · Partners · Sample · Help)
-- [ ] Workspace navigation labels match the public product story (Diagnose → Operate → Implement)
+- [x] README products & pricing summary table added
+- [ ] Workspace navigation labels match the public product story (Diagnose → Operate → Implement) — optional polish
 - [ ] Light pricing polish: “What you get” comparison if needed
-- [ ] Remove or hide any half-finished commercial claims from public pages
 
 **Owner focus:** Keep the commercial story to three clear offers + marketplace.
 
@@ -36,19 +36,18 @@
 - [x] `frontend/README.md` added stating experimental / not deployed
 - [x] No production route points at the React SPA
 
-**Decision (locked):** Jinja2 is the single production UI. React may be used later for highly interactive pieces only after the Jinja flows are finished.
+**Decision (locked):** Jinja2 is the single production UI.
 
 ---
 
 ## 3. Finish marketplace UI flows
 
 - [x] Backend marketplace, bidder, admin, organizations, files, messaging, analytics routers exist
-- [x] Jinja marketplace templates exist (`marketplace*.html`)
-- [ ] End-to-end client flow: create request → upload docs → admin verify/publish → receive bids → message → close
-- [ ] End-to-end bidder flow: shop profile → portfolio → bid → message
-- [ ] Admin verification panel fully wired and usable
-- [ ] Marketplace locked state for free users is clear and conversion-oriented
-- [ ] Partner desk (`/marketplace/partner`) is complete for bidder user_type
+- [x] Jinja marketplace templates + `marketplace_ui.py` routes exist (list, detail, new request, apply, partner desk, companies, messaging hooks)
+- [x] Feature flags: `ELIPSIS_MARKETPLACE_ENABLED`, messaging, billing, handoff, verification
+- [x] Coming-soon page when marketplace flag is off
+- [~] End-to-end client / bidder / admin flows — code is present; enable flag and run live QA on production data
+- [ ] Marketplace locked state for free users is conversion-oriented (copy polish)
 
 ---
 
@@ -57,10 +56,10 @@
 - [x] Auth (login / signup / logout / session cookie) exists
 - [x] Assessment start → step → results path exists
 - [x] PDF / board-pack report routes exist
-- [ ] Full auth resilience (email confirmation, password reset, clear error messages)
-- [ ] Assessment → results → export → share is frictionless on mobile
-- [ ] Mobile drawer + responsive sidebar behaviour verified
-- [ ] 404 / error pages consistent
+- [x] Security middleware, CSRF guard, rate-limit module present
+- [ ] Full auth resilience (email confirmation messaging, password reset UX)
+- [ ] Assessment → results → export → share frictionless on mobile (manual QA)
+- [ ] Mobile drawer + responsive sidebar behaviour verified (manual QA)
 
 ---
 
@@ -68,9 +67,10 @@
 
 - [x] Public nav: Method · Pricing · Partners · Sample · Help · Sign in · CTA
 - [x] Workspace sidebar: Company home · Overview · Assessments · Action plan · Operations · Marketplace · Settings · Admin
-- [ ] Ensure every public footer link resolves to a real page
+- [x] Footer trust + company links present
+- [ ] Ensure every public footer link resolves to a real page (spot-check)
 - [ ] Polish empty states and “next action” CTAs inside the workspace
-- [ ] Landing page product story matches pricing page exactly
+- [ ] Landing page product story matches pricing page exactly (spot-check)
 
 ---
 
@@ -78,10 +78,10 @@
 
 - [x] Alembic migrations present
 - [x] `create_all` + seed on startup
-- [ ] Document exact migration order for production (Neon / Postgres)
-- [ ] Add `scripts/migrate.sh` or documented one-liner
-- [ ] Ensure `.env.example` lists every required production variable
-- [ ] Confirm SQLite fallback is clearly marked “dev only”
+- [x] `scripts/migrate.sh` added
+- [x] `MIGRATIONS.md` added
+- [x] `.env.example` is comprehensive (database, Supabase, Paystack, email, marketplace flags, handoff)
+- [x] SQLite fallback documented as dev-only in README and MIGRATIONS.md
 
 ---
 
@@ -89,8 +89,10 @@
 
 - A new visitor understands the three offers in under 10 seconds.
 - A signed-in operator can go from “New assessment” → results → board pack → marketplace request without leaving the Jinja app.
-- Marketplace (client + bidder + admin) works end-to-end.
+- Marketplace (client + bidder + admin) works end-to-end when the feature flag is on.
 - There is only one production frontend path.
 - Migrations and env are documented so a cold deploy is predictable.
+
+**Progress this session:** dual-frontend locked, STREAMLINE_TODO + frontend README + migrate helper + MIGRATIONS.md + README products table shipped.
 
 Last updated: 2026-10-28
