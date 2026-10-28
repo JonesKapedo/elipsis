@@ -1,0 +1,422 @@
+/* ==========================================================================
+   Elipsis theme — light (default) and dark
+   Applied via html[data-theme="dark|light"]. System preference used when
+   data-theme="system" or cookie is unset (resolved by early head script).
+   ========================================================================== */
+
+/* ---- Subtler placeholders (both themes) -------------------------------- */
+input::placeholder,
+textarea::placeholder,
+select:invalid {
+  color: #94a3b8 !important;
+  opacity: 1;
+  font-weight: 400;
+}
+
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* ---- Dark mode --------------------------------------------------------- */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --asphalt: #070b12;
+  --asphalt-2: #0e1624;
+  --asphalt-3: #152033;
+  --ink: #e8eef7;
+  --ink-2: #b6c2d4;
+  --muted: #8b9bb0;
+  --muted-2: #6b7c92;
+  --line: #243044;
+  --line-strong: #334155;
+  --surface: #121a27;
+  --canvas: #0b111a;
+  --canvas-2: #0f1622;
+  --panel: #121a27;
+  --panel2: #0f1622;
+  --paper: #0b111a;
+  --soft: #b6c2d4;
+  --bg: #0b111a;
+  --bg2: #0e1624;
+  --amber: #f5b301;
+  --amber-ink: #1a1400;
+  --amber-soft: rgba(245, 179, 1, 0.12);
+  --blue: #60a5fa;
+  --green: #34d399;
+  --green-soft: rgba(52, 211, 153, 0.12);
+  --red: #f87171;
+  --red-soft: rgba(248, 113, 113, 0.12);
+  --orange: #fbbf24;
+  --orange-soft: rgba(251, 191, 36, 0.12);
+}
+
+html[data-theme="dark"] body,
+html[data-theme="dark"] body.marketing,
+html[data-theme="dark"] body.app-shell {
+  background: #0b111a !important;
+  color: #e8eef7 !important;
+}
+
+/* Marketing */
+html[data-theme="dark"] body.marketing .mk-header,
+html[data-theme="dark"] body.marketing .pub-header {
+  background: rgba(11, 17, 26, 0.92) !important;
+  border-bottom-color: #243044 !important;
+}
+
+html[data-theme="dark"] body.marketing .pub-nav a,
+html[data-theme="dark"] body.marketing .mk-nav a {
+  color: #b6c2d4 !important;
+}
+
+html[data-theme="dark"] body.marketing .pub-nav a:hover,
+html[data-theme="dark"] body.marketing .mk-nav a:hover,
+html[data-theme="dark"] body.marketing .pub-nav a[aria-current] {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] body.marketing h1,
+html[data-theme="dark"] body.marketing h2,
+html[data-theme="dark"] body.marketing h3,
+html[data-theme="dark"] body.marketing h4 {
+  color: #f1f5f9 !important;
+}
+
+html[data-theme="dark"] body.marketing .muted,
+html[data-theme="dark"] body.marketing .section-lede,
+html[data-theme="dark"] body.marketing .lede,
+html[data-theme="dark"] body.marketing .price-note,
+html[data-theme="dark"] body.marketing .mk-eyebrow {
+  color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] body.marketing .mk-price,
+html[data-theme="dark"] body.marketing .mk-card,
+html[data-theme="dark"] body.marketing .mk-step,
+html[data-theme="dark"] body.marketing .block,
+html[data-theme="dark"] body.marketing .card {
+  background: #121a27 !important;
+  color: #e8eef7 !important;
+  border-color: #243044 !important;
+}
+
+html[data-theme="dark"] body.marketing .mk-price ul li,
+html[data-theme="dark"] body.marketing .mk-card p {
+  color: #b6c2d4 !important;
+}
+
+html[data-theme="dark"] body.marketing table th {
+  background: #152033 !important;
+  color: #f1f5f9 !important;
+}
+
+html[data-theme="dark"] body.marketing table td {
+  background: #121a27 !important;
+  color: #e2e8f0 !important;
+  border-color: #243044 !important;
+}
+
+html[data-theme="dark"] body.marketing .mk-footer,
+html[data-theme="dark"] body.marketing .pub-footer {
+  background: #070b12 !important;
+  color: #94a3b8 !important;
+  border-top-color: #243044 !important;
+}
+
+html[data-theme="dark"] body.marketing .mk-footer a,
+html[data-theme="dark"] body.marketing .pub-footer a {
+  color: #b6c2d4 !important;
+}
+
+html[data-theme="dark"] body.marketing .auth-panel,
+html[data-theme="dark"] body.marketing .auth-card,
+html[data-theme="dark"] body.marketing .auth-panel-inner {
+  background: #121a27 !important;
+  color: #e8eef7 !important;
+  border-color: #243044 !important;
+}
+
+html[data-theme="dark"] body.marketing .auth-form input,
+html[data-theme="dark"] body.marketing input,
+html[data-theme="dark"] body.marketing select,
+html[data-theme="dark"] body.marketing textarea {
+  background: #0e1624 !important;
+  color: #e8eef7 !important;
+  border-color: #334155 !important;
+}
+
+html[data-theme="dark"] body.marketing .auth-story {
+  background: #070b12 !important;
+  color: #e8eef7 !important;
+}
+
+/* App shell content */
+html[data-theme="dark"] body.app-shell .app-main {
+  background: #0b111a !important;
+  color: #e8eef7 !important;
+}
+
+html[data-theme="dark"] body.app-shell .app-content {
+  color: #e8eef7 !important;
+}
+
+html[data-theme="dark"] body.app-shell .app-content h1,
+html[data-theme="dark"] body.app-shell .app-content h2,
+html[data-theme="dark"] body.app-shell .app-content h3,
+html[data-theme="dark"] body.app-shell .app-content h4,
+html[data-theme="dark"] body.app-shell .app-content strong,
+html[data-theme="dark"] body.app-shell .app-content b {
+  color: #f1f5f9 !important;
+}
+
+html[data-theme="dark"] body.app-shell .app-content p,
+html[data-theme="dark"] body.app-shell .app-content li,
+html[data-theme="dark"] body.app-shell .app-content label,
+html[data-theme="dark"] body.app-shell .app-content td,
+html[data-theme="dark"] body.app-shell .app-content th {
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] body.app-shell .app-content .muted,
+html[data-theme="dark"] body.app-shell .app-content .lede,
+html[data-theme="dark"] body.app-shell .app-content .eyebrow,
+html[data-theme="dark"] body.app-shell .app-content .kpi-lb,
+html[data-theme="dark"] body.app-shell .app-content .small {
+  color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] body.app-shell .block,
+html[data-theme="dark"] body.app-shell .pcard,
+html[data-theme="dark"] body.app-shell .card,
+html[data-theme="dark"] body.app-shell .kpi,
+html[data-theme="dark"] body.app-shell .stat-card,
+html[data-theme="dark"] body.app-shell .chart-card,
+html[data-theme="dark"] body.app-shell .click-card,
+html[data-theme="dark"] body.app-shell .empty-state,
+html[data-theme="dark"] body.app-shell .premium-note,
+html[data-theme="dark"] body.app-shell .settings-section,
+html[data-theme="dark"] body.app-shell .settings-account-card,
+html[data-theme="dark"] body.app-shell .settings-rail {
+  background: #121a27 !important;
+  color: #e8eef7 !important;
+  border-color: #243044 !important;
+}
+
+html[data-theme="dark"] body.app-shell .block h1,
+html[data-theme="dark"] body.app-shell .block h2,
+html[data-theme="dark"] body.app-shell .block h3,
+html[data-theme="dark"] body.app-shell .block h4,
+html[data-theme="dark"] body.app-shell .kpi b {
+  color: #f1f5f9 !important;
+}
+
+html[data-theme="dark"] body.app-shell .app-topbar {
+  background: #121a27 !important;
+  border-bottom-color: #243044 !important;
+  color: #e8eef7 !important;
+}
+
+html[data-theme="dark"] body.app-shell .org-switch,
+html[data-theme="dark"] body.app-shell .cmd-trigger,
+html[data-theme="dark"] body.app-shell .topbar-search input,
+html[data-theme="dark"] body.app-shell .sidebar-toggle {
+  background: #0e1624 !important;
+  color: #e8eef7 !important;
+  border-color: #334155 !important;
+}
+
+html[data-theme="dark"] body.app-shell .topbar-search input::placeholder {
+  color: #64748b !important;
+}
+
+html[data-theme="dark"] body.app-shell input,
+html[data-theme="dark"] body.app-shell select,
+html[data-theme="dark"] body.app-shell textarea {
+  background: #0e1624 !important;
+  color: #e8eef7 !important;
+  border-color: #334155 !important;
+}
+
+html[data-theme="dark"] body.app-shell label {
+  color: #b6c2d4 !important;
+}
+
+html[data-theme="dark"] body.app-shell table th,
+html[data-theme="dark"] body.app-shell .data-table th {
+  background: #152033 !important;
+  color: #f1f5f9 !important;
+  border-color: #243044 !important;
+}
+
+html[data-theme="dark"] body.app-shell table td,
+html[data-theme="dark"] body.app-shell .data-table td {
+  background: #121a27 !important;
+  color: #cbd5e1 !important;
+  border-color: #1e293b !important;
+}
+
+html[data-theme="dark"] body.app-shell table tr:hover td {
+  background: #152033 !important;
+}
+
+html[data-theme="dark"] body.app-shell .tag,
+html[data-theme="dark"] body.app-shell .pill {
+  background: #1e293b !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+
+html[data-theme="dark"] body.app-shell .tag.ok {
+  background: rgba(52, 211, 153, 0.15) !important;
+  color: #6ee7b7 !important;
+  border-color: rgba(52, 211, 153, 0.35) !important;
+}
+
+html[data-theme="dark"] body.app-shell .tag.warn {
+  background: rgba(251, 191, 36, 0.15) !important;
+  color: #fcd34d !important;
+  border-color: rgba(251, 191, 36, 0.35) !important;
+}
+
+html[data-theme="dark"] body.app-shell .flash.ok {
+  background: rgba(52, 211, 153, 0.12) !important;
+  border-color: rgba(52, 211, 153, 0.35) !important;
+  color: #a7f3d0 !important;
+}
+
+html[data-theme="dark"] body.app-shell .flash.err,
+html[data-theme="dark"] body.app-shell .error {
+  background: rgba(248, 113, 113, 0.12) !important;
+  border-color: rgba(248, 113, 113, 0.35) !important;
+  color: #fecaca !important;
+}
+
+html[data-theme="dark"] body.app-shell .btn.ghost,
+html[data-theme="dark"] body.app-shell .btn.secondary,
+html[data-theme="dark"] body.marketing .btn.ghost,
+html[data-theme="dark"] body.marketing .btn.secondary {
+  background: transparent !important;
+  color: #e8eef7 !important;
+  border-color: #475569 !important;
+}
+
+html[data-theme="dark"] body.app-shell .btn.ghost:hover,
+html[data-theme="dark"] body.app-shell .btn.secondary:hover {
+  background: #1e293b !important;
+  border-color: #64748b !important;
+}
+
+html[data-theme="dark"] body.app-shell .head h1,
+html[data-theme="dark"] body.app-shell .dash-hero h1,
+html[data-theme="dark"] body.app-shell .gauge-num {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] body.app-shell code {
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+  border-color: #334155 !important;
+}
+
+html[data-theme="dark"] body.app-shell .cmdk,
+html[data-theme="dark"] body.app-shell .cmdk-panel {
+  background: #121a27 !important;
+  color: #e8eef7 !important;
+  border-color: #243044 !important;
+}
+
+html[data-theme="dark"] body.app-shell .settings-nav a {
+  color: #b6c2d4 !important;
+}
+
+html[data-theme="dark"] body.app-shell .settings-nav a:hover {
+  color: #f8fafc !important;
+  background: #152033 !important;
+}
+
+/* Theme picker UI */
+.theme-chooser {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0 1.25rem;
+}
+
+.theme-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem 0.9rem;
+  border: 1.5px solid var(--line, #e2e8f0);
+  border-radius: 10px;
+  background: var(--surface, #fff);
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.theme-option:hover {
+  border-color: #94a3b8;
+}
+
+.theme-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.theme-option:has(input:checked),
+.theme-option.is-active {
+  border-color: #f5a623;
+  box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.2);
+}
+
+.theme-option strong {
+  font-size: 0.9rem;
+  color: inherit;
+}
+
+.theme-option span {
+  font-size: 0.78rem;
+  color: var(--muted, #64748b);
+  line-height: 1.35;
+}
+
+.theme-mini {
+  height: 36px;
+  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,0.08);
+  display: grid;
+  grid-template-columns: 10px 1fr;
+  overflow: hidden;
+}
+
+.theme-mini-side {
+  background: #0b1220;
+}
+
+.theme-mini-main {
+  background: #f5f6f7;
+}
+
+.theme-mini.dark .theme-mini-side { background: #05080f; }
+.theme-mini.dark .theme-mini-main { background: #121a27; }
+
+.theme-mini.system {
+  background: linear-gradient(90deg, #f5f6f7 50%, #121a27 50%);
+}
+.theme-mini.system .theme-mini-side { background: transparent; }
+.theme-mini.system .theme-mini-main { background: transparent; }
+
+html[data-theme="dark"] .theme-option {
+  background: #121a27;
+  border-color: #334155;
+  color: #e8eef7;
+}
+
+@media (max-width: 640px) {
+  .theme-chooser {
+    grid-template-columns: 1fr;
+  }
+}
