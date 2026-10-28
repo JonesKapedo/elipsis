@@ -17,7 +17,19 @@ Production path: **FastAPI + SQLAlchemy + Jinja2** (Vercel). Pure scoring engine
 `readiness.py` + declarative metrics in `constants.py`. Vertical sidebar workspace UI,
 investor-facing dashboard that surfaces the seven pillars, 36 metrics, maturity bands,
 and three-phase roadmap. Telegram bot remains a separate acquisition channel.
-Experimental React SPA under `frontend/` is not the deploy target.
+
+**Streamline work in progress** — see [`STREAMLINE_TODO.md`](STREAMLINE_TODO.md).
+
+## Frontend decision (locked)
+
+| Layer | Technology | Deployed? |
+| --- | --- | --- |
+| **Production UI** | FastAPI + Jinja2 templates + `static/` | **Yes** (Vercel) |
+| **Experimental SPA** | React + Vite under `frontend/` | **No** |
+
+The React SPA is kept for reference only. It is **not** the deploy target and is not linked from production routes. See [`frontend/README.md`](frontend/README.md).
+
+Do not point Vercel at the Telegram bot or at `frontend/`.
 
 ## Naming
 
@@ -91,6 +103,19 @@ Recommendations are grouped into three phases:
 
 ---
 
+## Products & pricing (summary)
+
+| Offer | Price | What you get |
+| --- | --- | --- |
+| Free diagnostic | $0 | 63-question diagnostic, Elipsis Index, top constraints, sample plan |
+| Full Assessment | $49 once | Full 36-metric report, costed constraints, board pack, 3 partner intros |
+| Operator subscription | $29 / mo (or $380 / yr) | Unlimited assessments, exports, team collaboration, switches |
+| Marketplace | Partner plans from $39 / mo | Clients publish briefs; verified implementers bid (no commission taken by Elipsis) |
+
+See `/pricing` on the live site for the full commercial story.
+
+---
+
 ## Setup
 
 ```bash
@@ -128,13 +153,18 @@ Change the port with `ELIPSIS_PORT=8080 python run_api.py`.
 python -m telegram_bot.bot
 ```
 
+### Database migrations
+
+```bash
+export ELIPSIS_DATABASE_URL='postgresql://…'
+./scripts/migrate.sh          # or: alembic upgrade head
+```
+
+Without a Postgres URL the app falls back to ephemeral SQLite under `/tmp` (**dev only** — data is lost on cold starts).
+
 ### Deploy to Vercel
 
-See **DEPLOY.md**. Production UI is the FastAPI + Jinja2 app. Do not point Vercel at
-the Telegram bot or the experimental React SPA under `frontend/`.
-
-**Storage:** set `ELIPSIS_DATABASE_URL` to a managed PostgreSQL URL. Without it the
-app uses ephemeral SQLite under `/tmp` and data is lost on cold starts.
+See **DEPLOY.md**. Production UI is the FastAPI + Jinja2 app.
 
 ---
 
@@ -175,7 +205,7 @@ telegram_bot/
 
 ## Workspace UI
 
-Signed-in users get a **vertical sidebar** (Command · Intelligence · Account) with a
-mobile drawer. The old diamond dropdown is retired. The dashboard surfaces the
-measurement model for operators and investors: KPI strip, framework summary, latest
-result with pillar bars, pillar portfolio, maturity spread, and assessment table.
+Signed-in users get a **vertical sidebar** (Workspace · Commercial · Account) with a
+mobile drawer. The dashboard surfaces the measurement model for operators and
+investors: KPI strip, framework summary, latest result with pillar bars, pillar
+portfolio, maturity spread, and assessment table.
