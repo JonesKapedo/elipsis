@@ -1357,3 +1357,37 @@ def test_activation_health_and_ticket_org_link():
         ticket = db.query(models.SupportTicket).filter_by(
             requester_email=email).one()
         assert ticket.organization_id == org_id
+
+
+def test_company_home_renders_the_selected_owned_company():
+    from fastapi.testclient import TestClient
+
+    from elipsis_api import models, security
+    from elipsis_api.database import SessionLocal
+    from elipsis_api.main import app
+
+    with TestClient(app) as home:
+        with SessionLocal() as db:
+            owner = models.User(
+                email="company-home@example.com", name="Home Owner", role="client",
+                user_type="client", password_hash=security.hash_password("company-home-pass"))
+            db.add(owner)
+            db.commit()
+            org = models.Organization(name="Home Logistics", industry="Logistics",
+                                      city="Mombasa", country="Kenya")
+            db.add(org)
+            db.commit()
+            db.add(models.OrgOwner(user_id=owner.id, organization_id=org.id,
+                                   role="owner", status="active"))
+            db.commit()
+            org_id = org.id
+
+        login = home.post("/login", data={
+            "email": "company-home@example.com", "password": "company-home-pass"},
+            follow_redirects=False)
+        assert login.status_code == 303
+        page = home.get(f"/company?org={org_id}")
+        assert page.status_code == 200
+        assert "Home Logistics" in page.text
+        assert "Set up your first company" not in page.text
+        assert "Company home" in page.text

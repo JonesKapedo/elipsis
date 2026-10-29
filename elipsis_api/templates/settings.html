@@ -145,26 +145,9 @@
           <div><h2>Interface</h2><p>Appearance, density, motion, and your compact mark.</p></div>
         </header>
 
-        <p class="field-note" style="margin-bottom:0.5rem">Appearance</p>
-        <div class="theme-chooser" role="radiogroup" aria-label="Colour theme">
-          <label class="theme-option{% if theme == 'light' %} is-active{% endif %}">
-            <input type="radio" name="theme" value="light" {% if theme == 'light' %}checked{% endif %}>
-            <div class="theme-mini light" aria-hidden="true"><span class="theme-mini-side"></span><span class="theme-mini-main"></span></div>
-            <strong>Light</strong>
-            <span>Bright canvas for daytime work and board sharing.</span>
-          </label>
-          <label class="theme-option{% if theme == 'dark' %} is-active{% endif %}">
-            <input type="radio" name="theme" value="dark" {% if theme == 'dark' %}checked{% endif %}>
-            <div class="theme-mini dark" aria-hidden="true"><span class="theme-mini-side"></span><span class="theme-mini-main"></span></div>
-            <strong>Dark</strong>
-            <span>Low-glare operations skin for long sessions.</span>
-          </label>
-          <label class="theme-option{% if theme == 'system' %} is-active{% endif %}">
-            <input type="radio" name="theme" value="system" {% if theme == 'system' %}checked{% endif %}>
-            <div class="theme-mini system" aria-hidden="true"><span class="theme-mini-side"></span><span class="theme-mini-main"></span></div>
-            <strong>System</strong>
-            <span>Follow the device light or dark preference.</span>
-          </label>
+        <div class="theme-current">
+          <strong>Control-tower dark canvas</strong>
+          <span>The workspace uses a low-glare operations skin so scores, evidence, and exceptions stay legible during long sessions. Light theme is on the design roadmap.</span>
         </div>
 
         <div class="settings-grid settings-grid-spaced">
