@@ -454,6 +454,21 @@ def create_document(db: Session, org_id: int, *, title: str,
     return row
 
 
+def attach_document_file(db: Session, org_id: int, document_id: int,
+                         stored: dict[str, Any]) -> models.ComplianceDocument | None:
+    row = db.get(models.ComplianceDocument, document_id)
+    if row is None or row.organization_id != org_id:
+        return None
+    row.attachment_name = stored["name"]
+    row.attachment_key = stored["key"]
+    row.attachment_backend = stored["backend"]
+    row.attachment_size = stored["size"]
+    row.attachment_type = stored.get("type")
+    row.attachment_uploaded_at = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
+    db.flush()
+    return row
+
+
 def renew_document(db: Session, org_id: int, document_id: int,
                    expires_on: str) -> models.ComplianceDocument | None:
     row = db.get(models.ComplianceDocument, document_id)

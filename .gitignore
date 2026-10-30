@@ -34,3 +34,6 @@ env/
 frontend/node_modules/
 frontend/dist/
 frontend/tsconfig.tsbuildinfo
+
+# Local document uploads
+/data/uploads/

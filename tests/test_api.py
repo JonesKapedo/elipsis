@@ -662,11 +662,18 @@ def test_operations_ecosystem_round_trip(signed_in):
         "organization_id": org_id, "title": "Carrier contract", "doc_type": "contract",
         "reference": "CC-2026-9", "owner": "Commercial lead",
         "issued_on": "2026-01-01", "expires_on": "2026-11-01",
-        "note": "Annual renewal"}, follow_redirects=False)
+        "note": "Annual renewal"},
+        files={"file": ("carrier-contract.pdf", b"%PDF-1.4 signed carrier terms",
+                        "application/pdf")},
+        follow_redirects=False)
     assert document.status_code == 303
     docs = client.get(f"/operations/documents?org={org_id}")
     assert "Carrier contract" in docs.text
+    assert "carrier-contract.pdf" in docs.text
     doc_id = int(re.search(r'/operations/documents/(\d+)/renew', docs.text).group(1))
+    attachment = client.get(f"/operations/documents/{doc_id}/attachment")
+    assert attachment.status_code == 200
+    assert attachment.content == b"%PDF-1.4 signed carrier terms"
     renewed = client.post(f"/operations/documents/{doc_id}/renew", data={
         "organization_id": org_id, "expires_on": "2027-11-01"},
         follow_redirects=False)

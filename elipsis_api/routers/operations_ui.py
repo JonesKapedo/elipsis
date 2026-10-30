@@ -8,13 +8,20 @@ import json
 from urllib.parse import quote
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Request, UploadFile
-from fastapi.responses import JSONResponse, RedirectResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 from sqlalchemy.orm import Session
 
 from elipsis_api import models, services, services_operations, services_ops, services_webhooks
 from elipsis_api.config import SESSION_COOKIE
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
+from elipsis_api.document_storage import (
+    AttachmentError,
+    attachment_url,
+    local_path,
+    remove_attachment,
+    store_attachment,
+)
 
 router = APIRouter()
 api_router = APIRouter(prefix="/api/v1/operations", tags=["operations"])
@@ -302,29 +309,97 @@ def documents_page(request: Request, user=Depends(get_current_user),
 
 
 @router.post("/operations/documents")
-def document_create(organization_id: int = Form(...), title: str = Form(...),
-                    doc_type: str = Form("licence"), reference: str = Form(""),
-                    owner: str = Form(""), issued_on: str = Form(""),
-                    expires_on: str = Form(""), note: str = Form(""),
-                    user=Depends(get_current_user), db: Session = Depends(get_db)):
+async def document_create(organization_id: int = Form(...), title: str = Form(...),
+                          doc_type: str = Form("licence"), reference: str = Form(""),
+                          owner: str = Form(""), issued_on: str = Form(""),
+                          expires_on: str = Form(""), note: str = Form(""),
+                          file: UploadFile | None = File(None),
+                          user=Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return login_redirect()
     org = _org_or_none(db, user, organization_id)
     if org is None:
         return _redirect("/operations/documents", error="Organisation not found.")
+    stored = None
     try:
+        if file is not None and file.filename:
+            stored = await store_attachment(file)
         row = services_operations.create_document(
             db, org.id, title=title, doc_type=doc_type, reference=reference,
             owner=owner, issued_on=issued_on or None, expires_on=expires_on,
             note=note, user_id=user.id)
+        if stored is not None:
+            services_operations.attach_document_file(db, org.id, row.id, stored)
         services_ops.record_audit(
             db, action="operations.document.added", organization_id=org.id,
-            user_id=user.id, detail=f"{row.title} expires {row.expires_on}")
+            user_id=user.id,
+            detail=f"{row.title} expires {row.expires_on}"
+                   + (" with attachment" if stored else ""))
         db.commit()
-    except ValueError as exc:
+    except Exception as exc:  # noqa: BLE001 - surface storage/DB failure in the flash
         db.rollback()
+        if stored is not None:
+            await remove_attachment(stored["key"], stored["backend"])
         return _redirect(f"/operations/documents?org={org.id}", error=str(exc))
     return _redirect(f"/operations/documents?org={org.id}", saved=True)
+
+
+@router.post("/operations/documents/{document_id}/attachment")
+async def document_attachment_upload(document_id: int,
+                                     organization_id: int = Form(...),
+                                     file: UploadFile = File(...),
+                                     user=Depends(get_current_user),
+                                     db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    org = _org_or_none(db, user, organization_id)
+    if org is None:
+        return _redirect("/operations/documents", error="Organisation not found.")
+    row = db.get(models.ComplianceDocument, document_id)
+    if row is None or row.organization_id != org.id:
+        return _redirect(f"/operations/documents?org={org.id}", error="Document not found.")
+    stored = None
+    old_key, old_backend = row.attachment_key, row.attachment_backend
+    try:
+        stored = await store_attachment(file)
+        services_operations.attach_document_file(db, org.id, document_id, stored)
+        services_ops.record_audit(
+            db, action="operations.document.attached", organization_id=org.id,
+            user_id=user.id, detail=f"{row.title} attachment {stored['name']}")
+        db.commit()
+    except Exception as exc:  # noqa: BLE001 - surface storage/DB failure in the flash
+        db.rollback()
+        if stored is not None:
+            await remove_attachment(stored["key"], stored["backend"])
+        return _redirect(f"/operations/documents?org={org.id}", error=str(exc))
+    if old_key and old_key != stored["key"]:
+        await remove_attachment(old_key, old_backend)
+    return _redirect(f"/operations/documents?org={org.id}", saved=True)
+
+
+@router.get("/operations/documents/{document_id}/attachment")
+def document_attachment_download(document_id: int,
+                                 user=Depends(get_current_user),
+                                 db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    row = db.get(models.ComplianceDocument, document_id)
+    if row is None or _org_or_none(db, user, row.organization_id) is None:
+        return Response("not found", status_code=404, media_type="text/plain")
+    if not row.attachment_key:
+        return Response("no attachment", status_code=404, media_type="text/plain")
+    remote = attachment_url(row.attachment_key, row.attachment_backend)
+    if remote:
+        return RedirectResponse(remote, status_code=307)
+    try:
+        path = local_path(row.attachment_key)
+    except AttachmentError:
+        return Response("not found", status_code=404, media_type="text/plain")
+    if not path.is_file():
+        return Response("not found", status_code=404, media_type="text/plain")
+    return FileResponse(
+        path, filename=row.attachment_name,
+        media_type=row.attachment_type or "application/octet-stream")
 
 
 @router.post("/operations/documents/{document_id}/renew")

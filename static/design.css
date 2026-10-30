@@ -2024,3 +2024,44 @@ body.app-shell .theme-current {
 }
 body.app-shell .theme-current strong { color: var(--ink); font-size: 13px; }
 body.app-shell .theme-current span { color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+/* Compliance attachments */
+.ops-attachment {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 5px;
+  color: var(--amber);
+  font-size: 10.5px;
+  font-weight: 550;
+  line-height: 1.35;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.ops-attachment:hover { color: #ffd27a; }
+.ops-attach-menu { margin-top: 6px; }
+.ops-attach-menu summary {
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 10.5px;
+  list-style: none;
+}
+.ops-attach-menu summary::-webkit-details-marker { display: none; }
+.ops-attach-menu summary::after { content: " +"; color: var(--amber); }
+.ops-attach-menu[open] summary::after { content: " −"; }
+.ops-attach-menu form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.ops-attach-menu input[type="file"] {
+  max-width: 148px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--canvas-2);
+  color: var(--muted);
+  font-size: 9.5px;
+}

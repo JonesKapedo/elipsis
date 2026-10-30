@@ -982,6 +982,12 @@ class ComplianceDocument(Base):
     expires_on: Mapped[str | None] = mapped_column(String)
     status: Mapped[str | None] = mapped_column(String, default="active")
     note: Mapped[str | None] = mapped_column(Text)
+    attachment_name: Mapped[str | None] = mapped_column(String)
+    attachment_key: Mapped[str | None] = mapped_column(String)
+    attachment_backend: Mapped[str | None] = mapped_column(String)
+    attachment_size: Mapped[int | None] = mapped_column(Integer)
+    attachment_type: Mapped[str | None] = mapped_column(String)
+    attachment_uploaded_at: Mapped[str | None] = mapped_column(String)
     created_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
 
