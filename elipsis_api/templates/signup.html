@@ -1,38 +1,38 @@
 {% extends "base.html" %}
-{% block title %}Create a company account{% endblock %}
+{% block title %}Create a company account — {{ BRAND_NAME }}{% endblock %}
 {% block body_class %}page-auth{% endblock %}
 {% block content %}
 <div class="auth auth-pro">
   <section class="auth-pitch">
-    <p class="eyebrow">COMPANY ACCOUNTS</p>
-    <h1>Measure the operation before you change it.</h1>
-    <p class="lede">Create a company account, set up your operating profile, and turn one informed view into a scored baseline, a costed constraint, and a sequenced action plan.</p>
+    <p class="eyebrow">FOR LOGISTICS TEAMS</p>
+    <h1>Score the operation before you change it.</h1>
+    <p class="lede">Create a company workspace, answer plain-English questions about how work actually runs, and leave with a readiness score, the top constraint, and a 90-day plan — without a consultant workshop.</p>
     <ul class="auth-points">
       <li>
         <span class="auth-icon">1</span>
         <div>
-          <strong>Set the company context</strong>
-          <p class="muted">Sector, scale, geography, sites, services, and systems. This is what makes the output specific.</p>
+          <strong>Describe the company</strong>
+          <p class="muted">Sector, size, sites, and systems. Context makes the score specific to your operation.</p>
         </div>
       </li>
       <li>
         <span class="auth-icon">2</span>
         <div>
-          <strong>Choose how to assess</strong>
-          <p class="muted">Answer directly, or send a department questionnaire to the people closest to the work.</p>
+          <strong>Run the diagnostic</strong>
+          <p class="muted">Answer yourself, or send sections to people closest to dispatch, warehouse, or finance.</p>
         </div>
       </li>
       <li>
         <span class="auth-icon">3</span>
         <div>
-          <strong>Leave with a decision</strong>
-          <p class="muted">A readiness index, peer context, the operating constraint, and a 90-day plan.</p>
+          <strong>Act on the plan</strong>
+          <p class="muted">Readiness index, costed gap, and prioritised actions with owners and dates.</p>
         </div>
       </li>
     </ul>
     <div class="auth-pilot-note">
-      <strong>Closed pilot</strong>
-      <p>Company accounts are open. Automation and assessment partners join by invitation while the marketplace is in pilot.</p>
+      <strong>Company accounts are open</strong>
+      <p>Start free. Implementation partners join by invitation while the marketplace is in pilot.</p>
     </div>
   </section>
 
@@ -41,7 +41,7 @@
       <span class="mark" aria-hidden="true">{{ BRAND_MARK }}</span>
       <div>
         <strong>{{ BRAND_NAME }}</strong>
-        <span class="muted">{% if signup_type == 'bidder' %}New implementation partner account{% else %}New company account{% endif %}</span>
+        <span class="muted">{% if signup_type == 'bidder' %}Implementation partner signup{% else %}New company account{% endif %}</span>
       </div>
     </div>
 
@@ -55,7 +55,7 @@
     <form method="post" action="/signup" class="stack" novalidate>
       <input type="hidden" name="user_type" value="{{ signup_type|default('client') }}">
       <label for="name">Full name
-        <input id="name" name="name" required maxlength="120" placeholder="Alex Morgan"
+        <input id="name" name="name" required maxlength="120" placeholder="Your full name"
                value="{{ form.name if form else '' }}" autocomplete="name" autofocus>
       </label>
       <label for="email">Work email
@@ -75,7 +75,7 @@
       <button class="btn big full" type="submit">Create account and set up company →</button>
     </form>
 
-    <p class="auth-secure muted">By continuing you agree to use {{ BRAND_NAME }} for legitimate business assessment. Your company data stays private to your organisation.</p>
+    <p class="auth-secure muted">{{ BRAND_NAME }} is for legitimate business assessment. Your company data stays private to your organisation.</p>
   </section>
 </div>
 {% endblock %}
