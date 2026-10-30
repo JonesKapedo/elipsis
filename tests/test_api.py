@@ -674,6 +674,14 @@ def test_operations_ecosystem_round_trip(signed_in):
     attachment = client.get(f"/operations/documents/{doc_id}/attachment")
     assert attachment.status_code == 200
     assert attachment.content == b"%PDF-1.4 signed carrier terms"
+    replaced = client.post(f"/operations/documents/{doc_id}/attachment", data={
+        "organization_id": org_id},
+        files={"file": ("carrier-contract-v2.pdf", b"%PDF-1.4 revised terms",
+                        "application/pdf")},
+        follow_redirects=False)
+    assert replaced.status_code == 303
+    attachment = client.get(f"/operations/documents/{doc_id}/attachment")
+    assert attachment.content == b"%PDF-1.4 revised terms"
     renewed = client.post(f"/operations/documents/{doc_id}/renew", data={
         "organization_id": org_id, "expires_on": "2027-11-01"},
         follow_redirects=False)
