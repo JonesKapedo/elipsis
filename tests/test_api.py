@@ -662,11 +662,26 @@ def test_operations_ecosystem_round_trip(signed_in):
         "organization_id": org_id, "title": "Carrier contract", "doc_type": "contract",
         "reference": "CC-2026-9", "owner": "Commercial lead",
         "issued_on": "2026-01-01", "expires_on": "2026-11-01",
-        "note": "Annual renewal"}, follow_redirects=False)
+        "note": "Annual renewal"},
+        files={"file": ("carrier-contract.pdf", b"%PDF-1.4 signed carrier terms",
+                        "application/pdf")},
+        follow_redirects=False)
     assert document.status_code == 303
     docs = client.get(f"/operations/documents?org={org_id}")
     assert "Carrier contract" in docs.text
+    assert "carrier-contract.pdf" in docs.text
     doc_id = int(re.search(r'/operations/documents/(\d+)/renew', docs.text).group(1))
+    attachment = client.get(f"/operations/documents/{doc_id}/attachment")
+    assert attachment.status_code == 200
+    assert attachment.content == b"%PDF-1.4 signed carrier terms"
+    replaced = client.post(f"/operations/documents/{doc_id}/attachment", data={
+        "organization_id": org_id},
+        files={"file": ("carrier-contract-v2.pdf", b"%PDF-1.4 revised terms",
+                        "application/pdf")},
+        follow_redirects=False)
+    assert replaced.status_code == 303
+    attachment = client.get(f"/operations/documents/{doc_id}/attachment")
+    assert attachment.content == b"%PDF-1.4 revised terms"
     renewed = client.post(f"/operations/documents/{doc_id}/renew", data={
         "organization_id": org_id, "expires_on": "2027-11-01"},
         follow_redirects=False)
@@ -1357,3 +1372,47 @@ def test_activation_health_and_ticket_org_link():
         ticket = db.query(models.SupportTicket).filter_by(
             requester_email=email).one()
         assert ticket.organization_id == org_id
+
+
+def test_company_home_renders_the_selected_owned_company():
+    from fastapi.testclient import TestClient
+
+    from elipsis_api import models, security
+    from elipsis_api.database import SessionLocal
+    from elipsis_api.main import app
+
+    with TestClient(app) as home:
+        with SessionLocal() as db:
+            owner = models.User(
+                email="company-home@example.com", name="Home Owner", role="client",
+                user_type="client", password_hash=security.hash_password("company-home-pass"))
+            db.add(owner)
+            db.commit()
+            org = models.Organization(name="Home Logistics", industry="Logistics",
+                                      city="Mombasa", country="Kenya")
+            db.add(org)
+            db.commit()
+            db.add(models.OrgOwner(user_id=owner.id, organization_id=org.id,
+                                   role="owner", status="active"))
+            db.commit()
+            org_id = org.id
+
+        login = home.post("/login", data={
+            "email": "company-home@example.com", "password": "company-home-pass"},
+            follow_redirects=False)
+        assert login.status_code == 303
+        page = home.get(f"/company?org={org_id}")
+        assert page.status_code == 200
+        assert "Home Logistics" in page.text
+        assert "Set up your first company" not in page.text
+        assert "Company home" in page.text
+
+        sample = home.post("/operations/sample", data={"organization_id": org_id},
+                           follow_redirects=False)
+        assert sample.status_code == 303
+        ledger = home.get(f"/operations/metrics?org={org_id}")
+        assert ledger.status_code == 200
+        assert "KPI ledger" in ledger.text
+        export = home.get(f"/operations/export.json?org={org_id}")
+        assert export.status_code == 200
+        assert export.json()["metrics"]

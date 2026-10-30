@@ -18,25 +18,33 @@
   {% if assessment.review_due_at %}&nbsp;&middot;&nbsp; <span class="tag">Review due {{ assessment.review_due_at }}</span>{% endif %}</p>
   <div class="hero-actions" style="margin-top:0.75rem">
     {% if report_unlocked %}
-    <a class="btn" href="/assessment/{{ assessment.id }}/report.pdf">Download PDF <span class="premium-tag">Premium</span></a>
-    <a class="btn ghost" href="/assessment/{{ assessment.id }}/report">Print / board pack</a>
-    <a class="btn ghost" href="/assessment/{{ assessment.id }}/export.xlsx">Excel</a>
-    <a class="btn ghost" href="/assessment/{{ assessment.id }}/export.json">JSON</a>
-    <a class="btn ghost" href="#share-links">Share links</a>
-    <a class="btn ghost" href="/assessment/{{ assessment.id }}/invite">Ask the team</a>
+    <a class="btn" href="/assessment/{{ assessment.id }}/report">Print / board pack</a>
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/plan">90-day plan</a>
+    <details class="action-menu">
+      <summary class="btn ghost">Export &amp; share</summary>
+      <div class="action-menu-panel">
+        <a href="/assessment/{{ assessment.id }}/report.pdf">Download PDF <span class="premium-tag">Premium</span></a>
+        <a href="/assessment/{{ assessment.id }}/export.xlsx">Export Excel</a>
+        <a href="/assessment/{{ assessment.id }}/export.json">Export JSON</a>
+        <a href="#share-links">Share links</a>
+        <a href="/assessment/{{ assessment.id }}/invite">Ask the team</a>
+      </div>
+    </details>
     {% else %}
     <a class="btn" href="/pro?locked=reports">Unlock report pack <span class="crown" title="Premium">{% include "partials/crown.svg" %}</span></a>
     <a class="btn ghost" href="/pro?locked=team">Ask the team <span class="crown" title="Premium">{% include "partials/crown.svg" %}</span></a>
     {% endif %}
-    <a class="btn ghost" href="/assessment/{{ assessment.id }}/plan">90-day plan</a>
-    <a class="btn ghost" href="/assessment/{{ assessment.id }}/summary">One-page summary</a>
-    <a class="btn ghost" href="/assessment/{{ assessment.id }}/narrative">Board narrative</a>
-    <a class="btn ghost" href="/assessment/{{ assessment.id }}/evidence">Evidence</a>
-    <a class="btn ghost" href="/assessment/{{ assessment.id }}/badge">Readiness badge</a>
-    {% if organization %}
-    <a class="btn ghost" href="/compare/{{ organization.id }}">Compare departments</a>
-    {% endif %}
-    <a class="btn ghost" href="/start">New assessment</a>
+    <details class="action-menu">
+      <summary class="btn ghost">More views</summary>
+      <div class="action-menu-panel">
+        <a href="/assessment/{{ assessment.id }}/summary">One-page summary</a>
+        <a href="/assessment/{{ assessment.id }}/narrative">Board narrative</a>
+        <a href="/assessment/{{ assessment.id }}/evidence">Evidence</a>
+        <a href="/assessment/{{ assessment.id }}/badge">Readiness badge</a>
+        {% if organization %}<a href="/compare/{{ organization.id }}">Compare departments</a>{% endif %}
+        <a href="/start">New assessment</a>
+      </div>
+    </details>
   </div>
   {% if not report_unlocked %}
   <div class="premium-note">
@@ -128,7 +136,6 @@
     <div class="kpi"><span>Current annual cost</span><b>{{ result.financial.current_cost|money }}</b></div>
     <div class="kpi"><span>Projected annual cost</span><b>{{ result.financial.future_cost|money }}</b></div>
     <div class="kpi accent"><span>Cost of inaction</span><b>{{ (result.financial.current_cost - result.financial.future_cost)|money }}</b></div>
-    <div class="kpi"><span>Annual savings potential</span><b>{{ result.financial.annual_savings|money }}</b></div>
   </div>
   <p class="muted">Financial figures are management estimates, not audited results. All inputs are listed under
     <a href="#assumptions">Assumptions and method</a> and can be edited.</p>

@@ -37,7 +37,11 @@
         <tbody>
           {% for item in rows %}
           <tr>
-            <td><strong>{{ item.row.title }}</strong><br><span class="muted small">{{ item.row.doc_type|title }}{% if item.row.reference %} · {{ item.row.reference }}{% endif %} · {{ org_names.get(item.row.organization_id, '') }}</span></td>
+            <td><strong>{{ item.row.title }}</strong><br><span class="muted small">{{ item.row.doc_type|title }}{% if item.row.reference %} · {{ item.row.reference }}{% endif %} · {{ org_names.get(item.row.organization_id, '') }}</span>
+              {% if item.row.attachment_name %}
+              <br><a class="ops-attachment" href="/operations/documents/{{ item.row.id }}/attachment">{{ item.row.attachment_name }}{% if item.row.attachment_size %} · {{ (item.row.attachment_size / 1024)|round|int }} KB{% endif %}</a>
+              {% endif %}
+            </td>
             <td>{{ item.row.owner or '—' }}</td>
             <td>{{ item.row.expires_on }}<br><span class="ops-pill ops-state-{{ item.state }}">{{ item.label }}</span></td>
             <td><span class="tag {{ 'ok' if item.row.status == 'active' else '' }}">{{ item.row.status }}</span></td>
@@ -54,6 +58,14 @@
                   <button class="btn ghost sm" type="submit">Archive</button>
                 </form>
               </div>
+              <details class="ops-attach-menu">
+                <summary>{{ 'Replace file' if item.row.attachment_name else 'Attach file' }}</summary>
+                <form method="post" enctype="multipart/form-data" action="/operations/documents/{{ item.row.id }}/attachment">
+                  <input type="hidden" name="organization_id" value="{{ item.row.organization_id }}">
+                  <input name="file" type="file" required accept=".pdf,.doc,.docx,.txt,.xlsx,.xls,.csv" aria-label="Attach file to {{ item.row.title }}">
+                  <button class="btn ghost sm" type="submit">Upload</button>
+                </form>
+              </details>
               {% else %}
               <span class="muted small">No action</span>
               {% endif %}
@@ -68,7 +80,7 @@
     {% endif %}
   </div>
 
-  <form method="post" action="/operations/documents" class="block stack">
+  <form method="post" enctype="multipart/form-data" action="/operations/documents" class="block stack">
     <h3>Add a document</h3>
     <label>Organisation
       <select name="organization_id" required>
@@ -88,6 +100,8 @@
       <label>Expires on <input name="expires_on" type="date" required></label>
     </div>
     <label>Note <textarea name="note" rows="2" placeholder="Cover, scope, renewal contact"></textarea></label>
+    <label>Attach the document <input name="file" type="file" accept=".pdf,.doc,.docx,.txt,.xlsx,.xls,.csv"></label>
+    <span class="field-note">Optional. PDF, Word, Excel, CSV, or text; up to 50 MB.</span>
     <button class="btn" type="submit" {% if not organizations %}disabled{% endif %}>Add document</button>
   </form>
 </section>

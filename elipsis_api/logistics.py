@@ -5,6 +5,7 @@ from __future__ import annotations
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from constants import SUBDOMAIN_LABELS
 from elipsis_api import models
 
 LANES = (
@@ -59,6 +60,26 @@ def _reading(score: float | None) -> str:
     return "Strong — protect and measure"
 
 
+def _lane_consequence(key: str) -> str:
+    return {
+        "dispatch": "Jobs wait for people instead of moving on their own.",
+        "documents": "Proof is chased after the fact instead of following the load.",
+        "capacity": "Commitments are made before the available capacity is visible.",
+        "warehouse": "Stock and job data are doubted at the point of decision.",
+        "cash": "Completed work leaks margin before it becomes cash.",
+        "customer": "Customers call for status that should already be visible.",
+    }.get(key, "The handoff is still person-dependent.")
+
+
+def _lane_reading(lane: dict, values: list[tuple[str, float]], score: float | None) -> str:
+    if score is None or not values:
+        return "No completed assessment yet"
+    code, weakest = min(values, key=lambda row: row[1])
+    label = SUBDOMAIN_LABELS.get(code, code)
+    return (f"Weakest link: {label} at {weakest:.0f}/100. "
+            f"{_lane_consequence(lane['key'])}")
+
+
 def latest_completed_ids(db: Session, org_ids: list[int] | None = None) -> list[int]:
     rows = db.scalars(select(models.Assessment).where(
         models.Assessment.status == "completed").order_by(
@@ -94,9 +115,10 @@ def snapshot(db: Session, assessment_ids: list[int] | None = None,
 
     lanes = []
     for lane in LANES:
-        values = [scores[code] for code in lane["subdomains"] if code in scores]
-        score = round(sum(values) / len(values), 1) if values else None
-        lanes.append({**lane, "score": score, "reading": _reading(score)})
+        values = [(code, scores[code]) for code in lane["subdomains"] if code in scores]
+        score = round(sum(value for _, value in values) / len(values), 1) if values else None
+        lanes.append({**lane, "score": score,
+                      "reading": _lane_reading(lane, values, score)})
     measured = [lane for lane in lanes if lane["score"] is not None]
     weakest = min(measured, key=lambda lane: lane["score"]) if measured else None
     return {"lanes": lanes, "weakest": weakest, "measured": len(measured)}

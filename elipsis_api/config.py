@@ -163,6 +163,22 @@ DATABASE_URL = resolve_database_url()
 HOST = _setting("ELIPSIS_HOST", "TURBINEZ_HOST", "127.0.0.1")
 PORT = int(_setting("ELIPSIS_PORT", "TURBINEZ_PORT", "8001"))
 SESSION_COOKIE = "elipsis_session"
+
+
+def _upload_dir() -> Path:
+    """Durable local upload directory, or a temp fallback on read-only hosts."""
+    configured = (os.getenv("ELIPSIS_UPLOAD_DIR") or "").strip()
+    if configured:
+        return Path(configured).expanduser()
+    base = BASE_DIR / "data" / "uploads"
+    if _writable_dir(base):
+        return base
+    fallback = Path(tempfile.gettempdir()) / "elipsis" / "uploads"
+    fallback.mkdir(parents=True, exist_ok=True)
+    return fallback
+
+
+UPLOAD_DIR = _upload_dir()
 MARKETPLACE_ENABLED = os.getenv("ELIPSIS_MARKETPLACE_ENABLED", "0").strip().lower() in {"1", "true", "yes"}
 
 SUPABASE_URL = (os.getenv("SUPABASE_URL") or "").strip().rstrip("/")
