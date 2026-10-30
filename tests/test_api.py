@@ -1391,3 +1391,13 @@ def test_company_home_renders_the_selected_owned_company():
         assert "Home Logistics" in page.text
         assert "Set up your first company" not in page.text
         assert "Company home" in page.text
+
+        sample = home.post("/operations/sample", data={"organization_id": org_id},
+                           follow_redirects=False)
+        assert sample.status_code == 303
+        ledger = home.get(f"/operations/metrics?org={org_id}")
+        assert ledger.status_code == 200
+        assert "KPI ledger" in ledger.text
+        export = home.get(f"/operations/export.json?org={org_id}")
+        assert export.status_code == 200
+        assert export.json()["metrics"]

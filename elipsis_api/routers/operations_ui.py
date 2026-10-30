@@ -126,7 +126,7 @@ def metrics_page(request: Request, user=Depends(get_current_user),
         row["spark"] = sparks.get(row["metric"].metric_key, [])
         row["spark_points"] = services_operations.spark_points(row["spark"])
     readings = []
-    for row in services_operations.metric_history(ctx["scope"], key, limit=80):
+    for row in services_operations.metric_history(db, ctx["scope"], key, limit=80):
         readings.append({"row": row, **{
             "label": services_operations.METRIC_CATALOG.get(
                 row.metric_key, {}).get("label", row.metric_key),
