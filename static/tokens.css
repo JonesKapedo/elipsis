@@ -1,0 +1,90 @@
+/* ==========================================================================
+   Elipsis — canonical design tokens
+   SINGLE SOURCE OF TRUTH. Loaded first in base.html.
+
+   Rules:
+   - No component rules in this file. Tokens only.
+   - No other stylesheet may declare a light-mode :root.
+   - Add new tokens here, then consume them everywhere.
+   - Dark mode overrides live in theme.css under html[data-theme="dark"].
+   - Per-element runtime vars (--i, --pct, --pulse, --room-accent,
+     --report-accent) are intentionally NOT defined here.
+   ========================================================================== */
+
+:root {
+  /* ---- Ink & surfaces -------------------------------------------------- */
+  --asphalt: #0b1220;
+  --asphalt-2: #111c2e;
+  --asphalt-3: #18263d;
+  --ink: #151b26;
+  --ink-2: #344054;
+  --muted: #667085;
+  --muted-2: #8a94a6;
+  --line: #e2e6ea;
+  --line-strong: #cdd4dc;
+  --surface: #ffffff;
+  --canvas: #f5f6f7;
+  --canvas-2: #fafbfc;
+
+  /* ---- Accent (single) ------------------------------------------------- */
+  --amber: #f5a623;
+  --amber-ink: #211603;
+  --amber-soft: #fff6e5;
+
+  /* ---- Status only ----------------------------------------------------- */
+  --blue: #2563eb;
+  --green: #15803d;
+  --green-soft: #e9f7ee;
+  --red: #b42318;
+  --red-soft: #fef3f2;
+  --orange: #b54708;
+  --orange-soft: #fff4e8;
+
+  /* ---- Shape ----------------------------------------------------------- */
+  --radius: 7px;
+  --radius-sm: 5px;
+  --shadow: 0 12px 28px -18px rgba(11, 18, 32, 0.28);
+  --shadow-sm: 0 1px 2px rgba(11, 18, 32, 0.05);
+  --shadow-soft: 0 1px 0 rgba(11, 18, 32, 0.03);
+
+  /* ---- Type ------------------------------------------------------------ */
+  --sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --serif: "IBM Plex Serif", Georgia, serif;
+  --mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+
+  /* ---- Legacy aliases (do not use in new work) ------------------------- */
+  --navy: var(--asphalt);
+  --navy-2: var(--asphalt-2);
+  --navy-3: var(--asphalt-3);
+  --paper: var(--canvas);
+  --mist: #8e9bb0;
+  --accent: var(--amber);
+  --accent-ink: var(--amber-ink);
+  --accent-bright: #ffb733;
+  --accent-soft: rgba(245, 166, 35, 0.14);
+  --good: var(--green);
+  --bad: var(--red);
+  --warn: var(--orange);
+  --panel: var(--surface);
+  --panel2: var(--canvas-2);
+  --soft: var(--ink-2);
+  --bg: var(--canvas);
+  --bg2: var(--canvas-2);
+  --line2: var(--line-strong);
+  --r: var(--radius);
+  --r-sm: var(--radius-sm);
+  --font: var(--sans);
+  --grad: var(--amber);
+  --ring: 0 0 0 3px rgba(245, 166, 35, 0.28);
+  --teal: #0f766e;
+  --teal-soft: rgba(15, 118, 110, 0.1);
+  --field-bg: var(--canvas-2);
+  --field-border: var(--line-strong);
+  --field-focus: rgba(245, 166, 35, 0.18);
+  --gold: var(--amber);
+  --gold-deep: #b45309;
+  --ink-blue: var(--asphalt);
+  --ink-blue-2: var(--asphalt-2);
+  --paper-warm: var(--canvas);
+  --focus: 0 0 0 3px rgba(245, 166, 35, 0.3);
+}

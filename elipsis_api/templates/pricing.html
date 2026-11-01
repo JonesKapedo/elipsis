@@ -4,55 +4,28 @@
 <section class="mk-wrap mk-section" style="padding-top:64px">
   <div class="mk-section-head">
     <p class="mk-eyebrow">Pricing</p>
-    <h2>Start with the diagnosis. Pay for the decision.</h2>
-    <p class="section-lede">See your {{ INDEX_NAME }}, the constraints holding the business back, and the first 90-day plan. Then decide whether to implement with Great Turbinez or publish the work to verified partners.</p>
+    <h2>Price the constraint. Decide with a document.</h2>
+    <p class="section-lede">Start with the free Pulse diagnostic. Buy the Constraint Report when you need the costed exposure, the 90-day plan, and the board pack.</p>
   </div>
 
   <div class="mk-pricing">
-    <article class="mk-price">
-      <p class="price-label">Free diagnostic</p>
-      <h3>$0</h3>
-      <p class="price-note">One company · one operating unit · no card</p>
+    {% for sku in skus %}
+    <article class="mk-price{% if sku.featured %} featured{% endif %}">
+      <p class="price-label">{{ sku.name }}</p>
+      <h3>
+        {% if sku.price_usd == 0 %}$0{% else %}${{ '{:,}'.format(sku.price_usd) }} <small>{% if sku.billing == 'one_time' %}once{% elif sku.billing == 'monthly' %}/ month{% elif sku.billing == 'yearly' %}/ year{% endif %}</small>{% endif %}
+      </h3>
+      <p class="price-note">{{ sku.tagline }} {{ sku.note }}</p>
+      {% if sku.annual_price_usd %}<p class="price-note">Or ${{ '{:,}'.format(sku.annual_price_usd) }} / year.</p>{% endif %}
       <ul>
-        <li>Full 63-question logistics diagnostic</li>
-        <li>{{ INDEX_NAME }} and maturity band</li>
-        <li>Top three constraints, ranked</li>
-        <li>Sample 90-day plan</li>
-        <li>On-screen only. No export or full report.</li>
+        {% for feature in sku.features %}<li>{{ feature }}</li>{% endfor %}
       </ul>
-      <a class="btn secondary" href="/signup">Start free</a>
+      <a class="btn{% if not sku.featured %} secondary{% endif %}" href="{{ sku.href }}">{{ sku.cta }}{% if sku.featured %} <svg class="icon"><use href="#i-arrow"/></svg>{% endif %}</a>
+      {% if sku.proof %}<p class="mk-price-proof">{{ sku.proof }}</p>{% endif %}
     </article>
-
-    <article class="mk-price featured">
-      <p class="price-label">Full Assessment</p>
-      <h3>$49 <small>once</small></h3>
-      <p class="price-note">One assessment · three partner introductions</p>
-      <ul>
-        <li>Full {{ INDEX_NAME }}, confidence, and 36 metrics</li>
-        <li>Costed constraints and financial assumptions</li>
-        <li>90-day plan with owners, dates, and KPIs</li>
-        <li>PDF, Excel, JSON, and board pack</li>
-        <li>Read-only share links and team annotations</li>
-        <li>One implementation request with three introductions</li>
-      </ul>
-      <a class="btn" href="/pro">Unlock Full Assessment <svg class="icon"><use href="#i-arrow"/></svg></a>
-    </article>
-
-    <article class="mk-price">
-      <p class="price-label">Operator subscription</p>
-      <h3>${{ premium_plans.monthly.price }} <small>/ month</small></h3>
-      <p class="price-note">Or ${{ premium_plans.annual.price }} / year · cancel before renewal</p>
-      <ul>
-        <li>Unlimited assessments and switches</li>
-        <li>Exports, board packs, and sharing</li>
-        <li>Team collaboration and annotations</li>
-        <li>Operating rhythm reviews</li>
-        <li>Existing Premium access continues until expiry</li>
-      </ul>
-      <a class="btn secondary" href="/pro">Start subscription</a>
-    </article>
+    {% endfor %}
   </div>
-  <p class="mk-price-note">Prices are in USD. Subscriptions renew through Paystack and can be cancelled before renewal. A switch top-up is ${{ '%.2f'|format(24.50) }} for three additional introductions.</p>
+  <p class="mk-price-note">Prices are in USD and exclusive of taxes. The report is a one-time purchase with perpetual access. Operator renews through Paystack and can be cancelled before renewal. Cost figures are indicative and based on your inputs.</p>
 </section>
 
 <section class="mk-wrap mk-section">
@@ -61,25 +34,29 @@
     <h2>What you get at each level</h2>
   </div>
   <div class="block" style="overflow-x:auto">
-    <table class="data-table" style="width:100%;min-width:520px;border-collapse:collapse">
+    <table class="data-table" style="width:100%;min-width:620px;border-collapse:collapse">
       <thead>
         <tr>
           <th style="text-align:left;padding:0.75rem">Capability</th>
-          <th style="padding:0.75rem">Free</th>
-          <th style="padding:0.75rem">Full $49</th>
+          <th style="padding:0.75rem">Pulse</th>
+          <th style="padding:0.75rem">Report</th>
+          <th style="padding:0.75rem">Facilitated</th>
           <th style="padding:0.75rem">Operator</th>
         </tr>
       </thead>
       <tbody>
-        <tr><td style="padding:0.6rem 0.75rem">63-question diagnostic + Index</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
-        <tr><td style="padding:0.6rem 0.75rem">Top constraints ranked</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
-        <tr><td style="padding:0.6rem 0.75rem">36 executive metrics + confidence</td><td style="text-align:center">—</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
-        <tr><td style="padding:0.6rem 0.75rem">Costed constraints + assumptions</td><td style="text-align:center">—</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
-        <tr><td style="padding:0.6rem 0.75rem">PDF / Excel / JSON / board pack</td><td style="text-align:center">—</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
-        <tr><td style="padding:0.6rem 0.75rem">Share links + team annotations</td><td style="text-align:center">—</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
-        <tr><td style="padding:0.6rem 0.75rem">Partner introductions</td><td style="text-align:center">—</td><td style="text-align:center">3</td><td style="text-align:center">Unlimited</td></tr>
-        <tr><td style="padding:0.6rem 0.75rem">Unlimited assessments</td><td style="text-align:center">—</td><td style="text-align:center">—</td><td style="text-align:center">✓</td></tr>
-        <tr><td style="padding:0.6rem 0.75rem">Operating rhythm reviews</td><td style="text-align:center">—</td><td style="text-align:center">—</td><td style="text-align:center">✓</td></tr>
+        <tr><td style="padding:0.6rem 0.75rem">Index, band, and confidence</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
+        <tr><td style="padding:0.6rem 0.75rem">Top three constraint names</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
+        <tr><td style="padding:0.6rem 0.75rem">One sample action</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
+        <tr><td style="padding:0.6rem 0.75rem">Constraint narrative</td><td style="text-align:center">—</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
+        <tr><td style="padding:0.6rem 0.75rem">Costed $ model and assumptions</td><td style="text-align:center">—</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
+        <tr><td style="padding:0.6rem 0.75rem">36 executive metrics</td><td style="text-align:center">—</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
+        <tr><td style="padding:0.6rem 0.75rem">90-day plan</td><td style="text-align:center">—</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
+        <tr><td style="padding:0.6rem 0.75rem">Board-pack PDF and share link</td><td style="text-align:center">—</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
+        <tr><td style="padding:0.6rem 0.75rem">Review call</td><td style="text-align:center">—</td><td style="text-align:center">—</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
+        <tr><td style="padding:0.6rem 0.75rem">Implementer introductions</td><td style="text-align:center">—</td><td style="text-align:center">—</td><td style="text-align:center">3</td><td style="text-align:center">✓</td></tr>
+        <tr><td style="padding:0.6rem 0.75rem">Action board and team seats</td><td style="text-align:center">—</td><td style="text-align:center">90 days</td><td style="text-align:center">90 days</td><td style="text-align:center">✓</td></tr>
+        <tr><td style="padding:0.6rem 0.75rem">Re-score</td><td style="text-align:center">✓</td><td style="text-align:center">Free</td><td style="text-align:center">Free</td><td style="text-align:center">✓</td></tr>
       </tbody>
     </table>
   </div>
@@ -87,54 +64,12 @@
 
 <section class="mk-wrap mk-section">
   <div class="mk-section-head">
-    <p class="mk-eyebrow">Implementation</p>
-    <h2>Turn the plan into change. No platform commission.</h2>
-    <p class="section-lede">Request implementation from Great Turbinez, our trusted partner, or publish the brief to verified implementation companies. The assessment summary is attached automatically.</p>
-  </div>
-  <div class="mk-cards">
-    <article class="mk-card">
-      <p class="card-num">01 / DIRECT</p>
-      <h3>Work with Great Turbinez</h3>
-      <p>Send the brief directly to our trusted implementation partner. The scope, constraints, and assumptions travel with it.</p>
-    </article>
-    <article class="mk-card">
-      <p class="card-num">02 / MARKETPLACE</p>
-      <h3>Publish to verified partners</h3>
-      <p>Publish the brief to implementation companies, review bids, and choose the team that fits the work.</p>
-    </article>
-    <article class="mk-card">
-      <p class="card-num">03 / NO MARK-UP</p>
-      <h3>The contract stays between you</h3>
-      <p>Elipsis does not take a commission on the implementation contract. Partners pay for verified access to serious briefs.</p>
-    </article>
+    <p class="mk-eyebrow">For consultants and implementers</p>
+    <h2>Use the report with your clients.</h2>
+    <p class="section-lede">Partners run Elipsis across multiple clients, deliver a white-labelled report, and get priority introductions. We do not take a commission on your implementation work.</p>
   </div>
   <div class="mk-hero-actions">
-    <a class="btn" href="/marketplace">Explore the marketplace <svg class="icon"><use href="#i-arrow"/></svg></a>
-    <a class="btn secondary" href="/partners">How partners work</a>
-  </div>
-</section>
-
-<section class="mk-wrap mk-section">
-  <div class="mk-section-head">
-    <p class="mk-eyebrow">Why this structure holds up</p>
-    <h2>You see the output before you see an invoice.</h2>
-  </div>
-  <div class="mk-workflow">
-    <article class="mk-step">
-      <p class="step-n">01 / DIAGNOSIS</p>
-      <h3>The diagnosis is free</h3>
-      <p>You see your own number before paying. The paid report is for the decision, the board pack, and the implementation brief — not for access to the score.</p>
-    </article>
-    <article class="mk-step">
-      <p class="step-n">02 / FULL ASSESSMENT</p>
-      <h3>One assessment, one clear price</h3>
-      <p>$49 unlocks a single full assessment and three partner introductions. No consulting calendar and no hidden implementation mark-up.</p>
-    </article>
-    <article class="mk-step">
-      <p class="step-n">03 / SUBSCRIPTION</p>
-      <h3>For teams that re-score</h3>
-      <p>Operators running repeated reviews get unlimited assessments, unlimited switches, exports, and collaboration for ${{ premium_plans.monthly.price }} a month.</p>
-    </article>
+    <a class="btn secondary" href="/partners">How partners work <svg class="icon"><use href="#i-arrow"/></svg></a>
   </div>
 </section>
 
@@ -145,28 +80,33 @@
   </div>
   <div class="mk-cards">
     <article class="mk-card">
-      <p class="card-num">01 / ONE-TIME</p>
-      <h3>Why is the assessment cheaper than a subscription?</h3>
-      <p>Because it covers one assessment and three introductions. A subscription is for teams that re-score regularly and need unlimited implementation switches.</p>
+      <p class="card-num">01 / PRICE</p>
+      <h3>Why does the report cost $499?</h3>
+      <p>It replaces a week of on-site discovery with a structured document: costed exposure, assumptions, a 90-day plan, and a board pack. Comparable diagnostics often start at $2,000+.</p>
     </article>
     <article class="mk-card">
-      <p class="card-num">02 / TOP-UP</p>
-      <h3>What happens after three introductions?</h3>
-      <p>You can buy a top-up for three more at ${{ '%.2f'|format(24.50) }}. Subscribers do not need top-ups.</p>
+      <p class="card-num">02 / FREE</p>
+      <h3>What stays free?</h3>
+      <p>Your index, maturity band, confidence, the names of your top three constraints, and one sample action. No card required.</p>
     </article>
     <article class="mk-card">
       <p class="card-num">03 / COMMISSION</p>
       <h3>Do you take a cut of implementation work?</h3>
-      <p>No. Partners pay a subscription for verified access. Elipsis does not charge a commission on the work you agree with them.</p>
+      <p>No. Partners pay a subscription for the workspace. Elipsis does not charge a commission on the work you agree with them.</p>
+    </article>
+    <article class="mk-card">
+      <p class="card-num">04 / REFUNDS</p>
+      <h3>What if the report is not right?</h3>
+      <p>Full refund within 14 days if the report has not been downloaded. After download, we will re-run it once at no charge.</p>
     </article>
   </div>
 </section>
 
 <section class="mk-wrap mk-cta">
-  <h2>See the output before you see an invoice.</h2>
+  <h2>See the report shape before you spend a dollar.</h2>
   <div class="actions">
     <a class="btn primary" href="/sample">View sample report <svg class="icon"><use href="#i-arrow"/></svg></a>
-    <a class="btn secondary" href="/signup">Start free</a>
+    <a class="btn secondary" href="/signup">Start free assessment</a>
   </div>
 </section>
 {% endblock %}

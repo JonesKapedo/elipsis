@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import os
+import secrets
 from datetime import date, timedelta
 
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import RedirectResponse, Response
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -18,6 +20,7 @@ from elipsis_api import (
     services_digest,
     services_ops,
     services_outreach,
+    services_reengage,
 )
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
@@ -361,3 +364,19 @@ def verify_page(token: str, request: Request):
     return templates.TemplateResponse(request, "verify.html", {
         "user": None, "payload": payload,
     })
+
+
+def _task_allowed(request: Request, user) -> bool:
+    expected = os.getenv("ELIPSIS_TASK_TOKEN", "")
+    supplied = request.query_params.get("token", "")
+    if expected and supplied and secrets.compare_digest(supplied, expected):
+        return True
+    return user is not None and services.is_admin(user)
+
+
+@router.api_route("/admin/tasks/rescore-reminders", methods=["GET", "POST"])
+def rescore_reminders_task(request: Request, user=Depends(get_current_user),
+                           db: Session = Depends(get_db)):
+    if not _task_allowed(request, user):
+        return JSONResponse({"error": "forbidden"}, status_code=403)
+    return JSONResponse(services_reengage.send_due_rescores(db))
