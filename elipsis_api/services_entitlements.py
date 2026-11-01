@@ -112,8 +112,14 @@ def has(
     return db.scalar(stmt) is not None
 
 
-def settle_report(db: Session, payment: models.Payment) -> models.Entitlement | None:
-    """Mark the report order paid and grant the report entitlement."""
+def settle_order(
+    db: Session,
+    payment: models.Payment,
+    *,
+    sku: str,
+    kind: str | None = None,
+) -> models.Entitlement | None:
+    """Mark an assessment-linked order paid and grant its entitlement."""
     if not payment.user_id or not payment.related_id:
         return None
     assessment = db.get(models.Assessment, payment.related_id)
@@ -124,22 +130,50 @@ def settle_report(db: Session, payment: models.Payment) -> models.Entitlement | 
         order = open_order(
             db,
             user_id=payment.user_id,
-            sku="report",
+            sku=sku,
             assessment_id=assessment.id,
             organization_id=assessment.organization_id,
             provider="paystack",
             provider_reference=payment.reference,
-            amount_minor=payment.amount_minor or catalog.amount_minor("report"),
-            description=f"Constraint Report for assessment {assessment.id}",
+            amount_minor=payment.amount_minor or catalog.amount_minor(sku),
+            description=f"{catalog.label(sku)} for assessment {assessment.id}",
         )
     order.status = "paid"
     order.paid_at = _now()
     return grant(
         db,
         user_id=payment.user_id,
-        sku="report",
+        sku=sku,
         order_id=order.id,
         assessment_id=assessment.id,
         organization_id=assessment.organization_id,
-        kind="report",
+        kind=kind or sku,
     )
+
+
+def settle_report(db: Session, payment: models.Payment) -> models.Entitlement | None:
+    return settle_order(db, payment, sku="report", kind="report")
+
+
+def settle_facilitated(db: Session, payment: models.Payment) -> models.Entitlement | None:
+    """Facilitated includes the report, so grant both against one order."""
+    entitlement = settle_order(db, payment, sku="facilitated", kind="facilitated")
+    order = order_for_reference(db, payment.reference)
+    if entitlement is not None and order is not None and payment.related_id:
+        assessment = db.get(models.Assessment, payment.related_id)
+        assessment_id = assessment.id if assessment else None
+        organization_id = assessment.organization_id if assessment else None
+        grant(
+            db,
+            user_id=payment.user_id,
+            sku="report",
+            order_id=order.id,
+            assessment_id=assessment_id,
+            organization_id=organization_id,
+            kind="report",
+        )
+    return entitlement
+
+
+def has_facilitated(db: Session, user_id: int, assessment_id: int) -> bool:
+    return has(db, user_id, "facilitated", assessment_id)

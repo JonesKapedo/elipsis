@@ -73,7 +73,7 @@ SKUS: dict[str, dict] = {
         "billing": "monthly",
         "annual_price_usd": 999,
         "tagline": "Run the plan after the report.",
-        "note": "Cancel before renewal.",
+        "note": "31 days of Operator.",
         "features": [
             "Action board with owners and dates",
             "Team seats and shared tracking",
@@ -90,7 +90,7 @@ SKUS: dict[str, dict] = {
         "price_usd": 999,
         "billing": "yearly",
         "tagline": "Two months free.",
-        "note": "Billed once a year.",
+        "note": "365 days of Operator.",
         "features": [
             "Everything in Operator monthly",
             "Two months free",

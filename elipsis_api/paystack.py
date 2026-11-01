@@ -119,3 +119,30 @@ def verify_webhook(payload: bytes, signature: str | None) -> bool:
         return False
     expected = hmac.new(SECRET.encode(), payload, hashlib.sha512).hexdigest()
     return hmac.compare_digest(expected, signature)
+
+
+def disable_subscription(code: str, token: str | None) -> bool:
+    """Stop future charges for a Paystack plan. Access runs to period end."""
+    ensure_configured()
+    if not code:
+        return False
+    if is_dummy():
+        return True
+    payload = {"code": code}
+    if token:
+        payload["token"] = token
+    req = urllib.request.Request(
+        "https://api.paystack.co/subscription/disable",
+        data=json.dumps(payload).encode(),
+        headers={
+            "Authorization": f"Bearer {SECRET}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            return 200 <= resp.status < 300
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode(errors="replace")
+        raise RuntimeError(f"Paystack disable subscription failed: {detail}") from exc

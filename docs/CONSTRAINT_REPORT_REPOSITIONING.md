@@ -1,6 +1,6 @@
 # Elipsis — Constraint Report Repositioning
 
-Status: Phase 1 complete (tests green)
+Status: Phase 1 complete; Phase 2 revenue surfaces built (tests green)
 Owner: Founder
 Last updated: 2026-11-01
 
@@ -254,7 +254,7 @@ reachable without a subscription.
 
 ### 9.3 Free/paid template
 
-`results.html` gates the appendix with `{% if report_unlocked %}`. The page is
+`results.html` gates the appendix with a `report_unlocked` conditional. The page is
 now ordered summary strip -> money -> constraint narrative -> index -> lanes ->
 90-day plan -> PDF rail. Free users see the index, band, confidence, and top-3
 names only.
@@ -470,10 +470,19 @@ Desktop and mobile:
 
 ### Phase 2 — Revenue
 
+Built:
+
+- Facilitated Report checkout ($1,900), booking workspace, and report entitlement bundle.
+- Billing history, printable receipts, entitlement list, and subscription renewal cancellation.
+- Operator page rewritten around execution, with renewal terms and billing links.
+- Public refund policy; trust nav, footer, robots, and sitemap updated.
+- Receipt and checkout copy state USD pricing and tax treatment.
+
+External gates:
+
 - Entity registered, Paystack KYC, first live $499 charge end-to-end.
-- Sample report and methodology page live.
 - 10 design-partner calls; 3 facilitated delivered.
-- Refund/chargeback policy published.
+- Tax/VAT/eTIMS confirmation before first Kenyan invoice.
 
 ### Phase 3 — Scale
 
@@ -491,7 +500,7 @@ Do not publish $499 until all are true:
 - [ ] Business registered; Paystack KYC approved.
 - [ ] Real test charge produces a downloadable report.
 - [ ] PDF matches on-screen order and includes the disclaimer.
-- [ ] Refund and chargeback policy published.
+- [x] Refund and chargeback policy published.
 - [ ] ToS, privacy, DPA reviewed.
 - [ ] Paid report is not redirected to `/pro`.
 - [ ] Marketplace absent from client nav.

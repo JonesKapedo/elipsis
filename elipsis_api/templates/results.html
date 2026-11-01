@@ -321,10 +321,17 @@
       <p class="muted">We introduce you to a vetted contract-logistics operator for the first constraint. Elipsis does not take a commission.</p>
       <a class="btn ghost sm" href="/support?topic=intros">Request an introduction →</a>
     </article>
-    <article>
-      <h4>Facilitated review</h4>
-      <p class="muted">Report plus a 60–90 minute working session and three introductions, delivered by the founder.</p>
-      <a class="btn ghost sm" href="/contact?sku=facilitated">Ask about facilitated →</a>
+    <article id="facilitated">
+      <h4>Facilitated Report — {{ facilitated_sku.price_usd|money }}</h4>
+      <p class="muted">The report plus a 60–90 minute working session, a revised document, and three curated introductions.</p>
+      {% if facilitated_entitled %}
+      <a class="btn sm" href="/assessment/{{ assessment.id }}/facilitated">Open facilitated workspace →</a>
+      {% else %}
+      <form method="post" action="/assessment/{{ assessment.id }}/checkout/facilitated">
+        <button class="btn sm" type="submit">Buy facilitated review · {{ facilitated_sku.price_usd|money }}</button>
+      </form>
+      <p class="muted small">One-time payment. Includes the Constraint Report. USD, exclusive of applicable taxes.</p>
+      {% endif %}
     </article>
   </div>
 </section>

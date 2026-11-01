@@ -1,4 +1,4 @@
-"""Premium workspace pricing and entitlement definitions.
+"""Operator workspace pricing and entitlement definitions.
 
 Backward-compatible facade over catalog.py. New code should import catalog.
 """
@@ -43,9 +43,9 @@ PLANS = {
 }
 
 FEATURES = (
-    ("Multiple companies", "Keep separate operating profiles, diagnostics, and benchmarks under one account."),
-    ("Team questionnaires", "Send department questionnaires, set deadlines and target roles, and combine responses into one diagnostic."),
-    ("Board packs", "Download PDF, Excel, and JSON, print a clean report, or share a read-only board link."),
+    ("Action board", "Every constraint action gets an owner, a date, and a status the team can see."),
+    ("Team seats", "Managers work from the same plan instead of a forwarded spreadsheet."),
+    ("Quarterly re-score", "The index is re-run every 90 days so movement, not memory, drives the next decision."),
 )
 
 

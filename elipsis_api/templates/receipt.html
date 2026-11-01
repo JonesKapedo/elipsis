@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Receipt {{ payment.reference }} — {{ BRAND_NAME }}{% endblock %}
+{% block content %}
+<section class="head no-print">
+  <p class="eyebrow">RECEIPT</p>
+  <h1>Payment received</h1>
+  <p class="muted">Reference <code>{{ payment.reference }}</code></p>
+  <div class="hero-actions" style="margin-top:1rem">
+    <button class="btn sm" type="button" onclick="window.print()">Print / Save as PDF</button>
+    <a class="btn ghost sm" href="/billing">Back to billing</a>
+  </div>
+</section>
+
+<section class="block receipt">
+  <div class="block-head">
+    <div>
+      <h3>{{ BRAND_NAME }}</h3>
+      <p class="muted small">Operations Constraint Report</p>
+    </div>
+    <div style="text-align:right">
+      <p><strong>Receipt</strong></p>
+      <p class="muted small">{{ payment.reference }}</p>
+    </div>
+  </div>
+
+  <table class="table">
+    <tbody>
+      <tr><th>Billed to</th><td>{{ user.name or user.email }}{% if org %}<br><span class="muted">{{ org.name }}</span>{% endif %}</td></tr>
+      <tr><th>Email</th><td>{{ user.email }}</td></tr>
+      <tr><th>Paid on</th><td>{{ paid_on }}</td></tr>
+      <tr><th>Provider</th><td>Paystack</td></tr>
+    </tbody>
+  </table>
+
+  <table class="table" style="margin-top:1rem">
+    <thead><tr><th>Item</th><th class="num">Amount</th></tr></thead>
+    <tbody>
+      <tr><td>{{ label }}</td><td class="num">{{ amount }} {{ currency }}</td></tr>
+      <tr><td>Tax (where applicable)</td><td class="num">{{ tax }} {{ currency }}</td></tr>
+      <tr><th>Total paid</th><th class="num">{{ amount }} {{ currency }}</th></tr>
+    </tbody>
+  </table>
+
+  <p class="muted small" style="margin-top:1rem">Prices are in USD and exclusive of applicable taxes. This receipt confirms payment; it is not a tax invoice where local law requires a separate document. For an invoice with tax details, <a href="/support?topic=billing">contact support</a> with this reference.</p>
+  <p class="muted small">Refunds and cancellations follow the <a href="/refund">refund policy</a>.</p>
+</section>
+{% endblock %}

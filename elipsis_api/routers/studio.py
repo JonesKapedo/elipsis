@@ -316,6 +316,7 @@ def pro_page(request: Request, user=Depends(get_current_user), db: Session = Dep
         "user": user, "prefs": prefs, "orgs": _owned_orgs(db, user),
         "plans": premium.PLANS, "features": premium.FEATURES,
         "currency": premium.CURRENCY, "is_pro": services.is_pro_user(db, user),
+        "recurring": premium.recurring_configured("premium"),
         "upgraded": request.query_params.get("upgraded") == "1",
         "locked": request.query_params.get("locked") or "",
     })
@@ -396,12 +397,17 @@ def _payment_matches(payment: models.Payment, verified: dict) -> bool:
 def _payment_description(db: Session, payment: models.Payment) -> str:
     if payment.purpose in {"pro", "premium"}:
         cycle = "annual" if payment.billing_cycle == "annual" else "monthly"
-        return f"Premium {cycle} pass"
+        return f"Operator {cycle} pass"
     if payment.purpose == "assessment" and payment.related_id:
         assessment = db.get(models.Assessment, payment.related_id)
         org = (db.get(models.Organization, assessment.organization_id)
                if assessment is not None else None)
-        return f"Full Assessment for {org.name}" if org else "Full Assessment"
+        return f"Constraint Report for {org.name}" if org else "Constraint Report"
+    if payment.purpose == "facilitated" and payment.related_id:
+        assessment = db.get(models.Assessment, payment.related_id)
+        org = (db.get(models.Organization, assessment.organization_id)
+               if assessment is not None else None)
+        return f"Facilitated Report for {org.name}" if org else "Facilitated Report"
     if payment.purpose == "bidder_plan":
         plan = premium.BIDDER_PLANS.get(payment.billing_cycle or "")
         return f"Bidder {plan['label']} plan" if plan else "Bidder subscription"
@@ -455,6 +461,8 @@ def _apply_payment(db: Session, payment: models.Payment, verified: dict) -> bool
                 purchase.payment_reference = payment.reference
                 purchase.active = True
             services_entitlements.settle_report(db, payment)
+    if payment.purpose == "facilitated" and payment.related_id:
+        services_entitlements.settle_facilitated(db, payment)
     if payment.purpose == "switch_topup" and payment.related_id:
         req = db.get(models.PhysicalAssessmentRequest, payment.related_id)
         if req is not None:
@@ -640,6 +648,8 @@ def _payment_destination(payment: models.Payment) -> str:
         return "/pro?upgraded=1"
     if payment.purpose == "assessment" and payment.related_id:
         return f"/assessment/{payment.related_id}/results?unlocked=1"
+    if payment.purpose == "facilitated" and payment.related_id:
+        return f"/assessment/{payment.related_id}/facilitated?booked=1"
     if payment.purpose == "switch_topup" and payment.related_id:
         return f"/marketplace/{payment.related_id}?topup=1"
     if payment.purpose == "bidder_plan":

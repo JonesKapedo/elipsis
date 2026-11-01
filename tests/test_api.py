@@ -193,8 +193,9 @@ def test_value_workstreams_round_trip(signed_in):
     token = shared.headers["location"].split("shared=")[-1]
     assert client.get(f"/share/{token}").status_code == 200
 
-    for path in ("/privacy", "/terms", "/security", "/partners", "/case-study"):
+    for path in ("/privacy", "/terms", "/refund", "/security", "/partners", "/case-study"):
         assert client.get(path).status_code == 200
+    assert "Refund policy" in client.get("/refund").text
 
 
 def test_workspace_intelligence_round_trip(signed_in):

@@ -33,9 +33,9 @@
       <div class="company-actions">
         <a href="/setup?org={{ company.id }}" class="text-link">Update company profile</a>
         {% if is_pro %}
-        <a href="/setup" class="text-link">Add another company <span class="crown" title="Premium">{% include "partials/crown.svg" %}</span></a>
+        <a href="/setup" class="text-link">Add another company <span class="crown" title="Operator">{% include "partials/crown.svg" %}</span></a>
         {% else %}
-        <a href="/pro" class="text-link">Add another company <span class="crown" title="Premium feature">{% include "partials/crown.svg" %}</span> <span class="premium-tag">Premium</span></a>
+        <a href="/pro" class="text-link">Add another company <span class="crown" title="Operator feature">{% include "partials/crown.svg" %}</span> <span class="premium-tag">Operator</span></a>
         {% endif %}
       </div>
     </div>
@@ -65,7 +65,7 @@
         </label>
         <label class="method-option">
           <input type="radio" name="method" value="team" {% if method == 'team' %}checked{% endif %}>
-          <span><strong>Ask the team{% if not company_pro %} <span class="premium-tag">Premium</span>{% endif %}</strong><small>Share a link. Responses combine into one diagnostic.{% if not company_pro %} Upgrade to unlock.{% endif %}</small></span>
+          <span><strong>Ask the team{% if not company_pro %} <span class="premium-tag">Operator</span>{% endif %}</strong><small>Share a link. Responses combine into one diagnostic.{% if not company_pro %} Upgrade to unlock.{% endif %}</small></span>
         </label>
       </div>
 

@@ -1,22 +1,22 @@
 {% extends "base.html" %}
-{% block title %}Premium{% endblock %}
+{% block title %}Operator — {{ BRAND_NAME }}{% endblock %}
 {% block content %}
 <section class="head">
-  <p class="eyebrow">PREMIUM WORKSPACE</p>
-  <h1>One diagnostic is a snapshot. Premium turns it into an operating habit.</h1>
-  <p class="lede">Unlock multiple companies, department team questionnaires, and board-ready report packs in PDF, Excel, JSON, print, and read-only share links.</p>
-  {% if upgraded %}<div class="flash ok">Payment confirmed. Premium is active on this account.</div>{% endif %}
+  <p class="eyebrow">OPERATOR</p>
+  <h1>Run the 90-day plan, not another spreadsheet.</h1>
+  <p class="lede">The report names the constraint. Operator is where the plan gets owners, dates, team visibility, and a quarterly re-score. One pass: 31 days monthly, 365 days annual.</p>
+  {% if upgraded %}<div class="flash ok">Payment confirmed. Operator is active on this account.</div>{% endif %}
   {% if is_pro %}
   <div class="premium-note">
-    <span class="crown large" title="Premium">{% include "partials/crown.svg" %}</span>
-    <p><strong>Premium is active.</strong>{% if prefs.pro_until and prefs.pro_until != 'active' %} Access runs to {{ prefs.pro_until[:10] }}.{% endif %} Add a pass below to extend it.</p>
+    <span class="crown large" title="Operator">{% include "partials/crown.svg" %}</span>
+    <p><strong>Operator is active.</strong>{% if prefs.pro_until and prefs.pro_until != 'active' %} Access runs to {{ prefs.pro_until[:10] }}.{% endif %} Adding a pass extends from the current end date.</p>
   </div>
   {% elif locked %}
   <div class="flash err">
-    {% if locked == 'team' %}Team questionnaires are Premium. Upgrade to send a department questionnaire instead of answering alone.
-    {% elif locked == 'reports' %}Report downloads, printing, and share links are Premium. Your on-screen result remains free.
-    {% elif locked == 'companies' %}Additional companies are Premium. Keep separate operating profiles under one account.
-    {% else %}That surface is part of Premium.{% endif %}
+    {% if locked == 'team' %}Team questionnaires are part of Operator. Send a department questionnaire instead of answering alone.
+    {% elif locked == 'reports' %}Report downloads, printing, and share links come with the Constraint Report. Operator adds the action board and team tracking.
+    {% elif locked == 'companies' %}Additional companies are part of Operator. Keep separate operating profiles under one account.
+    {% else %}That surface is part of Operator.{% endif %}
   </div>
   {% endif %}
 </section>
@@ -30,16 +30,16 @@
     <form method="post" action="/pro/checkout">
       <input type="hidden" name="billing" value="{{ key }}">
       <button class="btn{% if key != 'annual' %} ghost{% endif %}" type="submit">
-        {% if is_pro %}Extend with {{ plan.label|lower }}{% else %}Unlock {{ plan.label|lower }}{% endif %}
+        {% if is_pro %}Extend with {{ plan.label|lower }}{% else %}Start {{ plan.label|lower }}{% endif %}
       </button>
     </form>
-    <p class="muted small">Secure checkout through Paystack. Charged in USD. No automatic renewal.</p>
+    <p class="muted small">Secure checkout through Paystack. Charged in USD, exclusive of applicable taxes.</p>
   </article>
   {% endfor %}
 </section>
 
 <section class="block">
-  <h2>What Premium adds</h2>
+  <h2>What Operator adds</h2>
   <div class="steps">
     {% for title, copy in features %}
     <article class="step-card">
@@ -50,14 +50,40 @@
   </div>
 </section>
 
-<section class="block premium-note">
-  <span class="crown large" title="Premium">{% include "partials/crown.svg" %}</span>
-  <div>
-    <h2>Need the operating system around the diagnostic?</h2>
-    <p class="muted">Operator and Portfolio add the operating ledger, compliance calendar, team seats, and cross-unit benchmarks. Premium is the self-serve report and team layer.</p>
+<section class="two-col">
+  <article class="block prose">
+    <h3>How billing works</h3>
+    <ul>
+      <li><strong>Monthly is 31 days; annual is 365 days.</strong></li>
+      {% if recurring %}
+      <li><strong>Renews through Paystack.</strong> Cancel before renewal in <a href="/billing">billing</a>; access runs to the end of the period.</li>
+      {% else %}
+      <li><strong>No auto-renewal.</strong> We never charge your card again without a new checkout.</li>
+      {% endif %}
+      <li><strong>Extend anytime.</strong> A new pass starts from the current end date.</li>
+      <li><strong>Taxes.</strong> Prices are in USD and exclusive of applicable taxes. Receipts show what was charged.</li>
+    </ul>
+    <p class="muted small">See the <a href="/refund">refund policy</a> and <a href="/terms">terms</a>.</p>
+  </article>
+  <article class="block">
+    <h3>Your account</h3>
+    <p class="muted">Every receipt, payment reference, and active entitlement lives in billing.</p>
     <div class="hero-actions">
-      <a class="btn ghost" href="/pricing">Compare plans →</a>
-      <a class="btn ghost" href="/contact">Talk to us →</a>
+      <a class="btn sm" href="/billing">Billing and receipts →</a>
+      <a class="btn ghost sm" href="/pricing">Compare plans</a>
+    </div>
+    <p class="muted small" style="margin-top:1rem">Need an invoice with tax details? <a href="/support?topic=billing">Contact support</a> with the payment reference.</p>
+  </article>
+</section>
+
+<section class="block premium-note">
+  <span class="crown large" title="Operator">{% include "partials/crown.svg" %}</span>
+  <div>
+    <h2>Start with the report, then run it.</h2>
+    <p class="muted">Operator is the execution layer. If you have not bought the Constraint Report yet, that is the document your board will read.</p>
+    <div class="hero-actions">
+      <a class="btn ghost" href="/pricing">See the Constraint Report →</a>
+      <a class="btn ghost" href="/sample">Read a sample →</a>
     </div>
   </div>
 </section>
