@@ -3,29 +3,7 @@
    Loaded LAST. Uniform canvas theme — no stark white placeholders/tabs.
    ========================================================================== */
 
-:root {
-  --ink: #0f172a;
-  --ink-2: #1e293b;
-  --muted: #475569;
-  --muted-2: #64748b;
-  --line: #d8dee8;
-  --line-strong: #c5cedc;
-  --surface: #f4f6f9;
-  --canvas: #e8ecf2;
-  --canvas-2: #eef1f5;
-  --asphalt: #0b1220;
-  --amber: #f0a020;
-  --amber-ink: #1a1200;
-  --blue: #1d4ed8;
-  --radius: 10px;
-  --radius-sm: 8px;
-  --shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -16px rgba(11, 18, 32, 0.18);
-  --shadow-soft: 0 1px 0 rgba(15, 23, 42, 0.03);
-  --field-bg: #e8ecf2;
-  --field-border: #c5cedc;
-  --field-focus: rgba(29, 78, 216, 0.14);
-  --panel: #eef1f5;
-}
+/* Tokens live in tokens.css (loaded first). Do not re-declare :root here. */
 
 body.app-shell {
   background:
@@ -60,7 +38,7 @@ body.app-shell .small,
 body.app-shell .price-note { color: #475569 !important; }
 
 body.app-shell .app-topbar {
-  background: rgba(238, 241, 245, 0.94) !important;
+  background: rgba(255, 255, 255, 0.94) !important;
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line) !important;
   box-shadow: var(--shadow-soft);
@@ -238,9 +216,9 @@ body.app-shell .answer-option.is-selected,
 body.app-shell .choice.is-selected,
 body.app-shell .option.selected,
 body.app-shell .choice.selected {
-  background: #f3e6cc !important;
-  border-color: #d4a23a !important;
-  box-shadow: 0 0 0 2px rgba(240, 160, 32, 0.18) !important;
+  background: var(--amber-soft) !important;
+  border-color: var(--amber) !important;
+  box-shadow: 0 0 0 2px rgba(245, 166, 35, 0.2) !important;
   color: #0b1220 !important;
 }
 
@@ -267,7 +245,7 @@ body.app-shell .step-card::before {
   position: absolute;
   left: 0; top: 0; bottom: 0;
   width: 3px;
-  background: linear-gradient(180deg, var(--amber), #1d4ed8);
+  background: var(--amber);
 }
 
 body.app-shell .question-title,
@@ -285,8 +263,8 @@ body.app-shell .hint { color: #64748b !important; font-size: 12.5px !important; 
 body.app-shell .progress,
 body.app-shell .assess-progress,
 body.app-shell .stepper {
-  background: #d8dee8 !important;
-  border-radius: 999px !important;
+  background: var(--line-strong) !important;
+  border-radius: var(--radius-sm) !important;
   overflow: hidden;
   height: 8px !important;
   border: 0 !important;
@@ -297,8 +275,8 @@ body.app-shell .assess-progress > *,
 body.app-shell .stepper .done,
 body.app-shell .progress-bar,
 body.app-shell .bar-fill {
-  background: linear-gradient(90deg, #f0a020, #f5b84a) !important;
-  border-radius: 999px !important;
+  background: var(--amber) !important;
+  border-radius: var(--radius-sm) !important;
 }
 
 /* Tabs: underline, no white plates */
@@ -369,8 +347,8 @@ body.app-shell .settings-shell .settings-nav a:hover {
   color: #0f172a !important;
 }
 body.app-shell .settings-shell .settings-nav a.active {
-  background: #e2e8f0 !important;
-  color: #0b1220 !important;
+  background: var(--canvas-2) !important;
+  color: var(--ink) !important;
 }
 
 body.app-shell .btn.secondary,
@@ -394,9 +372,9 @@ body.marketing .btn.ghost:hover {
 
 body.app-shell .btn.primary,
 body.marketing .btn.primary {
-  background: linear-gradient(180deg, #f5b84a, #e89a14) !important;
-  color: #1a1200 !important;
-  border: 1px solid #d99212 !important;
+  background: var(--amber) !important;
+  color: var(--amber-ink) !important;
+  border: 1px solid var(--amber) !important;
   border-radius: var(--radius-sm) !important;
 }
 
@@ -420,12 +398,12 @@ body.app-shell .data-table td,
 body.app-shell .table td {
   background: transparent !important;
   color: #1e293b !important;
-  border-bottom: 1px solid #e2e8f0 !important;
+  border-bottom: 1px solid var(--line) !important;
 }
 
 body.app-shell table tr:hover td,
 body.app-shell .table tbody tr:hover {
-  background: rgba(232, 236, 242, 0.65) !important;
+  background: rgba(245, 246, 247, 0.65) !important;
 }
 
 body.app-shell .tag,
@@ -447,21 +425,21 @@ body.app-shell .head::after {
   width: 72px;
   margin-top: 14px;
   border-radius: 2px;
-  background: linear-gradient(90deg, var(--amber), transparent);
+  background: var(--amber);
 }
 
 body.marketing {
   background:
-    radial-gradient(1000px 480px at 90% -5%, rgba(240, 160, 32, 0.07), transparent 50%),
-    linear-gradient(180deg, #f3efe6 0%, #e8ecf2 100%) !important;
-  color: #14121a !important;
+    radial-gradient(1000px 480px at 90% -5%, rgba(245, 166, 35, 0.05), transparent 50%),
+    var(--canvas) !important;
+  color: var(--ink) !important;
 }
 
 body.marketing .mk-header,
 body.marketing .pub-header {
-  background: rgba(243, 239, 230, 0.92) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid #e0d8c8 !important;
+  border-bottom: 1px solid var(--line) !important;
 }
 
 body.marketing .mk-price,
@@ -469,11 +447,11 @@ body.marketing .mk-card,
 body.marketing .mk-step,
 body.marketing .auth-card,
 body.marketing .auth-panel {
-  background: #f3efe6 !important;
-  border: 1px solid #e0d8c8 !important;
-  border-radius: 14px !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius) !important;
   box-shadow: var(--shadow-soft) !important;
-  color: #14121a !important;
+  color: var(--ink) !important;
 }
 
 body.marketing h1,

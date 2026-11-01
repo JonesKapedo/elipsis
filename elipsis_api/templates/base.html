@@ -28,17 +28,19 @@
   <meta name="twitter:title" content="{{ self.title() }}">
   <meta name="twitter:description" content="{{ self.description() }}">
   <meta name="twitter:image" content="{{ request.url_for('static', path='brand/og-banner.png') }}">
-  <link rel="stylesheet" href="/static/style.css?v=20261028f">
-  <link rel="stylesheet" href="/static/app-shell.css?v=20261028f">
-  <link rel="stylesheet" href="/static/extras.css?v=20261028f">
+  <link rel="stylesheet" href="/static/tokens.css?v=20261101a">
+  <link rel="stylesheet" href="/static/style.css?v=20261101a">
+  <link rel="stylesheet" href="/static/app-shell.css?v=20261101a">
+  <link rel="stylesheet" href="/static/extras.css?v=20261101a">
   <link rel="stylesheet" href="/static/motion.css?v=20261022a">
-  <link rel="stylesheet" href="/static/app.css?v=20261028f">
-  <link rel="stylesheet" href="/static/premium.css?v=20261028f">
-  <link rel="stylesheet" href="/static/design.css?v=20261028f">
-  <link rel="stylesheet" href="/static/contrast-fix.css?v=20261028f">
-  <link rel="stylesheet" href="/static/theme.css?v=20261028f">
-  <link rel="stylesheet" href="/static/logistics-ui.css?v=20261028f">
-  <link rel="stylesheet" href="/static/brand-scale.css?v=20261028f">
+  <link rel="stylesheet" href="/static/app.css?v=20261101a">
+  <link rel="stylesheet" href="/static/premium.css?v=20261101a">
+  <link rel="stylesheet" href="/static/design.css?v=20261101a">
+  <link rel="stylesheet" href="/static/contrast-fix.css?v=20261101a">
+  <link rel="stylesheet" href="/static/theme.css?v=20261101a">
+  <link rel="stylesheet" href="/static/logistics-ui.css?v=20261101a">
+  <link rel="stylesheet" href="/static/brand-scale.css?v=20261101a">
+  <link rel="stylesheet" href="/static/results.css?v=20261101a">
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %} {% if authed %}app-shell{% else %}marketing{% endif %}">
@@ -89,7 +91,11 @@
         </div>
         <div class="nav-group">
           <p class="nav-group-label">Implement</p>
-          <a href="/marketplace" class="nav-item{% if path.startswith('/marketplace') and not path.startswith('/marketplace/partner') %} active{% endif %}"><svg class="icon"><use href="#i-briefcase"/></svg><span>Marketplace</span><span class="nav-note">{% if (user.role or '') == 'admin' or user.is_admin %}admin{% else %}open{% endif %}</span></a>
+          {% if (user.role or '') == 'admin' or user.is_admin %}
+          <a href="/marketplace" class="nav-item{% if path.startswith('/marketplace') and not path.startswith('/marketplace/partner') %} active{% endif %}"><svg class="icon"><use href="#i-briefcase"/></svg><span>Marketplace</span><span class="nav-note">admin</span></a>
+          {% else %}
+          <a href="/support?topic=intros" class="nav-item{% if path == '/support' %} active{% endif %}"><svg class="icon"><use href="#i-users"/></svg><span>Implementer intros</span></a>
+          {% endif %}
           {% if (user.user_type or '') == 'bidder' %}<a href="/marketplace/partner" class="nav-item{% if path.startswith('/marketplace/partner') %} active{% endif %}"><svg class="icon"><use href="#i-users"/></svg><span>Partner desk</span></a>{% endif %}
         </div>
         <div class="nav-group">

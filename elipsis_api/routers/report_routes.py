@@ -12,7 +12,15 @@ from constants import (
     INDEX_SHORT,
     PILLAR_LABELS,
 )
-from elipsis_api import analytics, benchmarks, models, services, services_room
+from elipsis_api import (
+    analytics,
+    benchmarks,
+    models,
+    services,
+    services_entitlements,
+    services_marketplace,
+    services_room,
+)
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
 from elipsis_api.narrative import company_portrait
@@ -27,6 +35,15 @@ def _guarded(db: Session, user, assessment_id: int):
     return services.compute(db, assessment_id)
 
 
+def _report_unlocked(db: Session, user, assessment) -> bool:
+    """Report access = subscription OR a paid assessment entitlement."""
+    if services.company_is_pro(db, assessment.organization_id, user):
+        return True
+    if services_entitlements.has(db, user.id, "report", assessment.id):
+        return True
+    return services_marketplace.assessment_is_unlocked(db, user.id, assessment.id)
+
+
 def _not_found(request, user):
     return templates.TemplateResponse(request, "404.html", {"user": user}, status_code=404)
 
@@ -39,7 +56,7 @@ def assessment_report(assessment_id: int, request: Request,
     assessment, result = _guarded(db, user, assessment_id)
     if assessment is None or result is None:
         return _not_found(request, user)
-    if not services.company_is_pro(db, assessment.organization_id, user):
+    if not _report_unlocked(db, user, assessment):
         return RedirectResponse("/pro?locked=reports", status_code=303)
     org = db.get(models.Organization, assessment.organization_id)
     dept = db.get(models.Department, assessment.department_id) if assessment.department_id else None
@@ -79,7 +96,7 @@ def assessment_report_pdf(assessment_id: int, request: Request,
     assessment, result = _guarded(db, user, assessment_id)
     if assessment is None or result is None:
         return _not_found(request, user)
-    if not services.company_is_pro(db, assessment.organization_id, user):
+    if not _report_unlocked(db, user, assessment):
         return RedirectResponse("/pro?locked=reports", status_code=303)
     org = db.get(models.Organization, assessment.organization_id)
     dept = (db.get(models.Department, assessment.department_id)

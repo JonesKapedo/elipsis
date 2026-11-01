@@ -1,36 +1,7 @@
 /* ==========================================================================
-   Elipsis — premium design system
-   Warm paper surfaces, deep ink type, gold accent. Editorial, not generic SaaS.
+   Elipsis — base layer
+   Tokens live in tokens.css (loaded first). Do not re-declare :root here.
    ========================================================================== */
-/* Fonts loaded from base.html: Inter + Source Serif 4 */
-
-:root{
-  --bg:#f3efe6;
-  --bg2:#ebe4d6;
-  --panel:#fffcf7;
-  --panel2:#f7f1e6;
-  --ink:#14121a;
-  --soft:#3d3a45;
-  --muted:#6b6570;
-  --line:#e4dccb;
-  --line2:#d4c9b4;
-  --accent:#b45309;
-  --accent-bright:#d97706;
-  --accent-soft:rgba(180,83,9,.1);
-  --teal:#0f766e;
-  --teal-soft:rgba(15,118,110,.1);
-  --good:#15803d;
-  --warn:#a16207;
-  --bad:#b91c1c;
-  --r:16px;
-  --r-sm:10px;
-  --shadow:0 20px 50px -20px rgba(40,30,15,.18);
-  --shadow-sm:0 8px 24px -12px rgba(40,30,15,.12);
-  --grad:linear-gradient(135deg,#b45309,#d97706);
-  --ring:0 0 0 3px rgba(180,83,9,.22);
-  --font:"Inter",system-ui,-apple-system,sans-serif;
-  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
-}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
 body{

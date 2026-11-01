@@ -181,50 +181,27 @@
 <section class="mk-wrap mk-section">
   <div class="mk-section-head">
     <p class="mk-eyebrow">Pricing</p>
-    <h2>Start free. Pay when you need the full decision pack.</h2>
-    <p class="section-lede">The free diagnostic shows your score and top constraints. Upgrade for the full metrics pack, costed assumptions, and implementation request.</p>
+    <h2>Start free. Buy the report when the decision is real.</h2>
+    <p class="section-lede">The free Pulse diagnostic shows your score and the names of your top constraints. The Constraint Report prices the exposure and gives you the 90-day plan.</p>
   </div>
   <div class="mk-pricing">
-    <article class="mk-price">
-      <p class="price-label">Free diagnostic</p>
-      <h3>$0</h3>
-      <p class="price-note">One company · no card required</p>
+    {% for sku in skus %}
+    <article class="mk-price{% if sku.featured %} featured{% endif %}">
+      <p class="price-label">{{ sku.name }}</p>
+      <h3>
+        {% if sku.price_usd == 0 %}$0{% else %}${{ '{:,}'.format(sku.price_usd) }} <small>{% if sku.billing == 'one_time' %}once{% elif sku.billing == 'monthly' %}/ month{% elif sku.billing == 'yearly' %}/ year{% endif %}</small>{% endif %}
+      </h3>
+      <p class="price-note">{{ sku.tagline }} {{ sku.note }}</p>
+      {% if sku.annual_price_usd %}<p class="price-note">Or ${{ '{:,}'.format(sku.annual_price_usd) }} / year.</p>{% endif %}
       <ul>
-        <li>{{ total_questions }}-question diagnostic</li>
-        <li>{{ INDEX_NAME }} and maturity band</li>
-        <li>Top three constraints</li>
-        <li>Preview of the 90-day plan</li>
+        {% for feature in sku.features %}<li>{{ feature }}</li>{% endfor %}
       </ul>
-      <a class="btn secondary" href="/signup">Start free</a>
+      <a class="btn{% if not sku.featured %} secondary{% endif %}" href="{{ sku.href }}">{{ sku.cta }}</a>
+      {% if sku.proof %}<p class="mk-price-proof">{{ sku.proof }}</p>{% endif %}
     </article>
-    <article class="mk-price featured">
-      <p class="price-label">Full assessment</p>
-      <h3>$49 <small>once</small></h3>
-      <p class="price-note">One full report · partner introductions</p>
-      <ul>
-        <li>Full 36-metric report and confidence</li>
-        <li>Costed constraints with printed assumptions</li>
-        <li>Board pack, Excel, JSON, and PDF</li>
-        <li>Share links for stakeholders</li>
-        <li>One implementation request</li>
-      </ul>
-      <a class="btn" href="/pro">Get full report</a>
-    </article>
-    <article class="mk-price">
-      <p class="price-label">Operator plan</p>
-      <h3>$29 <small>/ month</small></h3>
-      <p class="price-note">Or $380 / year · cancel anytime</p>
-      <ul>
-        <li>Unlimited assessments</li>
-        <li>Exports and board packs</li>
-        <li>Team collaboration</li>
-        <li>Re-score as you execute</li>
-        <li>Implementation workflow access</li>
-      </ul>
-      <a class="btn secondary" href="/pro">View operator plan</a>
-    </article>
+    {% endfor %}
   </div>
-  <p class="mk-price-note">Prices in USD. Implementation partners have separate plans. {{ BRAND_NAME }} does not take a commission on partner work.</p>
+  <p class="mk-price-note">Prices in USD and exclusive of taxes. Partners have separate plans. {{ BRAND_NAME }} does not take a commission on partner work.</p>
 </section>
 
 <section class="mk-wrap mk-cta">

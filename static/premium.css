@@ -4,14 +4,7 @@
    adds the public-facing composition: brand lockups, search, hero, footer.
    ========================================================================== */
 
-:root {
-  --gold: #f5b301;
-  --gold-deep: #b45309;
-  --ink-blue: #0a1628;
-  --ink-blue-2: #12213a;
-  --paper-warm: #f8f6f1;
-  --focus: 0 0 0 3px rgba(245, 179, 1, .35);
-}
+/* Tokens live in tokens.css (loaded first). Do not re-declare :root here. */
 
 html { scroll-padding-top: 90px; }
 body { overflow-x: hidden; }

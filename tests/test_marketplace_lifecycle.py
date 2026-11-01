@@ -260,7 +260,7 @@ def test_full_assessment_purchase_conversation_switch_handoff_and_directory(
         assessment_id, org_id = _demo_assessment(client)
         free = client.get(f"/assessment/{assessment_id}/results")
         assert free.status_code == 200
-        assert "Unlock Full Assessment" in free.text
+        assert "Get the Constraint Report" in free.text
         assert "Implementation roadmap" not in free.text
 
         checkout = client.post(f"/assessment/{assessment_id}/checkout",
@@ -273,11 +273,19 @@ def test_full_assessment_purchase_conversation_switch_handoff_and_directory(
         assert f"/assessment/{assessment_id}/results" in paid.headers["location"]
         unlocked = client.get(f"/assessment/{assessment_id}/results")
         assert "Implementation roadmap" in unlocked.text
-        assert "Unlock Full Assessment" not in unlocked.text
+        assert "Get the Constraint Report" not in unlocked.text
         with SessionLocal() as db:
             purchase = db.scalar(select(models.AssessmentPurchase).where(
                 models.AssessmentPurchase.assessment_id == assessment_id))
             assert purchase is not None and purchase.active is True
+            order = db.scalar(select(models.Order).where(
+                models.Order.provider_reference == reference))
+            assert order is not None and order.status == "paid"
+            assert order.sku == "report" and order.amount_minor == 49900
+            entitlement = db.scalar(select(models.Entitlement).where(
+                models.Entitlement.assessment_id == assessment_id,
+                models.Entitlement.sku == "report"))
+            assert entitlement is not None and entitlement.status == "active"
 
         created = client.post("/api/v1/marketplace/requests", json={
             "organization_id": org_id, "assessment_id": assessment_id,
@@ -457,7 +465,7 @@ def test_paystack_recurring_plan_webhooks(monkeypatch):
         renewal = client.post("/paystack/webhook", json={
             "event": "charge.success",
             "data": {
-                "reference": "RENEW_PREM_1", "amount": 2900, "currency": "USD",
+                "reference": "RENEW_PREM_1", "amount": 12900, "currency": "USD",
                 "plan": {"plan_code": "PLN_PREM_MONTHLY"},
                 "customer": {"email": email}}})
         assert renewal.status_code == 200, renewal.text

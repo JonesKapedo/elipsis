@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from elipsis_api import (
     analytics,
     benchmarks,
+    catalog,
     departments,
     logistics,
     models,
@@ -18,6 +19,7 @@ from elipsis_api import (
     schemas,
     services,
     services_operations,
+    services_entitlements,
     services_ops,
     services_room,
     services_success,
@@ -138,7 +140,8 @@ def landing(request: Request, user=Depends(get_current_user),
         request, "landing.html",
         {"user": user, "total_questions": _question_count(db),
          "reference_points": benchmarks.REFERENCE_POINTS,
-         "icp": benchmarks.ICP_LABEL})
+         "icp": benchmarks.ICP_LABEL,
+         "skus": catalog.public_skus()})
 
 
 @router.get("/sample")
@@ -153,7 +156,8 @@ def sample_report(request: Request, user=Depends(get_current_user)):
 def pricing(request: Request, user=Depends(get_current_user)):
     return templates.TemplateResponse(request, "pricing.html", {
         "user": user, "premium_plans": premium.PLANS,
-        "premium_currency": premium.CURRENCY})
+        "premium_currency": premium.CURRENCY,
+        "skus": catalog.public_skus()})
 
 
 @router.get("/methodology")
@@ -697,6 +701,11 @@ def assessment_checkout(assessment_id: int, request: Request,
         user_id=user.id, reference=ref, purpose="assessment", amount_kes=0,
         currency=premium.CURRENCY, amount_minor=amount, billing_cycle="one_time",
         related_id=assessment_id, status="pending"))
+    services_entitlements.open_order(
+        db, user_id=user.id, sku="report", assessment_id=assessment.id,
+        organization_id=assessment.organization_id, provider="paystack",
+        provider_reference=ref, amount_minor=amount,
+        description=f"Constraint Report for assessment {assessment.id}")
     db.commit()
     base = str(request.base_url).rstrip("/")
     data = paystack.initialize(
@@ -745,6 +754,7 @@ def assessment_results(assessment_id: int, request: Request,
          "logistics": logistics.snapshot(db, assessment_ids=[assessment_id]),
          "operations": services_operations.summary(db, [assessment.organization_id]),
          "share_links": services_ops.share_links(db, assessment_id),
+         "report_sku": catalog.SKUS["report"],
          "is_pro": services.company_is_pro(db, assessment.organization_id, user),
          "company_pro": services.company_is_pro(db, assessment.organization_id, user),
          "notes": services_room.notes(db, assessment.id),
@@ -773,6 +783,7 @@ def assessment_pillar(assessment_id: int, code: str, request: Request,
          "analytics": analytics.build(result),
          "benchmark": benchmarks.cohort_benchmark(db, org),
          "report_unlocked": True,
+         "report_sku": catalog.SKUS["report"],
          "is_pro": services.company_is_pro(db, assessment.organization_id, user),
          "focus_pillar": code.upper()})
 

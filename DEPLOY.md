@@ -1,7 +1,7 @@
 # Deploy Elipsis on Vercel
 
 The production web UI is the **FastAPI + Jinja2** app (`elipsis_api.main:app`).
-Do not point Vercel at the Telegram bot or at the incomplete React SPA under `frontend/`.
+Do not point Vercel at the Telegram bot.
 
 ## 1. Connect the repo
 
@@ -184,6 +184,6 @@ at head (`alembic upgrade head`).
 
 - **Static assets** are served from `/static/` (repo-root `static/`); the premium layer is `premium.css`.
 - **Telegram bot** is separate (`requirements-bot.txt`, `python -m telegram_bot.bot`). It is not part of the Vercel deployment.
-- **React frontend** under `frontend/` is experimental; the board-ready product path is the server-rendered templates. `frontend/node_modules` and `frontend/dist` are no longer tracked.
+- **Single frontend**: the server-rendered FastAPI + Jinja2 app. The experimental React SPA was removed; there is no frontend build step.
 - **Security**: signed, database-backed sessions with expiry/revocation; same-origin CSRF checks on unsafe methods; rate-limited login, signup, and password reset; per-organisation authorisation on assessment and marketplace APIs.
 - **Degraded mode**: check `GET /api/v1/health/detail` for `configuration_errors`. A degraded deployment is for diagnosis only, not for storing real client data.
