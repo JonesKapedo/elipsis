@@ -1,0 +1,101 @@
+/* Elipsis — UX polish layer
+   Load last, after theme/brand styles. Scoped additions that depend on tokens
+   (var(--line), var(--accent), var(--r), etc.) defined in tokens.css. */
+
+/* Branded 404 page --------------------------------------------------------- */
+.error-hero{
+  max-width: 46rem;
+  margin: clamp(3rem, 8vh, 6rem) auto;
+  padding: 0 clamp(1rem, 4vw, 2rem);
+  text-align: center;
+}
+.error-hero .eyebrow{letter-spacing:.14em}
+.error-hero h1{
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(2rem, 5vw, 2.8rem);
+  margin: .6rem 0 .8rem;
+}
+.error-hero .lede{margin-inline:auto; max-width: 34rem}
+.error-actions{
+  display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center;
+  margin: 1.4rem 0 .8rem;
+}
+.error-actions .btn{min-width: 10rem}
+.error-path code{
+  background: var(--panel2, #f2ede4); border: 1px solid var(--line);
+  padding: .1rem .45rem; border-radius: 6px; font-size: .82rem;
+}
+.error-art{
+  display: flex; justify-content: center; gap: .55rem; margin-bottom: 1.2rem;
+}
+.error-code-dot{
+  width: .55rem; height: .55rem; border-radius: 50%;
+  background: var(--accent);
+  opacity: .35; animation: ellipsis-pulse 2.4s ease-in-out infinite;
+}
+.error-code-dot:nth-child(2){animation-delay: .3s; opacity: .65}
+.error-code-dot:nth-child(3){animation-delay: .6s; opacity: 1}
+@keyframes ellipsis-pulse{
+  0%,100%{transform: translateY(0)}
+  50%{transform: translateY(-5px)}
+}
+@media (prefers-reduced-motion: reduce){
+  .error-code-dot{animation: none}
+}
+
+/* Refined global focus visibility ------------------------------------------ */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--accent);
+  border-radius: 4px;
+}
+
+/* Consistent professional scrollbars --------------------------------------- */
+*{scrollbar-width: thin; scrollbar-color: var(--line) transparent}
+*::-webkit-scrollbar{width: 10px; height: 10px}
+*::-webkit-scrollbar-track{background: transparent}
+*::-webkit-scrollbar-thumb{
+  background: var(--line); border-radius: 999px;
+  border: 3px solid transparent; background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover{background: var(--accent); background-clip: content-box}
+
+/* Empty states: reassuring, not broken ------------------------------------- */
+.empty-state{
+  border: 1px dashed var(--line);
+  border-radius: var(--r);
+  padding: clamp(1.4rem, 4vw, 2.2rem);
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: .5rem;
+  background: var(--panel);
+}
+.empty-state .empty-mark{
+  width: 2.4rem; height: 2.4rem; border-radius: 10px;
+  display: grid; place-items: center;
+  background: var(--panel2, #f2ede4); border: 1px solid var(--line);
+  color: var(--muted); font-weight: 800;
+}
+.empty-state h3{margin: 0; font-family: var(--serif); font-weight: 400}
+.empty-state p{margin: 0; color: var(--muted); max-width: 30rem}
+.empty-state .btn{margin-top: .4rem}
+
+/* Softer, professional micro-interactions ---------------------------------- */
+.btn{transition: border-color .15s ease, background-color .15s ease, transform .15s ease, box-shadow .15s ease}
+.btn:active{transform: translateY(1px)}
+@media (prefers-reduced-motion: reduce){
+  .btn:active{transform: none}
+}
+
+/* Print: reports stay clean ------------------------------------------------ */
+@media print{
+  .skip, .app-topbar, #app-sidebar, .site-footer, .error-actions,
+  .sidebar-backdrop, .menu-wrap{display: none !important}
+  body{background: #fff !important}
+}
