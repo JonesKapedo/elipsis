@@ -60,6 +60,76 @@
     });
   }
 
+  /* Theme quick-toggle ------------------------------------------------------ */
+  const THEME_COOKIE = "elipsis_theme";
+  const themeToggle = $("#theme-toggle");
+
+  function currentThemePref() {
+    const match = document.cookie.match(new RegExp("(?:^|; )" + THEME_COOKIE + "=([^;]*)"));
+    const pref = match ? decodeURIComponent(match[1]) : "system";
+    return (pref === "light" || pref === "dark" || pref === "system") ? pref : "system";
+  }
+
+  function resolvedTheme() {
+    const pref = currentThemePref();
+    if (pref === "system") {
+      return (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches)
+        ? "dark" : "light";
+    }
+    return pref;
+  }
+
+  function applyTheme(pref) {
+    const resolved = pref === "system"
+      ? (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : pref;
+    document.documentElement.setAttribute("data-theme", resolved);
+    document.documentElement.setAttribute("data-theme-pref", pref);
+  }
+
+  function saveThemePref(pref) {
+    // Mirror the server cookie (1 year) so theme-boot.js resolves it next load.
+    const secure = location.protocol === "https:" ? "; Secure" : "";
+    document.cookie = THEME_COOKIE + "=" + encodeURIComponent(pref)
+      + "; path=/; max-age=31536000; samesite=lax" + secure;
+  }
+
+  function toggleTheme() {
+    const next = resolvedTheme() === "dark" ? "light" : "dark";
+    saveThemePref(next);
+    applyTheme(next);
+  }
+
+  if (themeToggle) {
+    themeToggle.addEventListener("click", toggleTheme);
+  }
+
+  /* Keyboard shortcuts help -------------------------------------------------- */
+  const kbdHelp = $("#kbd-help");
+  const kbdTrigger = $("#kbd-help-trigger");
+  const kbdClose = $("#kbd-help-close");
+
+  function kbdOpen() {
+    if (!kbdHelp) return;
+    if (typeof kbdHelp.showModal === "function" && !kbdHelp.open) kbdHelp.showModal();
+    else if (!kbdHelp.open) kbdHelp.setAttribute("open", "");
+    if (kbdClose) window.setTimeout(() => kbdClose.focus(), 20);
+  }
+
+  function kbdCloseDialog() {
+    if (!kbdHelp) return;
+    if (typeof kbdHelp.close === "function" && kbdHelp.open) kbdHelp.close();
+    else kbdHelp.removeAttribute("open");
+  }
+
+  if (kbdTrigger) kbdTrigger.addEventListener("click", kbdOpen);
+  if (kbdClose) kbdClose.addEventListener("click", kbdCloseDialog);
+  if (kbdHelp) {
+    kbdHelp.addEventListener("click", (event) => {
+      if (event.target === kbdHelp) kbdCloseDialog();
+    });
+  }
+
   /* Command palette --------------------------------------------------------- */
   const cmdk = $("#cmdk");
   const cmdkInput = $("#cmdk-input");
@@ -202,7 +272,7 @@
     });
   });
 
-  /* Keyboard: escape closes, "/" focuses workspace search ------------------- */
+  /* Keyboard: shortcuts work everywhere outside text fields ----------------- */
   document.addEventListener("keydown", (event) => {
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
       event.preventDefault();
@@ -210,26 +280,39 @@
       else cmdkOpen();
       return;
     }
-    if (event.key === "Escape" && layout && layout.classList.contains("sidebar-open")) {
-      setSidebar(false);
-      if (openBtn) openBtn.focus();
-    }
-    if (event.key === "Escape" && pubNav && pubNav.classList.contains("open")) {
-      pubNav.classList.remove("open");
-      if (pubToggle) {
-        pubToggle.setAttribute("aria-expanded", "false");
-        pubToggle.focus();
+    if (event.key === "Escape") {
+      if (layout && layout.classList.contains("sidebar-open")) {
+        setSidebar(false);
+        if (openBtn) openBtn.focus();
       }
+      if (pubNav && pubNav.classList.contains("open")) {
+        pubNav.classList.remove("open");
+        if (pubToggle) {
+          pubToggle.setAttribute("aria-expanded", "false");
+          pubToggle.focus();
+        }
+      }
+      if (kbdHelp && kbdHelp.open) kbdCloseDialog();
+      return;
     }
     const tag = (event.target && event.target.tagName || "").toLowerCase();
     const typing = tag === "input" || tag === "textarea" || tag === "select" || event.target.isContentEditable;
-    if (event.key === "/" && !typing && !event.metaKey && !event.ctrlKey && !event.altKey) {
+    if (typing || event.metaKey || event.ctrlKey || event.altKey) return;
+    if (event.key === "/") {
       const search = $(".topbar-search input[type='search']");
       if (search) {
         event.preventDefault();
         search.focus();
         search.select();
       }
+    } else if (event.key === "?" || (event.shiftKey && event.key === "/")) {
+      if (kbdHelp) {
+        event.preventDefault();
+        kbdOpen();
+      }
+    } else if (event.key.toLowerCase() === "t" && themeToggle) {
+      event.preventDefault();
+      toggleTheme();
     }
   });
 
