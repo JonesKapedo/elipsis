@@ -41,6 +41,7 @@
   <link rel="stylesheet" href="/static/logistics-ui.css?v=20261101a">
   <link rel="stylesheet" href="/static/brand-scale.css?v=20261101a">
   <link rel="stylesheet" href="/static/results.css?v=20261101a">
+  <link rel="stylesheet" href="/static/ux-polish.css?v=20261102a">
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %} {% if authed %}app-shell{% else %}marketing{% endif %}">
@@ -137,7 +138,7 @@
         <button type="button" class="cmd-trigger" id="cmd-trigger" aria-haspopup="dialog" aria-controls="cmdk">
           <svg class="icon"><use href="#i-search"/></svg><span class="cmd-trigger-label">Commands</span><kbd>⌘K</kbd>
         </button>
-        <a class="topbar-bell" href="/help" aria-label="Help centre"><svg class="icon"><use href="#i-help"/></svg></a>
+        <a class="topbar-label" href="/help" aria-label="Help centre"><svg class="icon"><use href="#i-help"/></svg></a>
         <a class="topbar-bell" href="/notifications" aria-label="Notifications">
           <svg class="icon"><use href="#i-bell"/></svg>
           {% if notifications %}<span class="topbar-bell-dot">{{ notifications|length }}</span>{% endif %}
@@ -168,7 +169,6 @@
 </header>
 <main id="main" class="pub-main">
 {% endif %}
-
 {% block content %}{% endblock %}
 
 {% if authed %}
@@ -212,12 +212,12 @@
 {% endif %}
 
 {% if authed %}
-<dialog class="cmdk" id="cmdk" aria-labelledby="cmdk-title" data-admin="{{ 'true' if ((user.role or '') == 'admin' or user.is_admin) else 'false' }}">
+<dialog class="cmdk" id="cmdk" aria-labelledby="cmdk-title" data-admin="{{ 'true' if (user.role or '') == 'admin' or user.is_admin else 'false' }}">
   <div class="cmdk-panel">
     <h2 id="cmdk-title" class="sr-only">Command palette</h2>
     <div class="cmdk-head">
       <svg class="icon"><use href="#i-search"/></svg>
-      <input id="cmdk-input" type="search" placeholder="Search or jump to…" aria-label="Search commands" autocomplete="off">
+      <input id="cmdk-input" type="search" placeholder="Search for jump to…" aria-label="Search commands" autocomplete="off">
       <kbd>esc</kbd>
     </div>
     <div class="cmdk-results" id="cmdk-results" role="listbox" aria-label="Commands"></div>
@@ -229,7 +229,7 @@
   </div>
 </dialog>
 {% endif %}
-<script src="/static/app.js?v=20261028f" defer></script>
+<script src="/static/app.js?v=20261102a" defer></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>
