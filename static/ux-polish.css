@@ -93,6 +93,68 @@ summary:focus-visible,
   .btn:active{transform: none}
 }
 
+/* Theme quick-toggle in the topbar ------------------------------------------ */
+.topbar-theme{
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2.2rem; height: 2.2rem; border-radius: 8px;
+  background: var(--panel, #0e1624); border: 1px solid var(--line, #334155);
+  color: var(--ink, #e8eef7); cursor: pointer;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+.topbar-theme:hover{border-color: var(--accent, #f5a623)}
+.topbar-theme .icon{width: 1.1rem; height: 1.1rem}
+.topbar-theme .icon-moon{display: none}
+html[data-theme="dark"] .topbar-theme .icon-sun{display: none}
+html[data-theme="dark"] .topbar-theme .icon-moon{display: block}
+html[data-theme="dark"] .topbar-theme{
+  background: #0e1624; border-color: #334155; color: #e8eef7;
+}
+
+/* Keyboard shortcuts dialog ------------------------------------------------- */
+.kbd-help{padding: 0; border: 1px solid var(--line, #243044)}
+.kbd-help::backdrop{background: rgba(7, 11, 26, 0.55)}
+.kbd-help-panel{
+  background: var(--panel, #121a27); color: var(--ink, #e8eef7);
+  padding: 1.4rem 1.5rem 1.2rem; border-radius: 12px; min-width: 20rem; max-width: 26rem;
+}
+.kbd-help-panel h2{
+  margin: 0 0 1rem; font-family: var(--serif, serif); font-weight: 400; font-size: 1.2rem;
+}
+.kbd-grid{display: flex; flex-direction: column; gap: .5rem; margin-bottom: .9rem}
+.kbd-row{
+  display: flex; align-items: center; gap: .7rem; font-size: .9rem;
+}
+.kbd-row kbd{
+  font-family: var(--mono, monospace); font-size: .74rem; font-weight: 600;
+  background: var(--panel2, #0f1622); border: 1px solid var(--line, #334155);
+  border-bottom-width: 2px; border-radius: 6px; padding: .15rem .45rem;
+  color: var(--ink, #e8eef7);
+}
+.kbd-row span{color: var(--muted, #8b9bb0)}
+.kbd-note{margin: 0 0 1rem; font-size: .78rem; color: var(--muted, #8b9bb0)}
+
+/* Sortable, filterable data tables ------------------------------------------ */
+.table-tools{
+  display: flex; flex-wrap: wrap; align-items: center; gap: .5rem;
+  margin: .6rem 0 .8rem;
+}
+.table-tools input[type="search"]{
+  flex: 1 1 12rem; max-width: 18rem;
+}
+.table-tools .table-count{font-size: .8rem; color: var(--muted, #8b9bb0); margin-left: auto}
+table.table th[data-sortable="true"]{
+  cursor: pointer; user-select: none; white-space: nowrap;
+}
+table.table th[data-sortable="true"]:hover{color: var(--accent, #f5a623)}
+table.table th.sort-asc::after{content: " ↑"; color: var(--accent, #f5a623); font-size: .8em}
+table.table th.sort-desc::after{content: " ↓"; color: var(--accent, #f5a623); font-size: .8em}
+table.table tbody tr.is-filtered-out{display: none}
+.table-empty-note{
+  padding: 1rem; text-align: center; color: var(--muted, #8b9bb0);
+  border-top: 1px dashed var(--line, #243044); display: none;
+}
+.table-empty-note.is-visible{display: block}
+
 /* Print: reports stay clean ------------------------------------------------ */
 @media print{
   .skip, .app-topbar, #app-sidebar, .site-footer, .error-actions,
