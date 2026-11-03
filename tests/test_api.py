@@ -40,6 +40,17 @@ def test_health(client):
     assert body["index"] == C.INDEX_NAME
 
 
+def test_health_detail_reports_marketplace_readiness(client):
+    body = client.get("/api/v1/health/detail").json()
+    readiness = body["marketplace"]
+    assert {
+        "enabled", "billing_enabled", "messaging_enabled", "verification_enabled",
+        "handoff_enabled", "payments_configured", "requester_plans_configured",
+        "bidder_plans_configured", "launch_ready",
+    } == set(readiness)
+    assert all(isinstance(value, bool) for value in readiness.values())
+
+
 def test_questionnaire_exposes_per_question_options(client):
     questions = client.get("/api/v1/questionnaire").json()
     assert len(questions) == 63

@@ -58,6 +58,7 @@ def health_detail():
         "seed_ok": seed.get("seed_ok"),
         "seed_error": seed.get("seed_error"),
         "configuration_errors": errors,
+        "marketplace": config.marketplace_readiness(),
     }
 
 
