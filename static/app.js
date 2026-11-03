@@ -1,11 +1,11 @@
 /* Elipsis app entry: theme first, then full interface behaviour */
 (function () {
   var s = document.createElement("script");
-  s.src = "/static/theme-boot.js?v=20261028d";
+  s.src = "/static/theme-boot.js?v=20261031a";
   document.head.appendChild(s);
   var l = document.createElement("link");
   l.rel = "stylesheet";
-  l.href = "/static/theme.css?v=20261028d";
+  l.href = "/static/theme.css?v=20261031a";
   document.head.appendChild(l);
 })();
 

@@ -33,12 +33,13 @@
   <link rel="stylesheet" href="/static/extras.css?v=20261028f">
   <link rel="stylesheet" href="/static/motion.css?v=20261022a">
   <link rel="stylesheet" href="/static/app.css?v=20261028f">
-  <link rel="stylesheet" href="/static/premium.css?v=20261028f">
-  <link rel="stylesheet" href="/static/design.css?v=20261028f">
+  <link rel="stylesheet" href="/static/premium.css?v=20261031a">
+  <link rel="stylesheet" href="/static/design.css?v=20261031a">
   <link rel="stylesheet" href="/static/contrast-fix.css?v=20261028f">
-  <link rel="stylesheet" href="/static/theme.css?v=20261028f">
+  <link rel="stylesheet" href="/static/theme.css?v=20261031a">
   <link rel="stylesheet" href="/static/logistics-ui.css?v=20261028f">
   <link rel="stylesheet" href="/static/brand-scale.css?v=20261028f">
+  <link rel="stylesheet" href="/static/theme-light.css?v=20261031a">
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %} {% if authed %}app-shell{% else %}marketing{% endif %}">
@@ -63,6 +64,8 @@
   <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
   <symbol id="i-admin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></symbol>
   <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></symbol>
 </svg>
 
 {% if authed %}
@@ -135,6 +138,10 @@
           <svg class="icon"><use href="#i-bell"/></svg>
           {% if notifications %}<span class="topbar-bell-dot">{{ notifications|length }}</span>{% endif %}
         </a>
+        <button type="button" class="topbar-bell theme-toggle" id="theme-toggle" aria-label="Switch to light theme" aria-pressed="false">
+          <svg class="icon theme-icon-sun"><use href="#i-sun"/></svg>
+          <svg class="icon theme-icon-moon"><use href="#i-moon"/></svg>
+        </button>
         <span class="top-divider"></span>
         <a class="btn primary sm" href="/start"><svg class="icon"><use href="#i-plus"/></svg><span>New assessment</span></a>
         <a class="top-avatar" href="/settings" aria-label="Account settings">{{ (user.name or user.email or 'EL')[:2]|upper }}</a>
@@ -221,7 +228,32 @@
   </div>
 </dialog>
 {% endif %}
-<script src="/static/app.js?v=20261028f" defer></script>
+<script>
+(function () {
+  var button = document.getElementById("theme-toggle");
+  if (!button) return;
+  function current() {
+    return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+  }
+  function sync() {
+    var light = current() === "light";
+    button.setAttribute("aria-label", light ? "Switch to dark theme" : "Switch to light theme");
+    button.setAttribute("aria-pressed", light ? "true" : "false");
+    var scheme = document.querySelector('meta[name="color-scheme"]');
+    var color = document.querySelector('meta[name="theme-color"]');
+    if (scheme) scheme.setAttribute("content", light ? "light" : "dark");
+    if (color) color.setAttribute("content", light ? "#e8ecf2" : "#070d16");
+  }
+  button.addEventListener("click", function () {
+    var next = current() === "light" ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", next);
+    document.cookie = "elipsis_theme=" + next + "; path=/; max-age=63072000; samesite=lax";
+    sync();
+  });
+  sync();
+})();
+</script>
+<script src="/static/app.js?v=20261031a" defer></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

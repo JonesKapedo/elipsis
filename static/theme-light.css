@@ -1,0 +1,405 @@
+html[data-theme="light"] { color-scheme: light; }
+html[data-theme="light"] body.app-shell {
+  --ink: #172033;
+  --ink-2: #3f4c5f;
+  --muted: #627189;
+  --muted-2: #8592a6;
+  --line: #dfe5ec;
+  --line-strong: #c8d2de;
+  --surface: #ffffff;
+  --canvas: #f4f6f8;
+  --canvas-2: #f8fafc;
+  --amber: #b45309;
+  --amber-ink: #ffffff;
+  --amber-soft: #fff6e5;
+  --blue: #1d4ed8;
+  --green: #15803d;
+  --green-soft: #e9f7ee;
+  --red: #b42318;
+  --red-soft: #fef3f2;
+  --orange: #b54708;
+  --orange-soft: #fff4e8;
+  --shadow: 0 18px 40px -28px rgba(15, 23, 42, .32);
+  --paper: #ffffff;
+  --panel: #ffffff;
+  --panel2: #f8fafc;
+  --soft: var(--ink-2);
+  --accent: var(--amber);
+  --good: var(--green);
+  --bad: var(--red);
+  --warn: var(--orange);
+}
+html[data-theme="light"] body.app-shell .app-sidebar {
+  --amber: #f3b84a;
+  --amber-ink: #1b1304;
+}
+html[data-theme="light"] body.app-shell .app-content a:hover { color: #1d4ed8; }
+
+html[data-theme="light"] body.app-shell .app-topbar {
+  background: #ffffff;
+  border-bottom-color: var(--line);
+}
+html[data-theme="light"] body.app-shell .org-switch,
+html[data-theme="light"] body.app-shell .topbar-search {
+  background: #f8fafc;
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+html[data-theme="light"] body.app-shell .org-switch:hover {
+  background: #f1f4f8;
+  border-color: #b8c4d2;
+}
+html[data-theme="light"] body.app-shell .topbar-search:focus-within {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 3px rgba(180, 83, 9, .12);
+}
+html[data-theme="light"] body.app-shell .topbar-search .search-icon,
+html[data-theme="light"] body.app-shell .topbar-search input::placeholder { color: #8592a6; }
+html[data-theme="light"] body.app-shell .topbar-search input { color: var(--ink); }
+html[data-theme="light"] body.app-shell .topbar-search kbd,
+html[data-theme="light"] body.app-shell .cmd-trigger kbd {
+  background: #ffffff;
+  border-color: var(--line-strong);
+  color: #627189;
+}
+html[data-theme="light"] body.app-shell .cmd-trigger {
+  background: #f8fafc;
+  border-color: var(--line-strong);
+  color: #475467;
+}
+html[data-theme="light"] body.app-shell .cmd-trigger:hover {
+  background: #f1f4f8;
+  color: var(--ink);
+}
+html[data-theme="light"] body.app-shell .topbar-bell {
+  background: transparent;
+  border-color: transparent;
+  color: #627189;
+}
+html[data-theme="light"] body.app-shell .topbar-bell:hover {
+  background: #f1f4f8;
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+html[data-theme="light"] body.app-shell .top-divider { background: var(--line); }
+html[data-theme="light"] body.app-shell .top-avatar {
+  background: #fff3d6;
+  color: #9a5b00;
+}
+
+html[data-theme="light"] body.app-shell .btn {
+  background: #ffffff;
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+html[data-theme="light"] body.app-shell .btn:hover { background: #f1f4f8; color: var(--ink); }
+html[data-theme="light"] body.app-shell .btn.primary {
+  background: #f5b301;
+  color: #211603;
+  border-color: #e6a800;
+}
+html[data-theme="light"] body.app-shell .btn.primary:hover {
+  background: #ffc45c;
+  color: #211603;
+}
+html[data-theme="light"] body.app-shell .btn.secondary {
+  background: #ffffff;
+  color: var(--ink-2);
+  border-color: var(--line-strong);
+}
+html[data-theme="light"] body.app-shell .btn.secondary:hover { background: #f6f8fb; color: var(--ink); }
+html[data-theme="light"] body.app-shell .btn.ghost { background: transparent; color: var(--ink-2); }
+html[data-theme="light"] body.app-shell .btn.ghost:hover { background: #eef2f7; border-color: #c8d2de; color: var(--ink); }
+html[data-theme="light"] body.app-shell .btn.danger {
+  background: #ffffff;
+  color: #b42318;
+  border-color: #f3c0bc;
+}
+html[data-theme="light"] body.app-shell .btn.danger:hover { background: #fef3f2; color: #912018; }
+
+html[data-theme="light"] body.app-shell .eyebrow,
+html[data-theme="light"] body.app-shell .kpi span,
+html[data-theme="light"] body.app-shell .assess-kpi span,
+html[data-theme="light"] body.app-shell .stat-card span,
+html[data-theme="light"] body.app-shell .company-strip span,
+html[data-theme="light"] body.app-shell .field-note { color: #627189; }
+html[data-theme="light"] body.app-shell .stat-card.ok b { color: #15803d; }
+html[data-theme="light"] body.app-shell .stat-card.danger b { color: #b42318; }
+html[data-theme="light"] body.app-shell .stat-card.warn b { color: #b54708; }
+
+html[data-theme="light"] body.app-shell .tag,
+html[data-theme="light"] body.app-shell .pill,
+html[data-theme="light"] body.app-shell .premium-tag {
+  background: #eef2f7;
+  border-color: #dfe5ec;
+  color: #475467;
+}
+html[data-theme="light"] body.app-shell .tag.ok,
+html[data-theme="light"] body.app-shell .pill.ok {
+  background: #e9f7ee;
+  border-color: #bfe3cc;
+  color: #15803d;
+}
+html[data-theme="light"] body.app-shell .tag.warn,
+html[data-theme="light"] body.app-shell .pill.warn,
+html[data-theme="light"] body.app-shell .tag.sev-medium {
+  background: #fff6e5;
+  border-color: #f0d9a8;
+  color: #9a5b00;
+}
+html[data-theme="light"] body.app-shell .tag.err,
+html[data-theme="light"] body.app-shell .pill.err,
+html[data-theme="light"] body.app-shell .tag.risk,
+html[data-theme="light"] body.app-shell .tag.sev-high {
+  background: #fef3f2;
+  border-color: #f3c0bc;
+  color: #b42318;
+}
+html[data-theme="light"] body.app-shell .tag.sev-low {
+  background: #eff6ff;
+  border-color: #c7d9fb;
+  color: #1d4ed8;
+}
+html[data-theme="light"] body.app-shell .premium-tag {
+  background: #fff6e5;
+  border-color: #f0d9a8;
+  color: #9a5b00;
+}
+
+html[data-theme="light"] body.app-shell .progress,
+html[data-theme="light"] body.app-shell .progress-track,
+html[data-theme="light"] body.app-shell .bar,
+html[data-theme="light"] body.app-shell .pcard .sp-bar,
+html[data-theme="light"] body.app-shell .sp-bar,
+html[data-theme="light"] body.app-shell .assess-meter,
+html[data-theme="light"] body.app-shell .pulse-segments i,
+html[data-theme="light"] body.app-shell .component-track,
+html[data-theme="light"] body.app-shell .campaign-progress,
+html[data-theme="light"] body.app-shell .profile-meter,
+html[data-theme="light"] body.app-shell .assess-meter { background: #e6ebf1; }
+html[data-theme="light"] body.app-shell .sp-bar i { background: #c8d2de; }
+html[data-theme="light"] body.app-shell .lane-card.is-weak,
+html[data-theme="light"] body.app-shell .assess-constraint,
+html[data-theme="light"] body.app-shell .premium-note {
+  background: #fffbf2;
+  border-color: #efd9ad;
+}
+html[data-theme="light"] body.app-shell .lane-card.is-weak .lane-score,
+html[data-theme="light"] body.app-shell .assess-lane.is-weak b,
+html[data-theme="light"] body.app-shell .assess-steps span,
+html[data-theme="light"] body.app-shell .top-opps .opp-chip,
+html[data-theme="light"] body.app-shell .pulse-block em,
+html[data-theme="light"] body.app-shell .constraint-score span,
+html[data-theme="light"] body.app-shell .headline-meta .band { color: #9a5b00; }
+html[data-theme="light"] body.app-shell .pulse-block.strong em { color: #15803d; }
+html[data-theme="light"] body.app-shell .pulse-block.risk em { color: #b42318; }
+html[data-theme="light"] body.app-shell .pulse-block.risk em,
+html[data-theme="light"] body.app-shell .company-kpi.is-risk strong { color: #b42318; }
+html[data-theme="light"] body.app-shell .company-kpi.is-risk small { color: #c2413a; }
+html[data-theme="light"] body.app-shell .assess-constraint p,
+html[data-theme="light"] body.app-shell .assess-lane i em { color: #627189; }
+
+html[data-theme="light"] body.app-shell .table th {
+  background: #f8fafc;
+  border-bottom-color: #dfe5ec;
+  color: #627189;
+}
+html[data-theme="light"] body.app-shell .table td {
+  border-color: #e8edf3;
+  color: var(--ink-2);
+}
+html[data-theme="light"] body.app-shell .table tbody tr:hover { background: #f8fafc; }
+html[data-theme="light"] body.app-shell .qcode {
+  background: #eef2f7;
+  border-color: #dfe5ec;
+  color: #475467;
+}
+html[data-theme="light"] body.app-shell .attention a,
+html[data-theme="light"] body.app-shell .action-list li,
+html[data-theme="light"] body.app-shell .assess-lane,
+html[data-theme="light"] body.app-shell .phase,
+html[data-theme="light"] body.app-shell .note-card,
+html[data-theme="light"] body.app-shell .campaign-row,
+html[data-theme="light"] body.app-shell .next-move-list a,
+html[data-theme="light"] body.app-shell .company-facts > div,
+html[data-theme="light"] body.app-shell .company-activity-row { background: #ffffff; border-color: var(--line); }
+html[data-theme="light"] body.app-shell .attention small,
+html[data-theme="light"] body.app-shell .company-trend-value,
+html[data-theme="light"] body.app-shell .picture-score p,
+html[data-theme="light"] body.app-shell .profile-meter .row-between,
+html[data-theme="light"] body.app-shell .company-toolbar-links a { color: #627189; }
+html[data-theme="light"] body.app-shell .dot { background: #8592a6; }
+html[data-theme="light"] body.app-shell .dot.high,
+html[data-theme="light"] body.app-shell .dot.danger { background: #b42318; }
+html[data-theme="light"] body.app-shell .dot.low { background: #1d4ed8; }
+
+html[data-theme="light"] body.app-shell input,
+html[data-theme="light"] body.app-shell select,
+html[data-theme="light"] body.app-shell textarea {
+  background: #ffffff;
+  border-color: #c8d2de;
+  color: var(--ink);
+}
+html[data-theme="light"] body.app-shell input::placeholder,
+html[data-theme="light"] body.app-shell textarea::placeholder { color: #8592a6; }
+html[data-theme="light"] body.app-shell select option { background: #ffffff; color: var(--ink); }
+html[data-theme="light"] body.app-shell input:focus,
+html[data-theme="light"] body.app-shell select:focus,
+html[data-theme="light"] body.app-shell textarea:focus {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 3px rgba(180, 83, 9, .12);
+}
+html[data-theme="light"] body.app-shell label,
+html[data-theme="light"] body.app-shell .filter-bar > label { color: #475467; }
+html[data-theme="light"] body.app-shell .field input:disabled {
+  background: #f1f4f8;
+  color: #8592a6;
+}
+html[data-theme="light"] body.app-shell .flash.ok {
+  background: #e9f7ee;
+  border-color: #bfe3cc;
+  color: #15803d;
+}
+html[data-theme="light"] body.app-shell .flash.err {
+  background: #fef3f2;
+  border-color: #f3c0bc;
+  color: #b42318;
+}
+html[data-theme="light"] body.app-shell .member-avatar {
+  background: #eef2f7;
+  color: var(--ink);
+}
+
+html[data-theme="light"] body.app-shell .choice { background: #ffffff; border-color: var(--line); }
+html[data-theme="light"] body.app-shell .choice:hover { background: #f8fafc; border-color: #b8c4d2; }
+html[data-theme="light"] body.app-shell .choice.selected {
+  background: #fff6e5;
+  border-color: #d9a441;
+  box-shadow: inset 0 0 0 1px #d9a441;
+}
+html[data-theme="light"] body.app-shell .workspace-tabs .tab { color: #627189; }
+html[data-theme="light"] body.app-shell .tab .count {
+  background: #eef2f7;
+  border-color: var(--line);
+  color: #475467;
+}
+html[data-theme="light"] body.app-shell .settings-details {
+  background: #ffffff;
+  border-color: var(--line);
+}
+html[data-theme="light"] body.app-shell .cmdk::backdrop { background: rgba(15, 23, 42, .38); }
+html[data-theme="light"] body.app-shell .cmdk-head kbd,
+html[data-theme="light"] body.app-shell .cmdk-foot kbd {
+  background: #eef2f7;
+  border-color: var(--line);
+  color: #627189;
+}
+html[data-theme="light"] body.app-shell .cmdk-item.active { background: #fff6e5; color: var(--ink); }
+html[data-theme="light"] body.app-shell .cmdk-item-icon { color: #627189; }
+html[data-theme="light"] body.app-shell .cmdk-foot {
+  background: #f8fafc;
+  color: #627189;
+}
+
+html[data-theme="light"] .company-monogram {
+  background: #eef2f7;
+  border-color: #c8d2de;
+  color: #9a5b00;
+}
+html[data-theme="light"] .company-subline span + span::before { color: #8592a6; }
+html[data-theme="light"] .pulse-block span,
+html[data-theme="light"] .company-kpi span,
+html[data-theme="light"] .picture-score-top span,
+html[data-theme="light"] .pulse-block strong small,
+html[data-theme="light"] .component-row small,
+html[data-theme="light"] .company-trend-col small,
+html[data-theme="light"] .company-facts dt,
+html[data-theme="light"] .company-activity-row small,
+html[data-theme="light"] .company-activity-row em,
+html[data-theme="light"] .company-shortcuts .shortcut-list strong,
+html[data-theme="light"] .settings-rail-foot p,
+html[data-theme="light"] .color-field code { color: #627189; }
+html[data-theme="light"] .company-toolbar-links a { color: #475467; }
+html[data-theme="light"] .company-empty-inline p,
+html[data-theme="light"] .next-move-list a > span { color: #627189; }
+html[data-theme="light"] .constraint-pillar .component-track i { background: #c8d2de; }
+html[data-theme="light"] .company-activity-row .dot { background: #8592a6; }
+html[data-theme="light"] .company-shortcuts .shortcut-list a:hover { background: #f8fafc; }
+html[data-theme="light"] .company-peer:hover { border-color: #b8c4d2; }
+html[data-theme="light"] .settings-shell .settings-nav a { color: #475467; }
+html[data-theme="light"] .settings-shell .settings-nav a span { color: #8592a6; }
+html[data-theme="light"] .settings-shell .settings-nav a:hover { background: #f1f4f8; }
+html[data-theme="light"] .settings-shell .settings-nav a.active {
+  background: #fff6e5;
+  color: var(--ink);
+}
+html[data-theme="light"] .settings-num {
+  background: #eef2f7;
+  border-color: #dfe5ec;
+  color: #475467;
+}
+html[data-theme="light"] .settings-savebar {
+  background: rgba(255, 255, 255, .96);
+  border-color: var(--line-strong);
+  box-shadow: 0 18px 40px -24px rgba(15, 23, 42, .35);
+}
+html[data-theme="light"] .switch-row { border-top-color: #e8edf3; }
+html[data-theme="light"] .switch-track {
+  background: #e2e8ef;
+  border-color: #c8d2de;
+}
+html[data-theme="light"] .switch-track::after { background: #ffffff; }
+html[data-theme="light"] .settings-details summary { color: var(--ink); }
+
+html[data-theme="light"] body.app-shell .ops-chip { background: #ffffff; color: var(--ink-2); }
+html[data-theme="light"] body.app-shell .ops-chip.is-on { background: var(--ink); color: #ffffff; border-color: var(--ink); }
+html[data-theme="light"] body.app-shell .ops-code { background: #14121a; color: #f6efe2; }
+html[data-theme="light"] body.app-shell .ops-incident,
+html[data-theme="light"] body.app-shell .ops-api-card { background: #fffdf8; }
+html[data-theme="light"] body.app-shell .ops-token-reveal,
+html[data-theme="light"] body.app-shell .ops-token { background: #fffaf0; }
+
+html[data-theme="light"] body.app-shell .progress-sticky {
+  background: #ffffff;
+  border-color: var(--line);
+}
+html[data-theme="light"] body.app-shell .progress-sticky-bar { background: #edf0f3; }
+html[data-theme="light"] body.app-shell .progress-sticky-meta { color: #627189; }
+html[data-theme="light"] body.app-shell .save-pill {
+  background: #f1f4f8;
+  border-color: var(--line-strong);
+  color: #475467;
+}
+
+/* contrast-fix.css forces light button labels to white; undo that here. */
+html[data-theme="light"] body.app-shell .btn:not(.ghost):not(.secondary) {
+  color: var(--ink) !important;
+}
+html[data-theme="light"] body.app-shell .btn.primary {
+  color: #211603 !important;
+}
+
+/* The framework band stays dark in both themes, so keep its copy legible. */
+html[data-theme="light"] body.app-shell .model-panel {
+  background: #0b1220;
+  border-color: #24344b;
+}
+html[data-theme="light"] body.app-shell .model-panel h3 {
+  color: #f8fafc !important;
+}
+html[data-theme="light"] body.app-shell .model-panel > p {
+  color: #aeb9ca !important;
+}
+html[data-theme="light"] body.app-shell .model-panel > p strong {
+  color: #ffffff !important;
+}
+html[data-theme="light"] body.app-shell .model-card {
+  background: #111c2e;
+  border-color: #24344b;
+}
+html[data-theme="light"] body.app-shell .model-card strong {
+  color: #f3b84a !important;
+}
+html[data-theme="light"] body.app-shell .model-card span {
+  color: #9aa8bd !important;
+}
