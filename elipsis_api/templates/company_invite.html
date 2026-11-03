@@ -18,7 +18,7 @@
   <div>
     <h2>Invite ready</h2>
     <p class="muted">Send this link privately to {{ created.email or 'the person you are inviting' }}. It expires {{ created.expires_at[:10] }} and allows {{ created.max_uses or 1 }} use{% if (created.max_uses or 1) != 1 %}s{% endif %}.</p>
-    <div class="copy-line"><input id="invite-url" readonly value="{{ base_url }}/invite/{{ created.token }}"><button class="btn sm" type="button" data-copy="#invite-url">Copy link</button></div>
+    <div class="copy-line"><input id="invite-url" readonly value="{{ base_url }}/invite/{{ created.token }}"><button class="btn sm" type="button" data-copy-target="#invite-url">Copy link</button></div>
   </div>
 </section>
 {% endif %}

@@ -1,6 +1,31 @@
 {% extends "base.html" %}
-{% block title %}Not found{% endblock %}
+{% block title %}Page not found{% endblock %}
+{% block body_class %}page-404{% endblock %}
 {% block content %}
-<section class="narrow"><h1>404</h1><p>That page was not found.</p>
-<p><a class="btn ghost" href="/">Back home</a></p></section>
+<section class="error-hero" aria-labelledby="err-heading">
+  <div class="error-art" aria-hidden="true">
+    <span class="error-code-dot">.</span>
+    <span class="error-code-dot">.</span>
+    <span class="error-code-dot">.</span>
+  </div>
+  <p class="eyebrow">404 — NOT FOUND</p>
+  <h1 id="err-heading">This page has moved on.</h1>
+  <p class="lede">
+    The link you followed no longer exists. It may have been renamed, retired, or
+    shared from an older version of the platform.
+  </p>
+  <div class="error-actions">
+    <a class="btn" href="/">Back to the home page</a>
+    {% if user %}
+    <a class="btn ghost" href="/dashboard">Go to your dashboard</a>
+    <a class="btn ghost" href="/assessments">Open assessments</a>
+    {% else %}
+    <a class="btn ghost" href="/sample">See a sample report</a>
+    <a class="btn ghost" href="/login">Sign in</a>
+    {% endif %}
+  </div>
+  {% if request.url.path != '/' %}
+  <p class="error-path muted small">Requested: <code>{{ request.url.path }}</code></p>
+  {% endif %}
+</section>
 {% endblock %}
