@@ -1,9 +1,10 @@
 # Elipsis
 
-**Turning operational flow into business power.**
+**Global automation implementation marketplace for logistics.**
 
-Elipsis is a business transformation intelligence platform that measures how ready an
-organisation is to adopt automation — and what that readiness is worth in money.
+Like Upwork but specifically for logistics automation, with a professional assessment that answers "what should we automate first?"
+
+Logistics operators (10-300 staff) get a professional assessment ($49) that identifies what to automate, the cost of inaction, and a 90-day plan. They can then publish requests to vetted implementation partners. Partners pay monthly ($39-$219) to access and bid on these requests.
 
 > *Elipsis* is the three-dot mark for "and so on" — the sequence that shows the
 > pattern continuing. This platform looks for exactly that: the pattern of friction
@@ -18,14 +19,15 @@ Production path: **FastAPI + SQLAlchemy + Jinja2** (Vercel). Pure scoring engine
 investor-facing dashboard that surfaces the seven pillars, 36 metrics, maturity bands,
 and three-phase roadmap. Telegram bot remains a separate acquisition channel.
 
-**Streamline work in progress** — see [`STREAMLINE_TODO.md`](STREAMLINE_TODO.md).
+**Execution Roadmap:** See [`docs/IMPLEMENTATION_ROADMAP.md`](docs/IMPLEMENTATION_ROADMAP.md) - this is the single source of truth for current priorities, timeline, and metrics.
 
 ## Documentation
 
 | Document | Purpose |
 | --- | --- |
-| [`docs/PLATFORM_MASTER_PLAN.md`](docs/PLATFORM_MASTER_PLAN.md) | Market, target audience, competitive position, gaps, recommendations, and feature sequence. Start here. |
-| [`docs/DAILY_OPERATIONS_TRANSFORMATION.md`](docs/DAILY_OPERATIONS_TRANSFORMATION.md) | Technical specification for the daily operating layer. |
+| [`docs/IMPLEMENTATION_ROADMAP.md`](docs/IMPLEMENTATION_ROADMAP.md) | **START HERE** - Single source of truth for execution: phases, timeline, metrics, risks, and weekly check-ins. |
+| [`docs/PLATFORM_MASTER_PLAN.md`](docs/PLATFORM_MASTER_PLAN.md) | Market, target audience, competitive position, gaps, recommendations, and feature sequence. |
+| [`docs/DAILY_OPERATIONS_TRANSFORMATION.md`](docs/DAILY_OPERATIONS_TRANSFORMATION.md) | Technical specification for the daily operating layer (deferred - not in current scope). |
 | [`docs/PLATFORM_UPGRADE_IMPLEMENTATION_GUIDE.md`](docs/PLATFORM_UPGRADE_IMPLEMENTATION_GUIDE.md) | Marketplace, entitlement, and handoff specification. |
 | [`docs/COMPETITIVE_EDGE.md`](docs/COMPETITIVE_EDGE.md) | Original market read. Superseded for positioning by the master plan. |
 | [`docs/SERVICE_DELIVERY_STANDARD.md`](docs/SERVICE_DELIVERY_STANDARD.md) | Published service commitments and SLAs. |
@@ -33,10 +35,14 @@ and three-phase roadmap. Telegram bot remains a separate acquisition channel.
 
 ## Frontend decision (locked)
 
-**Production UI:** FastAPI + Jinja2 templates + `static/`, deployed on Vercel.
+| Layer | Technology | Deployed? |
+| --- | --- | --- |
+| **Production UI** | FastAPI + Jinja2 templates + `static/` | **Yes** (Vercel) |
+| **Experimental SPA** | React + Vite under `frontend/` | **No** |
 
-The experimental React/Vite SPA was removed. There is one frontend and one deploy
-target. Do not point Vercel at the Telegram bot.
+The React SPA is kept for reference only. It is **not** the deploy target and is not linked from production routes.
+
+Do not point Vercel at the Telegram bot or at `frontend/`.
 
 ## Naming
 
