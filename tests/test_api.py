@@ -995,8 +995,11 @@ def test_company_room_membership_collaboration_and_branding():
     from fastapi.testclient import TestClient
 
     from elipsis_api import models, security, services_room
-    from elipsis_api.database import SessionLocal
+    from elipsis_api.database import Base, SessionLocal, engine
     from elipsis_api.main import app
+
+    # Create tables before using SessionLocal (same as lifespan)
+    Base.metadata.create_all(bind=engine)
 
     with SessionLocal() as db:
         owner = models.User(
@@ -1416,3 +1419,20 @@ def test_company_home_renders_the_selected_owned_company():
         export = home.get(f"/operations/export.json?org={org_id}")
         assert export.status_code == 200
         assert export.json()["metrics"]
+
+
+def test_settings_default_theme_is_dark_and_switch_persists(signed_in):
+    page = signed_in.get("/settings")
+    assert page.status_code == 200
+    assert 'name="theme" value="dark" checked' in page.text
+    assert 'name="theme" value="system" checked' not in page.text
+
+    saved = signed_in.post("/settings", data={"theme": "light"},
+                           follow_redirects=False)
+    assert saved.status_code == 303
+    assert saved.cookies.get("elipsis_theme") == "light"
+
+    light_page = signed_in.get("/settings")
+    assert 'name="theme" value="light" checked' in light_page.text
+
+    signed_in.post("/settings", data={"theme": "dark"}, follow_redirects=False)

@@ -12,7 +12,7 @@ measurement model is auditable in one place.
 # --- Brand ----------------------------------------------------------------
 BRAND_NAME = "Elipsis"
 BRAND_SHORT = "ELIPSIS"
-BRAND_TAGLINE = "Business Operations Transformation Engine."
+BRAND_TAGLINE = "Global automation implementation marketplace for logistics."
 BRAND_MARK = "\u22ef"  # the ellipsis glyph
 FRAMEWORK_NAME = "Elipsis Transformation Framework"
 ASSESSMENT_NAME = "Elipsis Transformation Assessment"
