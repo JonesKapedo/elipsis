@@ -29,7 +29,7 @@ def is_admin(user) -> bool:
     ``is_admin`` is the authoritative flag. ``user_type`` is the commercial
     identity and may also be ``admin`` for API/legacy rows. The legacy
     ``User.role`` column is no longer consulted for authorization; migration
-    ``a9b8c7d6e5f4`` backfills it into ``is_admin``.
+    ``a9b8c7d6e5f4`` backfills it into ``is_admin`` and ``user_type``.
     """
     if user is None:
         return False
@@ -43,7 +43,7 @@ def is_admin(user) -> bool:
 
 def is_super_admin(user) -> bool:
     return bool(user is not None and
-                (getattr(user, "role", "") or "").lower() == "super_admin")
+                (getattr(user, "user_type", "") or "").lower() == "super_admin")
 
 
 def org_membership(db: Session, user, organization_id: int | None):
