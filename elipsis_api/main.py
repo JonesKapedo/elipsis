@@ -27,10 +27,11 @@ from starlette.middleware.gzip import GZipMiddleware
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from constants import BRAND_NAME, FRAMEWORK_NAME  # noqa: E402
-from elipsis_api import services  # noqa: E402
+from elipsis_api import services, session_auth  # noqa: E402
 from elipsis_api import state as runtime_state  # noqa: E402
-from elipsis_api.config import DATABASE_URL  # noqa: E402
+from elipsis_api.config import DATABASE_URL, SESSION_COOKIE  # noqa: E402
 from elipsis_api.database import Base, SessionLocal, engine  # noqa: E402
+from elipsis_api.deps import templates  # noqa: E402
 from elipsis_api.routers import api, pages
 
 try:
@@ -267,6 +268,14 @@ if _static.is_dir():
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(_request: Request, exc: StarletteHTTPException):
+    if exc.status_code == 404 and "text/html" in _request.headers.get("accept", ""):
+        db = SessionLocal()
+        try:
+            user = session_auth.resolve_user(db, _request.cookies.get(SESSION_COOKIE))
+        finally:
+            db.close()
+        return templates.TemplateResponse(
+            _request, "404.html", {"user": user}, status_code=404)
     if isinstance(exc.detail, (dict, list)):
         return JSONResponse(status_code=exc.status_code, content=exc.detail)
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
