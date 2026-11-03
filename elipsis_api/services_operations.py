@@ -588,7 +588,7 @@ def import_errors(batch: models.DataImport) -> list[dict[str, Any]]:
 
 
 def ensure_sample_data(db: Session, org_id: int, user_id: int | None = None) -> dict[str, int]:
-    """Add a coherent six-month operating history once, for demos and first-run pages."""
+    """Add a coherent six-month history of completed months for demos and first-run pages."""
     created = {"metrics": 0, "incidents": 0, "documents": 0}
     existing_metrics = db.scalar(select(models.OperationalMetric.id).where(
         models.OperationalMetric.organization_id == org_id).limit(1))
@@ -603,7 +603,7 @@ def ensure_sample_data(db: Session, org_id: int, user_id: int | None = None) -> 
             "claims_ratio": [2.8, 2.5, 2.2, 1.9, 1.6, 1.4],
             "warehouse_accuracy": [91, 92, 93, 94, 95, 96],
         }
-        first = _today().replace(day=1)
+        first = (_today().replace(day=1) - timedelta(days=1)).replace(day=1)
         periods = []
         for back in range(5, -1, -1):
             year = first.year

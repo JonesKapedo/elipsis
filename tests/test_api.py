@@ -4,6 +4,7 @@ Runs against a throwaway SQLite file so it never touches the dev database.
 """
 import os
 import tempfile
+from datetime import date
 
 import pytest
 
@@ -629,7 +630,7 @@ def test_operations_ecosystem_round_trip(signed_in):
 
     recorded = client.post("/operations/metrics", data={
         "organization_id": org_id, "metric_key": "on_time_delivery",
-        "value": "96.4", "period_end": "2026-10-31",
+        "value": "96.4", "period_end": date.today().isoformat(),
         "note": "Weekly dispatch review"}, follow_redirects=False)
     assert recorded.status_code == 303
     metrics = client.get(f"/api/v1/operations/metrics?org_id={org_id}").json()["metrics"]

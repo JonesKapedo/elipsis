@@ -175,7 +175,7 @@ class AuthOut(BaseModel):
     user_id: int
     email: str
     name: str
-    role: str
+    user_type: str
     token: str
 
 

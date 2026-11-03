@@ -48,7 +48,8 @@ def test_admin_detection_uses_flag_type_and_env_email(db, monkeypatch):
     assert permissions.is_admin(_user(db, "flag@example.com", is_admin=True)) is True
     assert permissions.is_admin(_user(db, "owner@example.com")) is True
     assert permissions.is_admin(_user(db, "member@example.com")) is False
-    assert permissions.is_super_admin(_user(db, "super@example.com", role="super_admin")) is True
+    assert permissions.is_super_admin(_user(db, "super@example.com", user_type="super_admin")) is True
+    assert permissions.is_super_admin(_user(db, "legacy@example.com", role="super_admin")) is False
 
 
 def test_org_roles_and_membership_control_management(db):

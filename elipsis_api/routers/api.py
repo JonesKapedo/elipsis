@@ -223,7 +223,6 @@ async def register(request: Request, response: Response, db: Session = Depends(g
                 "user_id": user.id,
                 "email": user.email,
                 "name": user.name or "",
-                "role": user.role or "client",
                 "user_type": user.user_type or "client",
                 "token": token,
             }
@@ -270,7 +269,7 @@ def login(payload: schemas.LoginIn, request: Request, response: Response,
             user_id=user.id,
             email=user.email,
             name=user.name or "",
-            role=user.role or "client",
+            user_type=user.user_type or "client",
             token=token,
         ),
     )
@@ -285,7 +284,7 @@ def me(request: Request, db: Session = Depends(get_db)):
         user_id=user.id,
         email=user.email,
         name=user.name or "",
-        role=user.role or "client",
+        user_type=user.user_type or "client",
         token=request.cookies.get(SESSION_COOKIE) or "",
     )
 
