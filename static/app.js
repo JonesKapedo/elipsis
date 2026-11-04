@@ -1,12 +1,3 @@
-/* Elipsis theme bootstrap — applied by this entry script before shell behaviour.
-   base.html loads theme.css statically; this resolves the saved theme preference
-   from the cookie as early as the entry script runs (preserves prior behaviour). */
-(function () {
-  var s = document.createElement("script");
-  s.src = "/static/theme-boot.js?v=20261102a";
-  document.head.appendChild(s);
-})();
-
 /* Elipsis — shared interface behaviour. No dependencies. */
 (function () {
   "use strict";

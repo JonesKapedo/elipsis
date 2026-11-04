@@ -1075,6 +1075,7 @@ body.marketing {
 }
 body.marketing a { color: inherit; }
 body.marketing .pub-main { max-width: 1180px; margin: 0 auto; padding: 0 24px 80px; }
+body.marketing .pub-main > .mk-hero { margin-top: 0; }
 body.marketing h1, body.marketing h2 { font-family: var(--serif); font-weight: 600; letter-spacing: -0.03em; }
 body.marketing h3 { letter-spacing: -0.01em; }
 body.marketing .eyebrow, body.marketing .mk-eyebrow {

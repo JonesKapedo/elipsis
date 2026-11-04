@@ -38,3 +38,38 @@ body.density-compact .block { padding: .8rem; }
 
 /* Neutralize legacy diamond menu — replaced by vertical sidebar */
 .diamond, .diamond-wrap, .diamond-btn, .diamond-face, .diamond-menu { display: none !important; }
+
+.mk-hero > div:first-child > *,
+.mk-stats > *,
+body.page-auth .auth-pitch > *,
+body.page-auth .auth-story-copy > *,
+body.page-auth .auth-card.auth-card-pro {
+  animation: rise .6s var(--ease-out, ease) both;
+}
+.mk-hero > div:first-child > *:nth-child(2) { animation-delay: .06s; }
+.mk-hero > div:first-child > *:nth-child(3) { animation-delay: .12s; }
+.mk-hero > div:first-child > *:nth-child(4) { animation-delay: .18s; }
+.mk-hero > div:first-child > *:nth-child(5) { animation-delay: .24s; }
+.mk-stats > *:nth-child(2) { animation-delay: .06s; }
+.mk-stats > *:nth-child(3) { animation-delay: .12s; }
+.mk-stats > *:nth-child(4) { animation-delay: .18s; }
+.mk-product { animation: rise .75s var(--ease-out, ease) both; animation-delay: .1s; }
+body.page-auth .auth-pitch > *:nth-child(2) { animation-delay: .06s; }
+body.page-auth .auth-pitch > *:nth-child(3) { animation-delay: .12s; }
+body.page-auth .auth-pitch > *:nth-child(4) { animation-delay: .18s; }
+body.page-auth .auth-pitch > *:nth-child(5) { animation-delay: .24s; }
+body.page-auth .auth-story-copy > *:nth-child(2) { animation-delay: .06s; }
+body.page-auth .auth-story-copy > *:nth-child(3) { animation-delay: .12s; }
+body.page-auth .auth-story-copy > *:nth-child(4) { animation-delay: .18s; }
+body.page-auth .auth-card.auth-card-pro { animation-delay: .08s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mk-hero > div:first-child > *,
+  .mk-stats > *,
+  .mk-product,
+  body.page-auth .auth-pitch > *,
+  body.page-auth .auth-story-copy > *,
+  body.page-auth .auth-card.auth-card-pro {
+    animation: none !important;
+  }
+}

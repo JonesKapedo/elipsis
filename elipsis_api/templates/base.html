@@ -3,7 +3,7 @@
 {% set assess_active = path.startswith('/assessments') or path.startswith('/assessment/') or path.startswith('/compare') or path.startswith('/trends') or path.startswith('/benchmarks') %}
 {% set company_active = path.startswith('/company') or path == '/audit' %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-public="{{ 'false' if authed else 'true' }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -28,19 +28,19 @@
   <meta name="twitter:title" content="{{ self.title() }}">
   <meta name="twitter:description" content="{{ self.description() }}">
   <meta name="twitter:image" content="{{ request.url_for('static', path='brand/og-banner.png') }}">
+  <script src="/static/theme-boot.js?v=20261104b"></script>
   <link rel="stylesheet" href="/static/tokens.css?v=20261104a">
   <link rel="stylesheet" href="/static/components.css?v=20261104a">
   <link rel="stylesheet" href="/static/micro-interactions.css?v=20261104a">
   {% if not authed %}<link rel="stylesheet" href="/static/marketing.css?v=20261104a">{% endif %}
-  {% if path == '/login' or path == '/signup' or path == '/forgot-password' or path == '/reset-password' %}<link rel="stylesheet" href="/static/auth.css?v=20261104a">{% endif %}
   {% if path == '/settings' %}<link rel="stylesheet" href="/static/settings.css?v=20261104a">{% endif %}
   <link rel="stylesheet" href="/static/style.css?v=20261101a">
   <link rel="stylesheet" href="/static/app-shell.css?v=20261101a">
   <link rel="stylesheet" href="/static/extras.css?v=20261101a">
-  <link rel="stylesheet" href="/static/motion.css?v=20261022a">
+  <link rel="stylesheet" href="/static/motion.css?v=20261104a">
   <link rel="stylesheet" href="/static/app.css?v=20261101a">
   <link rel="stylesheet" href="/static/premium.css?v=20261101a">
-  <link rel="stylesheet" href="/static/design.css?v=20261101a">
+  <link rel="stylesheet" href="/static/design.css?v=20261104b">
   <link rel="stylesheet" href="/static/contrast-fix.css?v=20261101a">
   <link rel="stylesheet" href="/static/theme.css?v=20261101a">
   <link rel="stylesheet" href="/static/theme-light.css?v=20261103a">
@@ -48,6 +48,7 @@
   <link rel="stylesheet" href="/static/brand-scale.css?v=20261101a">
   <link rel="stylesheet" href="/static/results.css?v=20261101a">
   <link rel="stylesheet" href="/static/ux-polish.css?v=20261102b">
+  {% if path == '/login' or path == '/signup' or path == '/forgot-password' or path == '/reset-password' %}<link rel="stylesheet" href="/static/auth.css?v=20261104e">{% endif %}
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %} {% if authed %}app-shell{% else %}marketing{% endif %}">
@@ -95,15 +96,15 @@
           <a href="/assessments" class="nav-item{% if assess_active %} active{% endif %}"{% if assess_active %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-clipboard"/></svg><span>Assessments</span></a>
         </div>
         <div class="nav-group">
-          <p class="nav-group-label">Operate</p>
+          <p class="nav-group-label">Plan</p>
           <a href="/actions" class="nav-item{% if path == '/actions' %} active{% endif %}"{% if path == '/actions' %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-check-square"/></svg><span>Action plan</span>{% if notifications %}<span class="nav-badge">{{ notifications|length }}</span>{% endif %}</a>
-          <a href="/operations" class="nav-item{% if path.startswith('/operations') %} active{% endif %}"{% if path.startswith('/operations') %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-activity"/></svg><span>Operations</span></a>
         </div>
+        {% if (user.user_type or '') == 'bidder' %}
         <div class="nav-group">
-          <p class="nav-group-label">Implement</p>
-          <a href="/marketplace" class="nav-item{% if path.startswith('/marketplace') and not path.startswith('/marketplace/partner') %} active{% endif %}"><svg class="icon"><use href="#i-briefcase"/></svg><span>Marketplace</span><span class="nav-note">{% if (user.user_type or '') == 'admin' or user.is_admin %}admin{% else %}open{% endif %}</span></a>
-          {% if (user.user_type or '') == 'bidder' %}<a href="/marketplace/partner" class="nav-item{% if path.startswith('/marketplace/partner') %} active{% endif %}"><svg class="icon"><use href="#i-users"/></svg><span>Partner desk</span></a>{% endif %}
+          <p class="nav-group-label">Partner</p>
+          <a href="/marketplace/partner" class="nav-item{% if path.startswith('/marketplace/partner') %} active{% endif %}"><svg class="icon"><use href="#i-users"/></svg><span>Partner desk</span></a>
         </div>
+        {% endif %}
         <div class="nav-group">
           <p class="nav-group-label">Account</p>
           <a href="/settings" class="nav-item{% if path == '/settings' %} active{% endif %}"{% if path == '/settings' %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-settings"/></svg><span>Settings</span></a>
@@ -129,36 +130,12 @@
       <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Open menu" aria-controls="app-sidebar" aria-expanded="false">
         <svg class="icon"><use href="#i-menu"/></svg>
       </button>
-      <a class="org-switch" href="/company">
+      {% set workspace = company if company is defined and company else (selected_org if selected_org is defined and selected_org else none) %}
+      <a class="org-switch" href="/company" aria-label="Switch workspace">
         <svg class="icon"><use href="#i-building"/></svg>
-        <span>{{ company.name if company is defined and company else 'Workspace' }}</span>
+        <span>{{ workspace.name if workspace else 'Workspace' }}</span>
         <svg class="icon chev"><use href="#i-chevron"/></svg>
       </a>
-      <form class="topbar-search top-search" action="/search" method="get" role="search">
-        <svg class="icon"><use href="#i-search"/></svg>
-        <input type="search" name="q" placeholder="Search assessments, actions, people" aria-label="Search your company" value="{{ q if q is defined else '' }}" autocomplete="off">
-        <kbd aria-hidden="true">/</kbd>
-      </form>
-      <div class="topbar-actions top-actions">
-        <button type="button" class="cmd-trigger" id="cmd-trigger" aria-haspopup="dialog" aria-controls="cmdk">
-          <svg class="icon"><use href="#i-search"/></svg><span class="cmd-trigger-label">Commands</span><kbd>&#8984;K</kbd>
-        </button>
-        <button type="button" class="topbar-theme" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle light / dark theme">
-          <svg class="icon icon-sun" aria-hidden="true"><use href="#i-sun"/></svg>
-          <svg class="icon icon-moon" aria-hidden="true"><use href="#i-moon"/></svg>
-        </button>
-        <button type="button" class="topbar-label" id="kbd-help-trigger" aria-haspopup="dialog" aria-controls="kbd-help" aria-label="Keyboard shortcuts">
-          <svg class="icon"><use href="#i-keyboard"/></svg>
-        </button>
-        <a class="topbar-label" href="/help" aria-label="Help centre"><svg class="icon"><use href="#i-help"/></svg></a>
-        <a class="topbar-bell" href="/notifications" aria-label="Notifications">
-          <svg class="icon"><use href="#i-bell"/></svg>
-          {% if notifications %}<span class="topbar-bell-dot">{{ notifications|length }}</span>{% endif %}
-        </a>
-        <span class="top-divider"></span>
-        <a class="btn primary sm" href="/start"><svg class="icon"><use href="#i-plus"/></svg><span>New assessment</span></a>
-        <a class="top-avatar" href="/settings" aria-label="Account settings">{{ (user.name or user.email or 'EL')[:2]|upper }}</a>
-      </div>
     </header>
     <main id="main" class="app-content content">
 {% else %}
@@ -223,39 +200,6 @@
 </footer>
 {% endif %}
 
-{% if authed %}
-<dialog class="cmdk" id="cmdk" aria-labelledby="cmdk-title" data-admin="{{ 'true' if ((user.user_type or '') == 'admin' or user.is_admin) else 'false' }}">
-  <div class="cmdk-panel">
-    <h2 id="cmdk-title" class="sr-only">Command palette</h2>
-    <div class="cmdk-head">
-      <svg class="icon"><use href="#i-search"/></svg>
-      <input id="cmdk-input" type="search" placeholder="Search for jump to…" aria-label="Search commands" autocomplete="off">
-      <kbd>esc</kbd>
-    </div>
-    <div class="cmdk-results" id="cmdk-results" role="listbox" aria-label="Commands"></div>
-    <div class="cmdk-foot">
-      <span><kbd>&#8593;</kbd><kbd>&#8595;</kbd> navigate</span>
-      <span><kbd>&#8629;</kbd> open</span>
-      <span><kbd>/</kbd> company search</span>
-    </div>
-  </div>
-</dialog>
-
-<dialog class="kbd-help" id="kbd-help" aria-labelledby="kbd-help-title">
-  <div class="kbd-help-panel">
-    <h2 id="kbd-help-title">Keyboard shortcuts</h2>
-    <div class="kbd-grid">
-      <div class="kbd-row"><kbd>&#8984;K</kbd> / <kbd>Ctrl K</kbd><span>Command palette</span></div>
-      <div class="kbd-row"><kbd>/</kbd><span>Focus workspace search</span></div>
-      <div class="kbd-row"><kbd>?</kbd><span>Open this shortcut list</span></div>
-      <div class="kbd-row"><kbd>T</kbd><span>Toggle light / dark theme</span></div>
-      <div class="kbd-row"><kbd>esc</kbd><span>Close menus and dialogs</span></div>
-    </div>
-    <p class="kbd-note">Shortcuts work anywhere outside a text field.</p>
-    <button type="button" class="btn ghost sm" id="kbd-help-close">Close</button>
-  </div>
-</dialog>
-{% endif %}
 <script src="/static/app.js?v=20261103a" defer></script>
 <script src="/static/table-tools.js?v=20261103a" defer></script>
 {% block scripts %}{% endblock %}
