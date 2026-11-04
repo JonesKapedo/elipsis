@@ -9,6 +9,7 @@
 
   <div class="progress-sticky no-print" role="progressbar"
        aria-valuenow="{{ live.percent or 0 }}" aria-valuemin="0" aria-valuemax="100"
+       aria-valuetext="{{ live.answered or 0 }} of {{ live.total or 0 }} questions answered"
        aria-label="Assessment progress">
     <div class="progress-sticky-inner">
       <div class="progress-sticky-bar"><span id="stickyFill" style="width:{{ live.percent or 0 }}%"></span></div>
@@ -46,7 +47,9 @@
         {% for s in steps %}
         <a href="/assessment/{{ assessment.id }}/step/{{ s.number }}"
            class="section-pill {{ 'done' if s.complete }} {{ 'current' if s.number == step.number }}"
-           title="{{ SUBDOMAIN_LABELS.get(s.subdomain, s.subdomain) }} ({{ s.answered }}/{{ s.total }})">
+           title="{{ SUBDOMAIN_LABELS.get(s.subdomain, s.subdomain) }} ({{ s.answered }}/{{ s.total }})"
+           aria-label="Section {{ s.number }}: {{ SUBDOMAIN_LABELS.get(s.subdomain, s.subdomain) }}, {{ s.answered }} of {{ s.total }} answered"
+           {% if s.number == step.number %}aria-current="step"{% endif %}>
           <span class="pill-mark">{% if s.complete %}✓{% elif s.number == step.number %}●{% else %}○{% endif %}</span>
         </a>
         {% endfor %}

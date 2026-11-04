@@ -132,6 +132,11 @@ def test_step_pages_render_every_segment(signed_in):
         page = client.get(f"/assessment/{assessment_id}/step/{number}")
         assert page.status_code == 200
         assert "Why this matters" in page.text
+        assert 'class="step-layout step-layout-full"' in page.text
+        assert "assessment.css" in page.text
+        assert 'aria-current="step"' in page.text
+        assert "Answer for how the work runs today" in page.text
+        assert "Readiness so far" in page.text
     # Out-of-range steps clamp instead of erroring.
     assert client.get(f"/assessment/{assessment_id}/step/999").status_code == 200
 
@@ -530,6 +535,7 @@ def test_setup_persists_logistics_organisation_fields():
         assert "Start Mombasa Line Haul's diagnostic" in start_page.text
         assert "Freight forwarding" in start_page.text
         assert "I will answer" in start_page.text
+        assert "assessment.css" in start_page.text
 
         started = client.post("/start", data={
             "organization_id": str(org_id),
