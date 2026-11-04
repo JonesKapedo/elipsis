@@ -493,6 +493,71 @@ class AssessmentPurchase(Base):
     created_at: Mapped[str | None] = mapped_column(String, default=_now)
 
 
+class Order(Base):
+    """A commercial order for a catalog SKU (report, facilitated, operator)."""
+    __tablename__ = "orders"
+    __table_args__ = (
+        UniqueConstraint("provider_reference", name="uq_orders_provider_reference"),
+        Index("ix_orders_user", "user_id"),
+        Index("ix_orders_status", "status"),
+    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    assessment_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("assessments.id"))
+    organization_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("organizations.id"))
+    sku: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str | None] = mapped_column(String)
+    amount_minor: Mapped[int] = mapped_column(Integer, nullable=False)
+    tax_minor: Mapped[int | None] = mapped_column(Integer, default=0)
+    currency: Mapped[str | None] = mapped_column(String, default="USD")
+    status: Mapped[str | None] = mapped_column(String, default="pending")
+    provider: Mapped[str | None] = mapped_column(String)
+    provider_reference: Mapped[str | None] = mapped_column(String)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+    paid_at: Mapped[str | None] = mapped_column(String)
+
+
+class Entitlement(Base):
+    """What a user may access, independent of how they paid."""
+    __tablename__ = "entitlements"
+    __table_args__ = (
+        Index("ix_entitlements_user", "user_id"),
+        Index("ix_entitlements_assessment", "assessment_id"),
+    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    order_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("orders.id"))
+    assessment_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("assessments.id"))
+    organization_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("organizations.id"))
+    sku: Mapped[str] = mapped_column(String, nullable=False)
+    kind: Mapped[str | None] = mapped_column(String)
+    status: Mapped[str | None] = mapped_column(String, default="active")
+    starts_at: Mapped[str | None] = mapped_column(String, default=_now)
+    expires_at: Mapped[str | None] = mapped_column(String)
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
+class RescoreReminder(Base):
+    """One row per assessment re-score cycle so reminders are idempotent."""
+    __tablename__ = "rescore_reminders"
+    __table_args__ = (
+        UniqueConstraint("assessment_id", "cycle", name="uq_rescore_reminder_cycle"),
+    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    assessment_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("assessments.id"), nullable=False)
+    cycle: Mapped[int] = mapped_column(Integer, default=1)
+    due_at: Mapped[str | None] = mapped_column(String)
+    sent_at: Mapped[str | None] = mapped_column(String)
+    status: Mapped[str | None] = mapped_column(String, default="sent")
+    created_at: Mapped[str | None] = mapped_column(String, default=_now)
+
+
 class BidderVerificationDocument(Base):
     """Private document supporting a bidder verification review."""
     __tablename__ = "bidder_verification_documents"

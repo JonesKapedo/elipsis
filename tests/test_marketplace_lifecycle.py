@@ -260,7 +260,7 @@ def test_full_assessment_purchase_conversation_switch_handoff_and_directory(
         assessment_id, org_id = _demo_assessment(client)
         free = client.get(f"/assessment/{assessment_id}/results")
         assert free.status_code == 200
-        assert "Unlock Full Assessment" in free.text
+        assert "Get the Constraint Report" in free.text
         assert "Implementation roadmap" not in free.text
 
         checkout = client.post(f"/assessment/{assessment_id}/checkout",
@@ -273,11 +273,19 @@ def test_full_assessment_purchase_conversation_switch_handoff_and_directory(
         assert f"/assessment/{assessment_id}/results" in paid.headers["location"]
         unlocked = client.get(f"/assessment/{assessment_id}/results")
         assert "Implementation roadmap" in unlocked.text
-        assert "Unlock Full Assessment" not in unlocked.text
+        assert "Get the Constraint Report" not in unlocked.text
         with SessionLocal() as db:
             purchase = db.scalar(select(models.AssessmentPurchase).where(
                 models.AssessmentPurchase.assessment_id == assessment_id))
             assert purchase is not None and purchase.active is True
+            order = db.scalar(select(models.Order).where(
+                models.Order.provider_reference == reference))
+            assert order is not None and order.status == "paid"
+            assert order.sku == "report" and order.amount_minor == 49900
+            entitlement = db.scalar(select(models.Entitlement).where(
+                models.Entitlement.assessment_id == assessment_id,
+                models.Entitlement.sku == "report"))
+            assert entitlement is not None and entitlement.status == "active"
 
         created = client.post("/api/v1/marketplace/requests", json={
             "organization_id": org_id, "assessment_id": assessment_id,
@@ -400,6 +408,86 @@ def test_full_assessment_purchase_conversation_switch_handoff_and_directory(
         assert "Partner handoffs" in handoffs_page.text
 
 
+def test_facilitated_checkout_billing_and_receipt(marketplace_on):
+    email = _email("facilitated")
+    user_id = _make_user(email, "facilitated-password")
+    other_email = _email("other")
+    _make_user(other_email, "other-password")
+
+    with TestClient(app) as client:
+        _login(client, email, "facilitated-password")
+        assessment_id, _org_id = _demo_assessment(client)
+
+        free = client.get(f"/assessment/{assessment_id}/results")
+        assert free.status_code == 200
+
+        gated = client.get(f"/assessment/{assessment_id}/facilitated",
+                           follow_redirects=False)
+        assert gated.status_code == 303
+        assert "results" in gated.headers["location"]
+
+        checkout = client.post(
+            f"/assessment/{assessment_id}/checkout/facilitated",
+            follow_redirects=False)
+        assert checkout.status_code == 303
+        assert "/pay/dummy/FAC_" in checkout.headers["location"]
+        reference = checkout.headers["location"].rsplit("/", 1)[-1]
+
+        paid = client.get(f"/pay/return/{reference}", follow_redirects=False)
+        assert paid.status_code == 303
+        assert f"/assessment/{assessment_id}/facilitated" in paid.headers["location"]
+
+        booking = client.get(f"/assessment/{assessment_id}/facilitated")
+        assert booking.status_code == 200
+        assert "What happens next" in booking.text
+
+        unlocked = client.get(f"/assessment/{assessment_id}/results")
+        assert "Implementation roadmap" in unlocked.text
+
+        billing = client.get("/billing")
+        assert billing.status_code == 200
+        assert reference in billing.text
+        assert "Facilitated Report" in billing.text
+
+        receipt = client.get(f"/billing/receipt/{reference}")
+        assert receipt.status_code == 200
+        assert "Payment received" in receipt.text
+        assert "1,900.00" in receipt.text
+
+        with SessionLocal() as db:
+            db.add(models.BillingSubscription(
+                user_id=user_id, plan_code="PLAN_OPERATOR_MONTHLY",
+                provider_subscription_code="SUB_test_cancel",
+                status="active", current_period_end="2027-01-01 00:00:00"))
+            db.commit()
+        cancelled = client.post("/billing/cancel", follow_redirects=False)
+        assert cancelled.status_code == 303
+        assert cancelled.headers["location"] == "/billing?cancelled=1"
+        assert "Renewal cancelled" in client.get("/billing").text
+
+        with SessionLocal() as db:
+            subscription = db.scalar(select(models.BillingSubscription).where(
+                models.BillingSubscription.provider_subscription_code
+                == "SUB_test_cancel"))
+            assert subscription is not None
+            assert subscription.cancel_at_period_end is True
+            order = db.scalar(select(models.Order).where(
+                models.Order.provider_reference == reference))
+            assert order is not None and order.status == "paid"
+            assert order.sku == "facilitated" and order.amount_minor == 190000
+            kinds = {
+                row.kind for row in db.scalars(select(models.Entitlement).where(
+                    models.Entitlement.assessment_id == assessment_id)).all()
+            }
+            assert {"report", "facilitated"} <= kinds
+
+    with TestClient(app) as other:
+        _login(other, other_email, "other-password")
+        denied = other.get(f"/billing/receipt/{reference}", follow_redirects=False)
+        assert denied.status_code == 303
+        assert denied.headers["location"] == "/billing"
+
+
 def test_bidder_partner_console_and_subscription_checkout(marketplace_on):
     email = _email("partner")
     user_id = _make_user(email, "partner-password", user_type="bidder")
@@ -457,7 +545,7 @@ def test_paystack_recurring_plan_webhooks(monkeypatch):
         renewal = client.post("/paystack/webhook", json={
             "event": "charge.success",
             "data": {
-                "reference": "RENEW_PREM_1", "amount": 2900, "currency": "USD",
+                "reference": "RENEW_PREM_1", "amount": 12900, "currency": "USD",
                 "plan": {"plan_code": "PLN_PREM_MONTHLY"},
                 "customer": {"email": email}}})
         assert renewal.status_code == 200, renewal.text

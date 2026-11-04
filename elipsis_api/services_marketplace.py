@@ -271,6 +271,9 @@ def assessment_is_unlocked(db: Session, user_id: int, assessment_id: int) -> boo
     ))
     if purchase is not None:
         return True
+    from elipsis_api import services_entitlements
+    if services_entitlements.has(db, user_id, "report", assessment_id):
+        return True
     user = db.get(models.User, user_id)
     return bool(user and permissions.is_pro_user(db, user))
 

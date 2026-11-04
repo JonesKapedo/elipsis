@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Refund policy — {{ BRAND_NAME }}{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">Trust centre</p>
+  <h1>Refund policy</h1>
+  <p class="lede">Clear rules for digital reports, facilitated reviews, and Operator passes. If something is wrong, tell us first — we will fix it or refund it.</p>
+  <p class="muted">Version 2026-11-01.</p>
+</section>
+{% include "partials/trust_nav.html" %}
+
+<article class="block prose">
+  <h3>1. Constraint Report — $499</h3>
+  <ul>
+    <li><strong>Full refund within 14 days</strong> if the report has not been generated or downloaded.</li>
+    <li><strong>No refund after the report is generated or downloaded.</strong> It is a digital deliverable produced for your inputs, and access is perpetual.</li>
+    <li><strong>One free re-run</strong> if an answer was entered incorrectly or a department was selected by mistake. Ask within 30 days.</li>
+  </ul>
+
+  <h3>2. Facilitated Report — $1,900</h3>
+  <ul>
+    <li>The report component follows the Constraint Report rules above.</li>
+    <li><strong>Cancel at least 48 hours before the session</strong> for a full refund, provided the revised report has not been delivered.</li>
+    <li><strong>One free reschedule</strong> at any time. Cancelling inside 48 hours, or after the session, is not refundable.</li>
+    <li>If we cancel and cannot offer a workable alternative, you receive a full refund.</li>
+  </ul>
+
+  <h3>3. Operator — $129/month or $999/year</h3>
+  <ul>
+    <li>Operator is either a <strong>one-time pass</strong> or, where checkout shows a renewal plan, a <strong>subscription</strong>. Cancel a renewal anytime from <a href="/billing">billing</a>; access runs to the end of the paid period.</li>
+    <li>If a renewal was charged in error, contact us within 14 days for a refund of that renewal, provided the new period has not been used.</li>
+    <li>We do not pro-rate part-used periods. Access continues to the end of the paid period.</li>
+  </ul>
+
+  <h3>4. Duplicate or unauthorised charges</h3>
+  <p>Duplicate charges, charges after a failed cancellation, and unauthorised card use are refunded in full. Contact us before raising a chargeback so we can resolve it faster; we may pause paid features while a chargeback is investigated.</p>
+
+  <h3>5. How to request a refund</h3>
+  <p>Use <a href="/support?topic=billing">support</a> and include the payment reference from your <a href="/billing">billing history</a>. We aim to decide within 5 business days. Approved refunds return to the original payment method, usually within 5–10 business days depending on your bank. Any tax charged is refunded where required by law.</p>
+
+  <h3>6. Statutory rights</h3>
+  <p>Nothing in this policy limits rights you have under mandatory consumer law in your jurisdiction. Where those rights give you a stronger remedy, they apply.</p>
+
+  <h3>7. Changes</h3>
+  <p>We may update this policy. The version that applied when you paid governs that purchase. Material changes are announced on the <a href="/changelog">changelog</a>.</p>
+</article>
+{% endblock %}

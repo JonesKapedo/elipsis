@@ -360,6 +360,11 @@ def terms(request: Request, user=Depends(get_current_user)):
     return templates.TemplateResponse(request, "terms.html", {"user": user})
 
 
+@router.get("/refund")
+def refund(request: Request, user=Depends(get_current_user)):
+    return templates.TemplateResponse(request, "refund.html", {"user": user})
+
+
 @router.get("/security")
 def security(request: Request, user=Depends(get_current_user)):
     return templates.TemplateResponse(request, "security.html", {"user": user})

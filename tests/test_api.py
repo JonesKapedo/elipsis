@@ -156,8 +156,8 @@ def test_pricing_is_global_and_utility_priced():
     with TestClient(app) as fresh:
         page = fresh.get("/pricing")
     assert page.status_code == 200
-    assert "$49" in page.text and "$29" in page.text and "$380" in page.text
-    assert "Why this structure holds up" in page.text
+    assert "$499" in page.text and "$129" in page.text and "$999" in page.text
+    assert "The commercial model, without the fog." in page.text
     assert "Prices are in USD" in page.text
     assert "$1,500" not in page.text
     assert "Kenya" not in page.text
@@ -205,8 +205,9 @@ def test_value_workstreams_round_trip(signed_in):
     token = shared.headers["location"].split("shared=")[-1]
     assert client.get(f"/share/{token}").status_code == 200
 
-    for path in ("/privacy", "/terms", "/security", "/partners", "/case-study"):
+    for path in ("/privacy", "/terms", "/refund", "/security", "/partners", "/case-study"):
         assert client.get(path).status_code == 200
+    assert "Refund policy" in client.get("/refund").text
 
 
 def test_workspace_intelligence_round_trip(signed_in):
@@ -462,7 +463,7 @@ def test_guided_demo_generates_a_readable_result(signed_in):
     page = client.get(location)
     assert page.status_code == 200
     assert "Guided Demo Co" in page.text
-    assert "Logistics reading" in page.text
+    assert "Operating lanes" in page.text
 
 
 def test_setup_persists_logistics_organisation_fields():
@@ -870,7 +871,7 @@ def test_premium_checkout_and_dummy_return_grant_access():
             "default_department": "Operations"}, follow_redirects=False)
         page = fresh.get("/pro")
         assert page.status_code == 200
-        assert "$29" in page.text and "$380" in page.text
+        assert "$129" in page.text and "$999" in page.text
         checkout = fresh.post("/pro/checkout", data={"billing": "monthly"},
                               follow_redirects=False)
         assert checkout.status_code == 303

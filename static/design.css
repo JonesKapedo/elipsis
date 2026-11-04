@@ -1,47 +1,5 @@
 /* Elipsis — Control Tower interface and Freight Desk marketing.
-   Loaded after the legacy layers so the product has one visual system. */
-
-:root {
-  --asphalt: #0b1220;
-  --asphalt-2: #111c2e;
-  --asphalt-3: #18263d;
-  --ink: #151b26;
-  --ink-2: #344054;
-  --muted: #667085;
-  --muted-2: #8a94a6;
-  --line: #e2e6ea;
-  --line-strong: #cdd4dc;
-  --surface: #ffffff;
-  --canvas: #f5f6f7;
-  --canvas-2: #fafbfc;
-  --amber: #f5a623;
-  --amber-ink: #211603;
-  --amber-soft: #fff6e5;
-  --blue: #2563eb;
-  --green: #15803d;
-  --green-soft: #e9f7ee;
-  --red: #b42318;
-  --red-soft: #fef3f2;
-  --orange: #b54708;
-  --orange-soft: #fff4e8;
-  --radius: 7px;
-  --radius-sm: 5px;
-  --shadow: 0 12px 28px -18px rgba(11, 18, 32, 0.28);
-  --sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
-  --serif: "IBM Plex Serif", Georgia, serif;
-  --mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
-  --navy: var(--asphalt);
-  --navy-2: var(--asphalt-2);
-  --paper: var(--canvas);
-  --mist: #8e9bb0;
-  --accent: #b45309;
-  --good: var(--green);
-  --bad: var(--red);
-  --warn: var(--orange);
-  --panel: var(--surface);
-  --panel2: var(--canvas-2);
-  --soft: var(--ink-2);
-}
+   Tokens live in tokens.css (loaded first). Do not re-declare :root here. */
 
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -1286,17 +1244,18 @@ body.marketing .muted { color: #6f6a61; }
 .mk-report-card .rc-row span { color: var(--muted); }
 .mk-report-card .rc-row b { font-weight: 550; text-align: right; }
 
-.mk-pricing { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: 32px; border: 1px solid #ded8cc; background: #ded8cc; border-radius: 6px; overflow: hidden; }
-.mk-price { padding: 24px; background: #fbfaf7; }
-.mk-price.featured { background: #fff; }
-.mk-price .price-label { color: #7a5a1e; font: 600 9.5px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
-.mk-price h3 { margin-top: 10px; font-size: 68px; line-height: .95; font-weight: 600; letter-spacing: -.05em; }
-.mk-price h3 small { font-size: 13px; font-weight: 400; letter-spacing: 0; color: #6f6a61; }
-.mk-price .price-note { margin-top: 8px; color: #6f6a61; font-size: 12px; }
-.mk-price ul { margin: 18px 0 0; padding: 0; list-style: none; border-top: 1px solid #e8e2d7; }
-.mk-price li { padding: 8px 0; border-bottom: 1px solid #eee9df; color: #4f4a42; font-size: 12.5px; }
+.mk-pricing { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1px; margin-top: 32px; border: 1px solid var(--line); background: var(--line); border-radius: var(--radius); overflow: hidden; }
+.mk-price { padding: 24px; background: var(--surface); }
+.mk-price.featured { background: var(--amber-soft); box-shadow: inset 0 0 0 1px var(--amber); }
+.mk-price .price-label { color: var(--muted); font: 600 9.5px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+.mk-price h3 { margin-top: 10px; font: 500 34px/1 var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -.02em; color: var(--ink); }
+.mk-price h3 small { font: 400 12px/1 var(--sans); letter-spacing: 0; color: var(--muted); }
+.mk-price .price-note { margin-top: 8px; color: var(--muted); font-size: 12px; }
+.mk-price ul { margin: 18px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.mk-price li { padding: 8px 0; border-bottom: 1px solid var(--line); color: var(--ink-2); font-size: 12.5px; }
 .mk-price .btn { margin-top: 18px; width: 100%; }
-.mk-price-note { margin-top: 14px; color: #6f6a61; font-size: 11.5px; }
+.mk-price-proof { margin-top: 12px; color: var(--muted); font: 400 11px/1.45 var(--mono); }
+.mk-price-note { margin-top: 14px; color: var(--muted); font-size: 11.5px; }
 .mk-cta { display: flex; align-items: center; justify-content: space-between; gap: 30px; padding-top: 46px; padding-bottom: 68px; }
 .mk-cta h2 { max-width: 18ch; font-size: 36px; line-height: 1.1; }
 .mk-cta .actions { display: flex; gap: 10px; flex-wrap: wrap; }

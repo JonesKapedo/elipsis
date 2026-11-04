@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Results{% endblock %}
+{% block title %}Constraint Report — {{ organization.name }}{% endblock %}
 
 {% macro bar(pct) %}
 <div class="bar"><span style="width:{{ '%.1f'|format(pct if pct is not none else 0) }}%"></span></div>
 {% endmacro %}
 
 {% block content %}
-<section class="head">
+<section class="head report-head">
   <p class="eyebrow">{{ INDEX_NAME }}</p>
   <h1>{{ organization.name }}{% if department %} &mdash; {{ department.name }}{% endif %}</h1>
   {% if company_context is defined and company_context %}
@@ -16,23 +16,15 @@
   {{ result.answered }} of {{ result.total }} questions answered
   {% if previous %}&nbsp;&middot;&nbsp; <span class="tag {{ 'ok' if (delta or 0) >= 0 else 'warn' }}">Movement {{ '%+.1f'|format(delta or 0) }} vs previous</span>{% endif %}
   {% if assessment.review_due_at %}&nbsp;&middot;&nbsp; <span class="tag">Review due {{ assessment.review_due_at }}</span>{% endif %}</p>
-  <div class="hero-actions" style="margin-top:0.75rem">
+  <div class="hero-actions">
     {% if report_unlocked %}
-    <a class="btn" href="/assessment/{{ assessment.id }}/report">Print / board pack</a>
-    <a class="btn ghost" href="/assessment/{{ assessment.id }}/plan">90-day plan</a>
-    <details class="action-menu">
-      <summary class="btn ghost">Export &amp; share</summary>
-      <div class="action-menu-panel">
-        <a href="/assessment/{{ assessment.id }}/report.pdf">Download PDF <span class="premium-tag">Premium</span></a>
-        <a href="/assessment/{{ assessment.id }}/export.xlsx">Export Excel</a>
-        <a href="/assessment/{{ assessment.id }}/export.json">Export JSON</a>
-        <a href="#share-links">Share links</a>
-        <a href="/assessment/{{ assessment.id }}/invite">Ask the team</a>
-      </div>
-    </details>
+    <a class="btn" href="/assessment/{{ assessment.id }}/report.pdf">Download board pack</a>
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/report">Print view</a>
     {% else %}
-    <a class="btn" href="/pro?locked=reports">Unlock report pack <span class="crown" title="Premium">{% include "partials/crown.svg" %}</span></a>
-    <a class="btn ghost" href="/pro?locked=team">Ask the team <span class="crown" title="Premium">{% include "partials/crown.svg" %}</span></a>
+    <form method="post" action="/assessment/{{ assessment.id }}/checkout">
+      <button class="btn" type="submit">{{ report_sku.cta }} · ${{ report_sku.price_usd }}</button>
+    </form>
+    <a class="btn ghost" href="/sample">See a sample report</a>
     {% endif %}
     <details class="action-menu">
       <summary class="btn ghost">More views</summary>
@@ -41,17 +33,13 @@
         <a href="/assessment/{{ assessment.id }}/narrative">Board narrative</a>
         <a href="/assessment/{{ assessment.id }}/evidence">Evidence</a>
         <a href="/assessment/{{ assessment.id }}/badge">Readiness badge</a>
+        {% if report_unlocked %}<a href="/assessment/{{ assessment.id }}/export.xlsx">Export Excel</a>
+        <a href="/assessment/{{ assessment.id }}/export.json">Export JSON</a>{% endif %}
         {% if organization %}<a href="/compare/{{ organization.id }}">Compare departments</a>{% endif %}
         <a href="/start">New assessment</a>
       </div>
     </details>
   </div>
-  {% if not report_unlocked %}
-  <div class="premium-note">
-    <span class="crown" title="Premium">{% include "partials/crown.svg" %}</span>
-    <p><strong>Premium turns this result into a board pack.</strong> Download PDF, Excel, or JSON, print a clean report, share a read-only link, and send the questionnaire to your team.</p>
-  </div>
-  {% endif %}
   {% if request.query_params.get('import') %}
   <div class="flash {{ 'err' if request.query_params.get('import') in ['invalid','empty'] else 'ok' }}" style="margin-top:1rem">
     {% if request.query_params.get('import') == 'invalid' %}Import failed. Upload a CSV or XLSX under 2 MB.
@@ -69,66 +57,193 @@
   {% endif %}
 </section>
 
-<section class="headline">
-  <div class="gauge">
-    <div class="gauge-num">{{ '%.1f'|format(result.readiness_index) }}<span>/100</span></div>
-    <div class="gauge-label">{{ INDEX_SHORT }}</div>
+<section class="summary-strip" aria-label="Report summary">
+  <div class="summary-cell">
+    <span class="summary-label">{{ INDEX_SHORT }}</span>
+    <strong class="summary-value">{{ '%.1f'|format(result.readiness_index) }}<em>/100</em></strong>
+    <span class="summary-note">{{ result.maturity_band }}</span>
   </div>
-  <div class="headline-meta">
-    <p class="band">{{ result.maturity_band }}</p>
-    <p class="muted">Organisation score {{ '%.1f'|format(result.organisation_score) }}
-    &nbsp;&middot;&nbsp; {{ CONFIDENCE_NAME }} {{ '%.1f'|format(result.confidence_index) }}
-    ({{ result.confidence_band }})</p>
-    {% if analytics is defined and analytics.actions %}
-    <p class="muted"><strong>The one thing to act on:</strong> {{ analytics.actions[0] }}</p>
-    {% endif %}
+  <div class="summary-cell">
+    <span class="summary-label">Binding constraint</span>
+    <strong class="summary-value summary-text">{{ result.top_opportunities[0] if result.top_opportunities else 'No constraint triggered' }}</strong>
+    <span class="summary-note">{{ 'The first of three' if result.top_opportunities else 'Keep the current cadence' }}</span>
+  </div>
+  <div class="summary-cell">
+    <span class="summary-label">Indicative exposure</span>
     {% if report_unlocked and result.financial %}
-    <p class="muted"><strong>At stake:</strong> {{ result.financial.annual_savings|money }} annual savings potential
-      against {{ result.financial.investment|money }} indicative investment
-      (payback {{ '%.1f'|format(result.financial.payback_months) }} months).</p>
+    <strong class="summary-value">{{ result.financial.annual_savings|money }}</strong>
+    <span class="summary-note">annual, modelled</span>
+    {% else %}
+    <strong class="summary-value is-locked">In report</strong>
+    <span class="summary-note">${{ report_sku.price_usd }} one time</span>
     {% endif %}
+  </div>
+  <div class="summary-cell">
+    <span class="summary-label">{{ CONFIDENCE_NAME }}</span>
+    <strong class="summary-value">{{ '%.1f'|format(result.confidence_index) }}</strong>
+    <span class="summary-note">{{ result.confidence_band }}</span>
   </div>
 </section>
 
 {% if report_unlocked %}
-<section class="kpis">
-  <div class="kpi accent"><span>Annual savings potential</span><b>{{ result.financial.annual_savings|money }}</b></div>
-  <div class="kpi"><span>Indicative investment</span><b>{{ result.financial.investment|money }}</b></div>
-  <div class="kpi"><span>ROI</span><b>{{ '%.0f'|format(result.financial.roi) }}%</b></div>
-  <div class="kpi"><span>Payback</span><b>{{ '%.1f'|format(result.financial.payback_months) }} mo</b></div>
-</section>
+<div class="report-layout">
+  <div class="report-main">
+    <section class="block money-block" id="money">
+      <p class="eyebrow">What the constraint is worth</p>
+      <div class="money-figure">{{ result.financial.annual_savings|money }}</div>
+      <p class="muted">Modelled annual savings potential against {{ result.financial.investment|money }} indicative investment.
+        Payback in {{ '%.1f'|format(result.financial.payback_months) }} months.</p>
+      <div class="money-strip">
+        <div><span>ROI</span><b>{{ '%.0f'|format(result.financial.roi) }}%</b></div>
+        <div><span>Payback</span><b>{{ '%.1f'|format(result.financial.payback_months) }} mo</b></div>
+        <div><span>Current annual cost</span><b>{{ result.financial.current_cost|money }}</b></div>
+      </div>
+      <p class="muted small">Management estimate, not audited. Every input is editable under
+        <a href="#assumptions">assumptions and method</a>.</p>
+    </section>
 
-<section class="block" id="constraints">
-  <div class="block-head">
-    <div>
-      <h3>Top three constraints</h3>
-      <p class="muted small" style="margin:.25rem 0 0">Ranked by impact. Fix these first; the rest of the report explains why.</p>
-    </div>
-    <a class="btn ghost sm" href="/assessment/{{ assessment.id }}/plan">Open the plan →</a>
-  </div>
-  <ol class="opp">
-    {% for o in result.top_opportunities[:3] %}
-    <li>{{ o }}</li>
-    {% else %}
-    <li class="muted">No constraints triggered. Keep the current cadence and re-assess at the next review.</li>
-    {% endfor %}
-  </ol>
-  {% if result.pain_points %}
-  <table class="table" style="margin-top:1rem">
-    <thead><tr><th>Severity</th><th>Where it shows up</th><th class="num">Impact</th><th>Detail</th></tr></thead>
-    <tbody>
-      {% for p in result.pain_points[:5] %}
-      <tr>
-        <td><span class="tag sev-{{ p.severity|lower }}">{{ p.severity }}</span></td>
-        <td>{{ p.title }}</td>
-        <td class="num">{{ '%.0f'|format(p.impact) }}%</td>
-        <td class="muted">{{ p.detail }}</td>
-      </tr>
+    <section class="block" id="constraints">
+      <div class="block-head">
+        <div>
+          <h3>Top three constraints</h3>
+          <p class="muted small" style="margin:.25rem 0 0">Ranked by impact. Fix these first; the rest of the report explains why.</p>
+        </div>
+        <a class="btn ghost sm" href="/assessment/{{ assessment.id }}/plan">Open the plan →</a>
+      </div>
+      <ol class="opp">
+        {% for o in result.top_opportunities[:3] %}
+        <li>{{ o }}</li>
+        {% else %}
+        <li class="muted">No constraints triggered. Keep the current cadence and re-assess at the next review.</li>
+        {% endfor %}
+      </ol>
+      {% if result.pain_points %}
+      <table class="table" style="margin-top:1rem">
+        <thead><tr><th>Severity</th><th>Where it shows up</th><th class="num">Impact</th><th>Detail</th></tr></thead>
+        <tbody>
+          {% for p in result.pain_points[:5] %}
+          <tr>
+            <td><span class="tag sev-{{ p.severity|lower }}">{{ p.severity }}</span></td>
+            <td>{{ p.title }}</td>
+            <td class="num">{{ '%.0f'|format(p.impact) }}%</td>
+            <td class="muted">{{ p.detail }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+    </section>
+
+    <section class="block" id="reading">
+      <h3>What this means</h3>
+      {% if analytics is defined and analytics.actions %}
+      <p><strong>Act first:</strong> {{ analytics.actions[0] }}</p>
+      {% endif %}
+      <p class="muted">The index reads {{ '%.1f'|format(result.readiness_index) }} out of 100, in the
+        {{ result.maturity_band }} band, with {{ result.confidence_band }} confidence.
+        {% if result.top_opportunities %}The binding constraint is {{ result.top_opportunities[0]|lower }}.
+        Fixing it first protects the rest of the 90-day plan.{% endif %}</p>
+      <p class="muted small">Figures are indicative and depend on the assumptions below. They are a management
+        estimate, not an audit.</p>
+    </section>
+
+    <section class="block" id="index">
+      <div class="headline">
+        <div class="gauge">
+          <div class="gauge-num">{{ '%.1f'|format(result.readiness_index) }}<span>/100</span></div>
+          <div class="gauge-label">{{ INDEX_SHORT }}</div>
+        </div>
+        <div class="headline-meta">
+          <p class="band">{{ result.maturity_band }}</p>
+          <p class="muted">Organisation score {{ '%.1f'|format(result.organisation_score) }}
+          &nbsp;&middot;&nbsp; {{ CONFIDENCE_NAME }} {{ '%.1f'|format(result.confidence_index) }}
+          ({{ result.confidence_band }})</p>
+          <p class="muted">Scored across the seven pillars in the appendix, weighted and normalised to 100.
+            <a href="#appendix">See the diagnostics →</a></p>
+        </div>
+      </div>
+    </section>
+
+    {% if logistics %}
+    <section class="block" id="lanes">
+      <div class="block-head">
+        <div>
+          <h3>Operating lanes</h3>
+          <p class="muted small" style="margin:.25rem 0 0">The same score, read through the operating lanes that matter in contract logistics.</p>
+        </div>
+        <a class="btn ghost sm" href="/assessment/{{ assessment.id }}/plan">Open 90-day plan →</a>
+      </div>
+      <div class="lane-grid">
+        {% for lane in logistics.lanes %}
+        <article class="lane-card{% if logistics.weakest and lane.key == logistics.weakest.key %} is-weak{% endif %}">
+          <div class="lane-top">
+            <strong>{{ lane.label }}</strong>
+            <span class="lane-score">{{ '%.1f'|format(lane.score) if lane.score is not none else '—' }}</span>
+          </div>
+          <p>{{ lane.question }}</p>
+          <div class="lane-reading">{{ lane.reading }}</div>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    <section class="block" id="plan">
+      <h3>Implementation roadmap: the 90-day plan</h3>
+      <p class="muted">Three phases. Each action has an owner, a horizon, a complexity, and an expected return.</p>
+      {% for phase in result.roadmap %}
+      <div class="phase">
+        <div class="phase-head">
+          <h4>{{ phase.label }}</h4>
+          <span class="muted">{{ phase.horizon }} · {{ phase.count }} action{{ '' if phase.count == 1 else 's' }}</span>
+        </div>
+        <p class="muted">{{ phase.note }}</p>
+        {% if phase.items %}
+        <table class="table">
+          <thead><tr><th class="num">Priority</th><th>Recommendation</th><th>Technology</th>
+          <th>Complexity</th><th class="num">ROI</th><th>Pillar</th></tr></thead>
+          <tbody>
+            {% for r in phase['items'] %}
+            <tr>
+              <td class="num">{{ '%.0f'|format(r.priority) }}</td>
+              <td>{{ r.title }}</td>
+              <td>{{ r.technology }}</td>
+              <td>{{ r.complexity }}</td>
+              <td class="num">{{ '%.0f'|format(r.roi) }}%</td>
+              <td class="muted">{{ PILLAR_LABELS.get(r.pillar, r.pillar) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
+      </div>
       {% endfor %}
-    </tbody>
-  </table>
-  {% endif %}
-</section>
+      <a class="btn ghost sm" href="/assessment/{{ assessment.id }}/plan">Track actions and owners →</a>
+    </section>
+  </div>
+
+  <aside class="report-rail" aria-label="Report actions">
+    <div class="rail-card rail-primary">
+      <p class="eyebrow">Board pack</p>
+      <h3>Take this to the room.</h3>
+      <p class="muted small">Print-ready, with the costed exposure, the appendix, and the 90-day plan.</p>
+      <a class="btn" href="/assessment/{{ assessment.id }}/report.pdf">Download PDF</a>
+      <a class="btn ghost sm" href="/assessment/{{ assessment.id }}/report">Print view</a>
+      <a class="btn ghost sm" href="/assessment/{{ assessment.id }}/plan">90-day plan</a>
+    </div>
+    <div class="rail-card">
+      <p class="eyebrow">Share</p>
+      <p class="muted small">Read-only link for the board. Expires automatically.</p>
+      <a class="btn ghost sm" href="#share-links">Create share link</a>
+    </div>
+    <div class="rail-card">
+      <p class="eyebrow">Implementation</p>
+      <h3>Need hands on the floor?</h3>
+      <p class="muted small">We introduce you to a vetted contract-logistics operator for the first constraint. No commission.</p>
+      <a class="btn ghost sm" href="/support?topic=intros">Request an intro</a>
+    </div>
+  </aside>
+</div>
 
 <section class="block" id="cost">
   <h3>What it costs if nothing changes</h3>
@@ -137,40 +252,6 @@
     <div class="kpi"><span>Projected annual cost</span><b>{{ result.financial.future_cost|money }}</b></div>
     <div class="kpi accent"><span>Cost of inaction</span><b>{{ (result.financial.current_cost - result.financial.future_cost)|money }}</b></div>
   </div>
-  <p class="muted">Financial figures are management estimates, not audited results. All inputs are listed under
-    <a href="#assumptions">Assumptions and method</a> and can be edited.</p>
-</section>
-
-<section class="block">
-  <h3>Implementation roadmap</h3>
-  <p class="muted">Three phases. Each action has an owner, a horizon, a complexity, and an expected return.</p>
-  {% for phase in result.roadmap %}
-  <div class="phase">
-    <div class="phase-head">
-      <h4>{{ phase.label }}</h4>
-      <span class="muted">{{ phase.horizon }} · {{ phase.count }} action{{ '' if phase.count == 1 else 's' }}</span>
-    </div>
-    <p class="muted">{{ phase.note }}</p>
-    {% if phase.items %}
-    <table class="table">
-      <thead><tr><th class="num">Priority</th><th>Recommendation</th><th>Technology</th>
-      <th>Complexity</th><th class="num">ROI</th><th>Pillar</th></tr></thead>
-      <tbody>
-        {% for r in phase['items'] %}
-        <tr>
-          <td class="num">{{ '%.0f'|format(r.priority) }}</td>
-          <td>{{ r.title }}</td>
-          <td>{{ r.technology }}</td>
-          <td>{{ r.complexity }}</td>
-          <td class="num">{{ '%.0f'|format(r.roi) }}%</td>
-          <td class="muted">{{ PILLAR_LABELS.get(r.pillar, r.pillar) }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% endif %}
-  </div>
-  {% endfor %}
 </section>
 
 <section class="block" id="department-view">
@@ -236,14 +317,21 @@
   <h3>Implementation options</h3>
   <div class="two-col">
     <article>
-      <h4>Verified marketplace</h4>
-      <p class="muted">Publish a scoped request and compare bids from verified partners. Elipsis does not take a commission.</p>
-      <a class="btn ghost sm" href="/marketplace">Open marketplace →</a>
+      <h4>Implementer introduction</h4>
+      <p class="muted">We introduce you to a vetted contract-logistics operator for the first constraint. Elipsis does not take a commission.</p>
+      <a class="btn ghost sm" href="/support?topic=intros">Request an introduction →</a>
     </article>
-    <article>
-      <h4>Trusted partner</h4>
-      <p class="muted">Hand the board pack to an implementation partner with the scope, evidence, and success measures already defined.</p>
-      <a class="btn ghost sm" href="/assessment/{{ assessment.id }}/plan">Build the brief →</a>
+    <article id="facilitated">
+      <h4>Facilitated Report — {{ facilitated_sku.price_usd|money }}</h4>
+      <p class="muted">The report plus a 60–90 minute working session, a revised document, and three curated introductions.</p>
+      {% if facilitated_entitled %}
+      <a class="btn sm" href="/assessment/{{ assessment.id }}/facilitated">Open facilitated workspace →</a>
+      {% else %}
+      <form method="post" action="/assessment/{{ assessment.id }}/checkout/facilitated">
+        <button class="btn sm" type="submit">Buy facilitated review · {{ facilitated_sku.price_usd|money }}</button>
+      </form>
+      <p class="muted small">One-time payment. Includes the Constraint Report. USD, exclusive of applicable taxes.</p>
+      {% endif %}
     </article>
   </div>
 </section>
@@ -317,49 +405,25 @@
 </section>
 {% else %}
 <section class="block premium-note">
-  <span class="crown" title="Premium">{% include "partials/crown.svg" %}</span>
+  <span class="crown" title="Constraint Report">{% include "partials/crown.svg" %}</span>
   <h3>Your free diagnostic</h3>
   <p><strong>You scored {{ '%.1f'|format(result.readiness_index) }}/100 · {{ result.maturity_band }} · {{ result.confidence_band }} confidence.</strong></p>
   <p class="muted">Your top three constraints:</p>
   <ol class="opp">
     {% for o in result.top_opportunities[:3] %}<li>{{ o }}</li>{% else %}<li class="muted">No constraints triggered.</li>{% endfor %}
   </ol>
-  <p class="muted">Unlock the Full Assessment for the complete 36-metric report, costed friction analysis, 90-day roadmap, exports, and one implementation request with three bidder introductions.</p>
+  <p class="muted">The Constraint Report adds the costed exposure, the full 36-metric appendix, the 90-day plan, the board-pack PDF, and a share link. One report, perpetual access.</p>
   <div class="hero-actions">
     <form method="post" action="/assessment/{{ assessment.id }}/checkout">
-      <button class="btn" type="submit">Unlock Full Assessment · $49</button>
+      <button class="btn" type="submit">{{ report_sku.cta }} · ${{ report_sku.price_usd }}</button>
     </form>
-    <a class="btn ghost" href="/pro?locked=reports">Subscribe for unlimited assessments</a>
-  </div>
-</section>
-{% endif %}
-
-{% if logistics %}
-<section class="block">
-  <div class="block-head">
-    <div>
-      <h3>Logistics reading</h3>
-      <p class="muted small" style="margin:.25rem 0 0">The same score, read through the operating lanes that matter to a logistics SME.</p>
-    </div>
-    <a class="btn ghost sm" href="/assessment/{{ assessment.id }}/plan">Open 90-day plan →</a>
-  </div>
-  <div class="lane-grid">
-    {% for lane in logistics.lanes %}
-    <article class="lane-card{% if logistics.weakest and lane.key == logistics.weakest.key %} is-weak{% endif %}">
-      <div class="lane-top">
-        <strong>{{ lane.label }}</strong>
-        <span class="lane-score">{{ '%.1f'|format(lane.score) if lane.score is not none else '—' }}</span>
-      </div>
-      <p>{{ lane.question }}</p>
-      <div class="lane-reading">{{ lane.reading }}</div>
-    </article>
-    {% endfor %}
+    <a class="btn ghost" href="/sample">See a sample report</a>
   </div>
 </section>
 {% endif %}
 
 {% if operations %}
-<section class="block">
+<section class="block" id="operating-evidence">
   <div class="block-head">
     <div>
       <h3>Operating evidence</h3>
@@ -416,7 +480,7 @@
       <button class="btn sm" type="submit">Create link</button>
     </form>
     {% else %}
-    <p class="muted">Read-only board links are part of Premium. <a href="/pro?locked=reports">Unlock report sharing →</a></p>
+    <p class="muted">Read-only board links are part of the Constraint Report. <a href="#money">Unlock the report →</a></p>
     {% endif %}
     {% if share_links %}
     <table class="table">

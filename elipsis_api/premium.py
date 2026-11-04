@@ -1,18 +1,26 @@
-"""Premium workspace pricing and entitlement definitions."""
+"""Operator workspace pricing and entitlement definitions.
+
+Backward-compatible facade over catalog.py. New code should import catalog.
+"""
 
 from __future__ import annotations
 
 import os as _os
 
-CURRENCY = "USD"
-MONTHLY_USD = 29
-ANNUAL_USD = 380
-FULL_ASSESSMENT_USD = 49
-SWITCH_TOPUP_USD = 24.50
+from elipsis_api import catalog
+
+CURRENCY = catalog.CURRENCY
+MONTHLY_USD = catalog.price("operator_monthly")
+ANNUAL_USD = catalog.price("operator_annual")
+FULL_ASSESSMENT_USD = catalog.price("report")
+
+# Deprecated: the switch top-up is retired. Kept for legacy marketplace routes.
+SWITCH_TOPUP_USD = float(catalog.RETIRED["switch_topup"]["price_usd"])
 SWITCH_TOPUP_COUNT = 3
 MONTHLY_DAYS = 31
 ANNUAL_DAYS = 365
 
+# Deprecated: bidder marketplace is hidden from clients. Kept for legacy routes.
 BIDDER_PLANS = {
     "monthly": {"label": "Monthly", "price": 39, "days": 30},
     "six_months": {"label": "Six months", "price": 119, "days": 182},
@@ -21,23 +29,23 @@ BIDDER_PLANS = {
 
 PLANS = {
     "monthly": {
-        "label": "Monthly pass",
+        "label": "Operator",
         "price": MONTHLY_USD,
         "days": MONTHLY_DAYS,
-        "note": "One payment, 31 days of Premium.",
+        "note": "One payment, 31 days of Operator.",
     },
     "annual": {
-        "label": "Annual pass",
+        "label": "Operator annual",
         "price": ANNUAL_USD,
         "days": ANNUAL_DAYS,
-        "note": "One payment, 365 days of Premium.",
+        "note": "One payment, 365 days of Operator.",
     },
 }
 
 FEATURES = (
-    ("Multiple companies", "Keep separate operating profiles, diagnostics, and benchmarks under one account."),
-    ("Team questionnaires", "Send department questionnaires, set deadlines and target roles, and combine responses into one diagnostic."),
-    ("Board packs", "Download PDF, Excel, and JSON, print a clean report, or share a read-only board link."),
+    ("Action board", "Every constraint action gets an owner, a date, and a status the team can see."),
+    ("Team seats", "Managers work from the same plan instead of a forwarded spreadsheet."),
+    ("Quarterly re-score", "The index is re-run every 90 days so movement, not memory, drives the next decision."),
 )
 
 

@@ -35,14 +35,10 @@ and three-phase roadmap. Telegram bot remains a separate acquisition channel.
 
 ## Frontend decision (locked)
 
-| Layer | Technology | Deployed? |
-| --- | --- | --- |
-| **Production UI** | FastAPI + Jinja2 templates + `static/` | **Yes** (Vercel) |
-| **Experimental SPA** | React + Vite under `frontend/` | **No** |
+**Production UI:** FastAPI + Jinja2 templates + `static/`, deployed on Vercel.
 
-The React SPA is kept for reference only. It is **not** the deploy target and is not linked from production routes. See [`frontend/README.md`](frontend/README.md).
-
-Do not point Vercel at the Telegram bot or at `frontend/`.
+The experimental React/Vite SPA was removed. There is one frontend and one deploy
+target. Do not point Vercel at the Telegram bot.
 
 ## Naming
 

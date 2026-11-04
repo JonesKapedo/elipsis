@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from elipsis_api import (
     analytics,
     benchmarks,
+    catalog,
     departments,
     logistics,
     models,
@@ -17,6 +18,7 @@ from elipsis_api import (
     premium,
     schemas,
     services,
+    services_entitlements,
     services_operations,
     services_ops,
     services_room,
@@ -88,6 +90,7 @@ def robots(request: Request):
         "Allow: /sample\n"
         "Allow: /privacy\n"
         "Allow: /terms\n"
+        "Allow: /refund\n"
         "Allow: /security\n"
         "Allow: /case-study\n"
         "Allow: /trust\n"
@@ -115,7 +118,7 @@ def robots(request: Request):
 def sitemap(request: Request):
     base = str(request.base_url).rstrip("/")
     paths = ("/", "/methodology", "/pricing", "/partners", "/sample",
-             "/privacy", "/terms", "/security", "/case-study", "/trust",
+             "/privacy", "/terms", "/refund", "/security", "/case-study", "/trust",
              "/status", "/help", "/service-standards", "/changelog",
              "/accessibility", "/dpa", "/subprocessors", "/login", "/signup")
     urls = "".join(
@@ -138,7 +141,8 @@ def landing(request: Request, user=Depends(get_current_user),
         request, "landing.html",
         {"user": user, "total_questions": _question_count(db),
          "reference_points": benchmarks.REFERENCE_POINTS,
-         "icp": benchmarks.ICP_LABEL})
+         "icp": benchmarks.ICP_LABEL,
+         "skus": catalog.public_skus()})
 
 
 @router.get("/sample")
@@ -153,7 +157,8 @@ def sample_report(request: Request, user=Depends(get_current_user)):
 def pricing(request: Request, user=Depends(get_current_user)):
     return templates.TemplateResponse(request, "pricing.html", {
         "user": user, "premium_plans": premium.PLANS,
-        "premium_currency": premium.CURRENCY})
+        "premium_currency": premium.CURRENCY,
+        "skus": catalog.public_skus()})
 
 
 @router.get("/methodology")
@@ -697,6 +702,11 @@ def assessment_checkout(assessment_id: int, request: Request,
         user_id=user.id, reference=ref, purpose="assessment", amount_kes=0,
         currency=premium.CURRENCY, amount_minor=amount, billing_cycle="one_time",
         related_id=assessment_id, status="pending"))
+    services_entitlements.open_order(
+        db, user_id=user.id, sku="report", assessment_id=assessment.id,
+        organization_id=assessment.organization_id, provider="paystack",
+        provider_reference=ref, amount_minor=amount,
+        description=f"Constraint Report for assessment {assessment.id}")
     db.commit()
     base = str(request.base_url).rstrip("/")
     data = paystack.initialize(
@@ -704,6 +714,69 @@ def assessment_checkout(assessment_id: int, request: Request,
         {"purpose": "assessment", "assessment_id": assessment_id,
          "price_usd": premium.FULL_ASSESSMENT_USD}, currency=premium.CURRENCY)
     return RedirectResponse(data["authorization_url"], status_code=303)
+
+
+@router.post("/assessment/{assessment_id}/checkout/facilitated")
+def assessment_checkout_facilitated(assessment_id: int, request: Request,
+                                    user=Depends(get_current_user),
+                                    db: Session = Depends(get_db)):
+    if not BILLING_ENABLED:
+        return RedirectResponse("/pricing?billing=unavailable", status_code=303)
+    if user is None:
+        return login_redirect()
+    assessment = _owned_assessment(db, user, assessment_id)
+    if assessment is None:
+        return _not_found(request, user)
+    if services_entitlements.has_facilitated(db, user.id, assessment_id):
+        return RedirectResponse(
+            f"/assessment/{assessment_id}/facilitated", status_code=303)
+    ref = paystack.new_reference("FAC")
+    amount = catalog.amount_minor("facilitated")
+    db.add(models.Payment(
+        user_id=user.id, reference=ref, purpose="facilitated", amount_kes=0,
+        currency=catalog.CURRENCY, amount_minor=amount,
+        billing_cycle="one_time", related_id=assessment_id, status="pending"))
+    services_entitlements.open_order(
+        db, user_id=user.id, sku="facilitated", assessment_id=assessment.id,
+        organization_id=assessment.organization_id, provider="paystack",
+        provider_reference=ref, amount_minor=amount,
+        description=f"Facilitated Report for assessment {assessment.id}")
+    db.commit()
+    base = str(request.base_url).rstrip("/")
+    data = paystack.initialize(
+        user.email, amount, ref, f"{base}/pay/return/{ref}",
+        {"purpose": "facilitated", "assessment_id": assessment_id,
+         "price_usd": catalog.price("facilitated")}, currency=catalog.CURRENCY)
+    return RedirectResponse(data["authorization_url"], status_code=303)
+
+
+@router.get("/assessment/{assessment_id}/facilitated")
+def facilitated_workspace(assessment_id: int, request: Request,
+                          user=Depends(get_current_user),
+                          db: Session = Depends(get_db)):
+    if user is None:
+        return login_redirect()
+    assessment = _owned_assessment(db, user, assessment_id)
+    if assessment is None:
+        return _not_found(request, user)
+    if not services_entitlements.has_facilitated(db, user.id, assessment_id):
+        return RedirectResponse(
+            f"/assessment/{assessment_id}/results#implementation", status_code=303)
+    org = db.get(models.Organization, assessment.organization_id)
+    payment = db.scalar(
+        select(models.Payment)
+        .where(models.Payment.user_id == user.id,
+               models.Payment.purpose == "facilitated",
+               models.Payment.related_id == assessment_id,
+               models.Payment.status == "success")
+        .order_by(models.Payment.id.desc()))
+    return templates.TemplateResponse(request, "facilitated.html", {
+        "user": user, "assessment": assessment, "organization": org,
+        "payment": payment,
+        "booking_url": (os.getenv("ELIPSIS_BOOKING_URL") or "").strip(),
+        "sku": catalog.SKUS["facilitated"],
+        "booked": request.query_params.get("booked") == "1",
+    })
 
 
 @router.get("/assessment/{assessment_id}/results")
@@ -745,6 +818,10 @@ def assessment_results(assessment_id: int, request: Request,
          "logistics": logistics.snapshot(db, assessment_ids=[assessment_id]),
          "operations": services_operations.summary(db, [assessment.organization_id]),
          "share_links": services_ops.share_links(db, assessment_id),
+         "report_sku": catalog.SKUS["report"],
+         "facilitated_sku": catalog.SKUS["facilitated"],
+         "facilitated_entitled": services_entitlements.has_facilitated(
+             db, user.id, assessment_id),
          "is_pro": services.company_is_pro(db, assessment.organization_id, user),
          "company_pro": services.company_is_pro(db, assessment.organization_id, user),
          "notes": services_room.notes(db, assessment.id),
@@ -773,6 +850,9 @@ def assessment_pillar(assessment_id: int, code: str, request: Request,
          "analytics": analytics.build(result),
          "benchmark": benchmarks.cohort_benchmark(db, org),
          "report_unlocked": True,
+         "report_sku": catalog.SKUS["report"],
+         "facilitated_sku": catalog.SKUS["facilitated"],
+         "facilitated_entitled": False,
          "is_pro": services.company_is_pro(db, assessment.organization_id, user),
          "focus_pillar": code.upper()})
 

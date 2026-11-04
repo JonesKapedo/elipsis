@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Billing — {{ BRAND_NAME }}{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">ACCOUNT</p>
+  <h1>Billing and receipts</h1>
+  <p class="lede">Every payment, pass, and receipt on this account. Report and facilitated purchases are one-time. Operator passes run 31 or 365 days; renewal terms appear with the plan.</p>
+</section>
+
+{% if cancelled %}<div class="flash ok">Renewal cancelled. Access continues to the end of the paid period.</div>{% endif %}
+{% if cancel_error %}<div class="flash err">We could not reach the payment provider. Try again or <a href="/support?topic=billing">contact support</a>.</div>{% endif %}
+<section class="block">
+  <div class="block-head">
+    <h3>Current access</h3>
+    {% if is_operator %}<span class="tag ok">Operator active</span>{% else %}<span class="tag">No active Operator pass</span>{% endif %}
+  </div>
+  <p class="muted">
+    {% if is_operator %}
+    Operator is active{% if operator_until %} until {{ operator_until[:10] }}{% endif %}. You can renew at any time; access continues from the current end date.
+    {% else %}
+    Report and facilitated purchases stay available. Operator adds the action board, team seats, and quarterly re-score cadence.
+    {% endif %}
+  </p>
+  {% if subscription %}
+    {% if subscription.cancel_at_period_end %}
+    <p class="muted small"><span class="tag warn">Renewal cancelled</span>{% if subscription.current_period_end %} Access runs to {{ subscription.current_period_end[:10] }}.{% endif %}</p>
+    {% else %}
+    <form method="post" action="/billing/cancel" onsubmit="return confirm('Cancel renewal? Access continues to the end of the current period.')">
+      <button class="btn ghost sm" type="submit">Cancel renewal</button>
+    </form>
+    {% endif %}
+  {% else %}
+  <p class="muted small">No recurring renewal on this account. Operator passes are one-time.</p>
+  {% endif %}
+  <div class="hero-actions">
+    <a class="btn sm" href="/pro">{{ 'Renew Operator' if is_operator else 'See Operator' }} · {{ sku_operator.price_usd|money }}/mo</a>
+    <a class="btn ghost sm" href="/pricing">All plans</a>
+  </div>
+</section>
+
+<section class="block">
+  <div class="block-head">
+    <h3>Payments</h3>
+    <span class="muted small">Amounts in USD. Taxes are shown on the receipt where applicable.</span>
+  </div>
+  {% if rows %}
+  <table class="table">
+    <thead><tr><th>Date</th><th>Item</th><th>Reference</th><th>Status</th><th class="num">Amount</th><th></th></tr></thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td class="muted">{{ (row.payment.paid_at or row.payment.created_at or '')[:10] }}</td>
+        <td>{{ row.label }}</td>
+        <td><code>{{ row.payment.reference }}</code></td>
+        <td>
+          {% if row.status == 'success' %}<span class="tag ok">Paid</span>
+          {% elif row.status in ('failed', 'abandoned') %}<span class="tag warn">{{ row.status|title }}</span>
+          {% else %}<span class="tag">{{ row.status|title }}</span>{% endif %}
+        </td>
+        <td class="num">{{ row.amount }} {{ row.currency }}</td>
+        <td>
+          {% if row.status == 'success' %}
+          <a class="btn ghost sm" href="/billing/receipt/{{ row.payment.reference }}">Receipt</a>
+          {% else %}—{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No payments yet. The free Pulse assessment does not require a card.</p>
+  <a class="btn sm" href="/start">Start a Pulse assessment →</a>
+  {% endif %}
+</section>
+
+<section class="block">
+  <h3>Active entitlements</h3>
+  {% if entitlements %}
+  <table class="table">
+    <thead><tr><th>Item</th><th>Scope</th><th>Status</th><th>Started</th></tr></thead>
+    <tbody>
+      {% for item in entitlements %}
+      <tr>
+        <td>{{ item.sku|replace('_', ' ')|title }}</td>
+        <td class="muted">{% if item.organization_id %}Organisation {{ item.organization_id }}{% elif item.assessment_id %}Assessment {{ item.assessment_id }}{% else %}Account{% endif %}</td>
+        <td><span class="tag ok">{{ item.status|title }}</span></td>
+        <td class="muted">{{ (item.starts_at or item.created_at or '')[:10] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No active entitlements. A paid report appears here immediately after checkout.</p>
+  {% endif %}
+</section>
+
+<section class="block prose">
+  <h3>Need a change?</h3>
+  <p>Duplicate charge, invoice details, or a refund request: <a href="/support?topic=billing">contact support</a>. Include the payment reference above. Refund eligibility is described in the <a href="/refund">refund policy</a>.</p>
+  <p class="muted small">Payments are processed by Paystack. {{ BRAND_NAME }} never stores card numbers. Prices are in USD and exclusive of applicable taxes.</p>
+</section>
+{% endblock %}

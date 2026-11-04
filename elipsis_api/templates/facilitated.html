@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Facilitated Report — {{ organization.name if organization else 'Elipsis' }}{% endblock %}
+{% block content %}
+<section class="head">
+  <p class="eyebrow">FACILITATED REPORT · {{ sku.price_usd|money }}</p>
+  <h1>Your review is booked into the calendar.</h1>
+  <p class="lede">A 60–90 minute working session on the constraint, the money model, and the first three moves. You leave with a revised report and three implementer introductions.</p>
+  {% if booked %}<div class="flash ok">Payment received. Choose a time below and we will confirm by email.</div>{% endif %}
+</section>
+
+<section class="block">
+  <h3>What happens next</h3>
+  <ol class="stack">
+    <li><strong>Book the session.</strong> Pick a 90-minute slot. Bring the person who owns the constraint.</li>
+    <li><strong>We prepare.</strong> The report, assumptions, and operating lanes are sent to the reviewer in advance.</li>
+    <li><strong>We work the constraint.</strong> Validate the cost model, test the plan, and agree owners and dates.</li>
+    <li><strong>Revised report in 5 business days.</strong> Same PDF and share link, updated with the session.</li>
+    <li><strong>Three introductions.</strong> Curated implementers for the first move, not a directory.</li>
+  </ol>
+  <div class="hero-actions" style="margin-top:1rem">
+    {% if booking_url %}
+    <a class="btn" href="{{ booking_url }}" target="_blank" rel="noopener">Choose a time →</a>
+    {% else %}
+    <a class="btn" href="/support?topic=facilitated&assessment={{ assessment.id }}">Arrange your session →</a>
+    {% endif %}
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/results">Back to the report</a>
+  </div>
+</section>
+
+<section class="two-col">
+  <article class="block">
+    <h3>Before the call</h3>
+    <ul class="stack">
+      <li>The constraint name and the costed assumption you disagree with most.</li>
+      <li>One number you trust that is not in the report.</li>
+      <li>The person who can approve the first move.</li>
+    </ul>
+    <p class="muted small">No slide deck needed. The report is the agenda.</p>
+  </article>
+  <article class="block">
+    <h3>Your order</h3>
+    <table class="table">
+      <tbody>
+        <tr><th>Organisation</th><td>{{ organization.name if organization else '—' }}</td></tr>
+        <tr><th>Report</th><td><a href="/assessment/{{ assessment.id }}/results">Assessment {{ assessment.id }}</a></td></tr>
+        <tr><th>Package</th><td>Facilitated Report</td></tr>
+        <tr><th>Price</th><td class="num">{{ sku.price_usd|money }}</td></tr>
+        {% if payment %}
+        <tr><th>Reference</th><td><code>{{ payment.reference }}</code></td></tr>
+        <tr><th>Paid</th><td class="num">{{ (payment.paid_at or payment.created_at or '')[:10] }}</td></tr>
+        {% endif %}
+        <tr><th>Support</th><td><a href="/support?topic=facilitated">Message us</a></td></tr>
+      </tbody>
+    </table>
+    <p class="muted small">One-time payment in USD, exclusive of applicable taxes. Includes the Constraint Report. See the <a href="/refund">refund policy</a>.</p>
+  </article>
+</section>
+{% endblock %}

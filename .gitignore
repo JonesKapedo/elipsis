@@ -30,10 +30,8 @@ env/
 # Test artifacts
 /screenshots/
 
-# Frontend
-frontend/node_modules/
-frontend/dist/
-frontend/tsconfig.tsbuildinfo
-
 # Local document uploads
 /data/uploads/
+
+# Node
+node_modules/
