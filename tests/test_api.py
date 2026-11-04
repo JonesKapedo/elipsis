@@ -1497,3 +1497,30 @@ def test_assessment_funnel_endpoint_and_admin_page(signed_in):
             assessment_id=assessment_id).delete()
         db.query(models.Assessment).filter_by(id=assessment_id).delete()
         db.commit()
+
+
+def test_seed_refreshes_question_copy_on_version_change(client):
+    from elipsis_api import models, services_core
+    from elipsis_api.database import SessionLocal
+    from elipsis_questions import QUESTIONNAIRE
+
+    with SessionLocal() as db:
+        bank = db.query(models.Questionnaire).filter_by(
+            code=QUESTIONNAIRE["code"]).one()
+        row = db.query(models.Question).filter_by(
+            questionnaire_id=bank.id, code="Q01").one()
+        expected = row.why
+        assert "warehouse floor" in expected
+        bank.version = "stale"
+        row.why = "stale copy"
+        db.commit()
+
+        services_core.seed(db)
+        db.commit()
+
+        bank = db.query(models.Questionnaire).filter_by(
+            code=QUESTIONNAIRE["code"]).one()
+        row = db.query(models.Question).filter_by(
+            questionnaire_id=bank.id, code="Q01").one()
+        assert bank.version == QUESTIONNAIRE["version"]
+        assert row.why == expected
