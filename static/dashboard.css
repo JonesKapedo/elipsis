@@ -1,0 +1,122 @@
+/* Dashboard/Workspace - KPI ribbon, trend charts, exception queue, role-based views */
+
+.dash-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.hero-actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.journey-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.journey-card {
+  background: var(--neutral-0);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.journey-card:hover {
+  border-color: var(--brand-primary);
+  box-shadow: var(--shadow-brand);
+  transform: translateY(-2px);
+}
+
+.row-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.pill {
+  padding: var(--space-1) var(--space-3);
+  background: var(--neutral-100);
+  color: var(--neutral-600);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  border-radius: var(--radius-full);
+}
+
+.pill.ok {
+  background: var(--success-soft);
+  color: var(--success-dark);
+}
+
+.pill.warn {
+  background: var(--warning-soft);
+  color: var(--warning-dark);
+}
+
+.pill.err {
+  background: var(--danger-soft);
+  color: var(--danger-dark);
+}
+
+.progress-track {
+  height: 6px;
+  background: var(--neutral-200);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progress-track.small {
+  height: 4px;
+}
+
+.progress-track span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--brand-primary), var(--brand-primary-light));
+  border-radius: var(--radius-full);
+  transition: width var(--duration-normal) var(--ease-out);
+}
+
+.journey-next {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--brand-primary);
+  text-decoration: none;
+  margin-top: var(--space-2);
+}
+
+.journey-next:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 1024px) {
+  .dash-hero {
+    flex-direction: column;
+  }
+  .journey-strip {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  .hero-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
