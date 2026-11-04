@@ -34,9 +34,9 @@ REPORT_HEADER = "ELIPSIS \u2014 BUSINESS TRANSFORMATION ASSESSMENT"
 # --- Assessment instrumentation -------------------------------------------
 QUESTIONNAIRE_CODE = "ORG-001"  # generalised: no longer finance-only
 QUESTIONNAIRE_NAME = "Elipsis Organisation Readiness Assessment"
-QUESTIONNAIRE_VERSION = "2.0"
+QUESTIONNAIRE_VERSION = "2.1"
 CURRENCY = "USD"
-DEFAULT_HOURLY_RATE = 35  # USD/hour blended operating labour, global default
+DEFAULT_HOURLY_RATE = 24.0  # USD/hour blended logistics operations labour
 
 # --- Maturity scale (0-100) -----------------------------------------------
 # Bands are contiguous half-open ranges: (low, high_exclusive). An earlier

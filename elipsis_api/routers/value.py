@@ -17,6 +17,11 @@ from elipsis_api import benchmarks, models, services, services_ops, services_web
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
 from elipsis_api.narrative import board_narrative
+from readiness import (
+    WORKING_HOURS_PER_MONTH,
+    blended_hourly_range,
+    blended_hourly_rate,
+)
 
 router = APIRouter()
 
@@ -40,10 +45,18 @@ def _context(db: Session, assessment: models.Assessment, result: dict, user) -> 
     delta = None
     if previous is not None and previous.readiness_index is not None:
         delta = round((result.get("readiness_index") or 0) - previous.readiness_index, 1)
+    assumptions = services.get_assumptions(db, assessment.id)
+    staff = (assumptions.staff if assumptions and assumptions.staff
+             else getattr(org, "employee_count", None))
+    rate_low, rate_high = blended_hourly_range(staff)
     return {
         "user": user, "assessment": assessment, "result": result, "org": org,
         "organization": org, "department": dept,
-        "assumptions": services.get_assumptions(db, assessment.id),
+        "assumptions": assumptions,
+        "suggested_rate": blended_hourly_rate(staff),
+        "suggested_rate_low": rate_low,
+        "suggested_rate_high": rate_high,
+        "suggested_hours": WORKING_HOURS_PER_MONTH,
         "benchmark": benchmarks.cohort_benchmark(
             db, org, score=result.get("readiness_index")),
         "reference_points": benchmarks.REFERENCE_POINTS,

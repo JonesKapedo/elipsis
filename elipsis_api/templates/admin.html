@@ -46,6 +46,34 @@
 
 <section class="block">
   <div class="block-head">
+    <h3>Assessment funnel</h3>
+    <span class="muted small">Last {{ funnel.window_days }} days</span>
+  </div>
+  <div class="kpis" style="margin-bottom:1rem;">
+    <div class="kpi"><span class="kpi-lb">Started</span><b>{{ funnel.started }}</b></div>
+    <div class="kpi"><span class="kpi-lb">Completed</span><b>{{ funnel.completed }}</b></div>
+    <div class="kpi accent"><span class="kpi-lb">Completion rate</span><b>{{ funnel.completion_rate }}%</b></div>
+    <div class="kpi"><span class="kpi-lb">Paid reports</span><b>{{ funnel.paid }}</b></div>
+    <div class="kpi"><span class="kpi-lb">Paid conversion</span><b>{{ funnel.paid_conversion_rate }}%</b></div>
+    <div class="kpi">
+      <span class="kpi-lb">Avg completion</span>
+      <b>{% if funnel.average_completion_hours is not none %}{{ funnel.average_completion_hours }}h{% else %}—{% endif %}</b>
+    </div>
+  </div>
+  <table class="table">
+    <thead>
+      <tr><th>Week of</th><th class="num">Started</th><th class="num">Completed</th></tr>
+    </thead>
+    <tbody>
+      {% for week in funnel.weekly %}
+      <tr><td>{{ week.week }}</td><td class="num">{{ week.started }}</td><td class="num">{{ week.completed }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="block">
+  <div class="block-head">
     <h3>Adoption at a glance</h3>
   </div>
   <p class="muted" style="margin-bottom:1rem;">Simple view of how Elipsis is being used. Bars show relative volume.</p>

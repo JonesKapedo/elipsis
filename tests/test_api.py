@@ -1449,3 +1449,51 @@ def test_settings_default_theme_is_dark_and_switch_persists(signed_in):
     assert 'name="theme" value="light" checked' in light_page.text
 
     signed_in.post("/settings", data={"theme": "dark"}, follow_redirects=False)
+
+
+def test_assessment_funnel_endpoint_and_admin_page(signed_in):
+    from datetime import UTC, datetime, timedelta
+
+    from elipsis_api import models
+    from elipsis_api.database import SessionLocal
+
+    client = signed_in
+    now = datetime.now(UTC).replace(tzinfo=None)
+    with SessionLocal() as db:
+        org = db.query(models.Organization).first()
+        questionnaire = db.query(models.Questionnaire).first()
+        user = db.query(models.User).filter_by(email="admin@elipsis.local").one()
+        assert org is not None and questionnaire is not None
+        assessment = models.Assessment(
+            organization_id=org.id,
+            questionnaire_id=questionnaire.id,
+            respondent="Funnel Tester",
+            status="completed",
+            started_at=(now - timedelta(hours=3)).isoformat(),
+            completed_at=now.isoformat(),
+        )
+        db.add(assessment)
+        db.flush()
+        db.add(models.AssessmentPurchase(
+            user_id=user.id, assessment_id=assessment.id, active=True))
+        db.commit()
+        assessment_id = assessment.id
+
+    body = client.get("/api/v1/analytics/assessment-funnel?days=30").json()
+    assert body["window_days"] == 30
+    assert body["started"] >= 1
+    assert body["completed"] >= 1
+    assert body["paid"] >= 1
+    assert len(body["weekly"]) == 6
+    assert body["average_completion_hours"] is not None
+
+    page = client.get("/admin")
+    assert page.status_code == 200
+    assert "Assessment funnel" in page.text
+    assert "Paid conversion" in page.text
+
+    with SessionLocal() as db:
+        db.query(models.AssessmentPurchase).filter_by(
+            assessment_id=assessment_id).delete()
+        db.query(models.Assessment).filter_by(id=assessment_id).delete()
+        db.commit()
