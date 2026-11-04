@@ -589,3 +589,36 @@ def test_paystack_recurring_plan_webhooks(monkeypatch):
         bidder_charge = db.scalar(select(models.Payment).where(
             models.Payment.reference == "RENEW_BIDDER_1"))
         assert bidder_charge is not None and bidder_charge.related_id == bidder_id
+
+
+def test_conversation_window_is_two_weeks_and_closes_after_inactivity():
+    from elipsis_api import services_marketplace as sm
+
+    start = datetime(2026, 1, 1, 9, 0, 0)
+    assert sm.conversation_deadline(start) == "2026-01-15 09:00:00"
+
+    requester_id = _make_user(_email("conv-requester"), "requester-password")
+    bidder_user_id = _make_user(_email("conv-bidder"), "bidder-password",
+                                user_type="bidder")
+    stale = sm._now_dt() - timedelta(days=1)
+    stale_text = stale.strftime("%Y-%m-%d %H:%M:%S")
+    with SessionLocal() as db:
+        conv = models.MarketplaceConversation(
+            request_id=999001, bid_id=999001, requester_id=requester_id,
+            bidder_user_id=bidder_user_id, status="open", opened_at=stale_text,
+            last_message_at=stale_text, closes_at=stale_text)
+        db.add(conv)
+        db.commit()
+        conversation_id = conv.id
+
+    with SessionLocal() as db:
+        conv = db.get(models.MarketplaceConversation, conversation_id)
+        assert sm.refresh_conversation(db, conv) is True
+
+    with SessionLocal() as db:
+        conv = db.get(models.MarketplaceConversation, conversation_id)
+        assert conv.status == "closed"
+        assert conv.close_reason == "expired"
+        notes = db.scalars(select(models.MarketplaceNotification).where(
+            models.MarketplaceNotification.user_id == requester_id)).all()
+        assert any("14-day inactivity window" in (note.body or "") for note in notes)

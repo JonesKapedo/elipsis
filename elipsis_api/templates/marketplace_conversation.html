@@ -50,7 +50,7 @@
     <textarea name="body" rows="4" maxlength="4000" required placeholder="Share the next step, ask a question, or confirm scope."></textarea>
     <button class="btn" type="submit">Send message</button>
   </form>
-  <p class="muted small">The reply window resets to 24 hours after each message. Messages are visible to both parties and to an involved admin.</p>
+  <p class="muted small">The {{ conversation_days }}-day window resets after each message. Messages are visible to both parties and to an involved admin.</p>
 </section>
 {% elif conversation.status == 'open' and is_admin %}
 <section class="block">

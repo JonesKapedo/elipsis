@@ -22,6 +22,7 @@ from elipsis_api.deps import get_current_user, login_redirect, templates
 from elipsis_api.services_marketplace import (
     BID_APPROVED,
     BID_AWARDED,
+    CONVERSATION_DAYS,
     REQUEST_APPROVED,
     REQUEST_AWARDED,
     REQUEST_PENDING,
@@ -668,6 +669,7 @@ def marketplace_conversation(conversation_id: int, request: Request,
          "participant": participant,
          "is_admin": services.is_admin(user) or getattr(user, "is_admin", False),
          "can_respond": bool(participant and conv.status == "open"),
+         "conversation_days": CONVERSATION_DAYS,
          "error": request.query_params.get("error"),
          "ok": request.query_params.get("ok")})
 

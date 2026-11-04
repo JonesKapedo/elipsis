@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 from datetime import UTC, datetime, timedelta
 
@@ -33,7 +34,18 @@ VERIFY_EXPIRED = "expired"
 
 ACTIVE_REQUEST_STATUSES = (REQUEST_APPROVED, REQUEST_AWARDED)
 VISIBLE_REQUEST_STATUSES = (REQUEST_APPROVED, REQUEST_AWARDED, REQUEST_CLOSED)
-CONVERSATION_HOURS = 24
+
+
+def _conversation_days() -> int:
+    raw = os.getenv("ELIPSIS_CONVERSATION_DAYS", "14")
+    try:
+        return max(1, int(raw))
+    except (TypeError, ValueError):
+        return 14
+
+
+CONVERSATION_DAYS = _conversation_days()
+CONVERSATION_HOURS = CONVERSATION_DAYS * 24
 DEFAULT_SWITCHES = 3
 TOPUP_SWITCHES = 3
 
@@ -286,7 +298,7 @@ def switches_remaining(req: models.PhysicalAssessmentRequest) -> int:
 
 def conversation_deadline(now: datetime | None = None) -> str:
     base = now or _now_dt()
-    return (base + timedelta(hours=CONVERSATION_HOURS)).strftime("%Y-%m-%d %H:%M:%S")
+    return (base + timedelta(days=CONVERSATION_DAYS)).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def notify_user(db: Session, user_id: int | None, event: str, title: str,
@@ -299,7 +311,7 @@ def notify_user(db: Session, user_id: int | None, event: str, title: str,
 
 
 def refresh_conversation(db: Session, conv: models.MarketplaceConversation) -> bool:
-    """Lazily close a conversation 24 hours after its last message."""
+    """Lazily close a conversation after the inactivity window."""
     if conv is None or conv.status != "open":
         return False
     deadline = parse_dt(conv.closes_at)
@@ -310,11 +322,13 @@ def refresh_conversation(db: Session, conv: models.MarketplaceConversation) -> b
     conv.close_reason = "expired"
     notify_user(db, conv.requester_id, "conversation.closed",
                 "Implementation conversation closed",
-                "The 24-hour reply window has ended. Record the outcome to close the loop.",
+                f"The {CONVERSATION_DAYS}-day inactivity window has ended. "
+                "Record the outcome to close the loop.",
                 f"/marketplace/conversations/{conv.id}")
     notify_user(db, conv.bidder_user_id, "conversation.closed",
                 "Implementation conversation closed",
-                "The 24-hour reply window has ended. Record the outcome to close the loop.",
+                f"The {CONVERSATION_DAYS}-day inactivity window has ended. "
+                "Record the outcome to close the loop.",
                 f"/marketplace/conversations/{conv.id}")
     db.commit()
     return True
