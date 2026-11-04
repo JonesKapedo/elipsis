@@ -38,6 +38,7 @@
   <link rel="stylesheet" href="/static/design.css?v=20261101a">
   <link rel="stylesheet" href="/static/contrast-fix.css?v=20261101a">
   <link rel="stylesheet" href="/static/theme.css?v=20261101a">
+  <link rel="stylesheet" href="/static/theme-light.css?v=20261103a">
   <link rel="stylesheet" href="/static/logistics-ui.css?v=20261101a">
   <link rel="stylesheet" href="/static/brand-scale.css?v=20261101a">
   <link rel="stylesheet" href="/static/results.css?v=20261101a">
@@ -95,18 +96,14 @@
         </div>
         <div class="nav-group">
           <p class="nav-group-label">Implement</p>
-          {% if (user.role or '') == 'admin' or user.is_admin %}
-          <a href="/marketplace" class="nav-item{% if path.startswith('/marketplace') and not path.startswith('/marketplace/partner') %} active{% endif %}"><svg class="icon"><use href="#i-briefcase"/></svg><span>Marketplace</span><span class="nav-note">admin</span></a>
-          {% else %}
-          <a href="/support?topic=intros" class="nav-item{% if path == '/support' %} active{% endif %}"><svg class="icon"><use href="#i-users"/></svg><span>Implementer intros</span></a>
-          {% endif %}
+          <a href="/marketplace" class="nav-item{% if path.startswith('/marketplace') and not path.startswith('/marketplace/partner') %} active{% endif %}"><svg class="icon"><use href="#i-briefcase"/></svg><span>Marketplace</span><span class="nav-note">{% if (user.user_type or '') == 'admin' or user.is_admin %}admin{% else %}open{% endif %}</span></a>
           {% if (user.user_type or '') == 'bidder' %}<a href="/marketplace/partner" class="nav-item{% if path.startswith('/marketplace/partner') %} active{% endif %}"><svg class="icon"><use href="#i-users"/></svg><span>Partner desk</span></a>{% endif %}
         </div>
         <div class="nav-group">
           <p class="nav-group-label">Account</p>
           <a href="/settings" class="nav-item{% if path == '/settings' %} active{% endif %}"{% if path == '/settings' %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-settings"/></svg><span>Settings</span></a>
           <a href="/billing" class="nav-item{% if path.startswith('/billing') %} active{% endif %}"{% if path.startswith('/billing') %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-briefcase"/></svg><span>Billing</span></a>
-          {% if (user.role or '') == 'admin' or user.is_admin %}
+          {% if (user.user_type or '') == 'admin' or user.is_admin %}
           <a href="/admin" class="nav-item{% if path.startswith('/admin') %} active{% endif %}"{% if path.startswith('/admin') %} aria-current="page"{% endif %}><svg class="icon"><use href="#i-admin"/></svg><span>Admin</span></a>
           {% endif %}
           <a href="/logout" class="nav-item nav-danger"><svg class="icon"><use href="#i-logout"/></svg><span>Sign out</span></a>
@@ -222,7 +219,7 @@
 {% endif %}
 
 {% if authed %}
-<dialog class="cmdk" id="cmdk" aria-labelledby="cmdk-title" data-admin="{{ 'true' if (user.role or '') == 'admin' or user.is_admin else 'false' }}">
+<dialog class="cmdk" id="cmdk" aria-labelledby="cmdk-title" data-admin="{{ 'true' if ((user.user_type or '') == 'admin' or user.is_admin) else 'false' }}">
   <div class="cmdk-panel">
     <h2 id="cmdk-title" class="sr-only">Command palette</h2>
     <div class="cmdk-head">

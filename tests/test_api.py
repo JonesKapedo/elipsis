@@ -4,6 +4,7 @@ Runs against a throwaway SQLite file so it never touches the dev database.
 """
 import os
 import tempfile
+from datetime import date
 
 import pytest
 
@@ -37,6 +38,17 @@ def test_health(client):
     assert body["status"] == "ok"
     assert body["brand"] == C.BRAND_NAME
     assert body["index"] == C.INDEX_NAME
+
+
+def test_health_detail_reports_marketplace_readiness(client):
+    body = client.get("/api/v1/health/detail").json()
+    readiness = body["marketplace"]
+    assert {
+        "enabled", "billing_enabled", "messaging_enabled", "verification_enabled",
+        "handoff_enabled", "payments_configured", "requester_plans_configured",
+        "bidder_plans_configured", "launch_ready",
+    } == set(readiness)
+    assert all(isinstance(value, bool) for value in readiness.values())
 
 
 def test_questionnaire_exposes_per_question_options(client):
@@ -628,15 +640,9 @@ def test_operations_ecosystem_round_trip(signed_in):
     assert summary["incidents"]["open"] >= 2
     assert summary["documents"]["expiring"] >= 1
 
-    from calendar import monthrange
-    from datetime import date
-
-    today = date.today()
-    period_end = today.replace(
-        day=monthrange(today.year, today.month)[1]).isoformat()
     recorded = client.post("/operations/metrics", data={
         "organization_id": org_id, "metric_key": "on_time_delivery",
-        "value": "96.4", "period_end": period_end,
+        "value": "96.4", "period_end": date.today().isoformat(),
         "note": "Weekly dispatch review"}, follow_redirects=False)
     assert recorded.status_code == 303
     metrics = client.get(f"/api/v1/operations/metrics?org_id={org_id}").json()["metrics"]
@@ -1002,8 +1008,11 @@ def test_company_room_membership_collaboration_and_branding():
     from fastapi.testclient import TestClient
 
     from elipsis_api import models, security, services_room
-    from elipsis_api.database import SessionLocal
+    from elipsis_api.database import Base, SessionLocal, engine
     from elipsis_api.main import app
+
+    # Create tables before using SessionLocal (same as lifespan)
+    Base.metadata.create_all(bind=engine)
 
     with SessionLocal() as db:
         owner = models.User(
@@ -1423,3 +1432,20 @@ def test_company_home_renders_the_selected_owned_company():
         export = home.get(f"/operations/export.json?org={org_id}")
         assert export.status_code == 200
         assert export.json()["metrics"]
+
+
+def test_settings_default_theme_is_dark_and_switch_persists(signed_in):
+    page = signed_in.get("/settings")
+    assert page.status_code == 200
+    assert 'name="theme" value="dark" checked' in page.text
+    assert 'name="theme" value="system" checked' not in page.text
+
+    saved = signed_in.post("/settings", data={"theme": "light"},
+                           follow_redirects=False)
+    assert saved.status_code == 303
+    assert saved.cookies.get("elipsis_theme") == "light"
+
+    light_page = signed_in.get("/settings")
+    assert 'name="theme" value="light" checked' in light_page.text
+
+    signed_in.post("/settings", data={"theme": "dark"}, follow_redirects=False)

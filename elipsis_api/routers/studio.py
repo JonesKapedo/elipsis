@@ -744,8 +744,8 @@ def settings(request: Request, user=Depends(get_current_user), db: Session = Dep
     if company is None and organizations:
         company = organizations[0]
     from elipsis_api import services_room
-    raw_theme = (request.cookies.get("elipsis_theme") or "system").strip().lower()
-    theme = raw_theme if raw_theme in {"light", "dark", "system"} else "system"
+    raw_theme = (request.cookies.get("elipsis_theme") or "dark").strip().lower()
+    theme = raw_theme if raw_theme in {"light", "dark", "system"} else "dark"
     return templates.TemplateResponse(request, "settings.html", {
         "user": user, "prefs": prefs, "company": company, "webhooks": hooks,
         "deliveries": deliveries, "events": sorted(services_webhooks.ALLOWED_EVENTS),
@@ -765,7 +765,7 @@ def settings(request: Request, user=Depends(get_current_user), db: Session = Dep
 
 @router.post("/settings")
 def settings_save(request: Request, symbol: str = Form("E"), motion: str = Form("on"),
-                  density: str = Form("comfortable"), theme: str = Form("system"),
+                  density: str = Form("comfortable"), theme: str = Form("dark"),
                   name: str = Form(""), job_title: str = Form(""), phone: str = Form(""),
                   bio: str = Form(""), landing_page: str = Form("/dashboard"),
                   digest_day: str = Form("monday"), quiet_hours: str = Form(""),
@@ -803,9 +803,9 @@ def settings_save(request: Request, symbol: str = Form("E"), motion: str = Form(
     if org_id and services.can_access_org(db, user, org_id):
         prefs.default_organization_id = org_id
     db.commit()
-    theme_val = (theme or "system").strip().lower()
+    theme_val = (theme or "dark").strip().lower()
     if theme_val not in {"light", "dark", "system"}:
-        theme_val = "system"
+        theme_val = "dark"
     response = RedirectResponse("/settings?saved=1", status_code=303)
     response.set_cookie("elipsis_motion", prefs.motion, max_age=60 * 60 * 24 * 365, samesite="lax")
     response.set_cookie("elipsis_density", prefs.density, max_age=60 * 60 * 24 * 365, samesite="lax")

@@ -147,20 +147,20 @@
         </header>
         <p class="field-note" style="margin-bottom:0.5rem">Appearance</p>
         <div class="theme-chooser" role="radiogroup" aria-label="Colour theme">
-          <label class="theme-option{% if (theme|default('system')) == 'light' %} is-active{% endif %}">
-            <input type="radio" name="theme" value="light" {% if (theme|default('system')) == 'light' %}checked{% endif %}>
+          <label class="theme-option{% if (theme|default('dark')) == 'light' %} is-active{% endif %}">
+            <input type="radio" name="theme" value="light" {% if (theme|default('dark')) == 'light' %}checked{% endif %}>
             <div class="theme-mini light" aria-hidden="true"><span class="theme-mini-side"></span><span class="theme-mini-main"></span></div>
             <strong>Light</strong>
             <span>Bright canvas for daytime work and board sharing.</span>
           </label>
-          <label class="theme-option{% if (theme|default('system')) == 'dark' %} is-active{% endif %}">
-            <input type="radio" name="theme" value="dark" {% if (theme|default('system')) == 'dark' %}checked{% endif %}>
+          <label class="theme-option{% if (theme|default('dark')) == 'dark' %} is-active{% endif %}">
+            <input type="radio" name="theme" value="dark" {% if (theme|default('dark')) == 'dark' %}checked{% endif %}>
             <div class="theme-mini dark" aria-hidden="true"><span class="theme-mini-side"></span><span class="theme-mini-main"></span></div>
             <strong>Dark</strong>
             <span>Low-glare operations skin for long sessions.</span>
           </label>
-          <label class="theme-option{% if (theme|default('system')) == 'system' %} is-active{% endif %}">
-            <input type="radio" name="theme" value="system" {% if (theme|default('system')) == 'system' %}checked{% endif %}>
+          <label class="theme-option{% if (theme|default('dark')) == 'system' %} is-active{% endif %}">
+            <input type="radio" name="theme" value="system" {% if (theme|default('dark')) == 'system' %}checked{% endif %}>
             <div class="theme-mini system" aria-hidden="true"><span class="theme-mini-side"></span><span class="theme-mini-main"></span></div>
             <strong>System</strong>
             <span>Follow the device light or dark preference.</span>

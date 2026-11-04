@@ -79,6 +79,49 @@ def test_generic_database_url_is_trusted_in_production(monkeypatch):
     assert config.resolve_database_url().startswith("postgresql://")
 
 
+def _clear_plan_env(monkeypatch):
+    for name in (
+        "PAYSTACK_PLAN_PREMIUM_MONTHLY",
+        "PAYSTACK_PLAN_PREMIUM_ANNUAL",
+        "PAYSTACK_PLAN_BIDDER_MONTHLY",
+        "PAYSTACK_PLAN_BIDDER_SIX_MONTHS",
+        "PAYSTACK_PLAN_BIDDER_YEARLY",
+    ):
+        monkeypatch.delenv(name, raising=False)
+
+
+def test_marketplace_readiness_reports_launch_gaps(monkeypatch):
+    from elipsis_api import paystack
+
+    monkeypatch.setattr(config, "MARKETPLACE_ENABLED", True)
+    monkeypatch.setattr(config, "BILLING_ENABLED", True)
+    monkeypatch.setattr(config, "VERIFICATION_ENABLED", True)
+    monkeypatch.setattr(paystack, "is_dummy", lambda: True)
+    _clear_plan_env(monkeypatch)
+
+    readiness = config.marketplace_readiness()
+    assert readiness["enabled"] is True
+    assert readiness["payments_configured"] is False
+    assert readiness["bidder_plans_configured"] is False
+    assert readiness["launch_ready"] is False
+
+
+def test_marketplace_readiness_true_when_payments_and_plans_exist(monkeypatch):
+    from elipsis_api import paystack
+
+    monkeypatch.setattr(config, "MARKETPLACE_ENABLED", True)
+    monkeypatch.setattr(config, "BILLING_ENABLED", True)
+    monkeypatch.setattr(config, "VERIFICATION_ENABLED", True)
+    monkeypatch.setattr(paystack, "is_dummy", lambda: False)
+    _clear_plan_env(monkeypatch)
+    monkeypatch.setenv("PAYSTACK_PLAN_BIDDER_MONTHLY", "PLN_bidder_monthly")
+
+    readiness = config.marketplace_readiness()
+    assert readiness["payments_configured"] is True
+    assert readiness["bidder_plans_configured"] is True
+    assert readiness["launch_ready"] is True
+
+
 def test_broken_driver_does_not_propagate(monkeypatch):
     """A driver that imports but misbehaves reports unusable instead of raising."""
     stub = types.ModuleType("psycopg")  # no paramstyle / no real driver

@@ -85,6 +85,14 @@
       : pref;
     document.documentElement.setAttribute("data-theme", resolved);
     document.documentElement.setAttribute("data-theme-pref", pref);
+    syncThemeToggle();
+  }
+
+  function syncThemeToggle() {
+    if (!themeToggle) return;
+    const light = document.documentElement.getAttribute("data-theme") === "light";
+    themeToggle.setAttribute("aria-pressed", light ? "true" : "false");
+    themeToggle.setAttribute("aria-label", light ? "Switch to dark theme" : "Switch to light theme");
   }
 
   function saveThemePref(pref) {
@@ -100,6 +108,7 @@
     applyTheme(next);
   }
 
+  syncThemeToggle();
   if (themeToggle) {
     themeToggle.addEventListener("click", toggleTheme);
   }

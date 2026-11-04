@@ -41,7 +41,7 @@ def _seed_admin(db: Session):
               "administrator uses the default password. Set ELIPSIS_ADMIN_EMAIL "
               "and ELIPSIS_ADMIN_PASSWORD before exposing this instance.",
               flush=True)
-    db.add(models.User(email=email, name="Elipsis Admin", role="admin",
+    db.add(models.User(email=email, name="Elipsis Admin",
                        user_type="admin", is_admin=True, email_verified=True,
                        password_hash=security.hash_password(password)))
 
@@ -62,7 +62,7 @@ def _seed_trusted_partner(db: Session):
     user = db.scalar(select(models.User).where(models.User.email == email))
     if user is None:
         user = models.User(
-            email=email, name="Great Turbinez", role="bidder", user_type="bidder",
+            email=email, name="Great Turbinez", user_type="bidder",
             password_hash=security.hash_password(security.new_token()),
             email_verified=True, is_admin=False)
         db.add(user)

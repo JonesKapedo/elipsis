@@ -202,3 +202,29 @@ MESSAGING_ENABLED = _flag("ELIPSIS_MESSAGING_ENABLED")
 BILLING_ENABLED = _flag("ELIPSIS_BILLING_ENABLED")
 HANDOFF_ENABLED = _flag("ELIPSIS_HANDOFF_ENABLED")
 VERIFICATION_ENABLED = _flag("ELIPSIS_VERIFICATION_ENABLED")
+
+
+def marketplace_readiness() -> dict[str, bool]:
+    """Non-secret launch readiness for operators, without changing traffic."""
+    from elipsis_api import paystack, premium
+
+    payments_configured = not paystack.is_dummy()
+    requester_plans = premium.recurring_configured("premium")
+    bidder_plans = premium.recurring_configured("bidder")
+    return {
+        "enabled": MARKETPLACE_ENABLED,
+        "billing_enabled": BILLING_ENABLED,
+        "messaging_enabled": MESSAGING_ENABLED,
+        "verification_enabled": VERIFICATION_ENABLED,
+        "handoff_enabled": HANDOFF_ENABLED,
+        "payments_configured": payments_configured,
+        "requester_plans_configured": requester_plans,
+        "bidder_plans_configured": bidder_plans,
+        "launch_ready": (
+            MARKETPLACE_ENABLED
+            and BILLING_ENABLED
+            and VERIFICATION_ENABLED
+            and payments_configured
+            and bidder_plans
+        ),
+    }

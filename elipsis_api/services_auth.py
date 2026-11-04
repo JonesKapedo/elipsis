@@ -50,7 +50,6 @@ def _create_local_user(
     user = models.User(
         email=email,
         name=name,
-        role="client" if user_type == "client" else user_type,
         user_type=user_type,
         password_hash=password_hash,
         supabase_id=supabase_id,

@@ -44,7 +44,7 @@
   <p class="muted">Operators: tell us which gaps you want help closing. Providers: ask to be considered for the pilot. We review every request manually.</p>
   <div class="hero-actions">
     <a class="btn" href="mailto:partners@elipsis.co.ke?subject=Elipsis%20marketplace%20pilot">Email the pilot team</a>
-    {% if (user.role or '') == 'admin' or user.is_admin %}<a class="btn ghost" href="/admin/requests">Open request desk</a>{% endif %}
+    {% if (user.user_type or '') == 'admin' or user.is_admin %}<a class="btn ghost" href="/admin/requests">Open request desk</a>{% endif %}
   </div>
 </section>
 {% endblock %}

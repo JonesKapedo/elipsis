@@ -32,3 +32,6 @@ env/
 
 # Local document uploads
 /data/uploads/
+
+# Node
+node_modules/
