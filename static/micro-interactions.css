@@ -1,0 +1,157 @@
+/* Micro-interactions & Animations - Loading states, transitions, hover effects */
+
+/* Button press effect */
+.btn:active {
+  transform: scale(0.98);
+}
+
+/* Card hover lift */
+.card {
+  transition: transform var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+/* Input focus animation */
+.input:focus,
+.textarea:focus,
+.select:focus {
+  animation: input-focus 0.2s var(--ease-out);
+}
+
+@keyframes input-focus {
+  0% {
+    box-shadow: 0 0 0 0 var(--brand-primary-soft);
+  }
+  100% {
+    box-shadow: 0 0 0 3px var(--brand-primary-soft);
+  }
+}
+
+/* Badge pulse for notifications */
+.badge-dot {
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Smooth fade in */
+.fade-in {
+  animation: fade-in 0.3s var(--ease-out);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Slide in from right */
+.slide-in-right {
+  animation: slide-in-right 0.3s var(--ease-out);
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Loading spinner enhancement */
+.spinner {
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Progress bar animation */
+.progress-bar {
+  transition: width var(--duration-normal) var(--ease-out);
+}
+
+/* Alert slide in */
+.alert {
+  animation: alert-slide 0.3s var(--ease-out);
+}
+
+@keyframes alert-slide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Tooltip fade */
+[data-tooltip]::before,
+[data-tooltip]::after {
+  transition: opacity var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out),
+              visibility var(--duration-fast);
+}
+
+/* Smooth page transition */
+main {
+  animation: page-fade 0.2s var(--ease-out);
+}
+
+@keyframes page-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Hover scale for interactive elements */
+.btn:hover,
+.nav-item:hover {
+  transform: translateY(-1px);
+}
+
+/* Focus visible enhancement */
+.btn:focus-visible,
+.input:focus-visible,
+.nav-item:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+/* Disable animations for reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

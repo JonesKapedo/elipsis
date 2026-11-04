@@ -28,7 +28,12 @@
   <meta name="twitter:title" content="{{ self.title() }}">
   <meta name="twitter:description" content="{{ self.description() }}">
   <meta name="twitter:image" content="{{ request.url_for('static', path='brand/og-banner.png') }}">
-  <link rel="stylesheet" href="/static/tokens.css?v=20261101a">
+  <link rel="stylesheet" href="/static/tokens.css?v=20261104a">
+  <link rel="stylesheet" href="/static/components.css?v=20261104a">
+  <link rel="stylesheet" href="/static/micro-interactions.css?v=20261104a">
+  {% if not authed %}<link rel="stylesheet" href="/static/marketing.css?v=20261104a">{% endif %}
+  {% if path == '/login' or path == '/signup' or path == '/forgot-password' or path == '/reset-password' %}<link rel="stylesheet" href="/static/auth.css?v=20261104a">{% endif %}
+  {% if path == '/settings' %}<link rel="stylesheet" href="/static/settings.css?v=20261104a">{% endif %}
   <link rel="stylesheet" href="/static/style.css?v=20261101a">
   <link rel="stylesheet" href="/static/app-shell.css?v=20261101a">
   <link rel="stylesheet" href="/static/extras.css?v=20261101a">
