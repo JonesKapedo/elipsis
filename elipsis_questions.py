@@ -343,6 +343,42 @@ QUESTIONS: list[dict[str, Any]] = [
          weight=4, evidence_required=False),
 ]
 
+# Logistics-specific examples keep the question wording plain while making
+# the relevance concrete for warehouse, transport, and 3PL operators. They are
+# appended to `why` so every surface (form, report, seeded bank) reads the same.
+LOGISTICS_EXAMPLES = {
+    "Q01": "On a warehouse floor that means a picker, packer, or dispatcher can follow the same steps without asking a supervisor.",
+    "Q02": "In logistics, the same delivery or stock count can be done one way on the morning shift and another way at night.",
+    "Q04": "Think of a dispatch job: order received, stock checked, vehicle assigned, proof of delivery filed.",
+    "Q05": "A delivery discount or stock adjustment should not need four signatures before the customer gets an answer.",
+    "Q06": "A truck can wait at a loading bay for hours while the paperwork or the next job is sorted out.",
+    "Q10": "A warehouse team may re-key the same order into a spreadsheet, the dispatch board, and the invoice system every day.",
+    "Q16": "Examples include typing delivery notes into the system or re-entering supplier invoices by hand.",
+    "Q17": "Copying a consignment note into a spreadsheet and then into an invoice is a common source of wrong totals.",
+    "Q18": "Weekly fleet or stock reports that are rebuilt by hand every Friday are a good place to start.",
+    "Q22": "Paper manifests, gate passes, and delivery notes slow down handovers and get lost between sites.",
+    "Q24": "A dispatch board or stock ledger that lives only in one person's spreadsheet is hard to trust and hard to scale.",
+    "Q25": "For example, whether the warehouse system can raise an invoice without someone re-typing the order.",
+    "Q26": "If a person has to carry a delivery note from the yard to the office, the systems are not connected.",
+    "Q30": "Barcode scans at goods-in or proof of delivery captured on a phone are examples of information recorded while the work happens.",
+    "Q37": "Count the calls, emails, and messages about late deliveries, missing stock, or invoice queries in a normal week.",
+    "Q38": "Late-delivery, stock-availability, and invoice-query answers are usually the first candidates.",
+    "Q40": "For a logistics operator this includes pick-and-pack steps, dispatch rules, carrier contacts, and safety procedures.",
+    "Q43": "Think about how far ahead you plan vehicle capacity, warehouse space, and seasonal demand.",
+    "Q44": "Forecasting parcel volumes, seasonal peaks, or route demand a few weeks ahead is the usual starting point.",
+    "Q46": "A transport management, warehouse management, or accounting system that holds the real records, not a folder of spreadsheets.",
+    "Q49": "Examples are whether your warehouse system can send an order to your carrier or accounting system without a person retyping it.",
+    "Q52": "Leavers should lose access to the warehouse, dispatch, and finance systems on their last day, not months later.",
+    "Q55": "Adding a new customer or route should not require adding a dispatcher, a picker, and an invoice clerk for every step.",
+    "Q58": "If the only person who knows the carrier rates or the warehouse layout is on leave, orders can stall.",
+    "Q61": "The limit may be a loading bay, a single approver, or a paper handover between the yard and the office.",
+}
+
+for _question in QUESTIONS:
+    _example = LOGISTICS_EXAMPLES.get(_question["code"])
+    if _example:
+        _question["why"] = f'{_question["why"]} {_example}'
+
 
 def as_dicts() -> list[dict[str, Any]]:
     """Return the bank as dicts with a 1-based position, for seeding."""

@@ -263,6 +263,7 @@
       <tbody>
         <tr><td>Staff in scope</td><td class="num">{{ fx.staff }}</td></tr>
         <tr><td>Blended hourly rate</td><td class="num">{{ CURRENCY }} {{ '%.0f'|format(fx.hourly_rate) }}</td></tr>
+        <tr><td>Planning rate range</td><td class="num">{{ CURRENCY }} {{ '%.0f'|format(fx.hourly_rate_low) }}–{{ '%.0f'|format(fx.hourly_rate_high) }}</td></tr>
         <tr><td>Working hours / month</td><td class="num">{{ fx.working_hours_per_month }}</td></tr>
         <tr><td>Labour line (annual)</td><td class="num">{{ fx.labour_line|money }}</td></tr>
         <tr><td>Savings ceiling</td><td class="num">{{ '%.0f'|format(fx.max_savings_share * 100) }}% of labour line</td></tr>
@@ -376,7 +377,7 @@
     <p>
       <strong>{{ BRAND_NAME }}</strong> — {{ BRAND_TAGLINE }}
       {% if branding.footer %}{{ branding.footer }}.{% endif %}
-      This document is a management decision-support pack. Financial figures are estimates, not audited results.
+      This document is a management decision-support pack. Financial figures are directional estimates based on logistics operations labour and planning rates, not audited results.
       © {{ BRAND_NAME }}. Confidential.
     </p>
   </footer>

@@ -8,7 +8,7 @@ from typing import Any
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from constants import SUBDOMAIN_PILLAR
+from constants import DEFAULT_HOURLY_RATE, SUBDOMAIN_PILLAR
 from elipsis_api import departments, models, security
 from elipsis_questions import QUESTIONNAIRE, QUESTIONS
 from readiness import compute as _compute
@@ -91,6 +91,7 @@ def seed(db: Session):
         db.add(bank)
         db.flush()
 
+    version_changed = bank.version != QUESTIONNAIRE["version"]
     existing = list(db.scalars(select(models.Question).where(
         models.Question.questionnaire_id == bank.id)))
     if len(existing) != len(QUESTIONS):
@@ -104,6 +105,20 @@ def seed(db: Session):
                 subdomain=item["subdomain"], pillar=SUBDOMAIN_PILLAR[item["subdomain"]],
                 text=item["text"], why=item.get("why"), weight=item.get("weight") or 1.0,
                 evidence_required=1 if item.get("evidence_required") else 0, position=pos))
+    elif version_changed:
+        by_code = {row.code: row for row in existing}
+        for pos, item in enumerate(QUESTIONS, start=1):
+            row = by_code.get(item["code"])
+            if row is None:
+                continue
+            row.scale = item.get("scale")
+            row.subdomain = item["subdomain"]
+            row.pillar = SUBDOMAIN_PILLAR[item["subdomain"]]
+            row.text = item["text"]
+            row.why = item.get("why")
+            row.weight = item.get("weight") or 1.0
+            row.evidence_required = 1 if item.get("evidence_required") else 0
+            row.position = pos
     bank.name = QUESTIONNAIRE["name"]
     bank.version = QUESTIONNAIRE["version"]
     bank.department = QUESTIONNAIRE["department"]
@@ -456,7 +471,9 @@ def save_assumptions(db: Session, assessment_id: int, *, staff, hourly_rate,
         row = models.AssessmentAssumption(assessment_id=assessment_id)
         db.add(row)
     row.staff = max(1, min(100_000, int(_num(staff, 50) or 50)))
-    row.hourly_rate = max(50.0, min(20_000.0, _num(hourly_rate, 500.0) or 500.0))
+    row.hourly_rate = max(
+        1.0, min(500.0, _num(hourly_rate, DEFAULT_HOURLY_RATE)
+                 or DEFAULT_HOURLY_RATE))
     row.working_hours_per_month = max(
         20.0, min(400.0, _num(working_hours_per_month, 173.33) or 173.33))
     row.max_savings_share = max(

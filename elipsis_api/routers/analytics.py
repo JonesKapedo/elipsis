@@ -10,6 +10,7 @@ from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user
 from elipsis_api.query_utils import count_rows, isoformat
 from elipsis_api.services_analytics import (
+    get_assessment_funnel,
     get_bidder_metrics,
     get_conversion_metrics,
     get_engagement_metrics,
@@ -110,6 +111,16 @@ def get_engagement(
 ):
     """Get user engagement metrics."""
     return get_engagement_metrics(db)
+
+
+@router.get("/assessment-funnel")
+def get_assessment_funnel_metrics(
+    days: int = 30,
+    db: Session = Depends(get_db),
+    admin_user: models.User = Depends(require_admin),
+):
+    """Assessment start, completion, and paid-report conversion (admin only)."""
+    return get_assessment_funnel(db, days)
 
 
 @router.get("/conversions")

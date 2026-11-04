@@ -92,7 +92,8 @@
       <p class="eyebrow">What the constraint is worth</p>
       <div class="money-figure">{{ result.financial.annual_savings|money }}</div>
       <p class="muted">Modelled annual savings potential against {{ result.financial.investment|money }} indicative investment.
-        Payback in {{ '%.1f'|format(result.financial.payback_months) }} months.</p>
+        Payback in {{ '%.1f'|format(result.financial.payback_months) }} months. Based on logistics
+        operations labour and directional USD planning rates; edit the assumptions to match your payroll.</p>
       <div class="money-strip">
         <div><span>ROI</span><b>{{ '%.0f'|format(result.financial.roi) }}%</b></div>
         <div><span>Payback</span><b>{{ '%.1f'|format(result.financial.payback_months) }} mo</b></div>
@@ -302,6 +303,7 @@
     <tbody>
       <tr><td>Staff in scope</td><td class="num">{{ a.staff }}</td></tr>
       <tr><td>Blended hourly rate</td><td class="num">{{ CURRENCY }} {{ '%.0f'|format(a.hourly_rate) }}</td></tr>
+      <tr><td>Planning rate range</td><td class="num">{{ CURRENCY }} {{ '%.0f'|format(a.hourly_rate_low) }}–{{ '%.0f'|format(a.hourly_rate_high) }}</td></tr>
       <tr><td>Working hours / month</td><td class="num">{{ a.working_hours_per_month }}</td></tr>
       <tr><td>Labour line</td><td class="num">{{ a.labour_line|money }}</td></tr>
       <tr><td>Savings cap share</td><td class="num">{{ '%.0f'|format(a.max_savings_share * 100) }}%</td></tr>

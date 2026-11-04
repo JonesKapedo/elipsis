@@ -36,7 +36,7 @@ def test_wage_tiers_rise_with_size():
 
 def test_labour_line_matches_staff_times_rate():
     staff, rate = 120, R.blended_hourly_rate(120)
-    assert R.labour_line(staff, rate) == staff * 160 * 12 * rate
+    assert R.labour_line(staff, rate) == staff * R.WORKING_HOURS_PER_MONTH * 12 * rate
 
 
 # --- the ceiling ----------------------------------------------------------
@@ -84,7 +84,35 @@ def test_a_perfect_organisation_has_no_pain_points(questions):
 
 def test_assumptions_block_is_reported(questions, poor_answers):
     x = R.compute(questions, poor_answers, staff=64)["financial"]["assumptions"]
-    for key in ("staff", "hourly_rate", "labour_line", "savings_cap",
+    for key in ("staff", "hourly_rate", "hourly_rate_low", "hourly_rate_high",
+                "currency", "rate_basis", "labour_line", "savings_cap",
                 "max_savings_share", "capped", "hours_freed"):
         assert key in x
     assert x["hours_freed"] >= 0
+    assert x["currency"] == "USD"
+    assert "logistics" in x["rate_basis"].lower()
+
+
+def test_rate_range_brackets_the_blended_rate():
+    for staff in (10, 120, 300, 900):
+        low, high = R.blended_hourly_range(staff)
+        assert low <= R.blended_hourly_rate(staff) <= high
+        assert 14 <= low <= 47
+        assert 14 <= high <= 47
+
+
+def test_default_rate_is_a_logistics_planning_rate():
+    assert R.DEFAULT_HOURLY_RATE == 24.0
+    assert R.blended_hourly_rate(None) == 24.0
+    assert R.WORKING_HOURS_PER_MONTH == pytest.approx(173.33)
+
+
+def test_implementation_investments_are_usd_scale():
+    values = [spec["investment"] for spec in R.PAIN_CATALOG.values()]
+    assert min(values) >= 1_000
+    assert max(values) <= 60_000
+
+
+def test_annual_savings_is_exactly_rounded_cost_gap(questions, poor_answers):
+    f = R.compute(questions, poor_answers, staff=50)["financial"]
+    assert f["annual_savings"] == round(f["current_cost"]) - round(f["future_cost"])

@@ -19,6 +19,7 @@ from elipsis_api.config import (
 )
 from elipsis_api.database import get_db
 from elipsis_api.deps import get_current_user, login_redirect, templates
+from elipsis_api.services_analytics import get_assessment_funnel
 from elipsis_api.services_marketplace import (
     BID_APPROVED,
     BID_AWARDED,
@@ -932,6 +933,7 @@ def admin_pulse(request: Request, user=Depends(get_current_user),
             "bar_assess": bar_assess,
             "bar_pub": bar_pub,
             "bar_pend": bar_pend,
+            "funnel": get_assessment_funnel(db),
         },
     )
 

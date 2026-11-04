@@ -13,10 +13,11 @@
       <input type="number" id="sc-staff" name="staff" min="1" max="100000" value="{{ assumptions.staff if assumptions and assumptions.staff else (organization.employee_count or 50) }}" required>
     </label>
     <label>Blended hourly rate ({{ CURRENCY }})
-      <input type="number" id="sc-rate" name="hourly_rate" min="50" max="20000" step="1" value="{{ assumptions.hourly_rate if assumptions and assumptions.hourly_rate else 500 }}" required>
+      <input type="number" id="sc-rate" name="hourly_rate" min="1" max="500" step="0.5" value="{{ assumptions.hourly_rate if assumptions and assumptions.hourly_rate else suggested_rate }}" required>
+      <span class="muted small">Planning range for this headcount: {{ CURRENCY }} {{ suggested_rate_low }}–{{ suggested_rate_high }}/hour. Replace with payroll data where available.</span>
     </label>
     <label>Working hours per month
-      <input type="number" id="sc-hours" name="working_hours_per_month" min="20" max="400" step="0.5" value="{{ assumptions.working_hours_per_month if assumptions and assumptions.working_hours_per_month else 173.33 }}" required>
+      <input type="number" id="sc-hours" name="working_hours_per_month" min="20" max="400" step="0.5" value="{{ assumptions.working_hours_per_month if assumptions and assumptions.working_hours_per_month else suggested_hours }}" required>
     </label>
     <label>Savings cap (% of labour line)
       <input type="number" id="sc-cap" name="max_savings_share" min="1" max="30" step="0.5" value="{{ '%.1f'|format((assumptions.max_savings_share if assumptions and assumptions.max_savings_share else 0.12) * 100) }}" required>
@@ -32,7 +33,7 @@
       <a class="btn ghost" href="/assessment/{{ assessment.id }}/results">Cancel</a>
     </div>
   </form>
-  <p class="muted">Hard limits prevent accidental nonsense: rate {{ CURRENCY }} 50–20,000, 20–400 hours/month, cap 1–30%. The cap exists so the model cannot promise more than a credible share of payroll.</p>
+  <p class="muted">Hard limits prevent accidental nonsense: rate {{ CURRENCY }} 1–500, 20–400 hours/month, cap 1–30%. The cap exists so the model cannot promise more than a credible share of payroll.</p>
 
   <div class="block soft" style="margin-top:1rem">
     <div class="block-head"><h3>Live scenario preview</h3><span class="muted small">Not saved until you recalculate</span></div>

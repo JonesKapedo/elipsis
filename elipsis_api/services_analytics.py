@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session
@@ -311,4 +311,109 @@ def get_conversion_metrics(db: Session) -> dict:
         "verification_rate": round((verified_requests / total_requests) * 100, 2),
         "publication_rate": round((published_requests / total_requests) * 100, 2),
         "bid_rate": round((requests_with_bids / published_requests) * 100, 2) if published_requests > 0 else 0
+    }
+
+
+def _parse_timestamp(value: str | None) -> datetime | None:
+    """Parse the ISO timestamps stored in string columns."""
+    if not value:
+        return None
+    text = str(value).strip().replace("Z", "+00:00")
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d"):
+            try:
+                parsed = datetime.strptime(text, fmt)
+                break
+            except ValueError:
+                continue
+        else:
+            return None
+    if parsed.tzinfo is not None:
+        parsed = parsed.replace(tzinfo=None)
+    return parsed
+
+
+def get_assessment_funnel(db: Session, days: int = 30) -> dict:
+    """Assessment start, completion, and paid-report conversion for a window."""
+    window_days = max(1, int(days))
+    now = datetime.now(UTC).replace(tzinfo=None)
+    cutoff = now - timedelta(days=window_days)
+
+    assessments = list(db.scalars(select(models.Assessment)))
+    started_rows = []
+    for assessment in assessments:
+        started_at = _parse_timestamp(assessment.started_at)
+        if started_at is not None and started_at >= cutoff:
+            started_rows.append((assessment, started_at))
+
+    completed_rows = [
+        (assessment, started_at, _parse_timestamp(assessment.completed_at))
+        for assessment, started_at in started_rows
+        if assessment.completed_at
+    ]
+    completed_rows = [row for row in completed_rows if row[2] is not None]
+
+    paid_assessment_ids: set[int] = set()
+    purchases = db.scalars(
+        select(models.AssessmentPurchase).where(
+            models.AssessmentPurchase.created_at.is_not(None)
+        )
+    )
+    for purchase in purchases:
+        created_at = _parse_timestamp(purchase.created_at)
+        if created_at is not None and created_at >= cutoff and purchase.active is not False:
+            paid_assessment_ids.add(purchase.assessment_id)
+
+    orders = db.scalars(
+        select(models.Order).where(
+            models.Order.sku == "report",
+            models.Order.status == "paid",
+        )
+    )
+    for order in orders:
+        paid_at = _parse_timestamp(order.paid_at or order.created_at)
+        if paid_at is not None and paid_at >= cutoff and order.assessment_id:
+            paid_assessment_ids.add(order.assessment_id)
+
+    completed_ids = {assessment.id for assessment, _, _ in completed_rows}
+    paid = len(paid_assessment_ids & completed_ids)
+    durations = [
+        (completed_at - started_at).total_seconds() / 3600
+        for _, started_at, completed_at in completed_rows
+    ]
+    average_completion_hours = (
+        round(sum(durations) / len(durations), 1) if durations else None
+    )
+
+    weekly = []
+    current_week = (now - timedelta(days=now.weekday())).replace(
+        hour=0, minute=0, second=0, microsecond=0)
+    for offset in range(5, -1, -1):
+        week_start = current_week - timedelta(weeks=offset)
+        week_end = week_start + timedelta(days=7)
+        weekly.append({
+            "week": week_start.date().isoformat(),
+            "started": sum(
+                1 for _, started_at in started_rows
+                if week_start <= started_at < week_end
+            ),
+            "completed": sum(
+                1 for _, _, completed_at in completed_rows
+                if completed_at is not None and week_start <= completed_at < week_end
+            ),
+        })
+
+    started = len(started_rows)
+    completed = len(completed_rows)
+    return {
+        "window_days": window_days,
+        "started": started,
+        "completed": completed,
+        "completion_rate": round(completed / started * 100, 1) if started else 0.0,
+        "paid": paid,
+        "paid_conversion_rate": round(paid / completed * 100, 1) if completed else 0.0,
+        "average_completion_hours": average_completion_hours,
+        "weekly": weekly,
     }

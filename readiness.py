@@ -22,6 +22,7 @@ import ast
 from typing import Any
 
 from constants import (
+    CURRENCY,
     DEFAULT_HOURLY_RATE,
     EVIDENCE_MULTIPLIERS,
     METRIC_FORMULAS,
@@ -200,109 +201,109 @@ def validate_metrics(question_codes) -> None:
 PAIN_CATALOG: dict[str, dict[str, Any]] = {
     # --- Pillar 1: Operational Efficiency --------------------------------
     "Q01": dict(title="Tribal Knowledge Risk", severity="High", phase=1,
-                base_hours=28, share=0.1, investment=90000,
+                base_hours=28, share=0.1, investment=7500,
                 solution="Document the core processes and stand up a searchable SOP library",
                 technology="SOP / knowledge-base platform", complexity="Low"),
     "Q03": dict(title="Unowned Process Risk", severity="Medium", phase=1,
-                base_hours=14, share=0.06, investment=60000,
+                base_hours=14, share=0.06, investment=4000,
                 solution="Assign a named process owner and a review cadence for each core process",
                 technology="Process register + governance rhythm", complexity="Low"),
     "Q05": dict(title="Approval Bottleneck", severity="Medium", phase=2,
-                base_hours=16, share=0.08, investment=140000,
+                base_hours=16, share=0.08, investment=6000,
                 solution="Collapse approval layers and route low-value requests automatically",
                 technology="Workflow engine with approval rules", complexity="Medium"),
     "Q06": dict(title="Cycle-Time Drag", severity="High", phase=2,
-                base_hours=24, share=0.12, investment=180000,
+                base_hours=24, share=0.12, investment=6000,
                 solution="Re-engineer the flow to remove queue time between steps",
                 technology="Process redesign + workflow automation", complexity="Medium"),
     "Q08": dict(title="Overtime Dependency", severity="Medium", phase=2,
-                base_hours=20, share=0.1, investment=130000,
+                base_hours=20, share=0.1, investment=4500,
                 solution="Rebalance capacity against measured demand to remove overtime",
                 technology="Capacity planning + scheduling tool", complexity="Medium"),
     # --- Pillar 2: Automation Readiness ----------------------------------
     "Q10": dict(title="High-Frequency Repetitive Work", severity="High", phase=1,
-                base_hours=45, share=0.15, investment=210000,
+                base_hours=45, share=0.15, investment=3500,
                 solution="Automate the highest-frequency recurring tasks first",
                 technology="RPA / workflow automation", complexity="Low"),
     "Q13": dict(title="Rule-Based Decision Backlog", severity="High", phase=1,
-                base_hours=32, share=0.12, investment=190000,
+                base_hours=32, share=0.12, investment=6000,
                 solution="Encode fixed decision rules into an automated decision service",
                 technology="Rules engine / decision service", complexity="Medium"),
     "Q16": dict(title="Manual Data Entry Burden", severity="High", phase=1,
-                base_hours=38, share=0.14, investment=175000,
+                base_hours=38, share=0.14, investment=3000,
                 solution="Replace manual entry with capture at source and API transfer",
                 technology="Form capture / OCR / API integration", complexity="Low"),
     "Q17": dict(title="Copy-Paste Dependency", severity="Critical", phase=1,
-                base_hours=40, share=0.13, investment=195000,
+                base_hours=40, share=0.13, investment=7000,
                 solution="Remove re-keying by connecting the systems directly",
                 technology="API / iPaaS", complexity="Medium"),
     "Q18": dict(title="Manual Reporting & Chasing", severity="High", phase=1,
-                base_hours=42, share=0.15, investment=160000,
+                base_hours=42, share=0.15, investment=3500,
                 solution="Automate recurring reporting and exception chasing",
                 technology="Reporting suite (BI / Metabase)", complexity="Low"),
     # --- Pillar 3: Digital Maturity -------------------------------------
     "Q22": dict(title="Paper Reliance", severity="Medium", phase=2,
-                base_hours=18, share=0.1, investment=150000,
+                base_hours=18, share=0.1, investment=4000,
                 solution="Digitise intake and capture at the point of work",
                 technology="Digital forms / document capture", complexity="Medium"),
     "Q24": dict(title="Spreadsheet Dependency", severity="High", phase=1,
-                base_hours=35, share=0.12, investment=200000,
+                base_hours=35, share=0.12, investment=9000,
                 solution="Migrate spreadsheet system-of-record into a governed platform",
                 technology="BI platform / operational database", complexity="Medium"),
     "Q27": dict(title="Integration Constraint", severity="High", phase=3,
-                base_hours=26, share=0.08, investment=340000,
+                base_hours=26, share=0.08, investment=18000,
                 solution="Expose documented APIs and build an integration layer",
                 technology="iPaaS / API middleware", complexity="High"),
     # --- Pillar 4: Data Intelligence -------------------------------------
     "Q29": dict(title="Unowned Critical Data", severity="Medium", phase=1,
-                base_hours=14, share=0.05, investment=85000,
+                base_hours=14, share=0.05, investment=2000,
                 solution="Publish data ownership and quality standards per dataset",
                 technology="Data ownership register", complexity="Low"),
     "Q33": dict(title="Late Data Errors", severity="High", phase=2,
-                base_hours=28, share=0.1, investment=185000,
+                base_hours=28, share=0.1, investment=6500,
                 solution="Add automated validation at the point of capture",
                 technology="Validation rules / data-quality tooling", complexity="Medium"),
     "Q35": dict(title="Absent Decision Dashboard", severity="Medium", phase=3,
-                base_hours=22, share=0.08, investment=165000,
+                base_hours=22, share=0.08, investment=7500,
                 solution="Publish a live KPI dashboard fed from systems of record",
                 technology="BI dashboard layer", complexity="Medium"),
     # --- Pillar 5: AI Readiness -----------------------------------------
     "Q38": dict(title="Support Knowledge Deficit", severity="Medium", phase=3,
-                base_hours=20, share=0.08, investment=140000,
+                base_hours=20, share=0.08, investment=3000,
                 solution="Build a maintained FAQ and self-service knowledge base",
                 technology="Knowledge base + assisted search", complexity="Low"),
     "Q40": dict(title="No Central Knowledge Repository", severity="High", phase=1,
-                base_hours=24, share=0.1, investment=150000,
+                base_hours=24, share=0.1, investment=3000,
                 solution="Consolidate scattered knowledge into one governed repository",
                 technology="Knowledge-base platform", complexity="Low"),
     "Q44": dict(title="Forecast Blind Spot", severity="High", phase=3,
-                base_hours=30, share=0.1, investment=260000,
+                base_hours=30, share=0.1, investment=15000,
                 solution="Introduce demand forecasting on a defined horizon",
                 technology="Forecasting model / planning tool", complexity="High"),
     # --- Pillar 6: Technology & Integration ------------------------------
     "Q46": dict(title="No Core System of Record", severity="Critical", phase=3,
-                base_hours=36, share=0.2, investment=650000,
+                base_hours=36, share=0.2, investment=45000,
                 solution="Implement a core ERP as the authoritative record",
                 technology="ERP platform + implementation", complexity="High"),
     "Q52": dict(title="Weak Access Governance", severity="High", phase=2,
-                base_hours=20, share=0.07, investment=170000,
+                base_hours=20, share=0.07, investment=8000,
                 solution="Introduce role-based access control with regular recertification",
                 technology="IAM / RBAC tooling", complexity="Medium"),
     "Q53": dict(title="Recovery Exposure", severity="Critical", phase=2,
-                base_hours=26, share=0.06, investment=150000,
+                base_hours=26, share=0.06, investment=3000,
                 solution="Automate backups and prove recovery with scheduled restore tests",
                 technology="Backup + recovery automation", complexity="Low"),
     # --- Pillar 7: Strategic Scalability --------------------------------
     "Q58": dict(title="Key Person Dependency", severity="Critical", phase=1,
-                base_hours=18, share=0.09, investment=95000,
+                base_hours=18, share=0.09, investment=2500,
                 solution="Cross-train and document critical knowledge, remove single-owner steps",
                 technology="SOP system + cross-training", complexity="Low"),
     "Q59": dict(title="Decision Concentration", severity="High", phase=2,
-                base_hours=16, share=0.08, investment=130000,
+                base_hours=16, share=0.08, investment=4000,
                 solution="Delegate decisions below a defined threshold with guardrails",
                 technology="Delegation matrix + workflow", complexity="Low"),
     "Q61": dict(title="Operational Growth Ceiling", severity="High", phase=2,
-                base_hours=30, share=0.14, investment=230000,
+                base_hours=30, share=0.14, investment=8000,
                 solution="Remove the operational blockers constraining the next growth step",
                 technology="Capacity + process intervention", complexity="Medium"),
 }
@@ -322,16 +323,29 @@ PAIN_CATALOG: dict[str, dict[str, Any]] = {
 # The total is then capped so the result can never exceed MAX_SAVINGS_SHARE of
 # the organisation's labour line. Every figure is returned in `assumptions` so
 # the report can show the working and the number can be defended.
-WORKING_HOURS_PER_MONTH = 160      # ~40 hours a week, 12 months
+WORKING_HOURS_PER_MONTH = 173.33   # 40 hours a week, averaged across the year
 WORKING_DAYS_PER_YEAR = 220
 
-# Blended fully-loaded hourly rate (KES) by organisation size. Smaller
-# employers pay less, so the same automation is worth less money to them.
+# Blended fully-loaded hourly rate (USD) for logistics operations staff.
+# Smaller operators pay less; larger operations carry more supervision,
+# compliance, and systems overhead. Rates are directional planning ranges,
+# not audited payroll figures, and every report exposes them for editing.
 WAGE_TIERS = (
-    (0, 50, 250.0),
-    (51, 200, 450.0),
-    (201, 500, 650.0),
-    (501, None, 900.0),
+    (0, 50, 18.0),
+    (51, 200, 24.0),
+    (201, 500, 30.0),
+    (501, None, 38.0),
+)
+WAGE_RATE_RANGES = (
+    (0, 50, 14.0, 23.0),
+    (51, 200, 19.0, 30.0),
+    (201, 500, 24.0, 37.0),
+    (501, None, 30.0, 47.0),
+)
+RATE_BASIS = (
+    "Directional USD range for blended logistics operations labour "
+    "(warehouse, dispatch, transport, and supervision), scaled by headcount. "
+    "Replace with the operator's payroll data where available."
 )
 
 # Hard ceiling: never promise more than this share of the labour line.
@@ -350,6 +364,18 @@ def blended_hourly_rate(staff, default=DEFAULT_HOURLY_RATE):
         if staff >= low and (high is None or staff <= high):
             return rate
     return default
+
+
+def blended_hourly_range(staff, default=DEFAULT_HOURLY_RATE):
+    """Low/high planning range around the blended rate for this headcount."""
+    try:
+        staff = int(staff)
+    except (TypeError, ValueError):
+        return (default, default)
+    for low, high, rate_low, rate_high in WAGE_RATE_RANGES:
+        if staff >= low and (high is None or staff <= high):
+            return (rate_low, rate_high)
+    return (default, default)
 
 
 def labour_line(staff, rate):
@@ -482,7 +508,8 @@ def compute(questions, answers, respondent_coverage=1 / 3.0, consistency=1.0,
         rate = float(hourly_rate) if hourly_rate not in (None, "") else rate
     except (TypeError, ValueError):
         pass
-    rate = max(50.0, min(20_000.0, rate))
+    rate = max(1.0, min(500.0, rate))
+    rate_low, rate_high = blended_hourly_range(staff_count)
     try:
         hours = float(working_hours_per_month) if working_hours_per_month not in (None, "") else WORKING_HOURS_PER_MONTH
     except (TypeError, ValueError):
@@ -544,6 +571,10 @@ def compute(questions, answers, respondent_coverage=1 / 3.0, consistency=1.0,
     assumptions = dict(
         staff=staff_count,
         hourly_rate=round(rate, 2),
+        hourly_rate_low=round(rate_low, 2),
+        hourly_rate_high=round(rate_high, 2),
+        currency=CURRENCY,
+        rate_basis=RATE_BASIS,
         working_hours_per_month=round(hours, 1),
         labour_line=round(payroll),
         savings_cap=round(savings_cap),
@@ -556,7 +587,8 @@ def compute(questions, answers, respondent_coverage=1 / 3.0, consistency=1.0,
         hours_freed=round(total_savings / rate) if rate else 0,
         annual_revenue=round(float(annual_revenue), 2) if annual_revenue not in (None, "") else None,
         editable=True,
-        method="Labour exposure x process-drag severity, capped at a share of the annual labour line.",
+        method=("Logistics labour exposure x process-drag severity, capped at a "
+                "share of the annual labour line."),
     )
 
     # --- Three-phase roadmap ---------------------------------------------
@@ -592,7 +624,8 @@ def compute(questions, answers, respondent_coverage=1 / 3.0, consistency=1.0,
         roadmap=roadmap,
         top_opportunities=[r["title"] for r in ordered[:3]],
         financial=dict(current_cost=round(current_total), future_cost=round(future_total),
-                       annual_savings=round(total_savings), investment=round(investment_total),
+                       annual_savings=round(current_total) - round(future_total),
+                       investment=round(investment_total),
                        roi=round(roi_total, 1), payback_months=round(payback_total, 1),
                        assumptions=assumptions),
     )

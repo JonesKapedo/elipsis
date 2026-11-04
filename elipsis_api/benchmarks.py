@@ -64,11 +64,13 @@ REFERENCE_POINTS = [
 ]
 
 METHOD_NOTE = (
-    "Financial figures are management estimates from labour exposure and "
-    "process-drag severity, capped as a share of the annual labour line. They "
-    "are not audited savings. Public reference points describe the market, not "
-    "Elipsis customer outcomes. Peer medians are shown only when at least five "
-    "comparable completed assessments exist."
+    "Financial figures are directional management estimates from logistics "
+    "labour exposure and process-drag severity, capped as a share of the "
+    "annual labour line. Hourly rates are planning ranges for warehouse, "
+    "dispatch, transport, and supervision roles, not audited payroll. They "
+    "are not audited savings. Public reference points describe the market, "
+    "not Elipsis customer outcomes. Peer medians are shown only when at least "
+    "five comparable completed assessments exist."
 )
 
 MIN_COHORT = 5

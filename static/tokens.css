@@ -2,6 +2,10 @@
    Elipsis — canonical design tokens
    SINGLE SOURCE OF TRUTH. Loaded first in base.html.
 
+   Design philosophy: Hybrid of modern SaaS (Stripe/Linear), enterprise B2B,
+   premium financial, and industrial logistics patterns for a credible,
+   authoritative, and operationally clear experience.
+
    Rules:
    - No component rules in this file. Tokens only.
    - No other stylesheet may declare a light-mode :root.
@@ -12,59 +16,254 @@
    ========================================================================== */
 
 :root {
-  /* ---- Ink & surfaces -------------------------------------------------- */
-  --asphalt: #0b1220;
-  --asphalt-2: #111c2e;
-  --asphalt-3: #18263d;
-  --ink: #151b26;
-  --ink-2: #344054;
-  --muted: #667085;
-  --muted-2: #8a94a6;
-  --line: #e2e6ea;
-  --line-strong: #cdd4dc;
-  --surface: #ffffff;
-  --canvas: #f5f6f7;
-  --canvas-2: #fafbfc;
+  /* ==========================================================================
+     Color system - Primary & semantic
+     ========================================================================== */
 
-  /* ---- Accent (single) ------------------------------------------------- */
-  --amber: #f5a623;
-  --amber-ink: #211603;
-  --amber-soft: #fff6e5;
+  /* ---- Primary brand (amber/gold - warmth, authority, logistics) -------- */
+  --brand-primary: #d97706;
+  --brand-primary-light: #f59e0b;
+  --brand-primary-dark: #b45309;
+  --brand-primary-soft: rgba(217, 119, 6, 0.1);
+  --brand-primary-soft-light: rgba(245, 158, 11, 0.15);
 
-  /* ---- Status only ----------------------------------------------------- */
-  --blue: #2563eb;
-  --green: #15803d;
-  --green-soft: #e9f7ee;
-  --red: #b42318;
-  --red-soft: #fef3f2;
-  --orange: #b54708;
-  --orange-soft: #fff4e8;
+  /* ---- Neutral palette (warm undertones for logistics industry) --------- */
+  --neutral-0: #ffffff;
+  --neutral-50: #fafbfc;
+  --neutral-100: #f5f6f7;
+  --neutral-200: #e8e9eb;
+  --neutral-300: #d4d6d9;
+  --neutral-400: #a3a6ac;
+  --neutral-500: #74777e;
+  --neutral-600: #54585f;
+  --neutral-700: #3e4249;
+  --neutral-800: #2b2f36;
+  --neutral-900: #1a1e23;
+  --neutral-950: #0a0c0f;
 
-  /* ---- Shape ----------------------------------------------------------- */
-  --radius: 7px;
-  --radius-sm: 5px;
-  --shadow: 0 12px 28px -18px rgba(11, 18, 32, 0.28);
-  --shadow-sm: 0 1px 2px rgba(11, 18, 32, 0.05);
-  --shadow-soft: 0 1px 0 rgba(11, 18, 32, 0.03);
+  /* ---- Semantic colors (status, feedback, guidance) --------------------- */
+  --success: #059669;
+  --success-light: #10b981;
+  --success-dark: #047857;
+  --success-soft: rgba(5, 150, 105, 0.1);
+  --success-soft-light: rgba(16, 185, 129, 0.15);
 
-  /* ---- Type ------------------------------------------------------------ */
-  --sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
-  --serif: "IBM Plex Serif", Georgia, serif;
-  --mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  --danger: #dc2626;
+  --danger-light: #ef4444;
+  --danger-dark: #b91c1c;
+  --danger-soft: rgba(220, 38, 38, 0.1);
+  --danger-soft-light: rgba(239, 68, 68, 0.15);
 
-  /* ---- Legacy aliases (do not use in new work) ------------------------- */
-  --navy: var(--asphalt);
-  --navy-2: var(--asphalt-2);
-  --navy-3: var(--asphalt-3);
-  --paper: var(--canvas);
-  --mist: #8e9bb0;
-  --accent: var(--amber);
-  --accent-ink: var(--amber-ink);
-  --accent-bright: #ffb733;
-  --accent-soft: rgba(245, 166, 35, 0.14);
-  --good: var(--green);
-  --bad: var(--red);
-  --warn: var(--orange);
+  --warning: #d97706;
+  --warning-light: #f59e0b;
+  --warning-dark: #b45309;
+  --warning-soft: rgba(217, 119, 6, 0.1);
+  --warning-soft-light: rgba(245, 158, 11, 0.15);
+
+  --info: #2563eb;
+  --info-light: #3b82f6;
+  --info-dark: #1d4ed8;
+  --info-soft: rgba(37, 99, 235, 0.1);
+  --info-soft-light: rgba(59, 130, 246, 0.15);
+
+  /* ---- Logistics-specific (exception, critical, operational) ------------ */
+  --critical: #991b1b;
+  --critical-soft: rgba(153, 27, 27, 0.1);
+  --exception: #92400e;
+  --exception-soft: rgba(146, 64, 14, 0.1);
+  --operational: #1e40af;
+  --operational-soft: rgba(30, 64, 175, 0.1);
+
+  /* ==========================================================================
+     Typography scale - IBM Plex family (structured, data-dense, premium)
+     ========================================================================== */
+
+  --font-sans: "IBM Plex Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-serif: "IBM Plex Serif", Georgia, "Source Serif 4", serif;
+  --font-mono: "IBM Plex Mono", "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+
+  /* ---- Font sizes (modular scale for visual hierarchy) ------------------ */
+  --text-xs: 0.75rem;    /* 12px - labels, badges, metadata */
+  --text-sm: 0.875rem;   /* 14px - body text, secondary */
+  --text-base: 1rem;     /* 16px - default body */
+  --text-lg: 1.125rem;   /* 18px - emphasized body */
+  --text-xl: 1.25rem;    /* 20px - headings, cards */
+  --text-2xl: 1.5rem;    /* 24px - section headings */
+  --text-3xl: 1.875rem;  /* 30px - page headings */
+  --text-4xl: 2.25rem;   /* 36px - hero titles */
+  --text-5xl: 3rem;      /* 48px - display */
+
+  /* ---- Font weights (IBM Plex weights) ---------------------------------- */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  /* ---- Line heights (optimal readability) ------------------------------- */
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+
+  /* ---- Letter spacing (refinement for headings vs body) ------------------ */
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+
+  /* ==========================================================================
+     Spacing scale (8px base for consistency)
+     ========================================================================== */
+
+  --space-0: 0;
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+  --space-20: 5rem;     /* 80px */
+  --space-24: 6rem;     /* 96px */
+
+  /* ==========================================================================
+     Border radius (subtle refinement, not overly rounded)
+     ========================================================================== */
+
+  --radius-none: 0;
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 9999px;
+
+  /* ==========================================================================
+     Shadows & elevation (depth hierarchy for modern SaaS feel)
+     ========================================================================== */
+
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --shadow-2xl: 0 50px 100px -20px rgba(0, 0, 0, 0.25);
+
+  /* ---- Colored shadows for brand consistency ----------------------------- */
+  --shadow-brand: 0 10px 40px -10px rgba(217, 119, 6, 0.3);
+  --shadow-success: 0 10px 40px -10px rgba(5, 150, 105, 0.25);
+  --shadow-danger: 0 10px 40px -10px rgba(220, 38, 38, 0.25);
+
+  /* ==========================================================================
+     Transitions & motion (smooth, purposeful, not distracting)
+     ========================================================================== */
+
+  --duration-instant: 100ms;
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 500ms;
+
+  --ease-linear: linear;
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* ==========================================================================
+     Z-index scale (layering hierarchy)
+     ========================================================================== */
+
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-notification: 1080;
+
+  /* ==========================================================================
+     Component-specific tokens
+     ========================================================================== */
+
+  /* ---- Buttons ---------------------------------------------------------- */
+  --btn-height-sm: 2rem;
+  --btn-height: 2.5rem;
+  --btn-height-lg: 3rem;
+  --btn-padding-x-sm: 0.75rem;
+  --btn-padding-x: 1rem;
+  --btn-padding-x-lg: 1.5rem;
+
+  /* ---- Form inputs ------------------------------------------------------ */
+  --input-height-sm: 2rem;
+  --input-height: 2.5rem;
+  --input-height-lg: 3rem;
+  --input-padding-x: 0.875rem;
+
+  /* ---- Cards ------------------------------------------------------------- */
+  --card-padding: 1.5rem;
+  --card-padding-sm: 1rem;
+  --card-padding-lg: 2rem;
+
+  /* ==========================================================================
+     Legacy aliases (for backward compatibility - deprecate over time)
+     ========================================================================== */
+
+  --asphalt: var(--neutral-950);
+  --asphalt-2: var(--neutral-900);
+  --asphalt-3: var(--neutral-800);
+  --ink: var(--neutral-900);
+  --ink-2: var(--neutral-700);
+  --muted: var(--neutral-500);
+  --muted-2: var(--neutral-400);
+  --line: var(--neutral-200);
+  --line-strong: var(--neutral-300);
+  --surface: var(--neutral-0);
+  --canvas: var(--neutral-100);
+  --canvas-2: var(--neutral-50);
+
+  --amber: var(--brand-primary);
+  --amber-ink: var(--brand-primary-dark);
+  --amber-soft: var(--brand-primary-soft);
+
+  --blue: var(--info);
+  --green: var(--success);
+  --green-soft: var(--success-soft);
+  --red: var(--danger);
+  --red-soft: var(--danger-soft);
+  --orange: var(--warning);
+  --orange-soft: var(--warning-soft);
+
+  --radius: var(--radius-md);
+  --radius-sm: var(--radius-sm);
+  --shadow: var(--shadow-md);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-soft: var(--shadow-xs);
+
+  --sans: var(--font-sans);
+  --serif: var(--font-serif);
+  --mono: var(--font-mono);
+
+  --navy: var(--neutral-950);
+  --navy-2: var(--neutral-900);
+  --navy-3: var(--neutral-800);
+  --paper: var(--neutral-100);
+  --mist: var(--neutral-400);
+  --accent: var(--brand-primary);
+  --accent-ink: var(--brand-primary-dark);
+  --accent-bright: var(--brand-primary-light);
+  --accent-soft: var(--brand-primary-soft);
+  --good: var(--success);
+  --bad: var(--danger);
+  --warn: var(--warning);
   --panel: var(--surface);
   --panel2: var(--canvas-2);
   --soft: var(--ink-2);
@@ -74,17 +273,17 @@
   --r: var(--radius);
   --r-sm: var(--radius-sm);
   --font: var(--sans);
-  --grad: var(--amber);
-  --ring: 0 0 0 3px rgba(245, 166, 35, 0.28);
-  --teal: #0f766e;
-  --teal-soft: rgba(15, 118, 110, 0.1);
+  --grad: var(--brand-primary);
+  --ring: 0 0 0 3px var(--brand-primary-soft);
+  --teal: var(--success);
+  --teal-soft: var(--success-soft);
   --field-bg: var(--canvas-2);
   --field-border: var(--line-strong);
-  --field-focus: rgba(245, 166, 35, 0.18);
-  --gold: var(--amber);
-  --gold-deep: #b45309;
-  --ink-blue: var(--asphalt);
-  --ink-blue-2: var(--asphalt-2);
+  --field-focus: var(--brand-primary-soft);
+  --gold: var(--brand-primary);
+  --gold-deep: var(--brand-primary-dark);
+  --ink-blue: var(--neutral-950);
+  --ink-blue-2: var(--neutral-900);
   --paper-warm: var(--canvas);
-  --focus: 0 0 0 3px rgba(245, 166, 35, 0.3);
+  --focus: 0 0 0 3px var(--brand-primary-soft);
 }
