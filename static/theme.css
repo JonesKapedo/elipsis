@@ -51,103 +51,8 @@ html[data-theme="dark"] {
   --orange-soft: rgba(251, 191, 36, 0.12);
 }
 
-html[data-theme="dark"] body,
-html[data-theme="dark"] body.marketing,
 html[data-theme="dark"] body.app-shell {
   background: #0b111a !important;
-  color: #e8eef7 !important;
-}
-
-/* Marketing */
-html[data-theme="dark"] body.marketing .mk-header,
-html[data-theme="dark"] body.marketing .pub-header {
-  background: rgba(11, 17, 26, 0.92) !important;
-  border-bottom-color: #243044 !important;
-}
-
-html[data-theme="dark"] body.marketing .pub-nav a,
-html[data-theme="dark"] body.marketing .mk-nav a {
-  color: #b6c2d4 !important;
-}
-
-html[data-theme="dark"] body.marketing .pub-nav a:hover,
-html[data-theme="dark"] body.marketing .mk-nav a:hover,
-html[data-theme="dark"] body.marketing .pub-nav a[aria-current] {
-  color: #f8fafc !important;
-}
-
-html[data-theme="dark"] body.marketing h1,
-html[data-theme="dark"] body.marketing h2,
-html[data-theme="dark"] body.marketing h3,
-html[data-theme="dark"] body.marketing h4 {
-  color: #f1f5f9 !important;
-}
-
-html[data-theme="dark"] body.marketing .muted,
-html[data-theme="dark"] body.marketing .section-lede,
-html[data-theme="dark"] body.marketing .lede,
-html[data-theme="dark"] body.marketing .price-note,
-html[data-theme="dark"] body.marketing .mk-eyebrow {
-  color: #94a3b8 !important;
-}
-
-html[data-theme="dark"] body.marketing .mk-price,
-html[data-theme="dark"] body.marketing .mk-card,
-html[data-theme="dark"] body.marketing .mk-step,
-html[data-theme="dark"] body.marketing .block,
-html[data-theme="dark"] body.marketing .card {
-  background: #121a27 !important;
-  color: #e8eef7 !important;
-  border-color: #243044 !important;
-}
-
-html[data-theme="dark"] body.marketing .mk-price ul li,
-html[data-theme="dark"] body.marketing .mk-card p {
-  color: #b6c2d4 !important;
-}
-
-html[data-theme="dark"] body.marketing table th {
-  background: #152033 !important;
-  color: #f1f5f9 !important;
-}
-
-html[data-theme="dark"] body.marketing table td {
-  background: #121a27 !important;
-  color: #e2e8f0 !important;
-  border-color: #243044 !important;
-}
-
-html[data-theme="dark"] body.marketing .mk-footer,
-html[data-theme="dark"] body.marketing .pub-footer {
-  background: #070b12 !important;
-  color: #94a3b8 !important;
-  border-top-color: #243044 !important;
-}
-
-html[data-theme="dark"] body.marketing .mk-footer a,
-html[data-theme="dark"] body.marketing .pub-footer a {
-  color: #b6c2d4 !important;
-}
-
-html[data-theme="dark"] body.marketing .auth-panel,
-html[data-theme="dark"] body.marketing .auth-card,
-html[data-theme="dark"] body.marketing .auth-panel-inner {
-  background: #121a27 !important;
-  color: #e8eef7 !important;
-  border-color: #243044 !important;
-}
-
-html[data-theme="dark"] body.marketing .auth-form input,
-html[data-theme="dark"] body.marketing input,
-html[data-theme="dark"] body.marketing select,
-html[data-theme="dark"] body.marketing textarea {
-  background: #0e1624 !important;
-  color: #e8eef7 !important;
-  border-color: #334155 !important;
-}
-
-html[data-theme="dark"] body.marketing .auth-story {
-  background: #070b12 !important;
   color: #e8eef7 !important;
 }
 
@@ -293,9 +198,7 @@ html[data-theme="dark"] body.app-shell .error {
 }
 
 html[data-theme="dark"] body.app-shell .btn.ghost,
-html[data-theme="dark"] body.app-shell .btn.secondary,
-html[data-theme="dark"] body.marketing .btn.ghost,
-html[data-theme="dark"] body.marketing .btn.secondary {
+html[data-theme="dark"] body.app-shell .btn.secondary {
   background: transparent !important;
   color: #e8eef7 !important;
   border-color: #475569 !important;
