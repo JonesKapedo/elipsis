@@ -1,8 +1,8 @@
 # Elipsis Implementation Roadmap
 
 **Single Source of Truth**  
-Version: 1.0  
-Date: 3 November 2026  
+Version: 1.1  
+Date: 4 November 2026  
 Owner: Founder  
 Status: Active
 
@@ -17,12 +17,14 @@ Elipsis is a global automation implementation marketplace for logistics organiza
 Logistics operators (10-300 staff) get a professional assessment ($49) that identifies what to automate, the cost of inaction, and a 90-day plan. They can then publish requests to vetted implementation partners. Partners pay monthly ($39-$219) to access and bid on these requests.
 
 **Market Opportunity:**  
-- Logistics automation software: $8.9B (2025) → $30.5B (2033), 17% CAGR
-- Consulting: $5K-$25K diagnostic, $25K-$150K+ implementation (out of reach for mid-market)
-- Fiverr/Upwork: $10-$1,350/gig but no structure, no credibility
-- **Gap:** Mid-market logistics operators need professional, affordable, credible automation guidance
+- Logistics automation market: ~$75–90B (2025) → $130–230B (2030–34), ~8–12% CAGR (hardware-heavy; software/services more accessible to mid-market)
+- Consulting diagnostics: $5K–$25K+ (out of reach for mid-market)
+- Horizontal freelance platforms: volume exists but low trust/structure for complex implementation work
+- **Gap:** Mid-market logistics operators need professional, affordable, credible automation guidance and a path to the right implementer
 
 **Timeline:** 12 weeks to launch → 6 months to validate revenue
+
+**Strategic posture (v1.1):** Treat the **assessment as the primary product** until there is clear proof it converts to paid work and documented outcomes. Activate the marketplace deliberately once demand quality is proven. Prioritise bidder **quality over quantity**.
 
 ---
 
@@ -33,8 +35,8 @@ Logistics operators (10-300 staff) get a professional assessment ($49) that iden
 | Product | Price | What You Get | Customer |
 |---------|-------|--------------|----------|
 | **Free Diagnostic** | $0 | Elipsis Index, maturity band, top 3 constraints, sample 90-day plan (on-screen only) | Any logistics operator |
-| **Full Assessment** | $49 one-time | Complete 36-metric report, costed friction analysis, ranked pain points, 90-day roadmap with owners/dates/KPIs, PDF/Excel/JSON exports, 3 bidder introductions | Logistics operators ready to act |
-| **Marketplace Access** | $39/mo, $119/6mo, $219/yr | Verified listing, access to all published requests, bidding rights, conversation access, admin verification | Automation implementation partners |
+| **Full Assessment** | $49 one-time (test higher later) | Complete 36-metric report, costed friction analysis, ranked pain points, 90-day roadmap with owners/dates/KPIs, PDF/Excel/JSON exports, path to implementer intros | Logistics operators ready to act |
+| **Marketplace Access** | $39/mo, $119/6mo, $219/yr | Verified listing, access to published requests, bidding rights, conversation access, admin verification | Automation implementation partners |
 
 ### Non-Goals (Do Not Build)
 
@@ -46,6 +48,78 @@ Logistics operators (10-300 staff) get a professional assessment ($49) that iden
 ❌ AI/ML features (assessment is sophisticated enough)  
 ❌ Enterprise sales (target mid-market 10-300 staff)  
 ❌ Expansion beyond logistics sector
+
+**Discipline rule:** Every hour spent on non-wedge work reduces the chance of hitting early revenue and liquidity milestones. Say no by default.
+
+---
+
+## Success Levers (How We Improve Odds)
+
+These levers are locked into execution. They come from market reality (mid-market CAPEX fear, integration complexity, need for trust) and are non-negotiable for the next 12 weeks.
+
+### 1. Assessment is the primary product (longer)
+- Delay **heavy** marketplace activation until there is proof that assessments convert to paid work (even via manual intros or offline delivery).
+- Target **30–50 paying assessments** and documented outcomes before treating the marketplace as the main growth engine.
+- Marketplace infrastructure stays ready; promotion and bidder acquisition stay measured until demand quality is clear.
+
+**How to achieve it:**
+- Week 1–2: Ship core, enable marketplace flag for internal/manual use only if needed.
+- Weeks 2–6: Obsess over assessment completion rate, paid conversion, and collecting outcome stories.
+- Only scale bidder recruitment and public request volume once 10+ paid assessments exist and at least a few have clear next-step intent or completed work.
+
+### 2. Strengthen “cost of inaction” and outcome proof
+- The $49 report wins when friction is quantified in money and the 90-day plan feels specific and actionable.
+- Make financial model and recommendations logistics-specific (warehouse, 3PL, transport operations language and cost ranges).
+- Collect and publish even small case studies or anonymised before/after numbers as soon as they exist.
+
+**How to achieve it:**
+- Week 3–4: Research and hard-code realistic logistics cost ranges; tighten recommendation copy.
+- After every paid assessment: request a 15-minute feedback call; capture one quantifiable insight or quote.
+- Publish 2–3 anonymised mini case studies by end of Week 8 (even if outcomes are partial).
+
+### 3. Bidder side: quality over quantity
+- 5–10 excellent, logistics-experienced implementers who deliver results create more trust than 20 general freelancers.
+- Manual high-touch verification and early success stories matter more than automated onboarding early on.
+
+**How to achieve it:**
+- Prioritise outreach to people with logistics domain experience (ex-ops, small logistics software shops, consultants who have done warehouse/3PL automation).
+- Free first month for the first 5–10 verified bidders who meet quality bar.
+- Require a short portfolio or reference check before verification; document wins publicly (with permission).
+
+### 4. Distribution realism
+LinkedIn outreach is necessary but insufficient.
+
+**Layer in:**
+- Partnerships with logistics associations, software resellers, accountants/ERP implementers who already serve the ICP.
+- Content that ranks for intent queries (“what should we automate in our warehouse/3PL”, “cost of manual processes in logistics”).
+- Warm intros and referrals once the first 5–10 assessments are done.
+
+**How to achieve it:**
+- Weeks 2–4: Identify 10–15 potential partners; send personalised partnership notes (referral or co-branded diagnostic).
+- Weeks 4–8: Publish 4–6 practical content pieces (LinkedIn + simple site pages).
+- After each successful assessment: ask for one introduction.
+
+### 5. Pricing experiments
+- $49 is aggressive for acquisition. Once quality is proven, test higher price points or bundles.
+
+**How to achieve it:**
+- Keep $49 until 15–20 paid assessments and positive feedback exist.
+- Then A/B or sequential test $99–$149, and/or an “Assessment + 3 qualified intros” bundle.
+- Track conversion rate and willingness-to-pay feedback in every post-assessment call.
+
+### 6. Measurement discipline
+Track the full funnel religiously. Treat early metrics as leading indicators of whether the model works.
+
+| Stage | Metric | Early target |
+|-------|--------|--------------|
+| Top of funnel | Assessment starts | Growing weekly |
+| Completion | Completion rate | > 75–80% |
+| Revenue | Paid Full Assessments | 30–50 before heavy marketplace push |
+| Intent | Request published or explicit next-step | Rising % of paid |
+| Supply | Verified quality bidders | 5–10 strong |
+| Match | Bid → award → successful delivery | Document every one |
+
+Review these numbers in the weekly check-in. If assessment-to-paid or paid-to-next-step stalls, fix that before scaling marketplace promotion.
 
 ---
 
@@ -82,525 +156,179 @@ Logistics operators (10-300 staff) get a professional assessment ($49) that iden
 - Vercel deployment configuration
 - PostgreSQL (Neon) or SQLite fallback
 - Alembic migrations
-- Test suite (119 tests, 2 failing)
+- Test suite
 
 ✅ **Documentation**
-- Platform master plan (strategy, ICP, features)
-- Implementation guide (marketplace specification)
-- Service delivery standard (SLA, support)
-- Release checklist
+- Platform master plan, implementation guide, service delivery standard, release checklist
 
-### Technical Debt (Must Fix)
+### Technical Debt (Must Fix — Week 1)
 
-🔴 **Critical Blockers**
-1. **Test failures** - 2 tests fail with template error on `/settings`
-   - `test_growth_certification_imports_and_webhooks`
-   - `test_company_room_membership_collaboration_and_branding`
-   - Error: `UndefinedError: 'tuple object' has no attribute 'items'`
-   - Impact: Blocks confidence in deployment
+🔴 **Critical**
+1. Test failures (settings template / related)
+2. Role field conflict — use only `user_type` + `is_admin` (locked decision)
 
-2. **Role field conflict** - Two role fields exist (`User.role` and `User.user_type`)
-   - Platform guide locked decision: use only `user_type`
-   - `permissions.py:26` reads both fields
-   - Impact: Confusing permissions, potential security gaps
-
-🟡 **Medium Priority**
-3. **Marketplace disabled** - `ELIPSIS_MARKETPLACE_ENABLED=0` in config
-   - Full marketplace flow exists but not accessible
-   - Needs Paystack plan codes for live billing
-   - Impact: Cannot generate revenue
-
-4. **Theme changes uncommitted** - Staged CSS/template changes on branch
-   - `feat/theme-default-dark-responsive-polish` branch
-   - Changes not merged to main
-   - Impact: Unclear what UI state is current
-
-5. **Test expectation mismatch** - `test_marketplace_is_locked_while_coming_soon` expects 503, receives 404
-   - Hardening test needs update
-   - Impact: Test suite fails
+🟡 **Medium**
+3. Marketplace flag still off until Paystack plan codes and deliberate activation decision
+4. Theme / UI polish merge
+5. Any remaining test expectation mismatches
 
 ---
 
 ## Implementation Phases
 
-### Phase 1: Ship the Core (Weeks 1-2)
+### Phase 1: Ship the Core (Weeks 1–2)
 
-**Objective:** Enable marketplace and achieve first end-to-end transaction
+**Objective:** Green tests, role consolidation, assessment live and reliable. Marketplace infrastructure available for controlled/manual use; do not force public liquidity yet.
 
 #### Week 1: Fix & Launch
 
 | Day | Task | Owner | Acceptance Criteria |
 |-----|------|-------|---------------------|
-| 1 | Fix test failures - debug `/settings` template error | Founder | Both tests pass |
-| 2 | Fix test failures - implement fix | Founder | Test suite green |
-| 2 | Resolve role field conflict - plan migration | Founder | Migration script ready |
-| 3 | Resolve role field conflict - execute migration | Founder | `User.role` unused, `user_type` only |
-| 3 | Commit theme changes - review diff | Founder | All changes intentional |
-| 4 | Commit theme changes - merge to main | Founder | Branch clean, tests pass |
-| 4 | Enable marketplace on staging - set flag | Founder | Marketplace routes accessible |
-| 5 | Manual QA - assessment → request flow | Founder | Full flow works end-to-end |
-| 5 | Manual QA - bidder signup → bid flow | Founder | Full flow works end-to-end |
-| 6 | Manual QA - admin approval → award flow | Founder | Full flow works end-to-end |
-| 6 | Deploy to production - verify | Founder | Production marketplace live |
-| 7 | Monitoring - watch for errors | Founder | No critical errors in 24hrs |
+| 1–2 | Fix test failures | Founder | Full suite green |
+| 2–3 | Complete role consolidation (`user_type` only) | Founder | Legacy `role` unused for auth |
+| 3–4 | Merge theme / UI polish | Founder | Dark-first + light option live |
+| 4–5 | Manual QA of assessment → results → export | Founder | Happy path solid |
+| 5–6 | Deploy to production | Founder | Production stable |
+| 6–7 | Monitoring + first real assessment invites | Founder | No critical errors; pipeline started |
 
-**Deliverables:**
-- Clean test suite (all 119+ tests passing)
-- Marketplace enabled on production
-- First end-to-end transaction (even if test data)
+**Deliverables:** Clean test suite, production assessment path reliable, first operators in pipeline.
 
-#### Week 2: Validation
+#### Week 2: Assessment Traction (not full marketplace push)
 
 | Day | Task | Owner | Acceptance Criteria |
 |-----|------|-------|---------------------|
-| 1 | Recruit 3-5 logistics operators | Founder | 3 operators committed |
-| 2 | Guide operators through assessment | Founder | 3 assessments completed |
-| 3 | Guide operators to create requests | Founder | 3 requests created |
-| 3 | Recruit 2-3 bidders | Founder | 2 bidders signed up |
-| 4 | Verify bidders manually | Founder | 2 bidders verified |
-| 4 | Notify bidders of requests | Founder | Bidders receive notifications |
-| 5 | Monitor bid submission | Founder | At least 1 bid submitted |
-| 5 | Admin approve bid | Founder | Bid approved |
-| 6 | Award first request | Founder | First award completed |
-| 6 | Start conversation | Founder | Conversation active |
-| 7 | Document learnings | Founder | Lessons captured in doc |
+| 1–3 | Recruit 5–10 logistics operators | Founder | Committed to try assessment |
+| 2–5 | Guide completions; convert free → paid where possible | Founder | Paying assessments started |
+| 3–5 | Identify 5–8 high-quality bidder candidates | Founder | Shortlist ready |
+| 5–7 | Manual verification of first 2–3 bidders (quality bar) | Founder | Verified and briefed |
+| 7 | Document learnings; update cost-of-inaction notes | Founder | Insights captured |
 
-**Deliverables:**
-- 3 real assessment completions
-- 3 real marketplace requests
-- 2 verified bidders
-- First real bid → award → conversation
-
-**Success Metrics:**
-- 0 critical bugs in production
-- 100% of recruited users complete assessment
-- 100% of bidders verified successfully
-- Conversation closes within 24 hours
+**Deliverables:** Real assessment completions, early paid conversions, small set of quality bidders ready.
 
 ---
 
-### Phase 2: Polish the Assessment (Weeks 3-4)
+### Phase 2: Polish the Assessment (Weeks 3–4)
 
-**Objective:** Make assessment feel like premium consulting product
+**Objective:** Make the assessment feel like a premium consulting product. Maximise completion, perceived value, and conversion to paid / next step.
 
 #### Week 3: Professional Curation
+- Logistics-specific question language and examples
+- Stronger “why this matters” copy
+- 3–5 additional logistics-specific questions if gaps exist
+- Keep scoring integrity
 
-| Day | Task | Owner | Acceptance Criteria |
-|-----|------|-------|---------------------|
-| 1 | Review all 63 questions for logistics specificity | Founder | Question audit document |
-| 2 | Add logistics examples to generic questions | Founder | 10+ questions enhanced |
-| 2 | Improve "why" explanations | Founder | All "why" text compelling |
-| 3 | Add 3-5 logistics-specific questions | Founder | Questions integrated |
-| 3 | Update question weights if needed | Founder | Scoring still valid |
-| 4 | Test new question flow | Founder | Assessment completes successfully |
-| 4 | Update scoring if needed | Founder | Metrics still 0-100 range |
-| 5 | A/B test question wording with 2 users | Founder | User feedback captured |
-| 5 | Iterate based on feedback | Founder | Questions refined |
-| 6 | Document question changes | Founder | Change log updated |
-| 6 | Migration script for new questions | Founder | Migration tested |
-| 7 | Deploy question changes | Founder | Production updated |
+#### Week 4: Report & Cost-of-Inaction Polish
+- Results hierarchy: executive summary and money impact first
+- Realistic logistics cost figures in the calculator
+- More specific 90-day plan language and recommendations
+- Mobile polish and performance
 
-**Deliverables:**
-- Logistics-specific question set
-- Enhanced "why" explanations
-- 3-5 new logistics questions
-- Migration script
-- Change log
-
-#### Week 4: Report Polish
-
-| Day | Task | Owner | Acceptance Criteria |
-|-----|------|-------|---------------------|
-| 1 | Redesign results page hierarchy | Founder | Executive summary first |
-| 1 | Wireframe new layout | Founder | Design approved |
-| 2 | Implement new layout | Founder | Page renders correctly |
-| 2 | Add cost-of-inaction calculator | Founder | Calculator functional |
-| 3 | Research realistic logistics cost figures | Founder | Cost database created |
-| 3 | Integrate cost figures into calculator | Founder | Costs realistic |
-| 4 | Improve 90-day plan output | Founder | Plans more specific |
-| 4 | Add logistics-specific recommendations | Founder | 10+ logistics recommendations |
-| 5 | Mobile responsive testing | Founder | Works on phone |
-| 5 | Fix mobile issues | Founder | Mobile polished |
-| 6 | Performance testing | Founder | Load < 3 seconds |
-| 6 | Optimize if needed | Founder | Performance target met |
-| 7 | Deploy report changes | Founder | Production updated |
-
-**Deliverables:**
-- New results page layout
-- Cost-of-inaction calculator with logistics figures
-- Improved 90-day plans
-- Mobile-polished reports
-- Performance optimized
-
-**Success Metrics:**
-- Assessment completion rate > 80%
-- Time to complete assessment < 30 minutes
-- User satisfaction score > 4/5
-- Mobile traffic > 30% of total
+**Success metrics (end Phase 2):** Completion rate > 80%, time < 30 min, user satisfaction > 4/5, clear cost-of-inaction numbers that operators recognise.
 
 ---
 
-### Phase 3: Bidder Supply (Weeks 5-6)
+### Phase 3: Controlled Marketplace Activation (Weeks 5–6)
 
-**Objective:** Build marketplace liquidity with active bidders
+**Objective:** Only after assessment traction is visible — introduce quality bidders and a small number of real requests.
 
-#### Week 5: Bidder Recruitment
+#### Week 5: Quality Bidder Recruitment
+- Landing page and clear opportunity story
+- Targeted outreach (logistics-experienced implementers preferred)
+- Free first month for first 5–10 who pass quality bar
+- Manual verification + short onboarding
 
-| Day | Task | Owner | Acceptance Criteria |
-|-----|------|-------|---------------------|
-| 1 | Create bidder landing page | Founder | Page live, compelling copy |
-| 1 | Explain opportunity clearly | Founder | Value proposition clear |
-| 2 | Compile bidder outreach list | Founder | 50+ contacts identified |
-| 2 | Create outreach templates | Founder | 3 templates ready |
-| 3 | LinkedIn outreach to automation consultants | Founder | 20 messages sent |
-| 3 | Outreach to n8n/Zapier/Make specialists | Founder | 20 messages sent |
-| 4 | Outreach to small logistics software shops | Founder | 20 messages sent |
-| 4 | Outreach to independent logistics consultants | Founder | 20 messages sent |
-| 5 | Offer free first month to first 10 | Founder | Offer communicated |
-| 5 | Respond to interested bidders | Founder | All replies handled |
-| 6 | Manually verify first 5 bidders | Founder | 5 bidders verified |
-| 6 | Onboard verified bidders | Founder | Bidders can bid |
-| 7 | Publish bidder verification guide | Founder | Guide in help center |
+#### Week 6: First Real Matches
+- Publish a small number of real (or highly realistic) requests tied to assessments
+- Notify verified bidders
+- Support first bids → award → conversation
+- Document quality and any delivery outcomes
 
-**Deliverables:**
-- Bidder landing page
-- Outreach list (80+ contacts)
-- Outreach templates
-- 5-10 verified bidders
-- Verification guide
-
-#### Week 6: Marketplace Activation
-
-| Day | Task | Owner | Acceptance Criteria |
-|-----|------|-------|---------------------|
-| 1 | Publish first 3-5 real requests | Founder | Requests visible to bidders |
-| 1 | Even if test cases, make them realistic | Founder | Requests credible |
-| 2 | Notify bidders of new requests | Founder | Bidders receive emails |
-| 2 | Set up automated request alerts | Founder | Alerts working |
-| 3 | Monitor bid quality | Founder | Bid quality documented |
-| 3 | Adjust pricing if needed | Founder | Pricing data analyzed |
-| 4 | Encourage first bids | Founder | Manual follow-up if needed |
-| 4 | Review incoming bids | Founder | Bids assessed |
-| 5 | Admin approve first real bid | Founder | Bid approved |
-| 5 | Award first real request | Founder | Award completed |
-| 6 | Start conversation | Founder | Conversation active |
-| 6 | Monitor conversation quality | Founder | Conversation documented |
-| 7 | Document marketplace activation | Founder | Process documented |
-
-**Deliverables:**
-- 3-5 published requests
-- Automated request alerts
-- First real bid
-- First real award
-- Conversation documentation
-
-**Success Metrics:**
-- 5-10 active bidders
-- 3-5 published requests
-- Average bids per request > 2
-- Time to first bid < 48 hours
-- Conversation closure rate > 80%
+**Success metrics:** 5–10 strong verified bidders, first awards, conversation and delivery notes captured.
 
 ---
 
-### Phase 4: Growth (Weeks 7-12)
+### Phase 4: Growth (Weeks 7–12)
 
-**Objective:** 10 paying clients, 20 active bidders, revenue validation
+**Objective:** 10+ paying assessment clients, proven conversion path, 10–20 quality bidders, early MRR from subscriptions, and clear evidence the model works.
 
-#### Week 7-8: Marketing Funnel
+Focus areas:
+- Marketing funnel (assessment-led)
+- Partnerships and content
+- Pricing tests once proof exists
+- Referral loop
+- Funnel dashboard and weekly metric review
+- Retrospective and next-12-week plan
 
-| Day | Task | Owner | Acceptance Criteria |
-|-----|------|-------|---------------------|
-| 1 | Create landing page focused on "What should we automate first?" | Founder | Page live |
-| 1 | A/B test headline variants | Founder | Winner identified |
-| 2 | Write 3 case studies (can be hypothetical) | Founder | Case studies published |
-| 2 | Create social proof section | Founder | Testimonials/logos added |
-| 3 | Set up email sequence for assessment completers | Founder | Sequence active |
-| 3 | Create assessment reminder emails | Founder | Reminders scheduled |
-| 4 | LinkedIn outreach to logistics COOs | Founder | 50 messages sent |
-| 4 | LinkedIn outreach to Operations Directors | Founder | 50 messages sent |
-| 5 | Join logistics LinkedIn groups | Founder | 5 groups joined |
-| 5 | Share value in groups (not spam) | Founder | 10 posts |
-| 6 | Create referral program | Founder | Program defined |
-| 6 | Implement referral tracking | Founder | Tracking working |
-| 7 | Measure funnel metrics | Founder | Dashboard live |
-| 7 | Optimize based on data | Founder | Iterations planned |
-
-**Deliverables:**
-- Landing page with clear value prop
-- 3 case studies
-- Email sequences
-- LinkedIn outreach (100+ messages)
-- Referral program
-- Funnel dashboard
-
-#### Week 9-10: Product Refinement
-
-| Day | Task | Owner | Acceptance Criteria |
-|-----|------|-------|---------------------|
-| 1 | Analyze assessment completion drop-off | Founder | Drop-off points identified |
-| 1 | Add progress indicator if needed | Founder | Progress bar implemented |
-| 2 | Simplify question flow if needed | Founder | Flow optimized |
-| 2 | Reduce assessment time if needed | Founder | Time < 25 minutes |
-| 3 | Improve request-to-bid conversion | Founder | Conversion funnel analyzed |
-| 3 | Add request templates | Founder | Templates available |
-| 4 | Improve bidder dashboard | Founder | Dashboard more useful |
-| 4 | Add request alerts to dashboard | Founder | Alerts visible |
-| 5 | Improve admin desk efficiency | Founder | Admin time reduced |
-| 5 | Add bulk actions | Founder | Bulk operations working |
-| 6 | Gather user feedback | Founder | 10+ interviews |
-| 6 | Prioritize feedback | Founder | Backlog prioritized |
-| 7 | Deploy top 3 improvements | Founder | Improvements live |
-
-**Deliverables:**
-- Assessment flow optimized
-- Request templates
-- Improved bidder dashboard
-- Improved admin desk
-- User feedback captured
-- 3 improvements deployed
-
-#### Week 11-12: Scaling
-
-| Day | Task | Owner | Acceptance Criteria |
-|-----|------|-------|---------------------|
-| 1 | Automate bidder verification where possible | Founder | Automation documented |
-| 1 | Keep manual verification for quality | Founder | Quality maintained |
-| 2 | Add featured bidder option | Founder | Feature implemented |
-| 2 | Set featured bidder pricing | Founder | Pricing decided |
-| 3 | Improve SEO for logistics keywords | Founder | Keywords identified |
-| 3 | Implement SEO changes | Founder | SEO improved |
-| 4 | Set up Google Analytics | Founder | Analytics tracking |
-| 4 | Set up conversion tracking | Founder | Conversions tracked |
-| 5 | Review pricing strategy | Founder | Strategy documented |
-| 5 | Adjust if needed | Founder | New pricing live |
-| 6 | 12-week retrospective | Founder | Lessons documented |
-| 6 | Plan next 12 weeks | Founder | Roadmap updated |
-| 7 | Communicate progress (blog, social) | Founder | Progress shared |
-
-**Deliverables:**
-- Automated verification (partial)
-- Featured bidder option
-- SEO improvements
-- Analytics setup
-- Pricing review
-- 12-week retrospective
-- Next 12-week plan
-
-**Success Metrics (End of Week 12):**
-- 10 paying clients (Full Assessment)
-- 20 active bidders
-- Monthly recurring revenue > $2,000
-- Assessment completion rate > 75%
-- Bid conversion rate > 20%
-- Net Promoter Score > 40
+**End of Week 12 targets (adjusted for assessment-first posture):**
+- 30–50 paying Full Assessments (stretch) or clear trajectory toward it
+- Documented outcomes / mini case studies
+- 10–20 quality active bidders
+- Marketplace matches happening with positive delivery signals
+- MRR from bidder subscriptions starting to appear
+- NPS or equivalent satisfaction signal > 40 where measured
 
 ---
 
 ## Resource Allocation
 
-### Solo Founder Schedule (9 hours/day, 7 days/week = 63 hours/week)
+### Solo Founder Schedule (guideline)
 
-| Activity | Hours/Week | Percentage |
-|----------|------------|------------|
-| Development (coding, testing, deployment) | 25 | 40% |
-| User outreach & recruitment | 15 | 24% |
-| Product refinement (copy, UX, feedback) | 10 | 16% |
-| Marketing (content, social, SEO) | 8 | 13% |
-| Admin & operations (support, billing, monitoring) | 5 | 8% |
-| **Total** | **63** | **100%** |
+| Activity | Hours/Week | Notes |
+|----------|------------|-------|
+| Development / product | ~20–25 | Keep decreasing as core stabilises |
+| Operator outreach & assessment support | ~15–18 | Highest leverage early |
+| Bidder quality recruitment & verification | ~5–8 | Quality over volume |
+| Content, partnerships, distribution | ~6–8 | Compound over time |
+| Admin, metrics, support | ~5 | Weekly funnel review non-negotiable |
 
-### Time Blocking Recommendation
-
-| Time Block | Activity | Notes |
-|------------|----------|-------|
-| 6:00-9:00 (3h) | Deep work - Development | No interruptions, focus on coding |
-| 9:00-12:00 (3h) | User outreach & communication | Emails, messages, calls |
-| 12:00-13:00 (1h) | Break/Lunch with family | Family time |
-| 13:00-16:00 (3h) | Product refinement | Copy, UX, feedback analysis |
-| 16:00-17:00 (1h) | Marketing | Content creation, social media |
-| 17:00-18:00 (1h) | Admin & wrap-up | Support, monitoring, planning |
-| 18:00+ | Family time | No work |
-
----
-
-## Success Metrics
-
-### Leading Indicators (Week 1-4)
-
-| Metric | Target Week 4 | Measurement |
-|--------|---------------|-------------|
-| Test suite pass rate | 100% | pytest |
-| Assessment completions | 10 | Database |
-| Request creation rate | 30% of assessments | Database |
-| Bidder signups | 5 | Database |
-| Time to complete assessment | < 30 min | Analytics |
-| Assessment completion rate | > 80% | Analytics |
-
-### Lagging Indicators (Week 5-12)
-
-| Metric | Target Week 8 | Target Week 12 | Measurement |
-|--------|---------------|----------------|-------------|
-| Paying clients (Full Assessment) | 5 | 10 | Database |
-| Active bidders | 10 | 20 | Database |
-| Published requests | 5 | 15 | Database |
-| Monthly recurring revenue | $500 | $2,000 | Billing |
-| Assessment-to-request conversion | 25% | 35% | Database |
-| Request-to-bid conversion | 15% | 25% | Database |
-| Bid-to-award conversion | 10% | 20% | Database |
-| Net Promoter Score | 30 | 40 | Survey |
-
-### Financial Targets
-
-| Month | Assessments | Bidder Subs | Annual Subs | MRR |
-|-------|-------------|-------------|-------------|-----|
-| Month 1 | 5 | 3 | 0 | $117 |
-| Month 2 | 10 | 5 | 0 | $245 |
-| Month 3 | 20 | 10 | 2 | $790 |
-| Month 4 | 30 | 15 | 4 | $1,447 |
-| Month 5 | 50 | 20 | 6 | $2,138 |
-| Month 6 | 80 | 30 | 10 | $3,390 |
-
-*Assumptions: Full Assessment $49, Bidder Monthly $39, Bidder Annual $219 (amortized $18.25/mo)*
-
----
-
-## Risk Management
-
-### Technical Risks
-
-| Risk | Probability | Impact | Mitigation |
-|------|-------------|--------|------------|
-| Test failures block deployment | Medium | High | Fix in Week 1, keep tests green |
-| Database migration fails | Low | High | Test on staging first, backup before prod |
-| Payment provider outage | Low | Medium | Feature flag, manual billing fallback |
-| Marketplace bugs impact reputation | Medium | High | Extensive QA, gradual rollout |
-| Performance issues under load | Low | Medium | Monitor, optimize, scale when needed |
-
-### Go-to-Market Risks
-
-| Risk | Probability | Impact | Mitigation |
-|------|-------------|--------|------------|
-| Can't recruit bidders | Medium | High | Personal outreach, offer free months |
-| Can't recruit clients | Medium | High | Free diagnostic lowers friction, LinkedIn outreach |
-| Assessments too long/complex | Medium | Medium | A/B test, simplify based on data |
-| Bids low quality | Medium | Medium | Manual verification, quality standards |
-| Pricing too high/low | Low | Medium | A/B test pricing, adjust based on data |
-
-### Founder Risks
-
-| Risk | Probability | Impact | Mitigation |
-|------|-------------|--------|------------|
-| Burnout | Medium | High | Work within 9hr limit, take weekends off |
-| Family obligations conflict | Medium | Medium | Clear boundaries, communicate schedule |
-| Feature creep | High | Medium | Stick to roadmap, say NO to new features |
-| Losing focus | Medium | High | Review this document weekly, stay disciplined |
+Protect family time. Review this roadmap weekly.
 
 ---
 
 ## Decision Log
 
-### Locked Decisions (Do Not Reopen Without Strong Reason)
+### Locked Decisions
+1. Marketplace model — no commission on awards. Revenue from assessments + bidder subscriptions.
+2. Target segment — logistics operators 10–300 staff.
+3. Pricing baseline — Free diagnostic, $49 Full Assessment (subject to later tests), $39–$219 bidder plans.
+4. Tech stack — FastAPI + SQLAlchemy + Jinja2 on Vercel.
+5. Assessment scope — 63 questions, 7 pillars, 36 metrics (do not expand casually).
+6. Non-goals — as listed above.
+7. **Assessment-first posture** — prove assessment value and conversion before heavy marketplace scaling.
+8. **Bidder quality over quantity** — prefer fewer excellent, logistics-relevant implementers.
 
-1. **Marketplace model** - No commission on awards. Revenue from assessments and bidder subscriptions.
-2. **Target segment** - Logistics operators 10-300 staff. Not enterprises, not micro-businesses.
-3. **Pricing** - Free diagnostic, $49 Full Assessment, $39-$219 bidder subscriptions.
-4. **Tech stack** - FastAPI + SQLAlchemy + Jinja2 on Vercel. No React SPA in production.
-5. **Assessment scope** - 63 questions, 7 pillars, 36 metrics. Do not expand.
-6. **Non-goals** - No daily operations layer, no telematics, no native mobile app, no AI/ML.
-
-### Pending Decisions (Make by Week 2)
-
-1. **Paystack plan codes** - Create in Paystack dashboard and set in env vars
-2. **Featured bidder pricing** - Determine if and how much to charge
-3. **Referral program** - Define incentive structure
-4. **Assessment time target** - Confirm < 30 minutes or adjust
-
-### Open Questions (Research During Execution)
-
-1. **Optimal assessment length** - A/B test different lengths
-2. **Best outreach channels** - Test LinkedIn, email, cold call, referrals
-3. **Bidder verification level** - How strict should verification be?
-4. **Conversation expiry time** - 24 hours enough or too short?
+### Pending (by Week 2–4)
+- Paystack plan codes
+- Exact timing of public marketplace promotion (data-triggered)
+- First pricing experiment design
+- Partnership shortlist
 
 ---
 
-## Definition of Done
+## Definition of Done (Updated)
 
-### Phase 1 Complete When:
-- [ ] All tests passing (119+)
-- [ ] Marketplace enabled on production
-- [ ] First end-to-end transaction completed
-- [ ] No critical bugs in production for 48 hours
-- [ ] Documentation updated
+### Phase 1
+- [ ] All critical tests passing
+- [ ] Role consolidation done (`user_type` authoritative)
+- [ ] Assessment path production-stable
+- [ ] First real operators in pipeline
 
-### Phase 2 Complete When:
-- [ ] Assessment logistics-specific
-- [ ] Results page redesigned
-- [ ] Cost-of-inaction calculator working
-- [ ] Mobile polished
-- [ ] Performance < 3 seconds
-- [ ] User satisfaction > 4/5
+### Phase 2
+- [ ] Logistics-specific assessment polish live
+- [ ] Cost-of-inaction numbers credible
+- [ ] Completion and satisfaction targets hit or clearly trending
 
-### Phase 3 Complete When:
-- [ ] 5-10 active bidders
-- [ ] 3-5 published requests
-- [ ] First real bid → award → conversation
-- [ ] Bidder landing page live
-- [ ] Verification guide published
+### Phase 3
+- [ ] 5–10 quality verified bidders
+- [ ] First real request → bid → award path completed
+- [ ] Outcome notes captured
 
-### Phase 4 Complete When:
-- [ ] 10 paying clients
-- [ ] 20 active bidders
-- [ ] MRR > $2,000
-- [ ] Funnel dashboard live
-- [ ] 12-week retrospective completed
-- [ ] Next 12-week plan defined
-
----
-
-## Communication Plan
-
-### Internal (Founder)
-
-| Frequency | Activity | Format |
-|----------|----------|--------|
-| Daily | Review today's progress, plan tomorrow | Personal notes |
-| Weekly | Review roadmap, update status | This document |
-| Monthly | Financial review, goal check | Spreadsheet + this doc |
-| Quarterly | Strategic review, pivot if needed | Document + decision log |
-
-### External (Users)
-
-| Frequency | Activity | Channel |
-|----------|----------|---------|
-| Weekly | Feature updates, bug fixes | In-app notification |
-| Monthly | Product roadmap, what's coming | Email newsletter |
-| Quarterly | State of the platform, metrics | Blog post |
-
----
-
-## Tools & Infrastructure
-
-### Development
-- **Code**: Python, FastAPI, SQLAlchemy, Jinja2
-- **Version control**: Git (GitHub)
-- **Testing**: pytest
-- **Migrations**: Alembic
-- **Linting**: ruff
-
-### Deployment
-- **Hosting**: Vercel
-- **Database**: Neon (PostgreSQL) or SQLite fallback
-- **Storage**: S3 (for documents) or local fallback
-- **Email**: Resend
-- **Payments**: Paystack
-
-### Monitoring
-- **Health**: `/api/v1/health`
-- **Error tracking**: (Add Sentry when budget allows)
-- **Analytics**: Google Analytics (Week 11)
-- **Status page**: Build when time allows
+### Phase 4
+- [ ] Meaningful volume of paying assessments
+- [ ] Documented outcomes / case studies
+- [ ] Marketplace matches with positive signals
+- [ ] Funnel dashboard in use
+- [ ] 12-week retrospective and next plan written
 
 ---
 
@@ -609,115 +337,24 @@ Logistics operators (10-300 staff) get a professional assessment ($49) that iden
 ### Week: [X] of [12]
 
 **Completed:**
-- [ ] Task 1
-- [ ] Task 2
-- [ ] Task 3
+- [ ] ...
 
 **Blocked On:**
-- Issue: [description]
-- Mitigation: [plan]
+- ...
 
-**Metrics:**
-- Assessments completed: [X]
-- Requests created: [X]
-- Bidders signed up: [X]
-- MRR: $[X]
+**Funnel metrics:**
+- Assessment starts / completions / paid: [ ]
+- Requests published / bids / awards: [ ]
+- Quality bidders active: [ ]
+- MRR: [ ]
 
-**Learnings:**
-- [Insight 1]
-- [Insight 2]
+**Learnings (especially cost-of-inaction & operator language):**
+- ...
 
-**Next Week Focus:**
-- [ ] Priority 1
-- [ ] Priority 2
-- [ ] Priority 3
+**Next week focus (max 3):**
+- [ ] ...
 
-**Roadmap Changes:**
-- [ ] None / [Description of change]
-
----
-
-## Appendix
-
-### Contact Lists to Build
-
-**Logistics Operators (Target Clients)**
-- LinkedIn: Search "COO Logistics", "Operations Director", "Logistics Manager"
-- Filters: 10-300 employees, logistics industry
-- Geography: Start with Kenya, expand regionally
-- Outreach template: Personalized, focus on "what should we automate first?"
-
-**Implementation Partners (Target Bidders)**
-- LinkedIn: Search "Automation Consultant", "n8n developer", "Zapier expert"
-- Filters: Open to work, logistics experience preferred
-- Outreach template: Explain marketplace opportunity, free first month
-- Groups: n8n community, automation communities, logistics tech groups
-
-**Consulting Firms (Partners, Not Competitors)**
-- Boutique logistics consulting firms
-- Independent supply chain consultants
-- Pitch: White-label assessments, referral fees
-
-### Copy Templates
-
-**Assessment Outreach (LinkedIn)**
-```
-Hi [Name],
-
-I built a tool that answers "what should we automate first?" for logistics operations. It's a 25-minute assessment that gives you a professional report, costed constraints, and a 90-day plan.
-
-Free to try: [link]
-
-Would you be open to testing it and giving feedback?
-
-Thanks,
-[Your name]
-```
-
-**Bidder Outreach (LinkedIn)**
-```
-Hi [Name],
-
-I'm launching a marketplace for logistics automation implementation. Operators post requests (with professional assessment data), and vetted partners bid on them.
-
-First 10 verified bidders get free first month. $39/mo after that.
-
-Interested? [link to apply]
-
-Thanks,
-[Your name]
-```
-
-**Assessment Reminder (Email)**
-```
-Subject: Finish your automation assessment
-
-Hi [Name],
-
-You started the Elipsis assessment but didn't finish. It takes about 25 minutes and will show you:
-
-- Your Elipsis Index (automation readiness score)
-- Top 3 constraints holding you back
-- Cost of inaction
-- Sample 90-day plan
-
-Pick up where you left off: [link]
-
-Questions? Just reply to this email.
-
-Thanks,
-Elipsis team
-```
-
-### Key File Locations
-
-- **Assessment engine**: `readiness.py`, `constants.py`, `elipsis_questions.py`
-- **Marketplace**: `elipsis_api/routers/marketplace_ui.py`, `services_marketplace.py`
-- **Models**: `elipsis_api/models.py`
-- **Tests**: `tests/test_api.py`, `tests/test_marketplace_lifecycle.py`
-- **Config**: `elipsis_api/config.py`, `.env.example`
-- **Deployment**: `vercel.json`, `DEPLOY.md`
-- **Documentation**: `docs/` directory
+**Roadmap changes:** None / [description]
 
 ---
 
@@ -725,7 +362,8 @@ Elipsis team
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 1.0 | 3 Nov 2026 | Initial roadmap created |
+| 1.0 | 3 Nov 2026 | Initial roadmap |
+| 1.1 | 4 Nov 2026 | Assessment-first posture; cost-of-inaction & outcome proof; bidder quality over quantity; distribution realism; pricing experiments; stronger measurement discipline. ICP kept at logistics 10–300. |
 
 ---
 
