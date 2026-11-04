@@ -34,6 +34,8 @@
   {% if not authed %}<link rel="stylesheet" href="/static/marketing.css?v=20261104a">{% endif %}
   {% if path == '/login' or path == '/signup' or path == '/forgot-password' or path == '/reset-password' %}<link rel="stylesheet" href="/static/auth.css?v=20261104a">{% endif %}
   {% if path == '/settings' %}<link rel="stylesheet" href="/static/settings.css?v=20261104a">{% endif %}
+  {% if path.startswith('/operations') %}<link rel="stylesheet" href="/static/operations.css?v=20261104a">{% endif %}
+  {% if path.startswith('/marketplace') %}<link rel="stylesheet" href="/static/marketplace.css?v=20261104a">{% endif %}
   <link rel="stylesheet" href="/static/style.css?v=20261101a">
   <link rel="stylesheet" href="/static/app-shell.css?v=20261101a">
   <link rel="stylesheet" href="/static/extras.css?v=20261101a">
