@@ -528,6 +528,8 @@ def ensure_plan_items(db: Session, assessment_id: int, result: dict) -> list:
             complexity=item.get("complexity"),
             priority=item.get("priority"),
             horizon=item.get("horizon"),
+            roi=item.get("roi"),
+            kpi=item.get("kpi"),
             owner=None,
             due_date=(today + timedelta(days=days)).isoformat(),
             status="not_started",

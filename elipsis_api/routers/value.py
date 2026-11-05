@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import io
+from datetime import date
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Request, UploadFile
 from fastapi.responses import RedirectResponse, Response
@@ -211,8 +212,36 @@ def plan_get(assessment_id: int, request: Request,
     if result is None:
         return RedirectResponse(f"/assessment/{assessment_id}/step/1", status_code=303)
     items = services.ensure_plan_items(db, assessment_id, result)
+    today = date.today().isoformat()
+    phase_labels = (
+        ("First 30 days", "Stabilise the constraint and prove the first wins."),
+        ("Next 30 days", "Operationalise the changes across the team."),
+        ("Final 30 days", "Embed the new way of working and measure lift."),
+    )
+    plan_groups = [
+        {"number": index + 1, "label": phase_labels[index][0],
+         "note": phase_labels[index][1], "items": items[index * 3:index * 3 + 3]}
+        for index in range(3) if items[index * 3:index * 3 + 3]
+    ]
+    plan_stats = {
+        "total": len(items),
+        "done": sum(item.status == "done" for item in items),
+        "in_progress": sum(item.status == "in_progress" for item in items),
+        "blocked": sum(item.status == "blocked" for item in items),
+        "not_started": sum(item.status == "not_started" for item in items),
+        "unassigned": sum(not item.owner for item in items if item.status != "done"),
+        "overdue": sum(
+            bool(item.due_date) and item.due_date < today and item.status != "done"
+            for item in items),
+    }
+    plan_stats["completion"] = (
+        round(100 * plan_stats["done"] / plan_stats["total"])
+        if plan_stats["total"] else 0)
+    next_action = next(
+        (item for item in items if item.status != "done"), None)
     context = _context(db, assessment, result, user)
-    context.update(items=items)
+    context.update(items=items, plan_groups=plan_groups, plan_stats=plan_stats,
+                   next_action=next_action)
     return templates.TemplateResponse(request, "plan.html", context)
 
 

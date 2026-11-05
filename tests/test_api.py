@@ -270,10 +270,24 @@ def test_workspace_intelligence_round_trip(signed_in):
     assert review.status_code == 303
     results = client.get(f"/assessment/{assessment_id}/results")
     assert "2026-12-01" in results.text
+    assert "report-jump" in results.text
+    assert "roadmap-grid" in results.text
+    assert "The verdict" in results.text
 
     plan = client.get(f"/assessment/{assessment_id}/plan").text
+    assert "plan-overview" in plan
+    assert "Plan completion" in plan
+    assert "First 30 days" in plan
+    assert 'class="plan-card' in plan
     item_ids = [int(x) for x in re.findall(rf"/assessment/{assessment_id}/plan/(\d+)", plan)]
     assert item_ids
+    plan_saved = client.post(f"/assessment/{assessment_id}/plan/{item_ids[0]}", data={
+        "owner": "Plan owner", "due_date": "2026-11-20",
+        "status": "in_progress", "notes": "Checkpoint booked"},
+        follow_redirects=False)
+    assert plan_saved.status_code == 303
+    assert plan_saved.headers["location"].endswith("/plan?saved=1")
+    assert "Action saved" in client.get(plan_saved.headers["location"]).text
     updated = client.post(f"/actions/{item_ids[0]}", data={
         "owner": "Ops lead", "due_date": "2026-11-15",
         "status": "in_progress", "notes": "Kickoff booked", "next": "/actions"},
