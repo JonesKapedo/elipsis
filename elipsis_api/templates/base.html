@@ -35,7 +35,7 @@
   {% if not authed %}<link rel="stylesheet" href="/static/marketing.css?v=20261104a">{% endif %}
   {% if path == '/settings' %}<link rel="stylesheet" href="/static/settings.css?v=20261104a">{% endif %}
   <link rel="stylesheet" href="/static/style.css?v=20261101a">
-  <link rel="stylesheet" href="/static/app-shell.css?v=20261101a">
+  <link rel="stylesheet" href="/static/app-shell.css?v=20261105a">
   <link rel="stylesheet" href="/static/extras.css?v=20261101a">
   <link rel="stylesheet" href="/static/motion.css?v=20261104a">
   <link rel="stylesheet" href="/static/app.css?v=20261101a">
@@ -44,7 +44,7 @@
   <link rel="stylesheet" href="/static/contrast-fix.css?v=20261101a">
   <link rel="stylesheet" href="/static/theme.css?v=20261104b">
   <link rel="stylesheet" href="/static/theme-light.css?v=20261103a">
-  <link rel="stylesheet" href="/static/logistics-ui.css?v=20261101a">
+  <link rel="stylesheet" href="/static/logistics-ui.css?v=20261105a">
   <link rel="stylesheet" href="/static/brand-scale.css?v=20261101a">
   <link rel="stylesheet" href="/static/results.css?v=20261105b">
   <link rel="stylesheet" href="/static/ux-polish.css?v=20261102b">
@@ -86,6 +86,12 @@
       <a href="/dashboard" class="brand-lockup" aria-label="{{ BRAND_NAME }} overview">
         <img src="/static/brand/elipsis-logo-light.svg" alt="{{ BRAND_NAME }}" class="brand-img brand-img-light">
       </a>
+      <a href="/dashboard" class="sidebar-mark" aria-label="{{ BRAND_NAME }} overview">
+        <img src="/static/brand/elipsis-mark.svg" alt="" class="sidebar-mark-img">
+      </a>
+      <button type="button" class="sidebar-collapse" id="sidebar-collapse" aria-label="Collapse navigation" aria-expanded="true" aria-controls="app-sidebar">
+        <svg class="icon"><use href="#i-chevron"/></svg>
+      </button>
       <button type="button" class="sidebar-close" id="sidebar-close" aria-label="Close menu"><svg class="icon"><use href="#i-close"/></svg></button>
     </div>
     <div class="sidebar-scroll">
@@ -201,7 +207,7 @@
 </footer>
 {% endif %}
 
-<script src="/static/app.js?v=20261103a" defer></script>
+<script src="/static/app.js?v=20261105a" defer></script>
 <script src="/static/table-tools.js?v=20261103a" defer></script>
 {% block scripts %}{% endblock %}
 </body>

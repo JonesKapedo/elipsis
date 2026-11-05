@@ -151,3 +151,48 @@ def test_set_password_updates_supabase_and_local_hash(db, configured, monkeypatc
     services_auth.set_password(db, user, "new-password")
     assert user.supabase_id == "supabase-4"
     assert security.verify_password("new-password", user.password_hash)
+
+
+def test_ensure_supabase_admin_resyncs_drifted_remote_password(db, configured, monkeypatch):
+    monkeypatch.setenv("ELIPSIS_ADMIN_EMAIL", "admin@example.com")
+    monkeypatch.setenv("ELIPSIS_ADMIN_PASSWORD", "break-glass")
+    admin = models.User(
+        email="admin@example.com",
+        password_hash=security.hash_password("break-glass"),
+        supabase_id="remote-admin",
+        user_type="admin",
+        is_admin=True,
+    )
+    db.add(admin)
+    db.commit()
+    calls = {}
+
+    def synced(email, password, **kwargs):
+        calls.update(email=email, password=password, kwargs=kwargs)
+        return {"id": "remote-admin", "email": email}
+
+    monkeypatch.setattr(supabase_auth, "ensure_password", synced)
+    services_auth.ensure_supabase_admin(db)
+    assert calls["email"] == "admin@example.com"
+    assert calls["password"] == "break-glass"
+    assert calls["kwargs"]["user_type"] == "admin"
+
+
+def test_ensure_supabase_admin_does_not_revert_changed_password(db, configured, monkeypatch):
+    monkeypatch.setenv("ELIPSIS_ADMIN_EMAIL", "admin@example.com")
+    monkeypatch.setenv("ELIPSIS_ADMIN_PASSWORD", "break-glass")
+    admin = models.User(
+        email="admin@example.com",
+        password_hash=security.hash_password("changed-in-app"),
+        supabase_id="remote-admin",
+        user_type="admin",
+        is_admin=True,
+    )
+    db.add(admin)
+    db.commit()
+
+    def unexpected(*args, **kwargs):
+        raise AssertionError("admin password should not be resynced")
+
+    monkeypatch.setattr(supabase_auth, "ensure_password", unexpected)
+    services_auth.ensure_supabase_admin(db)

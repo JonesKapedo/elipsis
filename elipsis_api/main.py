@@ -30,7 +30,12 @@ from constants import BRAND_NAME, FRAMEWORK_NAME  # noqa: E402
 from elipsis_api import services, session_auth  # noqa: E402
 from elipsis_api import state as runtime_state  # noqa: E402
 from elipsis_api.config import DATABASE_URL, SESSION_COOKIE  # noqa: E402
-from elipsis_api.database import Base, SessionLocal, engine  # noqa: E402
+from elipsis_api.database import (  # noqa: E402
+    Base,
+    SessionLocal,
+    engine,
+    ensure_schema_compatibility,
+)
 from elipsis_api.deps import templates  # noqa: E402
 from elipsis_api.routers import api, pages
 
@@ -160,6 +165,9 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 async def lifespan(_app: FastAPI):
     try:
         Base.metadata.create_all(bind=engine)
+        repaired = ensure_schema_compatibility()
+        if repaired:
+            print(f"[elipsis] schema repaired: {', '.join(repaired)}", flush=True)
         db = SessionLocal()
         try:
             services.seed(db)
