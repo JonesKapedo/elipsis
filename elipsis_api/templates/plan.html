@@ -1,41 +1,151 @@
 {% extends "base.html" %}
 {% block title %}90-day plan — {{ organization.name }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/plan.css?v=20261105b">{% endblock %}
 {% block content %}
-<section class="head">
+{% set status_label = {'not_started': 'Not started', 'in_progress': 'In progress', 'blocked': 'Blocked', 'done': 'Done'} %}
+<section class="head plan-head">
   <p class="eyebrow">Execution, not another deck</p>
   <h1>90-day action plan</h1>
-  <p class="lede">Three quick wins in 30 days, three in 60, three in 90. Assign an owner, set a date, and update status as the work moves.</p>
+  <p class="lede">Three phases, up to nine actions. Assign an owner, set a date, and update status as the work moves. Every change saves against this assessment.</p>
   <div class="hero-actions">
     <a class="btn ghost" href="/assessment/{{ assessment.id }}/results">Back to results</a>
     <a class="btn ghost" href="/assessment/{{ assessment.id }}/summary">One-page summary</a>
+    <a class="btn ghost" href="/assessment/{{ assessment.id }}/report">Board pack</a>
     {% if previous %}<span class="tag {{ 'ok' if (delta or 0) >= 0 else 'warn' }}">Movement {{ '%+.1f'|format(delta or 0) }} vs previous</span>{% endif %}
   </div>
 </section>
 
-<article class="block">
-  {% for item in items %}<form id="plan-{{ item.id }}" method="post" action="/assessment/{{ assessment.id }}/plan/{{ item.id }}"></form>{% endfor %}
-  <table class="table plan-table">
-    <thead><tr><th>Action</th><th>Owner</th><th>Due</th><th>Status</th><th>Notes</th><th></th></tr></thead>
-    <tbody>
-      {% for item in items %}
-      <tr>
-        <td><strong>{{ item.title }}</strong><br><span class="muted">{{ item.technology or '' }} · {{ item.horizon or '' }}</span></td>
-        <td><input form="plan-{{ item.id }}" name="owner" value="{{ item.owner or '' }}" placeholder="Name" maxlength="120"></td>
-        <td><input form="plan-{{ item.id }}" type="date" name="due_date" value="{{ item.due_date or '' }}"></td>
-        <td>
-          <select form="plan-{{ item.id }}" name="status">
-            {% for key, label in [('not_started','Not started'),('in_progress','In progress'),('blocked','Blocked'),('done','Done')] %}
-            <option value="{{ key }}" {% if item.status == key %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
-        </td>
-        <td><input form="plan-{{ item.id }}" name="notes" value="{{ item.notes or '' }}" placeholder="Blocker or next step" maxlength="2000"></td>
-        <td><div style="display:flex;gap:.3rem;flex-wrap:wrap"><button form="plan-{{ item.id }}" class="btn sm" type="submit">Save</button><a class="btn ghost sm" href="/actions/{{ item.id }}/nudge">Nudge</a></div></td>
-      </tr>
-      {% else %}
-      <tr><td colspan="6" class="muted">No actions generated yet. Run a completed assessment first.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+{% if request.query_params.get('saved') %}
+<div class="flash ok" role="status">Action saved. The owner, date, status, and notes are up to date.</div>
+{% endif %}
+
+{% if items %}
+<section class="plan-overview" aria-label="Plan progress">
+  <article class="plan-progress">
+    <div>
+      <p class="eyebrow">Plan completion</p>
+      <strong class="plan-progress-value">{{ plan_stats.completion }}<span>%</span></strong>
+      <p class="muted small">{{ plan_stats.done }} of {{ plan_stats.total }} actions done</p>
+    </div>
+    <div class="plan-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ plan_stats.completion }}" aria-label="Plan completion">
+      <span style="width:{{ plan_stats.completion }}%"></span>
+    </div>
+  </article>
+
+  <div class="plan-stats">
+    <article class="plan-stat">
+      <span>Open</span>
+      <b>{{ plan_stats.total - plan_stats.done }}</b>
+      <small>actions remaining</small>
+    </article>
+    <article class="plan-stat">
+      <span>In progress</span>
+      <b>{{ plan_stats.in_progress }}</b>
+      <small>being worked</small>
+    </article>
+    <article class="plan-stat{% if plan_stats.blocked %} is-warn{% endif %}">
+      <span>Blocked</span>
+      <b>{{ plan_stats.blocked }}</b>
+      <small>need escalation</small>
+    </article>
+    <article class="plan-stat{% if plan_stats.unassigned %} is-warn{% endif %}">
+      <span>Unassigned</span>
+      <b>{{ plan_stats.unassigned }}</b>
+      <small>no owner yet</small>
+    </article>
+    <article class="plan-stat{% if plan_stats.overdue %} is-danger{% endif %}">
+      <span>Overdue</span>
+      <b>{{ plan_stats.overdue }}</b>
+      <small>past due date</small>
+    </article>
+  </div>
+</section>
+
+{% if next_action %}
+<article class="plan-next">
+  <div class="plan-next-copy">
+    <p class="eyebrow">Next action</p>
+    <h3>{{ next_action.title }}</h3>
+    <p class="muted">{{ next_action.solution if next_action.solution and next_action.solution != next_action.title else next_action.technology or 'Open the action below to assign an owner and set the next checkpoint.' }}</p>
+  </div>
+  <div class="plan-next-meta">
+    <span class="plan-status is-{{ next_action.status }}">{{ status_label.get(next_action.status, next_action.status) }}</span>
+    <span class="plan-next-fact"><b>Owner</b>{{ next_action.owner or 'Unassigned' }}</span>
+    <span class="plan-next-fact"><b>Due</b>{{ next_action.due_date or 'Not set' }}</span>
+    <a class="btn primary sm" href="#action-{{ next_action.id }}">Open action</a>
+  </div>
 </article>
+{% endif %}
+
+<div class="plan-phases">
+  {% for group in plan_groups %}
+  <section class="plan-phase" aria-labelledby="phase-{{ group.number }}">
+    <header class="plan-phase-head">
+      <span class="plan-phase-number">{{ '%02d'|format(group.number) }}</span>
+      <div>
+        <h2 id="phase-{{ group.number }}">{{ group.label }}</h2>
+        <p>{{ group.note }}</p>
+      </div>
+      <span class="plan-phase-count">{{ group['items']|length }} action{{ '' if group['items']|length == 1 else 's' }}</span>
+    </header>
+
+    <div class="plan-grid">
+      {% for item in group['items'] %}
+      <form class="plan-card is-{{ item.status }}" id="action-{{ item.id }}" method="post" action="/assessment/{{ assessment.id }}/plan/{{ item.id }}">
+        <header class="plan-card-head">
+          <div class="plan-card-title">
+            <span class="plan-card-kicker">{% if item.priority is not none %}Priority {{ '%.0f'|format(item.priority) }}{% else %}Action {{ loop.index }}{% endif %} · Complexity {{ item.complexity or 'TBD' }}</span>
+            <h3>{{ item.title }}</h3>
+          </div>
+          <span class="plan-status is-{{ item.status }}">{{ status_label.get(item.status, item.status) }}</span>
+        </header>
+
+        <div class="plan-card-meta">
+          {% if item.roi is not none %}<span>{{ '%.0f'|format(item.roi) }}% modelled ROI</span>{% endif %}
+          {% if item.kpi %}<span>KPI: {{ item.kpi }}</span>{% endif %}
+        </div>
+
+        {% if item.solution and item.solution != item.title %}<p class="plan-solution">{{ item.solution }}</p>{% endif %}
+        {% if item.technology %}<p class="plan-tech"><span>Technology</span>{{ item.technology }}</p>{% endif %}
+
+        <div class="plan-edit-grid">
+          <label>Owner
+            <input name="owner" value="{{ item.owner or '' }}" placeholder="Assign an owner" maxlength="120">
+          </label>
+          <label>Due date
+            <input type="date" name="due_date" value="{{ item.due_date or '' }}">
+          </label>
+          <label>Status
+            <select name="status">
+              {% for key in ['not_started', 'in_progress', 'blocked', 'done'] %}
+              <option value="{{ key }}" {% if item.status == key %}selected{% endif %}>{{ status_label[key] }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label class="plan-notes">Notes / next checkpoint
+            <input name="notes" value="{{ item.notes or '' }}" placeholder="Blocker, decision, or next step" maxlength="2000">
+          </label>
+        </div>
+
+        <footer class="plan-card-foot">
+          <span class="muted small">Saves only this action.</span>
+          <div class="plan-card-actions">
+            <a class="btn ghost sm" href="/actions/{{ item.id }}/nudge">Nudge owner</a>
+            <button class="btn sm" type="submit">Save changes</button>
+          </div>
+        </footer>
+      </form>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+</div>
+{% else %}
+<article class="plan-empty">
+  <span class="empty-mark">0</span>
+  <h2>No actions generated yet</h2>
+  <p class="muted">Complete an assessment first, then return here to turn the constraints into owners, dates, and checkpoints.</p>
+  <a class="btn" href="/start">Start an assessment</a>
+</article>
+{% endif %}
 {% endblock %}
