@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" role="img" aria-labelledby="title desc">
+  <title id="title">Fleet routing network</title>
+  <desc id="desc">A stylized route map showing vehicles, corridor stops and live dispatch controls.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#071510"/>
+      <stop offset="0.55" stop-color="#0a211a"/>
+      <stop offset="1" stop-color="#123b2e"/>
+    </linearGradient>
+    <radialGradient id="gold" cx="0.3" cy="0.15" r="0.8">
+      <stop offset="0" stop-color="#dda15e" stop-opacity="0.23"/>
+      <stop offset="1" stop-color="#dda15e" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="route" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#dda15e"/>
+      <stop offset="1" stop-color="#f2cf9a"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#f5efe2" stroke-opacity="0.055"/>
+    </pattern>
+    <pattern id="dots" width="12" height="12" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="1" fill="#f5efe2" fill-opacity="0.06"/>
+    </pattern>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+  <rect width="800" height="600" rx="28" fill="url(#bg)"/>
+  <rect width="800" height="600" rx="28" fill="url(#grid)"/>
+  <rect width="800" height="600" rx="28" fill="url(#gold)"/>
+  <text x="40" y="52" font-family="IBM Plex Mono, monospace" font-size="11" font-weight="600" letter-spacing="2.5" fill="#dda15e">FLEET &amp; CORRIDOR</text>
+  <text x="40" y="94" font-family="Fraunces, Georgia, serif" font-size="34" font-weight="600" fill="#f7f1e5" letter-spacing="-0.7">Routes that hold up.</text>
+  <g transform="translate(40 124)">
+    <rect width="156" height="32" rx="16" fill="#ffffff" fill-opacity="0.055" stroke="#f5efe2" stroke-opacity="0.12"/>
+    <circle cx="18" cy="16" r="4" fill="#b9d88e"/>
+    <text x="30" y="20" font-family="IBM Plex Mono, monospace" font-size="9" letter-spacing="1.1" fill="#d7e4d4">24 VEHICLES LIVE</text>
+  </g>
+  <g transform="translate(40 176)">
+    <rect width="720" height="294" rx="18" fill="#05100c" fill-opacity="0.48" stroke="#f5efe2" stroke-opacity="0.1" filter="url(#shadow)"/>
+    <rect width="720" height="294" rx="18" fill="url(#dots)"/>
+    <g opacity="0.55" fill="none" stroke="#9ecb9d" stroke-width="1">
+      <path d="M-10 210C90 180 130 228 230 196s120-86 214-58 90 74 174 42 80-72 122-86"/>
+      <path d="M-10 250C96 218 136 266 236 234s122-86 214-58 92 74 174 42 82-72 122-86"/>
+      <path d="M-10 168C92 138 132 186 232 154s120-86 214-58 90 74 174 42 80-72 122-86"/>
+    </g>
+    <path d="M88 222C166 204 178 160 262 154s118-64 190-54 100 56 176 30" fill="none" stroke="url(#route)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M88 222C166 204 178 160 262 154s118-64 190-54 100 56 176 30" fill="none" stroke="#f7f1e5" stroke-opacity="0.3" stroke-width="1.2" stroke-dasharray="5 8"/>
+    <g fill="#dda15e">
+      <circle cx="88" cy="222" r="7"/><circle cx="262" cy="154" r="7"/><circle cx="452" cy="100" r="7"/><circle cx="628" cy="130" r="8"/>
+    </g>
+    <g fill="#f7f1e5" fill-opacity="0.07" stroke="#f5efe2" stroke-opacity="0.15">
+      <rect x="50" y="242" width="126" height="36" rx="8"/>
+      <rect x="304" y="72" width="126" height="36" rx="8"/>
+      <rect x="520" y="198" width="150" height="36" rx="8"/>
+    </g>
+    <g font-family="IBM Plex Mono, monospace" fill="#aabbb0">
+      <text x="64" y="258" font-size="8" letter-spacing="1">NAIROBI DC</text>
+      <text x="64" y="271" font-size="12" fill="#f7f1e5">18 loads</text>
+      <text x="318" y="88" font-size="8" letter-spacing="1">ELDORET HUB</text>
+      <text x="318" y="101" font-size="12" fill="#f7f1e5">6 loads</text>
+      <text x="534" y="214" font-size="8" letter-spacing="1">MOMBASA PORT</text>
+      <text x="534" y="227" font-size="12" fill="#f7f1e5">11 loads</text>
+    </g>
+    <g transform="translate(420 190)">
+      <rect width="88" height="58" rx="10" fill="#f7f1e5"/>
+      <text x="12" y="18" font-family="IBM Plex Mono, monospace" font-size="7" letter-spacing="1" fill="#6e6a5f">ON-TIME</text>
+      <text x="12" y="44" font-family="Fraunces, Georgia, serif" font-size="23" font-weight="600" fill="#10231c">91%</text>
+    </g>
+    <g transform="translate(150 70)" fill="#f7f1e5" fill-opacity="0.9">
+      <path d="M0 18h20l8-10h11v10h8v8H39a8 8 0 0 1-16 0H13a6 6 0 0 1-6-6z"/>
+      <circle cx="31" cy="28" r="4" fill="#0a1f18"/>
+      <circle cx="15" cy="28" r="4" fill="#0a1f18"/>
+      <rect x="4" y="6" width="17" height="10" rx="2" fill="#dda15e"/>
+    </g>
+    <g transform="translate(640 56)" fill="#f7f1e5" fill-opacity="0.9">
+      <path d="M0 18h20l8-10h11v10h8v8H39a8 8 0 0 1-16 0H13a6 6 0 0 1-6-6z"/>
+      <circle cx="31" cy="28" r="4" fill="#0a1f18"/>
+      <circle cx="15" cy="28" r="4" fill="#0a1f18"/>
+      <rect x="4" y="6" width="17" height="10" rx="2" fill="#dda15e"/>
+    </g>
+  </g>
+  <g transform="translate(40 492)" font-family="IBM Plex Mono, monospace">
+    <rect width="220" height="64" rx="12" fill="#ffffff" fill-opacity="0.055" stroke="#f5efe2" stroke-opacity="0.11"/>
+    <text x="18" y="24" font-size="8" letter-spacing="1.4" fill="#8fa397">COST / KM</text>
+    <text x="18" y="50" font-size="20" font-weight="600" fill="#f7f1e5">$1.42</text>
+    <text x="100" y="50" font-size="10" fill="#b9d88e">↓ 11%</text>
+    <rect x="240" width="220" height="64" rx="12" fill="#ffffff" fill-opacity="0.055" stroke="#f5efe2" stroke-opacity="0.11"/>
+    <text x="258" y="24" font-size="8" letter-spacing="1.4" fill="#8fa397">EMPTY RUNS</text>
+    <text x="258" y="50" font-size="20" font-weight="600" fill="#f7f1e5">14%</text>
+    <text x="330" y="50" font-size="10" fill="#e8b089">watch</text>
+    <rect x="480" width="280" height="64" rx="12" fill="#dda15e"/>
+    <text x="498" y="24" font-size="8" letter-spacing="1.4" fill="#4c2b0d">NEXT DISPATCH</text>
+    <text x="498" y="50" font-size="20" font-weight="600" fill="#1c1206">06:40 · 8 loads</text>
+  </g>
+</svg>

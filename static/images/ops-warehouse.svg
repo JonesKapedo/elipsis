@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" role="img" aria-labelledby="title desc">
+  <title id="title">Warehouse flow and dock control</title>
+  <desc id="desc">A dark isometric warehouse scene with inbound and outbound lanes, pallet racks and pick-flow markers.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#081711"/>
+      <stop offset="0.6" stop-color="#0c241d"/>
+      <stop offset="1" stop-color="#173f32"/>
+    </linearGradient>
+    <radialGradient id="gold" cx="0.78" cy="0.16" r="0.7">
+      <stop offset="0" stop-color="#dda15e" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#dda15e" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#173d30"/>
+      <stop offset="1" stop-color="#0a1f18"/>
+    </linearGradient>
+    <linearGradient id="rack" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b5b49"/>
+      <stop offset="1" stop-color="#183b2f"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#f5efe2" stroke-opacity="0.05"/>
+    </pattern>
+    <pattern id="dots" width="10" height="10" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="1" fill="#f5efe2" fill-opacity="0.07"/>
+    </pattern>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000000" flood-opacity="0.42"/>
+    </filter>
+  </defs>
+  <rect width="800" height="600" rx="28" fill="url(#bg)"/>
+  <rect width="800" height="600" rx="28" fill="url(#grid)"/>
+  <rect width="800" height="600" rx="28" fill="url(#gold)"/>
+  <text x="40" y="52" font-family="IBM Plex Mono, monospace" font-size="11" font-weight="600" letter-spacing="2.5" fill="#dda15e">WAREHOUSE FLOOR</text>
+  <text x="40" y="94" font-family="Fraunces, Georgia, serif" font-size="34" font-weight="600" fill="#f7f1e5" letter-spacing="-0.7">Every movement, measured.</text>
+  <g transform="translate(40 128)">
+    <rect width="134" height="32" rx="16" fill="#ffffff" fill-opacity="0.06" stroke="#f5efe2" stroke-opacity="0.12"/>
+    <circle cx="18" cy="16" r="4" fill="#b9d88e"/>
+    <text x="30" y="20" font-family="IBM Plex Mono, monospace" font-size="9" letter-spacing="1.2" fill="#d7e4d4">DOCK 04 · LIVE</text>
+  </g>
+  <g transform="translate(0 154)">
+    <path d="M0 178 400 300 800 178V470L400 600 0 470Z" fill="url(#floor)" stroke="#9ecb9d" stroke-opacity="0.14"/>
+    <path d="M400 300 800 178M400 300 0 178M400 300v300" fill="none" stroke="#9ecb9d" stroke-opacity="0.12"/>
+    <rect x="40" y="212" width="200" height="104" rx="6" fill="#06120e" fill-opacity="0.5" stroke="#f5efe2" stroke-opacity="0.08"/>
+    <g transform="translate(56 226)">
+      <rect width="168" height="8" rx="4" fill="#dda15e" fill-opacity="0.8"/>
+      <g stroke="#f5efe2" stroke-opacity="0.14" fill="url(#rack)">
+        <rect x="0" y="20" width="168" height="22" rx="3"/>
+        <rect x="0" y="50" width="168" height="22" rx="3"/>
+      </g>
+      <g fill="#dda15e" fill-opacity="0.75">
+        <rect x="10" y="26" width="26" height="10" rx="2"/>
+        <rect x="46" y="26" width="18" height="10" rx="2"/>
+        <rect x="98" y="56" width="24" height="10" rx="2"/>
+        <rect x="132" y="56" width="18" height="10" rx="2"/>
+      </g>
+    </g>
+    <rect x="278" y="238" width="92" height="58" rx="5" fill="#ffffff" fill-opacity="0.04" stroke="#f5efe2" stroke-opacity="0.1"/>
+    <text x="290" y="266" font-family="IBM Plex Mono, monospace" font-size="8" letter-spacing="1" fill="#8fa397">PICK FACE</text>
+    <text x="290" y="284" font-family="IBM Plex Mono, monospace" font-size="15" font-weight="600" fill="#f7f1e5">A-12</text>
+    <rect x="400" y="206" width="156" height="88" rx="6" fill="#ffffff" fill-opacity="0.035" stroke="#f5efe2" stroke-opacity="0.1"/>
+    <g transform="translate(414 220)" font-family="IBM Plex Mono, monospace">
+      <text font-size="8" letter-spacing="1" fill="#8fa397">STAGING</text>
+      <text y="24" font-size="14" font-weight="600" fill="#f7f1e5">18 pallets</text>
+      <text y="46" font-size="8" fill="#b9d88e">dock-ready · 92%</text>
+    </g>
+    <path d="M214 360C280 340 322 350 380 326s58-52 118-62" fill="none" stroke="#dda15e" stroke-width="3" stroke-linecap="round"/>
+    <path d="M214 360C280 340 322 350 380 326s58-52 118-62" fill="none" stroke="#f7f1e5" stroke-opacity="0.3" stroke-width="1.2" stroke-dasharray="4 7"/>
+    <g fill="#dda15e">
+      <circle cx="214" cy="360" r="5"/><circle cx="380" cy="326" r="5"/><circle cx="498" cy="264" r="6"/>
+    </g>
+    <g transform="translate(520 248)">
+      <rect width="220" height="190" rx="14" fill="#06110d" fill-opacity="0.72" stroke="#f5efe2" stroke-opacity="0.12" filter="url(#shadow)"/>
+      <rect width="220" height="190" rx="14" fill="url(#dots)"/>
+      <text x="18" y="26" font-family="IBM Plex Mono, monospace" font-size="8" letter-spacing="1.4" fill="#8fa397">DOCK TO SHELF</text>
+      <text x="18" y="58" font-family="IBM Plex Mono, monospace" font-size="25" font-weight="600" fill="#f7f1e5">2h 14m</text>
+      <text x="18" y="74" font-family="IBM Plex Sans, Arial, sans-serif" font-size="10" fill="#b9d88e">↓ 38 min vs. baseline</text>
+      <line x1="18" y1="94" x2="202" y2="94" stroke="#f5efe2" stroke-opacity="0.1"/>
+      <text x="18" y="116" font-family="IBM Plex Mono, monospace" font-size="8" letter-spacing="1.4" fill="#8fa397">TOUCHES / UNIT</text>
+      <g transform="translate(18 128)" fill="#f5efe2" fill-opacity="0.14">
+        <rect width="24" height="34" rx="3"/><rect x="32" width="24" height="46" rx="3"/><rect x="64" width="24" height="26" rx="3"/><rect x="96" width="24" height="38" rx="3"/><rect x="128" width="24" height="18" rx="3"/><rect x="160" width="24" height="28" rx="3"/>
+      </g>
+      <g transform="translate(18 128)" fill="#dda15e">
+        <rect width="24" height="20" rx="3"/><rect x="32" height="28" rx="3"/><rect x="64" height="14" rx="3"/><rect x="96" height="22" rx="3"/><rect x="128" height="10" rx="3"/><rect x="160" height="16" rx="3"/>
+      </g>
+    </g>
+  </g>
+</svg>

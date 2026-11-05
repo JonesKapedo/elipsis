@@ -39,6 +39,7 @@
   const collapseBtn = $("#sidebar-collapse");
   const COLLAPSE_KEY = "elipsis_sidebar_collapsed";
   const desktopSidebar = window.matchMedia("(min-width: 961px)");
+  let sidebarHoldTimer = null;
 
   function storedCollapsed() {
     try {
@@ -56,10 +57,26 @@
     }
   }
 
+  function setSidebarHold(hold) {
+    if (!layout || !sidebar) return;
+    if (sidebarHoldTimer) {
+      window.clearTimeout(sidebarHoldTimer);
+      sidebarHoldTimer = null;
+    }
+    layout.classList.toggle("sidebar-hold", hold);
+    sidebar.classList.toggle("sidebar-hold", hold);
+    if (hold) {
+      sidebarHoldTimer = window.setTimeout(() => {
+        if (sidebar && !sidebar.matches(":hover, :focus-within")) setSidebarHold(false);
+      }, 900);
+    }
+  }
+
   function setCollapsed(collapsed, persist) {
     if (!layout) return;
     const active = Boolean(collapsed && desktopSidebar.matches);
     layout.classList.toggle("sidebar-collapsed", active);
+    if (!active) setSidebarHold(false);
     if (collapseBtn) {
       collapseBtn.setAttribute("aria-expanded", active ? "false" : "true");
       collapseBtn.setAttribute("aria-label", active ? "Expand navigation" : "Collapse navigation");
@@ -72,8 +89,14 @@
     collapseBtn.addEventListener("click", () => {
       const next = !(layout && layout.classList.contains("sidebar-collapsed"));
       setCollapsed(next, true);
-      if (next) collapseBtn.blur();
+      if (next) {
+        setSidebarHold(true);
+        collapseBtn.blur();
+      }
     });
+  }
+  if (sidebar) {
+    sidebar.addEventListener("pointerleave", () => setSidebarHold(false));
   }
   setCollapsed(storedCollapsed(), false);
   if (typeof desktopSidebar.addEventListener === "function") {
