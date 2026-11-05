@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import os
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.schema import CreateIndex
 
 from elipsis_api.config import DATABASE_URL
 
@@ -80,6 +81,90 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, futu
 
 class Base(DeclarativeBase):
     """Declarative base for all Elipsis ORM models."""
+
+
+def _default_sql(column) -> str | None:
+    if column.server_default is None:
+        return None
+    arg = column.server_default.arg
+    if isinstance(arg, str):
+        return arg
+    text_sql = getattr(arg, "text", None)
+    return text_sql if text_sql is not None else str(arg)
+
+
+def ensure_schema_compatibility(bind=None) -> list[str]:
+    """Apply additive schema repairs for databases predating newer columns.
+
+    The app creates new tables with ``create_all`` at startup, but that does not
+    add columns to existing tables. Production deployments do not always run
+    Alembic before the web process, so an older database would otherwise break
+    login with ``no such column: users.supabase_id``. Only nullable or
+    defaulted columns are added; destructive changes are left to migrations.
+    """
+    from elipsis_api import models  # noqa: F401  (populate Base.metadata)
+
+    target = bind or engine
+    inspector = inspect(target)
+    preparer = target.dialect.identifier_preparer
+    applied: list[str] = []
+
+    for table in Base.metadata.sorted_tables:
+        if not inspector.has_table(table.name):
+            continue
+        existing = {col["name"] for col in inspector.get_columns(table.name)}
+        table_sql = preparer.format_table(table)
+        for column in table.columns:
+            if column.name in existing:
+                continue
+            default_sql = _default_sql(column)
+            if not column.nullable and default_sql is None:
+                print(
+                    f"[elipsis] schema repair skipped non-nullable "
+                    f"{table.name}.{column.name}",
+                    flush=True,
+                )
+                continue
+            type_sql = column.type.compile(dialect=target.dialect)
+            ddl = (
+                f"ALTER TABLE {table_sql} ADD COLUMN "
+                f"{preparer.quote(column.name)} {type_sql}"
+            )
+            if default_sql is not None:
+                ddl += f" DEFAULT {default_sql}"
+            try:
+                with target.begin() as conn:
+                    conn.execute(text(ddl))
+            except Exception as exc:  # noqa: BLE001
+                print(
+                    f"[elipsis] schema repair failed for "
+                    f"{table.name}.{column.name}: {exc}",
+                    flush=True,
+                )
+                continue
+            existing.add(column.name)
+            applied.append(f"{table.name}.{column.name}")
+
+        index_names = {
+            index["name"] for index in inspector.get_indexes(table.name)
+            if index.get("name")
+        }
+        for index in table.indexes:
+            if not index.name or index.name in index_names:
+                continue
+            try:
+                with target.begin() as conn:
+                    conn.execute(CreateIndex(index))
+            except Exception as exc:  # noqa: BLE001
+                print(
+                    f"[elipsis] schema repair failed for index "
+                    f"{index.name}: {exc}",
+                    flush=True,
+                )
+                continue
+            applied.append(f"index:{index.name}")
+
+    return applied
 
 
 def get_db():

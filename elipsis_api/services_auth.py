@@ -275,9 +275,28 @@ def ensure_supabase_admin(db: Session) -> None:
     if not password:
         return
     user = db.scalar(select(models.User).where(models.User.email == email))
-    if user is None or user.supabase_id:
+    if user is None:
         return
     try:
+        if user.supabase_id:
+            # Keep the break-glass admin usable if the remote password drifted.
+            # Only resync while the local hash still matches ELIPSIS_ADMIN_PASSWORD,
+            # so a password changed in the app is not silently reverted.
+            if not security.verify_password(password, user.password_hash):
+                return
+            remote = supabase_auth.ensure_password(
+                user.email,
+                password,
+                name=user.name,
+                user_type=user.user_type or "admin",
+            )
+            remote_id = str(remote.get("id") or "").strip()
+            if remote_id and remote_id != user.supabase_id:
+                user.supabase_id = remote_id
+                db.commit()
+            print(f"[elipsis] synced {email} to Supabase Auth", flush=True)
+            return
+
         remote = supabase_auth.create_or_link_user(
             user.email,
             password,
@@ -289,7 +308,7 @@ def ensure_supabase_admin(db: Session) -> None:
         print(f"[elipsis] linked {email} to Supabase Auth", flush=True)
     except Exception as exc:  # noqa: BLE001
         db.rollback()
-        print(f"[elipsis] Supabase admin link failed: {exc}", flush=True)
+        print(f"[elipsis] Supabase admin sync failed: {exc}", flush=True)
 
 
 def create_session(db: Session, user_id: int) -> str:
