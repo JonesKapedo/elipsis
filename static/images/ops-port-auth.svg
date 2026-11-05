@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="700" viewBox="0 0 1400 700" role="img" aria-labelledby="title desc">
+  <title id="title">Port and corridor operations</title>
+  <desc id="desc">A dark editorial view of a container port with gantry cranes, stacked containers and movement signals.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#06110e"/>
+      <stop offset="0.55" stop-color="#0b241c"/>
+      <stop offset="1" stop-color="#081812"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.72" cy="0.18" r="0.5">
+      <stop offset="0" stop-color="#e6b978" stop-opacity="0.34"/>
+      <stop offset="0.45" stop-color="#dda15e" stop-opacity="0.1"/>
+      <stop offset="1" stop-color="#dda15e" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#123a30"/>
+      <stop offset="1" stop-color="#071712"/>
+    </linearGradient>
+    <linearGradient id="crane" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d7a55a"/>
+      <stop offset="1" stop-color="#9c652f"/>
+    </linearGradient>
+    <pattern id="grid" width="56" height="56" patternUnits="userSpaceOnUse">
+      <path d="M56 0H0V56" fill="none" stroke="#f5efe2" stroke-opacity="0.04"/>
+    </pattern>
+    <pattern id="dots" width="12" height="12" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="1" fill="#f5efe2" fill-opacity="0.05"/>
+    </pattern>
+    <filter id="blur"><feGaussianBlur stdDeviation="18"/></filter>
+  </defs>
+  <rect width="1400" height="700" fill="url(#sky)"/>
+  <rect width="1400" height="700" fill="url(#grid)"/>
+  <rect width="1400" height="700" fill="url(#sun)"/>
+  <circle cx="1040" cy="150" r="110" fill="#e5b774" fill-opacity="0.07" filter="url(#blur)"/>
+  <g opacity="0.32" fill="none" stroke="#9ecb9d" stroke-width="1">
+    <path d="M-20 470C210 430 330 500 520 444s320-120 520-50 300 100 390 66"/>
+    <path d="M-30 500C200 458 340 528 530 472s320-118 520-48 300 100 390 66"/>
+  </g>
+  <g transform="translate(780 0)" opacity="0.5">
+    <rect x="0" y="300" width="18" height="260" fill="#1f4b3c"/>
+    <rect x="52" y="240" width="300" height="14" fill="url(#crane)"/>
+    <rect x="76" y="240" width="10" height="110" fill="#b78242"/>
+    <rect x="330" y="240" width="10" height="170" fill="#b78242"/>
+    <rect x="92" y="352" width="42" height="18" fill="#dda15e"/>
+    <path d="M113 370v38" stroke="#dda15e" stroke-width="2"/>
+    <rect x="96" y="406" width="38" height="26" rx="2" fill="#2a5a48"/>
+  </g>
+  <g transform="translate(1130 0)" opacity="0.3">
+    <rect x="0" y="320" width="16" height="240" fill="#1f4b3c"/>
+    <rect x="44" y="270" width="250" height="12" fill="#b78242"/>
+    <rect x="62" y="270" width="9" height="100" fill="#9c652f"/>
+    <rect x="270" y="270" width="9" height="140" fill="#9c652f"/>
+    <rect x="76" y="370" width="36" height="16" fill="#c99750"/>
+  </g>
+  <path d="M0 566C220 548 360 566 520 552s280-20 430-8 250 30 450 12v144H0Z" fill="url(#water)"/>
+  <g stroke="#f5efe2" stroke-opacity="0.08">
+    <path d="M0 608C240 590 360 610 540 596s300-12 460-2 260 20 400 8" fill="none"/>
+    <path d="M0 642C250 626 380 646 560 632s300-10 450 0 260 16 390 6" fill="none"/>
+  </g>
+  <g transform="translate(640 500)">
+    <path d="M0 46 70 22h330l84 24-40 26H44Z" fill="#173f32" stroke="#f5efe2" stroke-opacity="0.1"/>
+    <rect x="62" y="18" width="310" height="12" rx="4" fill="#2c5f4c"/>
+    <g fill="#dda15e">
+      <rect x="88" y="0" width="26" height="18" rx="2"/><rect x="120" y="0" width="26" height="18" rx="2"/><rect x="152" y="0" width="26" height="18" rx="2"/><rect x="184" y="0" width="26" height="18" rx="2"/><rect x="216" y="0" width="26" height="18" rx="2"/>
+    </g>
+    <g fill="#b9d88e" fill-opacity="0.8">
+      <rect x="248" y="0" width="26" height="18" rx="2"/><rect x="280" y="0" width="26" height="18" rx="2"/><rect x="312" y="0" width="26" height="18" rx="2"/>
+    </g>
+    <rect x="118" y="44" width="44" height="18" rx="3" fill="#e9ddc9" fill-opacity="0.86"/>
+    <rect x="258" y="44" width="44" height="18" rx="3" fill="#e9ddc9" fill-opacity="0.86"/>
+  </g>
+  <g transform="translate(112 506)">
+    <rect x="0" y="0" width="48" height="30" rx="3" fill="#b78242"/>
+    <rect x="54" y="0" width="48" height="30" rx="3" fill="#2e6652"/>
+    <rect x="108" y="0" width="48" height="30" rx="3" fill="#dda15e"/>
+    <rect x="0" y="-36" width="48" height="30" rx="3" fill="#2e6652"/>
+    <rect x="54" y="-36" width="48" height="30" rx="3" fill="#dda15e"/>
+    <rect x="108" y="-36" width="48" height="30" rx="3" fill="#b78242"/>
+    <rect x="0" y="-72" width="48" height="30" rx="3" fill="#dda15e"/>
+    <rect x="54" y="-72" width="48" height="30" rx="3" fill="#b78242"/>
+    <rect x="108" y="-72" width="48" height="30" rx="3" fill="#2e6652"/>
+  </g>
+  <g transform="translate(56 56)">
+    <text font-family="IBM Plex Mono, monospace" font-size="12" font-weight="600" letter-spacing="3.2" fill="#dda15e">PORT TO SHELF</text>
+    <text y="64" font-family="Fraunces, Georgia, serif" font-size="58" font-weight="600" fill="#f7f1e5" letter-spacing="-1.9">One corridor.</text>
+    <text y="124" font-family="Fraunces, Georgia, serif" font-size="58" font-weight="600" fill="#c9ddc6" letter-spacing="-1.9">No blind spots.</text>
+    <text y="170" font-family="IBM Plex Sans, Arial, sans-serif" font-size="15" fill="#9fb2a6">Port, warehouse and fleet signals reconciled into a single operating view.</text>
+  </g>
+  <rect width="1400" height="700" fill="url(#dots)"/>
+  <rect x="0.5" y="0.5" width="1399" height="699" rx="30" fill="none" stroke="#f5efe2" stroke-opacity="0.08"/>
+</svg>

@@ -1,0 +1,2242 @@
+/* ==========================================================================
+   Elipsis Atelier — final visual layer
+   Mineral green, bone paper, copper signal. Loaded last on purpose.
+   ========================================================================== */
+
+:root {
+  --font-display: "Fraunces", "IBM Plex Serif", Georgia, serif;
+  --atlas-forest: #0b2b22;
+  --atlas-forest-deep: #071712;
+  --atlas-copper: #ad6a34;
+  --atlas-brass: #dda15e;
+  --atlas-bone: #f1ecdf;
+  --atlas-sage: #b9d88e;
+  --atlas-sidebar-accent: #dda15e;
+}
+
+:root,
+body.marketing,
+html[data-theme="light"] body.app-shell {
+  --brand-primary: #ad6a34;
+  --brand-primary-light: #cf9355;
+  --brand-primary-dark: #7f4620;
+  --brand-primary-soft: rgba(173, 106, 52, 0.12);
+  --brand-primary-soft-light: rgba(207, 147, 85, 0.16);
+  --ink: #14241e;
+  --ink-2: #31453b;
+  --muted: #65766c;
+  --muted-2: #84938a;
+  --line: #ded5c3;
+  --line-strong: #c9bfaa;
+  --surface: #fbf7ed;
+  --canvas: #f0eadb;
+  --canvas-2: #f6f1e5;
+  --paper: #ece5d5;
+  --panel: #fbf7ed;
+  --panel2: #f6f1e5;
+  --asphalt: #0b1f18;
+  --asphalt-2: #10291f;
+  --asphalt-3: #17382b;
+  --navy: #0b1f18;
+  --navy-2: #10291f;
+  --navy-3: #17382b;
+  --amber: #ad6a34;
+  --amber-ink: #fff8ed;
+  --amber-soft: rgba(173, 106, 52, 0.12);
+  --blue: #2d6a78;
+  --green: #2e7455;
+  --green-soft: rgba(46, 116, 85, 0.12);
+  --red: #a74238;
+  --red-soft: rgba(167, 66, 56, 0.12);
+  --orange: #b5732c;
+  --orange-soft: rgba(181, 115, 44, 0.13);
+  --gold: #ad6a34;
+  --gold-deep: #7f4620;
+  --field-bg: #fbf7ed;
+  --field-border: #c9bfaa;
+  --field-focus: rgba(173, 106, 52, 0.16);
+  --grad: linear-gradient(135deg, #ad6a34, #cf9355);
+  --shadow: 0 18px 40px -24px rgba(20, 36, 30, 0.28);
+  --shadow-sm: 0 8px 22px -16px rgba(20, 36, 30, 0.24);
+  --atlas-grid: rgba(20, 36, 30, 0.045);
+  --atlas-glow: rgba(173, 106, 52, 0.13);
+  --atlas-topbar: rgba(248, 244, 233, 0.88);
+  --atlas-sidebar-bg: #071712;
+  --atlas-panel-line: rgba(241, 236, 223, 0.12);
+  --atlas-panel-ink: #f5f0e4;
+  --atlas-panel-muted: #9eb1a5;
+}
+
+html[data-theme="dark"],
+html[data-theme="dark"] body.app-shell {
+  --brand-primary: #dda15e;
+  --brand-primary-light: #f0c68a;
+  --brand-primary-dark: #b87c38;
+  --brand-primary-soft: rgba(221, 161, 94, 0.14);
+  --brand-primary-soft-light: rgba(240, 198, 138, 0.18);
+  --ink: #f2eee3;
+  --ink-2: #c3d0c8;
+  --muted: #91a89b;
+  --muted-2: #70877b;
+  --line: #223b32;
+  --line-strong: #325447;
+  --surface: #0f211b;
+  --canvas: #071712;
+  --canvas-2: #0a1b16;
+  --paper: #071712;
+  --panel: #0f211b;
+  --panel2: #0a1b16;
+  --asphalt: #06120e;
+  --asphalt-2: #0b1f18;
+  --asphalt-3: #112d24;
+  --navy: #06120e;
+  --navy-2: #0b1f18;
+  --navy-3: #112d24;
+  --amber: #dda15e;
+  --amber-ink: #1c1206;
+  --amber-soft: rgba(221, 161, 94, 0.14);
+  --blue: #7db4c0;
+  --green: #88c79d;
+  --green-soft: rgba(136, 199, 157, 0.14);
+  --red: #e38d81;
+  --red-soft: rgba(227, 141, 129, 0.14);
+  --orange: #e3ad69;
+  --orange-soft: rgba(227, 173, 105, 0.14);
+  --gold: #dda15e;
+  --gold-deep: #b87c38;
+  --field-bg: #0b1f18;
+  --field-border: #325447;
+  --field-focus: rgba(221, 161, 94, 0.18);
+  --grad: linear-gradient(135deg, #dda15e, #f0c68a);
+  --shadow: 0 24px 60px -32px rgba(0, 0, 0, 0.8);
+  --shadow-sm: 0 12px 32px -22px rgba(0, 0, 0, 0.7);
+  --atlas-grid: rgba(241, 236, 223, 0.035);
+  --atlas-glow: rgba(221, 161, 94, 0.14);
+  --atlas-topbar: rgba(7, 23, 18, 0.84);
+  --atlas-panel-line: rgba(241, 236, 223, 0.1);
+}
+
+/* ---- Global type -------------------------------------------------------- */
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body.marketing h1,
+body.marketing h2,
+body.app-shell .app-content h1,
+body.app-shell .app-content h2,
+.auth-story h1,
+.auth-pitch h1,
+.auth-panel h2,
+.auth-card h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+
+body.marketing h1,
+body.marketing h2 {
+  color: var(--ink);
+}
+
+body.app-shell .app-content h1,
+body.app-shell .app-content h2,
+body.app-shell .app-content h3,
+body.app-shell .app-content h4,
+body.app-shell .app-content strong,
+body.app-shell .app-content b {
+  color: var(--ink) !important;
+}
+
+body.app-shell .app-content p,
+body.app-shell .app-content li,
+body.app-shell .app-content label,
+body.app-shell .app-content td,
+body.app-shell .app-content th {
+  color: var(--ink-2) !important;
+}
+
+body.app-shell .app-content .muted,
+body.app-shell .app-content .lede,
+body.app-shell .app-content .kpi-lb,
+body.app-shell .app-content .small,
+body.app-shell .app-content .eyebrow {
+  color: var(--muted) !important;
+}
+
+body.app-shell .app-content .eyebrow {
+  font: 600 10px/1.2 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* ---- Backgrounds -------------------------------------------------------- */
+body.marketing {
+  background-color: var(--canvas) !important;
+  background-image:
+    radial-gradient(900px 540px at 85% -8%, rgba(173, 106, 52, 0.12), transparent 62%),
+    linear-gradient(to right, var(--atlas-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--atlas-grid) 1px, transparent 1px);
+  background-size: auto, 76px 76px, 76px 76px;
+  color: var(--ink);
+}
+
+body.app-shell,
+html[data-theme="light"] body.app-shell,
+html[data-theme="dark"] body.app-shell {
+  background: var(--canvas) !important;
+  color: var(--ink) !important;
+}
+
+body.app-shell .app-main,
+html[data-theme="light"] body.app-shell .app-main,
+html[data-theme="dark"] body.app-shell .app-main {
+  background-color: var(--canvas) !important;
+  background-image:
+    radial-gradient(900px 520px at 76% -10%, var(--atlas-glow), transparent 64%),
+    linear-gradient(to right, var(--atlas-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--atlas-grid) 1px, transparent 1px) !important;
+  background-size: auto, 72px 72px, 72px 72px !important;
+  color: var(--ink) !important;
+}
+
+body.app-shell .app-content {
+  max-width: 1280px;
+  padding: 34px clamp(22px, 4vw, 56px) 92px;
+  margin: 0 auto;
+}
+
+/* ---- Shared buttons ----------------------------------------------------- */
+body .btn {
+  border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+}
+
+body .btn:hover {
+  transform: translateY(-1px);
+}
+
+body .btn.primary,
+body .btn-primary {
+  background: var(--amber) !important;
+  border-color: var(--amber) !important;
+  color: var(--amber-ink) !important;
+  box-shadow: 0 10px 24px -16px rgba(173, 106, 52, 0.8);
+}
+
+body .btn.primary:hover,
+body .btn-primary:hover {
+  background: var(--brand-primary-light) !important;
+  border-color: var(--brand-primary-light) !important;
+}
+
+body.app-shell .btn {
+  background: var(--amber) !important;
+  border-color: var(--amber) !important;
+  color: var(--amber-ink) !important;
+}
+
+body.app-shell .btn.ghost,
+body.app-shell .btn.secondary,
+body.app-shell .btn-tertiary {
+  background: transparent !important;
+  border-color: var(--line-strong) !important;
+  color: var(--ink) !important;
+}
+
+body.app-shell .btn.ghost:hover,
+body.app-shell .btn.secondary:hover {
+  background: var(--canvas-2) !important;
+  border-color: var(--amber) !important;
+}
+
+body.app-shell .btn.ghost.sm {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 11px;
+}
+
+/* ---- Public shell ------------------------------------------------------- */
+body.marketing .mk-header,
+body.marketing .pub-header {
+  background: rgba(247, 243, 234, 0.9) !important;
+  border-bottom: 1px solid rgba(20, 36, 30, 0.1) !important;
+  backdrop-filter: blur(16px);
+}
+
+body.marketing .mk-header-inner {
+  max-width: 1220px;
+  min-height: 74px;
+}
+
+body.marketing .mk-nav a {
+  color: #41554a;
+  font-weight: 500;
+}
+
+body.marketing .mk-nav a:hover,
+body.marketing .mk-nav a[aria-current="page"] {
+  color: #14241e;
+}
+
+body.marketing .mk-brand img,
+body.marketing .pub-header img {
+  height: 38px;
+  width: auto;
+}
+
+body.marketing .mk-nav .signin {
+  border-left: 1px solid rgba(20, 36, 30, 0.12);
+  padding-left: 18px;
+}
+
+body.marketing .mk-footer,
+body.marketing .pub-footer {
+  margin-top: 64px;
+  padding: 54px 0 32px;
+  background: #071712 !important;
+  border-top: 1px solid rgba(241, 236, 223, 0.08) !important;
+  color: #a8b9ae !important;
+  background-image:
+    radial-gradient(700px 320px at 16% 0%, rgba(221, 161, 94, 0.12), transparent 70%),
+    linear-gradient(to right, rgba(241, 236, 223, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(241, 236, 223, 0.035) 1px, transparent 1px);
+  background-size: auto, 72px 72px, 72px 72px;
+}
+
+body.marketing .mk-footer-inner {
+  max-width: 1220px;
+  gap: 34px;
+}
+
+body.marketing .mk-footer-brand p {
+  color: #9db0a4 !important;
+}
+
+body.marketing .mk-footer-nav a {
+  color: #b9c8be !important;
+}
+
+body.marketing .mk-footer-nav a:hover {
+  color: #f0c68a !important;
+}
+
+body.marketing .mk-footer-note {
+  color: #8ea397 !important;
+  border-top-color: rgba(241, 236, 223, 0.12) !important;
+}
+
+/* ---- Marketing hero ----------------------------------------------------- */
+body.marketing .mk-hero {
+  position: relative;
+  margin-top: 30px;
+  padding: clamp(34px, 5vw, 64px);
+  border: 1px solid rgba(241, 236, 223, 0.1);
+  border-radius: 28px;
+  background-color: #071712;
+  background-image:
+    radial-gradient(760px 460px at 88% 12%, rgba(221, 161, 94, 0.24), transparent 64%),
+    radial-gradient(600px 420px at 2% 100%, rgba(136, 199, 157, 0.12), transparent 66%),
+    linear-gradient(132deg, #071712 0%, #0b241c 52%, #123a2d 100%);
+  box-shadow: 0 46px 100px -60px rgba(7, 23, 18, 0.85);
+  overflow: hidden;
+}
+
+body.marketing .mk-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(241, 236, 223, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(241, 236, 223, 0.045) 1px, transparent 1px);
+  background-size: 58px 58px;
+  mask-image: radial-gradient(600px 520px at 20% 30%, #000, transparent 78%);
+}
+
+body.marketing .mk-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+body.marketing .mk-hero h1 {
+  max-width: 760px;
+  margin-top: 12px;
+  color: #f7f1e5 !important;
+  font-size: clamp(3rem, 5.4vw, 5.4rem);
+  line-height: 0.98;
+  letter-spacing: -0.05em;
+}
+
+body.marketing .mk-hero .lede {
+  max-width: 62ch;
+  margin-top: 22px;
+  color: #b9c8be !important;
+  font-size: clamp(1rem, 1.25vw, 1.14rem);
+  line-height: 1.7;
+}
+
+body.marketing .mk-eyebrow {
+  color: var(--amber) !important;
+  font: 600 10px/1.2 var(--font-mono);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+body.marketing .mk-hero .mk-eyebrow {
+  color: #f0c68a !important;
+}
+
+body.marketing .mk-hero .mk-trust {
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(241, 236, 223, 0.14);
+  color: #9fb2a6 !important;
+}
+
+body.marketing .mk-hero .mk-trust svg {
+  color: #b9d88e;
+}
+
+body.marketing .mk-hero .btn.secondary {
+  background: rgba(241, 236, 223, 0.06) !important;
+  border-color: rgba(241, 236, 223, 0.24) !important;
+  color: #f7f1e5 !important;
+}
+
+body.marketing .mk-hero .btn.secondary:hover {
+  background: rgba(241, 236, 223, 0.12) !important;
+  border-color: #dda15e !important;
+}
+
+body.marketing .mk-hero .mk-product {
+  border-color: rgba(241, 236, 223, 0.12);
+  background: #f6f1e5;
+  box-shadow: 0 44px 90px -46px rgba(0, 0, 0, 0.82);
+}
+
+body.marketing .mk-product-top {
+  background: #0b1f18;
+  border-bottom-color: rgba(241, 236, 223, 0.14);
+  color: #b9c8be;
+}
+
+body.marketing .mk-product-top .addr {
+  color: #b9c8be;
+}
+
+body.marketing .mk-mini {
+  background: #f6f1e5;
+}
+
+body.marketing .mk-mini-side {
+  background: #0b1f18;
+}
+
+body.marketing .mk-mini-brand {
+  color: #f7f1e5;
+}
+
+body.marketing .mk-mini-nav span,
+body.marketing .mk-mini-nav span i {
+  color: #a8b9ae;
+}
+
+body.marketing .mk-mini-nav span.active {
+  color: #f0c68a;
+  background: rgba(221, 161, 94, 0.12);
+}
+
+body.marketing .mk-mini-head,
+body.marketing .mk-mini-panel h5,
+body.marketing .mk-mini-row {
+  color: #14241e;
+}
+
+body.marketing .mk-mini-head span {
+  color: #7f4620;
+}
+
+body.marketing .mk-mini-strip > div,
+body.marketing .mk-mini-panel {
+  background: #fbf7ed;
+  border-color: #ded5c3;
+}
+
+body.marketing .mk-mini-strip span,
+body.marketing .mk-mini-lane span {
+  color: #65766c;
+}
+
+body.marketing .mk-mini-strip b,
+body.marketing .mk-mini-lane b {
+  color: #14241e;
+}
+
+/* ---- Stats + visual band ------------------------------------------------ */
+body.marketing .mk-stats {
+  margin: 24px 0 0;
+  border: 0;
+  border-bottom: 1px solid rgba(20, 36, 30, 0.14);
+  background: transparent;
+}
+
+body.marketing .mk-stat {
+  padding: 22px 20px;
+  border-left: 1px solid rgba(20, 36, 30, 0.12);
+}
+
+body.marketing .mk-stat:first-child {
+  border-left: 0;
+}
+
+body.marketing .mk-stat b {
+  color: #7f4620;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 3vw, 2.8rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+body.marketing .mk-stat span {
+  color: #65766c;
+  font: 600 10px/1.35 var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+body.marketing .mk-visuals {
+  margin-top: 42px;
+}
+
+body.marketing .mk-visual-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 12px 52px;
+  align-items: end;
+  margin-bottom: 20px;
+}
+
+body.marketing .mk-visual-intro .mk-eyebrow {
+  grid-column: 1 / -1;
+  margin-bottom: 2px;
+}
+
+body.marketing .mk-visual-intro h2 {
+  margin: 0;
+  font-size: clamp(2rem, 3.4vw, 3.1rem);
+  line-height: 1.02;
+}
+
+body.marketing .mk-visual-intro p:last-child {
+  max-width: 52ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+body.marketing .mk-visual-grid {
+  display: grid;
+  grid-template-columns: 1.38fr 0.62fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 14px;
+}
+
+body.marketing .mk-visual-card {
+  position: relative;
+  margin: 0;
+  min-height: 0;
+  border: 1px solid rgba(20, 36, 30, 0.14);
+  border-radius: 18px;
+  background: #071712;
+  overflow: hidden;
+  box-shadow: 0 24px 56px -42px rgba(7, 23, 18, 0.7);
+}
+
+body.marketing .mk-visual-card img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+body.marketing .mk-visual-card:hover img {
+  transform: scale(1.025);
+}
+
+body.marketing .mk-visual-command {
+  grid-row: span 2;
+}
+
+body.marketing .mk-visual-command img {
+  min-height: 410px;
+}
+
+body.marketing .mk-visual-card figcaption {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 44px 20px 18px;
+  background: linear-gradient(to top, rgba(4, 14, 10, 0.96), rgba(4, 14, 10, 0));
+  color: #f7f1e5;
+}
+
+body.marketing .mk-visual-card figcaption span {
+  display: block;
+  margin-bottom: 5px;
+  color: #f0c68a;
+  font: 600 9px/1.2 var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+body.marketing .mk-visual-card figcaption strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+body.marketing .mk-visual-card figcaption p {
+  max-width: 44ch;
+  margin: 4px 0 0;
+  color: #a8b9ae;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+body.marketing .mk-visual-command figcaption strong {
+  font-size: 28px;
+}
+
+/* ---- Marketing sections ------------------------------------------------- */
+body.marketing .mk-section {
+  margin-top: 64px;
+}
+
+body.marketing .mk-section-head {
+  max-width: 760px;
+  margin-bottom: 28px;
+}
+
+body.marketing .mk-section-head h2 {
+  margin-top: 10px;
+  font-size: clamp(2rem, 3.4vw, 3.15rem);
+  line-height: 1.03;
+}
+
+body.marketing .mk-section-head .section-lede {
+  max-width: 64ch;
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+body.marketing .mk-cards,
+body.marketing .mk-workflow,
+body.marketing .mk-pricing {
+  gap: 14px;
+}
+
+body.marketing .mk-card,
+body.marketing .mk-step,
+body.marketing .mk-price {
+  background: rgba(251, 247, 237, 0.72);
+  border: 1px solid rgba(20, 36, 30, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 18px 44px -38px rgba(20, 36, 30, 0.36);
+  backdrop-filter: blur(8px);
+}
+
+body.marketing .mk-card {
+  padding: 26px 24px;
+}
+
+body.marketing .mk-card:hover,
+body.marketing .mk-step:hover,
+body.marketing .mk-price:hover {
+  border-color: rgba(173, 106, 52, 0.5);
+  box-shadow: 0 26px 54px -40px rgba(20, 36, 30, 0.42);
+  transform: translateY(-2px);
+}
+
+body.marketing .card-num,
+body.marketing .step-n,
+body.marketing .price-label {
+  color: #7f4620 !important;
+  font: 600 9px/1.2 var(--font-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+body.marketing .mk-card h3,
+body.marketing .mk-step h3 {
+  margin-top: 12px;
+  color: #14241e;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+body.marketing .mk-card p,
+body.marketing .mk-step p {
+  color: #65766c;
+  font-size: 13.5px;
+  line-height: 1.65;
+}
+
+body.marketing .mk-workflow::before {
+  background: rgba(20, 36, 30, 0.14);
+}
+
+body.marketing .mk-step {
+  padding: 24px 22px;
+}
+
+body.marketing .mk-step::after {
+  background: var(--amber);
+}
+
+body.marketing .mk-report {
+  padding: clamp(28px, 4vw, 52px);
+  border-radius: 22px;
+  background-color: #071712;
+  background-image:
+    linear-gradient(100deg, rgba(7, 23, 18, 0.97) 0%, rgba(7, 23, 18, 0.88) 52%, rgba(7, 23, 18, 0.54) 100%),
+    url("/static/images/ops-port.svg");
+  background-size: cover, cover;
+  background-position: center, 70% 38%;
+  border: 1px solid rgba(241, 236, 223, 0.1);
+  box-shadow: 0 44px 90px -60px rgba(7, 23, 18, 0.9);
+}
+
+body.marketing .mk-report h2 {
+  color: #f7f1e5 !important;
+  font-size: clamp(2rem, 3.2vw, 3rem);
+  line-height: 1.03;
+}
+
+body.marketing .mk-report p {
+  color: #b9c8be;
+}
+
+body.marketing .mk-report .mk-eyebrow {
+  color: #f0c68a !important;
+}
+
+body.marketing .mk-report .btn {
+  background: #dda15e !important;
+  border-color: #dda15e !important;
+  color: #1c1206 !important;
+}
+
+body.marketing .mk-report-card {
+  background: rgba(251, 247, 237, 0.94);
+  border-color: rgba(241, 236, 223, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+body.marketing .mk-report-card,
+body.marketing .mk-report-card b,
+body.marketing .rc-top b {
+  color: #14241e;
+}
+
+body.marketing .mk-report-card span,
+body.marketing .rc-row span {
+  color: #65766c;
+}
+
+body.marketing .rc-row {
+  border-top-color: rgba(20, 36, 30, 0.12);
+}
+
+body.marketing .mk-price.featured {
+  background: #0b1f18;
+  border-color: rgba(221, 161, 94, 0.5);
+}
+
+body.marketing .mk-price.featured h3,
+body.marketing .mk-price.featured .price-label {
+  color: #f0c68a !important;
+}
+
+body.marketing .mk-price.featured .price-note,
+body.marketing .mk-price.featured li,
+body.marketing .mk-price.featured .mk-price-proof {
+  color: #b9c8be !important;
+}
+
+body.marketing .mk-price.featured li::before {
+  color: #b9d88e;
+}
+
+body.marketing .mk-price h3 {
+  color: #14241e;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+body.marketing .mk-price li {
+  color: #31453b;
+}
+
+body.marketing .mk-price li::before {
+  color: #2e7455;
+}
+
+body.marketing .mk-price .btn.secondary {
+  border-color: rgba(20, 36, 30, 0.2);
+  color: #14241e;
+}
+
+body.marketing .mk-price.featured .btn {
+  background: #dda15e !important;
+  border-color: #dda15e !important;
+  color: #1c1206 !important;
+}
+
+body.marketing .mk-price-note {
+  color: #65766c;
+}
+
+body.marketing .mk-cta {
+  margin-top: 70px;
+  padding: clamp(38px, 5vw, 66px);
+  border-radius: 24px;
+  background-color: #071712;
+  background-image:
+    radial-gradient(620px 360px at 84% 0%, rgba(221, 161, 94, 0.22), transparent 68%),
+    linear-gradient(120deg, #071712, #0c2a20 58%, #124234);
+  border: 1px solid rgba(241, 236, 223, 0.1);
+}
+
+body.marketing .mk-cta h2 {
+  max-width: 760px;
+  color: #f7f1e5 !important;
+  font-size: clamp(2rem, 3.6vw, 3.4rem);
+  line-height: 1.02;
+}
+
+body.marketing .mk-cta .btn.secondary {
+  background: rgba(241, 236, 223, 0.06) !important;
+  border-color: rgba(241, 236, 223, 0.24) !important;
+  color: #f7f1e5 !important;
+}
+
+body.marketing .table {
+  background: rgba(251, 247, 237, 0.7);
+  border-color: rgba(20, 36, 30, 0.14);
+}
+
+body.marketing .table th {
+  background: #0b1f18;
+  color: #f0c68a;
+  border-color: rgba(241, 236, 223, 0.12);
+}
+
+body.marketing .table td {
+  border-top-color: rgba(20, 36, 30, 0.1);
+  color: #31453b;
+}
+
+/* ---- App sidebar -------------------------------------------------------- */
+body.app-shell .app-sidebar,
+html[data-theme="light"] body.app-shell .app-sidebar,
+html[data-theme="dark"] body.app-shell .app-sidebar {
+  background-color: var(--atlas-sidebar-bg) !important;
+  background-image:
+    radial-gradient(460px 340px at 50% 0%, rgba(221, 161, 94, 0.16), transparent 74%),
+    linear-gradient(to bottom, #071712, #091d17 58%, #071410) !important;
+  border-right: 1px solid rgba(241, 236, 223, 0.09) !important;
+  box-shadow: 24px 0 70px -50px rgba(0, 0, 0, 0.72);
+  color: #f5f0e4 !important;
+}
+
+body.app-shell .sidebar-brand {
+  min-height: 74px;
+  padding: 0 16px !important;
+  border-bottom: 1px solid rgba(241, 236, 223, 0.09);
+}
+
+body.app-shell .brand-img-light {
+  filter: none;
+  opacity: 1;
+}
+
+body.app-shell .sidebar-nav {
+  padding: 16px 12px !important;
+}
+
+body.app-shell .nav-group {
+  margin-bottom: 18px;
+}
+
+body.app-shell .nav-group-label {
+  padding: 0 10px 7px !important;
+  color: #6f877a !important;
+  font: 600 9px/1.2 var(--font-mono) !important;
+  letter-spacing: 0.18em !important;
+  text-transform: uppercase;
+}
+
+body.app-shell .nav-item,
+html[data-theme="light"] body.app-shell .nav-item,
+html[data-theme="dark"] body.app-shell .nav-item {
+  min-height: 39px;
+  border-radius: 8px;
+  color: #b9c8be !important;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+body.app-shell .nav-item .icon {
+  color: #7f9789;
+}
+
+body.app-shell .nav-item:hover,
+html[data-theme="light"] body.app-shell .nav-item:hover,
+html[data-theme="dark"] body.app-shell .nav-item:hover {
+  background: rgba(241, 236, 223, 0.07) !important;
+  color: #f7f1e5 !important;
+}
+
+body.app-shell .nav-item.active,
+html[data-theme="light"] body.app-shell .nav-item.active,
+html[data-theme="dark"] body.app-shell .nav-item.active {
+  background: rgba(221, 161, 94, 0.12) !important;
+  color: #f7f1e5 !important;
+  box-shadow: inset 2px 0 0 #dda15e;
+}
+
+body.app-shell .nav-item.active .icon {
+  color: #f0c68a;
+}
+
+body.app-shell .nav-badge {
+  background: #dda15e !important;
+  color: #1c1206 !important;
+  font-weight: 600;
+}
+
+body.app-shell .nav-danger,
+body.app-shell .nav-danger .icon {
+  color: #e38d81 !important;
+}
+
+body.app-shell .sidebar-collapse {
+  width: 30px !important;
+  height: 30px !important;
+  border: 1px solid rgba(241, 236, 223, 0.16) !important;
+  border-radius: 7px !important;
+  background: rgba(241, 236, 223, 0.06) !important;
+  color: #d9e4dc !important;
+}
+
+body.app-shell .sidebar-collapse:hover {
+  background: rgba(221, 161, 94, 0.16) !important;
+  border-color: rgba(221, 161, 94, 0.5) !important;
+  color: #f0c68a !important;
+}
+
+body.app-shell .sidebar-user {
+  border-top: 1px solid rgba(241, 236, 223, 0.09);
+  background: rgba(0, 0, 0, 0.16);
+}
+
+body.app-shell .user-avatar {
+  background: linear-gradient(145deg, #dda15e, #a96832) !important;
+  color: #1c1206 !important;
+  font-weight: 700;
+}
+
+body.app-shell .user-meta strong {
+  color: #f7f1e5 !important;
+}
+
+body.app-shell .user-meta span {
+  color: #7f9789 !important;
+}
+
+body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:is(:not(:hover):not(:focus-within), .sidebar-hold) .nav-group + .nav-group {
+  border-top-color: rgba(241, 236, 223, 0.1) !important;
+}
+
+/* ---- App topbar + headline ---------------------------------------------- */
+body.app-shell .app-topbar,
+html[data-theme="dark"] body.app-shell .app-topbar,
+html[data-theme="light"] body.app-shell .app-topbar {
+  background: var(--atlas-topbar) !important;
+  border-bottom: 1px solid var(--line) !important;
+  backdrop-filter: blur(18px);
+  color: var(--ink) !important;
+}
+
+body.app-shell .org-switch,
+body.app-shell .sidebar-toggle,
+html[data-theme="dark"] body.app-shell .org-switch,
+html[data-theme="dark"] body.app-shell .sidebar-toggle {
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  color: var(--ink) !important;
+  border-radius: 8px;
+}
+
+body.app-shell .org-switch:hover,
+body.app-shell .sidebar-toggle:hover {
+  border-color: var(--amber) !important;
+}
+
+body.app-shell .dash-hero,
+body.app-shell .assess-head {
+  position: relative;
+  padding: 8px 0 30px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+body.app-shell .dash-hero::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: -24px;
+  width: min(420px, 44vw);
+  height: 230px;
+  background: url("/static/images/ops-fleet.svg") center right / contain no-repeat;
+  opacity: 0.22;
+  pointer-events: none;
+  mask-image: linear-gradient(90deg, transparent, #000 34%);
+}
+
+body.app-shell .dash-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+body.app-shell .dash-hero h1,
+body.app-shell .head h1,
+body.app-shell .assess-head h1 {
+  margin-top: 9px;
+  color: var(--ink) !important;
+  font-size: clamp(2.55rem, 4.4vw, 4.5rem);
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+}
+
+body.app-shell .dash-hero .lede,
+body.app-shell .head .lede,
+body.app-shell .assess-head .lede {
+  max-width: 72ch;
+  margin-top: 13px;
+  color: var(--muted) !important;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+body.app-shell .hero-actions .btn {
+  box-shadow: 0 14px 34px -24px rgba(173, 106, 52, 0.85);
+}
+
+/* ---- App cards and dashboard blocks ------------------------------------- */
+body.app-shell .company-strip {
+  overflow: visible;
+  gap: 10px;
+  background: transparent !important;
+  border: 0 !important;
+  margin-bottom: 18px;
+}
+
+body.app-shell .company-strip > div,
+body.app-shell .company-strip > div:first-child {
+  border: 1px solid var(--line) !important;
+  border-left: 2px solid rgba(173, 106, 52, 0.5) !important;
+  border-radius: 9px;
+  background: var(--surface) !important;
+  padding: 12px 14px;
+}
+
+body.app-shell .company-strip span {
+  color: var(--muted) !important;
+}
+
+body.app-shell .company-strip strong {
+  color: var(--ink) !important;
+  font-weight: 600;
+}
+
+body.app-shell .journey-strip {
+  gap: 12px;
+}
+
+body.app-shell .journey-card {
+  padding: 17px 18px;
+  border-radius: 12px;
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: var(--shadow-sm);
+}
+
+body.app-shell .journey-card:hover {
+  border-color: rgba(173, 106, 52, 0.48) !important;
+}
+
+body.app-shell .journey-card .eyebrow {
+  color: var(--muted) !important;
+}
+
+body.app-shell .journey-card strong {
+  color: var(--ink) !important;
+  font-size: 14px;
+}
+
+body.app-shell .journey-next {
+  color: var(--amber) !important;
+}
+
+body.app-shell .onboard-card,
+html[data-theme="dark"] body.app-shell .onboard-card,
+html[data-theme="light"] body.app-shell .onboard-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(241, 236, 223, 0.12) !important;
+  border-radius: 18px;
+  background-color: #071712 !important;
+  background-image:
+    linear-gradient(100deg, rgba(7, 23, 18, 0.97) 0%, rgba(7, 23, 18, 0.9) 50%, rgba(7, 23, 18, 0.65) 100%),
+    url("/static/images/ops-command.svg") !important;
+  background-size: cover, cover !important;
+  background-position: center, 82% 42% !important;
+  color: #f7f1e5 !important;
+  padding: 30px !important;
+  box-shadow: 0 34px 72px -54px rgba(0, 0, 0, 0.9);
+}
+
+body.app-shell .onboard-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(7, 23, 18, 0.3), transparent 64%);
+  pointer-events: none;
+}
+
+body.app-shell .onboard-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+body.app-shell .onboard-card .eyebrow {
+  color: #f0c68a !important;
+}
+
+body.app-shell .onboard-card h2 {
+  color: #f7f1e5 !important;
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 2.8vw, 2.4rem) !important;
+  line-height: 1.08;
+  letter-spacing: -0.04em !important;
+}
+
+body.app-shell .onboard-card .muted {
+  color: #b9c8be !important;
+}
+
+body.app-shell .onboard-card .btn {
+  background: #dda15e !important;
+  border-color: #dda15e !important;
+  color: #1c1206 !important;
+}
+
+body.app-shell .onboard-card .btn.ghost {
+  background: rgba(241, 236, 223, 0.06) !important;
+  border-color: rgba(241, 236, 223, 0.22) !important;
+  color: #f7f1e5 !important;
+}
+
+body.app-shell .onboard-steps li,
+html[data-theme="dark"] body.app-shell .onboard-steps li {
+  background: rgba(241, 236, 223, 0.055) !important;
+  border: 1px solid rgba(241, 236, 223, 0.13) !important;
+  border-radius: 9px;
+}
+
+body.app-shell .onboard-steps li.done {
+  background: rgba(136, 199, 157, 0.12) !important;
+  border-color: rgba(136, 199, 157, 0.34) !important;
+}
+
+body.app-shell .onboard-steps strong {
+  color: #f7f1e5 !important;
+}
+
+body.app-shell .onboard-steps small {
+  color: #a8b9ae !important;
+}
+
+body.app-shell .onboard-num,
+html[data-theme="dark"] body.app-shell .onboard-num {
+  background: rgba(7, 23, 18, 0.7) !important;
+  border: 1px solid rgba(221, 161, 94, 0.4) !important;
+  color: #f0c68a !important;
+}
+
+body.app-shell .kpis,
+body.app-shell .assess-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  overflow: visible;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+body.app-shell .kpi,
+body.app-shell .assess-kpi,
+body.app-shell .kpi:first-child {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line) !important;
+  border-radius: 13px;
+  background: var(--surface) !important;
+  padding: 17px 18px 16px !important;
+  box-shadow: var(--shadow-sm);
+}
+
+body.app-shell .kpi::before,
+body.app-shell .assess-kpi::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--amber), transparent 72%);
+  opacity: 0.75;
+}
+
+body.app-shell .kpi b,
+body.app-shell .assess-kpi b {
+  margin-top: 9px;
+  color: var(--ink) !important;
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+body.app-shell .kpi.accent b,
+body.app-shell .assess-kpi.accent b {
+  color: var(--amber) !important;
+}
+
+body.app-shell .kpi span,
+body.app-shell .assess-kpi span {
+  color: var(--muted) !important;
+  font: 600 9px/1.3 var(--font-mono) !important;
+  letter-spacing: 0.13em !important;
+  text-transform: uppercase;
+}
+
+body.app-shell .block,
+body.app-shell .pcard,
+body.app-shell .card,
+body.app-shell .settings-section,
+body.app-shell .settings-account-card,
+body.app-shell .settings-rail,
+html[data-theme="dark"] body.app-shell .block,
+html[data-theme="dark"] body.app-shell .pcard,
+html[data-theme="dark"] body.app-shell .card,
+html[data-theme="dark"] body.app-shell .settings-section,
+html[data-theme="dark"] body.app-shell .settings-account-card,
+html[data-theme="dark"] body.app-shell .settings-rail {
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  padding: 20px;
+}
+
+body.app-shell .block-head {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+body.app-shell .pcard h4,
+body.app-shell .pcard strong {
+  color: var(--ink) !important;
+}
+
+body.app-shell .pcard p,
+body.app-shell .pcard-w {
+  color: var(--muted) !important;
+}
+
+body.app-shell .model-panel,
+html[data-theme="light"] body.app-shell .model-panel,
+html[data-theme="dark"] body.app-shell .model-panel {
+  background-color: #071712 !important;
+  background-image:
+    radial-gradient(620px 300px at 88% 0%, rgba(221, 161, 94, 0.16), transparent 70%),
+    linear-gradient(125deg, #071712, #0b241c 60%, #123a2d) !important;
+  border: 1px solid rgba(241, 236, 223, 0.12) !important;
+  border-radius: 16px;
+  color: #f7f1e5 !important;
+  box-shadow: 0 30px 68px -54px rgba(0, 0, 0, 0.9);
+}
+
+body.app-shell .model-panel h3,
+html[data-theme="light"] body.app-shell .model-panel h3 {
+  color: #f7f1e5 !important;
+  font-family: var(--font-display);
+  font-size: 24px !important;
+  letter-spacing: -0.03em;
+}
+
+body.app-shell .model-panel > p,
+html[data-theme="light"] body.app-shell .model-panel > p {
+  color: #b9c8be !important;
+}
+
+body.app-shell .model-panel > p strong,
+html[data-theme="light"] body.app-shell .model-panel > p strong {
+  color: #f0c68a !important;
+}
+
+body.app-shell .model-card,
+html[data-theme="light"] body.app-shell .model-card,
+html[data-theme="dark"] body.app-shell .model-card {
+  background: rgba(241, 236, 223, 0.055) !important;
+  border: 1px solid rgba(241, 236, 223, 0.13) !important;
+  border-radius: 9px;
+}
+
+body.app-shell .model-card strong,
+html[data-theme="light"] body.app-shell .model-card strong {
+  color: #f0c68a !important;
+}
+
+body.app-shell .model-card span,
+html[data-theme="light"] body.app-shell .model-card span {
+  color: #a8b9ae !important;
+}
+
+body.app-shell .block h3 {
+  color: var(--ink) !important;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+body.app-shell .block h3::before {
+  content: "";
+  display: inline-block;
+  width: 18px;
+  height: 2px;
+  margin-right: 8px;
+  vertical-align: middle;
+  background: var(--amber);
+}
+
+body.app-shell .lane-grid {
+  gap: 10px;
+}
+
+body.app-shell .lane-card,
+html[data-theme="dark"] body.app-shell .lane-card {
+  background: var(--canvas-2) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+body.app-shell .lane-card:hover {
+  border-color: rgba(173, 106, 52, 0.5) !important;
+}
+
+body.app-shell .lane-card.is-weak,
+html[data-theme="dark"] body.app-shell .lane-card.is-weak {
+  background: var(--amber-soft) !important;
+  border-color: rgba(173, 106, 52, 0.4) !important;
+  box-shadow: inset 2px 0 0 var(--amber);
+}
+
+body.app-shell .lane-top strong {
+  color: var(--ink) !important;
+}
+
+body.app-shell .lane-score {
+  color: var(--ink) !important;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+body.app-shell .lane-card.is-weak .lane-score {
+  color: var(--amber) !important;
+}
+
+body.app-shell .lane-card p,
+body.app-shell .lane-reading {
+  color: var(--muted) !important;
+}
+
+body.app-shell .ops-metric {
+  background: var(--canvas-2) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 11px;
+}
+
+body.app-shell .ops-metric b {
+  color: var(--ink) !important;
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+body.app-shell .stat-card,
+body.app-shell .chart-card,
+body.app-shell .click-card,
+body.app-shell .empty-state,
+body.app-shell .premium-note {
+  background: var(--canvas-2) !important;
+  border-color: var(--line) !important;
+  border-radius: 10px;
+}
+
+body.app-shell .stat-card b {
+  color: var(--ink) !important;
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+body.app-shell .table {
+  border-color: var(--line) !important;
+}
+
+body.app-shell .table th {
+  background: var(--canvas-2) !important;
+  color: var(--muted) !important;
+  border-color: var(--line) !important;
+}
+
+body.app-shell .table td {
+  border-top-color: var(--line) !important;
+}
+
+body.app-shell .table tr:hover td {
+  background: rgba(173, 106, 52, 0.055) !important;
+}
+
+body.app-shell input,
+body.app-shell select,
+body.app-shell textarea,
+html[data-theme="dark"] body.app-shell input,
+html[data-theme="dark"] body.app-shell select,
+html[data-theme="dark"] body.app-shell textarea {
+  background: var(--field-bg) !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--field-border) !important;
+  border-radius: 8px;
+}
+
+body.app-shell input:focus,
+body.app-shell select:focus,
+body.app-shell textarea:focus {
+  border-color: var(--amber) !important;
+  box-shadow: 0 0 0 3px var(--field-focus) !important;
+  outline: none;
+}
+
+body.app-shell .action-menu-panel {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+  box-shadow: 0 28px 60px -34px rgba(0, 0, 0, 0.5);
+}
+
+body.app-shell .action-menu-panel a {
+  color: var(--ink-2) !important;
+}
+
+body.app-shell .action-menu-panel a:hover {
+  background: var(--canvas-2) !important;
+  color: var(--ink) !important;
+}
+
+body.app-shell .attention a,
+body.app-shell .action-list li {
+  border-color: var(--line) !important;
+}
+
+body.app-shell .pill,
+body.app-shell .tag {
+  border-radius: 5px;
+  background: var(--canvas-2) !important;
+  color: var(--ink-2) !important;
+  font: 600 9px/1 var(--font-mono);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+body.app-shell .pill.ok,
+body.app-shell .tag.ok {
+  background: var(--green-soft) !important;
+  color: var(--green) !important;
+}
+
+body.app-shell .pill.warn,
+body.app-shell .tag.warn {
+  background: var(--amber-soft) !important;
+  color: var(--amber) !important;
+}
+
+body.app-shell .pill.err,
+body.app-shell .tag.err {
+  background: var(--red-soft) !important;
+  color: var(--red) !important;
+}
+
+body.app-shell .progress-track,
+body.app-shell .progress {
+  background: var(--canvas-2) !important;
+  border-radius: 999px;
+}
+
+body.app-shell .progress-track span,
+body.app-shell .progress i {
+  background: linear-gradient(90deg, var(--amber), var(--brand-primary-light)) !important;
+  border-radius: 999px;
+}
+
+/* ---- Auth --------------------------------------------------------------- */
+body.page-auth,
+body.page-auth .auth-login,
+body.page-auth .auth {
+  background: #f1ecdf !important;
+}
+
+body.page-auth .auth-story,
+body.page-auth .auth-pitch {
+  position: relative;
+  background-color: #071712 !important;
+  background-image:
+    linear-gradient(100deg, rgba(7, 23, 18, 0.97) 0%, rgba(7, 23, 18, 0.84) 58%, rgba(7, 23, 18, 0.42) 100%),
+    url("/static/images/ops-port-auth.svg") !important;
+  background-size: cover, cover !important;
+  background-position: center, 66% 42% !important;
+  color: #f7f1e5 !important;
+}
+
+body.page-auth .auth-story-copy h1,
+body.page-auth .auth-pitch h1 {
+  color: #f7f1e5 !important;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+}
+
+body.page-auth .auth-story-copy .lede,
+body.page-auth .auth-pitch .lede {
+  color: #b9c8be !important;
+}
+
+body.page-auth .auth-story-copy .eyebrow,
+body.page-auth .auth-pitch .eyebrow,
+body.page-auth .auth-panel-head .eyebrow {
+  color: #f0c68a !important;
+}
+
+body.page-auth .auth-lane-card {
+  background: rgba(241, 236, 223, 0.06) !important;
+  border-color: rgba(241, 236, 223, 0.14) !important;
+  border-radius: 14px;
+  backdrop-filter: blur(12px);
+}
+
+body.page-auth .auth-panel,
+body.page-auth .auth-card {
+  background: #f1ecdf !important;
+}
+
+body.page-auth .auth-panel-inner,
+body.page-auth .auth-card-pro {
+  background: #fbf7ed !important;
+  border: 1px solid #ded5c3 !important;
+  border-radius: 18px;
+  box-shadow: 0 30px 70px -42px rgba(20, 36, 30, 0.4);
+}
+
+body.page-auth .auth-panel-head h2,
+body.page-auth .auth-card-head h2 {
+  color: #14241e !important;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+
+body.page-auth .auth-panel-head p,
+body.page-auth .auth-card-head p {
+  color: #65766c !important;
+}
+
+body.page-auth .auth-panel .auth-divider {
+  color: #84938a !important;
+}
+
+body.page-auth .auth-panel .auth-divider::before,
+body.page-auth .auth-panel .auth-divider::after {
+  background: #ded5c3 !important;
+}
+
+body.page-auth .auth-panel input,
+body.page-auth .auth-card input {
+  background: #fbf7ed !important;
+  border-color: #c9bfaa !important;
+  color: #14241e !important;
+}
+
+body.page-auth .auth-panel .btn.big,
+body.page-auth .auth-card .btn.big {
+  background: #ad6a34 !important;
+  border-color: #ad6a34 !important;
+  color: #fff8ed !important;
+}
+
+body.page-auth .auth-panel .btn.ghost,
+body.page-auth .auth-card .btn.ghost {
+  background: transparent !important;
+  border-color: #c9bfaa !important;
+  color: #14241e !important;
+}
+
+body.page-auth .auth-panel-brand strong,
+body.page-auth .auth-card-brand strong {
+  color: #14241e !important;
+}
+
+body.page-auth .auth-panel-brand span,
+body.page-auth .auth-card-brand span {
+  color: #65766c !important;
+}
+
+body.page-auth .auth-panel-note,
+body.page-auth .auth-card-head p a {
+  color: #65766c !important;
+}
+
+body.page-auth .auth-panel-note a,
+body.page-auth .auth-card-head p a:hover {
+  color: #ad6a34 !important;
+}
+
+/* ---- Residual dark-blue cleanup ----------------------------------------- */
+
+/* Match the late operations skin without letting its navy fields return. */
+html[data-theme] body.app-shell input:not([type="checkbox"]):not([type="radio"]),
+html[data-theme] body.app-shell select,
+html[data-theme] body.app-shell textarea {
+  background: var(--field-bg) !important;
+  color: var(--ink) !important;
+  border-color: var(--field-border) !important;
+}
+
+html[data-theme] body.app-shell input:not([type="checkbox"]):not([type="radio"]):focus,
+html[data-theme] body.app-shell select:focus,
+html[data-theme] body.app-shell textarea:focus {
+  border-color: var(--amber) !important;
+  box-shadow: 0 0 0 3px var(--field-focus) !important;
+}
+
+body.app-shell input[type="checkbox"],
+body.app-shell input[type="radio"] {
+  accent-color: var(--amber) !important;
+}
+
+body.app-shell .kpi,
+body.app-shell .stat-card,
+body.app-shell .empty-state,
+body.app-shell .step-card,
+html[data-theme] body.app-shell .kpi,
+html[data-theme] body.app-shell .stat-card,
+html[data-theme] body.app-shell .empty-state,
+html[data-theme] body.app-shell .step-card {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+}
+
+body.app-shell .kpi.accent,
+body.app-shell .stat-card.ok,
+body.app-shell .stat-card.warn,
+body.app-shell .stat-card.danger {
+  background: var(--canvas-2) !important;
+}
+
+body.app-shell .ops-onboard,
+html[data-theme] body.app-shell .ops-onboard {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+}
+
+body.app-shell .ops-sample,
+html[data-theme] body.app-shell .ops-sample {
+  background: var(--canvas-2) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-theme] body.app-shell table td,
+html[data-theme] body.app-shell .table td,
+html[data-theme] body.app-shell .data-table td {
+  background: transparent !important;
+}
+
+html[data-theme] body.app-shell .table tr:hover td,
+html[data-theme] body.app-shell .data-table tr:hover td {
+  background: rgba(173, 106, 52, 0.055) !important;
+}
+
+body.app-shell .settings-shell .settings-nav,
+html[data-theme] body.app-shell .settings-shell .settings-nav {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+}
+
+body.app-shell .settings-shell .settings-nav a,
+html[data-theme] body.app-shell .settings-shell .settings-nav a {
+  color: var(--muted) !important;
+}
+
+body.app-shell .settings-shell .settings-nav a span,
+html[data-theme] body.app-shell .settings-shell .settings-nav a span {
+  color: var(--muted-2) !important;
+}
+
+body.app-shell .settings-shell .settings-nav a:hover {
+  background: var(--canvas-2) !important;
+  color: var(--ink) !important;
+}
+
+body.app-shell .settings-shell .settings-nav a.active,
+body.app-shell .settings-shell .settings-nav a[aria-current="page"] {
+  background: var(--canvas-2) !important;
+  color: var(--amber) !important;
+  box-shadow: inset 2px 0 0 var(--amber);
+}
+
+body.app-shell .settings-num,
+html[data-theme] body.app-shell .settings-num {
+  background: var(--canvas-2) !important;
+  border-color: var(--line-strong) !important;
+  color: var(--amber) !important;
+}
+
+body.app-shell .theme-option,
+html[data-theme] body.app-shell .theme-option {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  background: var(--canvas-2) !important;
+  border-color: var(--line) !important;
+  color: var(--ink) !important;
+}
+
+body.app-shell .theme-option:hover {
+  border-color: var(--line-strong) !important;
+}
+
+body.app-shell .theme-option:has(input:checked),
+body.app-shell .theme-option.is-active {
+  background: var(--surface) !important;
+  border-color: var(--amber) !important;
+  box-shadow: inset 0 0 0 1px var(--amber);
+}
+
+body.app-shell .theme-option strong {
+  color: var(--ink) !important;
+}
+
+body.app-shell .theme-option span {
+  color: var(--muted) !important;
+}
+
+body.app-shell .theme-mini {
+  width: 100%;
+  height: 44px;
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+body.app-shell .theme-mini .theme-mini-side {
+  background: #0b1f19 !important;
+}
+
+body.app-shell .theme-mini .theme-mini-main {
+  background: #f1ecdf !important;
+}
+
+body.app-shell .theme-mini.dark .theme-mini-side {
+  background: #020a08 !important;
+}
+
+body.app-shell .theme-mini.dark .theme-mini-main {
+  background: #0f211b !important;
+}
+
+body.app-shell .theme-mini.system {
+  background: linear-gradient(90deg, #f1ecdf 50%, #0f211b 50%) !important;
+}
+
+body.app-shell .theme-mini.system .theme-mini-side,
+body.app-shell .theme-mini.system .theme-mini-main {
+  background: transparent !important;
+}
+
+body.app-shell .settings-details,
+html[data-theme] body.app-shell .settings-details {
+  background: var(--canvas-2) !important;
+  border: 1px solid var(--line) !important;
+}
+
+body.app-shell .settings-details summary,
+html[data-theme] body.app-shell .settings-details summary {
+  background: var(--canvas-2) !important;
+  color: var(--ink) !important;
+}
+
+body.app-shell .settings-details form {
+  border-top-color: var(--line) !important;
+}
+
+body.app-shell .settings-savebar,
+html[data-theme] body.app-shell .settings-savebar {
+  background: var(--surface) !important;
+  border: 1px solid var(--line-strong) !important;
+  box-shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.55);
+}
+
+body.app-shell .switch-track {
+  background: var(--canvas-2) !important;
+  border-color: var(--line-strong) !important;
+}
+
+body.app-shell .switch-track::after {
+  background: var(--muted) !important;
+}
+
+body.app-shell .switch input:checked + .switch-track {
+  background: var(--amber) !important;
+  border-color: var(--amber) !important;
+}
+
+body.app-shell .switch input:checked + .switch-track::after {
+  background: var(--amber-ink) !important;
+}
+
+body.app-shell .field-note {
+  color: var(--muted-2) !important;
+}
+
+body.app-shell .color-field code {
+  color: var(--muted) !important;
+}
+
+/* ---- Typography after the late blue skins ------------------------------- */
+
+html[data-theme] body.app-shell .app-content {
+  color: var(--ink-2) !important;
+}
+
+html[data-theme] body.app-shell .app-content h1,
+html[data-theme] body.app-shell .app-content h2,
+html[data-theme] body.app-shell .app-content h3,
+html[data-theme] body.app-shell .app-content h4,
+html[data-theme] body.app-shell .app-content strong,
+html[data-theme] body.app-shell .app-content b {
+  color: var(--ink) !important;
+}
+
+html[data-theme] body.app-shell .app-content p,
+html[data-theme] body.app-shell .app-content li,
+html[data-theme] body.app-shell .app-content label,
+html[data-theme] body.app-shell .app-content td {
+  color: var(--ink-2) !important;
+}
+
+html[data-theme] body.app-shell .app-content .muted,
+html[data-theme] body.app-shell .app-content .lede,
+html[data-theme] body.app-shell .app-content .section-lede,
+html[data-theme] body.app-shell .app-content .price-note,
+html[data-theme] body.app-shell .app-content .eyebrow,
+html[data-theme] body.app-shell .app-content .kpi-lb,
+html[data-theme] body.app-shell .app-content .pcard-w,
+html[data-theme] body.app-shell .app-content .small {
+  color: var(--muted) !important;
+}
+
+html[data-theme] body.app-shell .app-content th,
+html[data-theme] body.app-shell table th,
+html[data-theme] body.app-shell .table th,
+html[data-theme] body.app-shell .data-table th {
+  background: var(--canvas-2) !important;
+  color: var(--muted) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-theme] body.app-shell .app-content .block,
+html[data-theme] body.app-shell .app-content .pcard,
+html[data-theme] body.app-shell .app-content .kpi,
+html[data-theme] body.app-shell .app-content .stat-card,
+html[data-theme] body.app-shell .app-content .chart-card,
+html[data-theme] body.app-shell .app-content .click-card,
+html[data-theme] body.app-shell .app-content .empty-state,
+html[data-theme] body.app-shell .app-content .premium-note,
+html[data-theme] body.app-shell .app-content .settings-section,
+html[data-theme] body.app-shell .app-content .settings-account-card,
+html[data-theme] body.app-shell .app-content .settings-rail {
+  color: var(--ink-2) !important;
+}
+
+html[data-theme] body.app-shell .app-content .tag,
+html[data-theme] body.app-shell .app-content .pill,
+html[data-theme] body.app-shell .app-content .nav-badge,
+html[data-theme] body.app-shell .app-content .nav-note {
+  background: var(--canvas-2) !important;
+  color: var(--ink-2) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-theme] body.app-shell .app-content .tag.ok,
+html[data-theme] body.app-shell .app-content .pill.ok {
+  background: var(--green-soft) !important;
+  color: var(--green) !important;
+  border-color: color-mix(in srgb, var(--green) 34%, transparent) !important;
+}
+
+html[data-theme] body.app-shell .app-content .tag.warn,
+html[data-theme] body.app-shell .app-content .pill.warn {
+  background: var(--amber-soft) !important;
+  color: var(--amber) !important;
+  border-color: color-mix(in srgb, var(--amber) 34%, transparent) !important;
+}
+
+html[data-theme] body.app-shell .app-content .tag.err,
+html[data-theme] body.app-shell .app-content .tag.risk,
+html[data-theme] body.app-shell .app-content .pill.err {
+  background: var(--red-soft) !important;
+  color: var(--red) !important;
+  border-color: color-mix(in srgb, var(--red) 34%, transparent) !important;
+}
+
+html[data-theme] body.app-shell .app-content .premium-tag {
+  background: var(--amber-soft) !important;
+  color: var(--amber) !important;
+  border-color: color-mix(in srgb, var(--amber) 34%, transparent) !important;
+}
+
+html[data-theme] body.app-shell .app-content .flash.ok {
+  background: var(--green-soft) !important;
+  border-color: color-mix(in srgb, var(--green) 34%, transparent) !important;
+  color: var(--green) !important;
+}
+
+html[data-theme] body.app-shell .app-content .flash.err {
+  background: var(--red-soft) !important;
+  border-color: color-mix(in srgb, var(--red) 34%, transparent) !important;
+  color: var(--red) !important;
+}
+
+html[data-theme] body.app-shell .btn.ghost,
+html[data-theme] body.app-shell .btn.secondary {
+  background: transparent !important;
+  color: var(--ink) !important;
+  border-color: var(--line-strong) !important;
+}
+
+html[data-theme] body.app-shell .btn.ghost:hover,
+html[data-theme] body.app-shell .btn.secondary:hover {
+  background: var(--canvas-2) !important;
+  color: var(--ink) !important;
+  border-color: var(--amber) !important;
+}
+
+html[data-theme] body.app-shell .app-content code {
+  background: var(--canvas-2) !important;
+  color: var(--ink-2) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-theme] body.app-shell .user-meta strong {
+  color: #f7f1e5 !important;
+}
+
+html[data-theme] body.app-shell .user-meta span {
+  color: #a8b9ae !important;
+}
+
+html[data-theme] body.app-shell .workspace-tabs .tab {
+  color: var(--muted) !important;
+}
+
+html[data-theme] body.app-shell .workspace-tabs .tab:hover {
+  color: var(--ink) !important;
+}
+
+html[data-theme] body.app-shell .workspace-tabs .tab[aria-current="page"] {
+  color: var(--amber) !important;
+  border-bottom-color: var(--amber) !important;
+}
+
+html[data-theme] body.app-shell .workspace-tabs .count {
+  background: var(--canvas-2) !important;
+  border-color: var(--line) !important;
+  color: var(--ink-2) !important;
+}
+
+html[data-theme] body.app-shell .app-content .step-card {
+  color: var(--ink-2) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-theme] body.app-shell .app-content table td,
+html[data-theme] body.app-shell .app-content .table td,
+html[data-theme] body.app-shell .app-content .data-table td {
+  border-color: var(--line) !important;
+}
+
+html[data-theme] body.app-shell .app-content .settings-nav {
+  color: var(--ink-2) !important;
+}
+
+body.app-shell .company-monogram {
+  background: var(--canvas-2) !important;
+  border-color: var(--line-strong) !important;
+  color: var(--amber) !important;
+}
+
+body.app-shell .company-subline span + span::before,
+body.app-shell .company-toolbar-links a,
+body.app-shell .pulse-block span,
+body.app-shell .pulse-block strong small {
+  color: var(--muted) !important;
+}
+
+body.app-shell .pulse-block em {
+  color: var(--amber) !important;
+}
+
+body.app-shell .pulse-block.strong em {
+  color: var(--green) !important;
+}
+
+body.app-shell .pulse-block.risk em {
+  color: var(--red) !important;
+}
+
+/* Panels that stay dark in both themes need to keep their own ink. */
+html[data-theme] body.app-shell .app-content .model-panel {
+  color: #f7f1e5 !important;
+}
+
+html[data-theme] body.app-shell .app-content .model-panel h3 {
+  color: #f7f1e5 !important;
+}
+
+html[data-theme] body.app-shell .app-content .model-panel > p {
+  color: #b9c8be !important;
+}
+
+html[data-theme] body.app-shell .app-content .model-panel > p strong,
+html[data-theme] body.app-shell .app-content .model-card strong {
+  color: #f0c68a !important;
+}
+
+html[data-theme] body.app-shell .app-content .model-card span {
+  color: #a8b9ae !important;
+}
+
+html[data-theme] body.app-shell .app-content .onboard-card {
+  color: #f7f1e5 !important;
+}
+
+html[data-theme] body.app-shell .app-content .onboard-card h2 {
+  color: #f7f1e5 !important;
+}
+
+html[data-theme] body.app-shell .app-content .onboard-card .eyebrow {
+  color: #f0c68a !important;
+}
+
+html[data-theme] body.app-shell .app-content .onboard-card .muted {
+  color: #b9c8be !important;
+}
+
+html[data-theme] body.app-shell .app-content .onboard-card .onboard-steps strong {
+  color: #f7f1e5 !important;
+}
+
+html[data-theme] body.app-shell .app-content .onboard-card .onboard-steps small {
+  color: #a8b9ae !important;
+}
+
+html[data-theme] body.app-shell .app-content .onboard-card .btn.ghost {
+  background: rgba(241, 236, 223, 0.06) !important;
+  border-color: rgba(241, 236, 223, 0.22) !important;
+  color: #f7f1e5 !important;
+}
+
+/* ---- Responsive --------------------------------------------------------- */
+@media (max-width: 1080px) {
+  body.marketing .mk-visual-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+  }
+  body.marketing .mk-visual-command {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+  body.marketing .mk-visual-command img {
+    min-height: 340px;
+  }
+}
+
+@media (max-width: 900px) {
+  body.marketing .mk-hero {
+    border-radius: 22px;
+    padding: 32px 24px;
+  }
+  body.marketing .mk-hero h1 {
+    font-size: clamp(2.6rem, 9vw, 4.2rem);
+  }
+  body.marketing .mk-visual-intro {
+    grid-template-columns: 1fr;
+  }
+  body.marketing .mk-visual-intro h2 {
+    font-size: clamp(2rem, 8vw, 3rem);
+  }
+  body.marketing .mk-visual-grid {
+    grid-template-columns: 1fr;
+  }
+  body.marketing .mk-visual-command {
+    grid-column: auto;
+  }
+  body.marketing .mk-visual-card img,
+  body.marketing .mk-visual-command img {
+    min-height: 260px;
+  }
+  body.marketing .mk-stat {
+    border-left: 0;
+    border-top: 1px solid rgba(20, 36, 30, 0.12);
+  }
+  body.marketing .mk-stat:first-child {
+    border-top: 0;
+  }
+  body.app-shell .dash-hero::after {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  body.app-shell .app-content {
+    padding: 24px 18px 70px;
+  }
+  body.app-shell .kpis,
+  body.app-shell .assess-kpis {
+    grid-template-columns: 1fr 1fr;
+  }
+  body.app-shell .dash-hero h1,
+  body.app-shell .head h1,
+  body.app-shell .assess-head h1 {
+    font-size: clamp(2.2rem, 11vw, 3.2rem);
+  }
+  body.app-shell .onboard-card {
+    padding: 22px !important;
+  }
+  body.marketing .mk-footer-inner {
+    gap: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body .btn,
+  body.marketing .mk-visual-card img {
+    transition: none;
+  }
+}
+
+/* ---- Ops/report surfaces that shipped as light paper ---------------------- */
+@media screen {
+  body.app-shell .lane-card,
+  body.app-shell .lane-card.is-weak,
+  body.app-shell .ops-metric,
+  body.app-shell .ops-loop-grid a,
+  body.app-shell .ops-loop-grid > div,
+  body.app-shell .ops-incident,
+  body.app-shell .ops-api-card,
+  body.app-shell .ops-sample,
+  body.app-shell .assess-kpi,
+  body.app-shell .assess-steps article,
+  body.app-shell .assess-constraint,
+  body.app-shell .assess-empty,
+  body.app-shell .premium-note,
+  body.app-shell .date-chip,
+  body.app-shell .member-chip,
+  body.app-shell .desk-item,
+  body.app-shell .team-card,
+  body.app-shell .invite-facts div,
+  body.app-shell .note-card,
+  body.app-shell .room-callout,
+  body.app-shell .room-lock,
+  body.app-shell .brief-sheet {
+    background: var(--surface) !important;
+    border-color: var(--line) !important;
+    color: var(--ink-2) !important;
+  }
+
+  body.app-shell .ops-chip {
+    background: var(--canvas-2) !important;
+    border-color: var(--line) !important;
+    color: var(--ink-2) !important;
+  }
+
+  body.app-shell .ops-chip.is-on {
+    background: var(--amber) !important;
+    border-color: var(--amber) !important;
+    color: #10241e !important;
+  }
+
+  body.app-shell .ops-api-card p,
+  body.app-shell .ops-api-card code,
+  body.app-shell .ops-loop-grid small,
+  body.app-shell .note-card p {
+    color: var(--ink-2) !important;
+  }
+
+  body.app-shell .assess-meter,
+  body.app-shell .member-chip i {
+    background: var(--canvas-2) !important;
+  }
+
+  body.app-shell .pulse-ring::before {
+    background: var(--surface) !important;
+  }
+}
+
+body.app-shell .ops-code {
+  background: var(--canvas) !important;
+  border-color: var(--line) !important;
+  color: var(--ink) !important;
+}
+
+body.app-shell .ops-code code {
+  background: transparent !important;
+  color: var(--ink) !important;
+}

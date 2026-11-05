@@ -511,8 +511,8 @@ body.app-shell .sidebar-mark-img { width: 30px; height: 30px; display: block; }
   body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar {
     width: 84px;
   }
-  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:hover,
-  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:focus-within {
+  body.app-shell .app-layout.app.sidebar-collapsed:not(.sidebar-hold) .app-sidebar:hover,
+  body.app-shell .app-layout.app.sidebar-collapsed:not(.sidebar-hold) .app-sidebar:focus-within {
     width: 244px;
     box-shadow: 18px 0 40px -28px rgba(0, 0, 0, 0.72);
   }
@@ -520,30 +520,30 @@ body.app-shell .sidebar-mark-img { width: 30px; height: 30px; display: block; }
     transform: rotate(-90deg);
   }
 
-  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .sidebar-brand {
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:is(:not(:hover):not(:focus-within), .sidebar-hold) .sidebar-brand {
     justify-content: space-between;
     padding: 0 10px;
   }
-  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .brand-lockup {
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:is(:not(:hover):not(:focus-within), .sidebar-hold) .brand-lockup {
     display: none;
   }
-  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .sidebar-mark {
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:is(:not(:hover):not(:focus-within), .sidebar-hold) .sidebar-mark {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     flex: none;
   }
-  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .nav-group-label {
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:is(:not(:hover):not(:focus-within), .sidebar-hold) .nav-group-label {
     display: none;
   }
-  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .nav-group {
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:is(:not(:hover):not(:focus-within), .sidebar-hold) .nav-group {
     margin-bottom: 10px;
   }
-  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .nav-group + .nav-group {
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:is(:not(:hover):not(:focus-within), .sidebar-hold) .nav-group + .nav-group {
     padding-top: 10px;
     border-top: 1px solid #152237;
   }
-  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .nav-item {
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:is(:not(:hover):not(:focus-within), .sidebar-hold) .nav-item {
     width: 44px;
     min-height: 38px;
     margin: 0 auto;
@@ -551,13 +551,13 @@ body.app-shell .sidebar-mark-img { width: 30px; height: 30px; display: block; }
     justify-content: center;
     border-left-color: transparent;
   }
-  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .nav-item.active {
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:is(:not(:hover):not(:focus-within), .sidebar-hold) .nav-item.active {
     box-shadow: inset 2px 0 0 var(--amber);
   }
-  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .nav-item > span:not(.nav-badge) {
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:is(:not(:hover):not(:focus-within), .sidebar-hold) .nav-item > span:not(.nav-badge) {
     display: none;
   }
-  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .nav-badge {
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:is(:not(:hover):not(:focus-within), .sidebar-hold) .nav-badge {
     position: absolute;
     top: 5px;
     right: 4px;
@@ -570,14 +570,14 @@ body.app-shell .sidebar-mark-img { width: 30px; height: 30px; display: block; }
     color: transparent;
     font-size: 0;
   }
-  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .nav-item {
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:is(:not(:hover):not(:focus-within), .sidebar-hold) .nav-item {
     position: relative;
   }
-  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .sidebar-user {
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:is(:not(:hover):not(:focus-within), .sidebar-hold) .sidebar-user {
     justify-content: center;
     padding: 12px 0;
   }
-  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .user-meta {
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:is(:not(:hover):not(:focus-within), .sidebar-hold) .user-meta {
     display: none;
   }
 }
