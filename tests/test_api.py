@@ -184,7 +184,10 @@ def test_value_workstreams_round_trip(signed_in):
     assert submitted.status_code == 200
 
     for path in ("assumptions", "evidence", "plan", "summary", "report"):
-        assert client.get(f"/assessment/{assessment_id}/{path}").status_code == 200
+        page = client.get(f"/assessment/{assessment_id}/{path}")
+        assert page.status_code == 200
+        if path in {"summary", "report"}:
+            assert "report-body" in page.text
     assert client.get(f"/assessment/{assessment_id}/export.xlsx").status_code == 200
 
     saved = client.post(f"/assessment/{assessment_id}/assumptions", data={
@@ -347,6 +350,7 @@ def test_growth_certification_imports_and_webhooks(signed_in):
 
     narrative = client.get(f"/assessment/{assessment_id}/narrative")
     assert narrative.status_code == 200
+    assert "report-body" in narrative.text
     assert "Board narrative" in narrative.text or "What to do next" in narrative.text
 
     badge = client.get(f"/assessment/{assessment_id}/badge")

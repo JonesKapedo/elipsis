@@ -323,3 +323,13 @@ html[data-theme="dark"] .theme-option {
     grid-template-columns: 1fr;
   }
 }
+
+html[data-theme="dark"] body.app-shell .section-label > span {
+  background: var(--amber-soft) !important;
+  border-color: color-mix(in srgb, var(--amber) 34%, transparent) !important;
+  color: var(--amber) !important;
+}
+
+html[data-theme="dark"] body.app-shell .btn.primary:not(.ghost):not(.secondary) {
+  color: var(--amber-ink) !important;
+}

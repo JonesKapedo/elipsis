@@ -206,3 +206,171 @@ body.report-body main{
 .report-cover-note{margin-top:.9rem;padding:.65rem .8rem;border-left:3px solid var(--report-accent,#b45309);background:#fffaf0;color:#4b4237;font-size:.9rem;line-height:1.55}
 .report-section h2::after{content:"";display:block;width:34px;height:2px;margin-top:.5rem;background:var(--report-accent,#b45309);opacity:.7}
 .report-footer-note strong{color:var(--report-accent,#b45309)}
+
+body.report-body.app-shell,
+html[data-theme="dark"] body.report-body.app-shell {
+  --ink: #172033;
+  --ink-2: #3f4c5f;
+  --muted: #627189;
+  --line: #dfe5ec;
+  --line-strong: #c8d2de;
+  --surface: #ffffff;
+  --canvas: #f4f2ec;
+  --canvas-2: #f8fafc;
+  --panel: #ffffff;
+  --panel2: #f8fafc;
+  --paper: #f4f2ec;
+  background: #f4f2ec !important;
+  color: #111827 !important;
+}
+
+body.report-body.app-shell .app-layout.app {
+  display: block !important;
+  background: #f4f2ec !important;
+}
+
+body.report-body.app-shell .app-sidebar,
+body.report-body.app-shell .app-topbar,
+body.report-body.app-shell > .skip {
+  display: none !important;
+}
+
+body.report-body.app-shell .app-main,
+html[data-theme="dark"] body.report-body.app-shell .app-main {
+  background: #f4f2ec !important;
+}
+
+body.report-body.app-shell #main {
+  max-width: 960px !important;
+  margin: 0 auto !important;
+  padding: 1.5rem 1.25rem 4rem !important;
+  background: transparent !important;
+  color: #111827 !important;
+}
+
+html[data-theme="dark"] body.app-shell .report-shell {
+  background: #fff !important;
+  color: #111827 !important;
+}
+
+html[data-theme="dark"] body.app-shell .report-shell .report-cover,
+html[data-theme="dark"] body.app-shell .report-shell .report-section {
+  background: #fff !important;
+  color: #111827 !important;
+}
+
+html[data-theme="dark"] body.app-shell .report-shell h1,
+html[data-theme="dark"] body.app-shell .report-shell h2,
+html[data-theme="dark"] body.app-shell .report-shell h3,
+html[data-theme="dark"] body.app-shell .report-shell h4 {
+  color: #0f172a !important;
+}
+
+html[data-theme="dark"] body.app-shell .report-shell p,
+html[data-theme="dark"] body.app-shell .report-shell li {
+  color: #374151 !important;
+}
+
+html[data-theme="dark"] body.app-shell .report-shell strong,
+html[data-theme="dark"] body.app-shell .report-shell b {
+  color: inherit !important;
+}
+
+html[data-theme="dark"] body.app-shell .report-shell .report-brand,
+html[data-theme="dark"] body.app-shell .report-shell .report-score-num,
+html[data-theme="dark"] body.app-shell .report-shell .report-kpi b,
+html[data-theme="dark"] body.app-shell .report-shell .opp-list strong {
+  color: #0f172a !important;
+}
+
+html[data-theme="dark"] body.app-shell .report-shell .report-brand .mark {
+  color: #fff !important;
+}
+
+html[data-theme="dark"] body.app-shell .report-shell .report-doc-type {
+  color: var(--report-accent, #b45309) !important;
+}
+
+html[data-theme="dark"] body.app-shell .report-shell .report-org,
+html[data-theme="dark"] body.app-shell .report-shell .report-lead {
+  color: #1f2937 !important;
+}
+
+html[data-theme="dark"] body.app-shell .report-shell .report-meta-line,
+html[data-theme="dark"] body.app-shell .report-shell .report-kpi span,
+html[data-theme="dark"] body.app-shell .report-shell .report-kpi em,
+html[data-theme="dark"] body.app-shell .report-shell .report-score-label,
+html[data-theme="dark"] body.app-shell .report-shell .report-score-right .report-score-label,
+html[data-theme="dark"] body.app-shell .report-shell .report-table th,
+html[data-theme="dark"] body.app-shell .report-shell .report-footer-note,
+html[data-theme="dark"] body.app-shell .report-shell .opp-list .opp-meta {
+  color: #6b7280 !important;
+}
+
+html[data-theme="dark"] body.app-shell .report-shell .report-score-num span {
+  color: #6b7280 !important;
+}
+
+html[data-theme="dark"] body.app-shell .report-shell .report-band {
+  background: #fff7ed !important;
+  border-color: #fdba74 !important;
+  color: #c2410c !important;
+}
+
+html[data-theme="dark"] body.app-shell .report-shell .report-cover-note {
+  background: #fffaf0 !important;
+  color: #4b4237 !important;
+}
+
+html[data-theme="dark"] body.app-shell .report-shell .insight-box,
+html[data-theme="dark"] body.app-shell .report-shell .insight-box p {
+  background: #fffbeb !important;
+  color: #422006 !important;
+}
+
+html[data-theme="dark"] body.app-shell .report-shell .report-table th {
+  background: #fff !important;
+  border-color: #e5e7eb !important;
+}
+
+html[data-theme="dark"] body.app-shell .report-shell .report-table td {
+  background: #fff !important;
+  border-color: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+html[data-theme="dark"] body.app-shell .report-shell .report-table tr:hover td {
+  background: #fafaf9 !important;
+}
+
+html[data-theme="dark"] body.app-shell .report-shell .report-footer-note {
+  background: #fafaf9 !important;
+}
+
+body.report-body .report-toolbar .btn {
+  box-shadow: none;
+}
+
+html[data-theme="dark"] body.report-body.app-shell .report-toolbar .btn.ghost {
+  background: #fff !important;
+  border-color: #cbd5e1 !important;
+  color: #334155 !important;
+}
+
+html[data-theme="dark"] body.report-body.app-shell .report-toolbar .btn.ghost:hover {
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="dark"] body.report-body.app-shell .report-shell .muted {
+  color: #6b7280 !important;
+}
+
+html[data-theme="dark"] body.report-body.app-shell .noprint {
+  color: #4b5563 !important;
+}
+
+html[data-theme="dark"] body.report-body.app-shell .noprint strong {
+  color: #111827 !important;
+}
