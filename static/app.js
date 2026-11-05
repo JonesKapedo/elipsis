@@ -35,6 +35,54 @@
     });
   }
 
+  /* App shell: collapsible desktop sidebar --------------------------------- */
+  const collapseBtn = $("#sidebar-collapse");
+  const COLLAPSE_KEY = "elipsis_sidebar_collapsed";
+  const desktopSidebar = window.matchMedia("(min-width: 961px)");
+
+  function storedCollapsed() {
+    try {
+      return window.localStorage.getItem(COLLAPSE_KEY) === "1";
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function rememberCollapsed(value) {
+    try {
+      window.localStorage.setItem(COLLAPSE_KEY, value ? "1" : "0");
+    } catch (error) {
+      /* Private browsing can disable storage; the toggle still works this visit. */
+    }
+  }
+
+  function setCollapsed(collapsed, persist) {
+    if (!layout) return;
+    const active = Boolean(collapsed && desktopSidebar.matches);
+    layout.classList.toggle("sidebar-collapsed", active);
+    if (collapseBtn) {
+      collapseBtn.setAttribute("aria-expanded", active ? "false" : "true");
+      collapseBtn.setAttribute("aria-label", active ? "Expand navigation" : "Collapse navigation");
+      collapseBtn.title = active ? "Expand navigation" : "Collapse navigation";
+    }
+    if (persist) rememberCollapsed(active);
+  }
+
+  if (collapseBtn) {
+    collapseBtn.addEventListener("click", () => {
+      const next = !(layout && layout.classList.contains("sidebar-collapsed"));
+      setCollapsed(next, true);
+      if (next) collapseBtn.blur();
+    });
+  }
+  setCollapsed(storedCollapsed(), false);
+  if (typeof desktopSidebar.addEventListener === "function") {
+    desktopSidebar.addEventListener("change", (event) => {
+      if (!event.matches) layout && layout.classList.remove("sidebar-collapsed");
+      else setCollapsed(storedCollapsed(), false);
+    });
+  }
+
   /* Public mobile menu ------------------------------------------------------ */
   const pubToggle = $("#pub-menu-toggle");
   const pubNav = $("#pub-nav");

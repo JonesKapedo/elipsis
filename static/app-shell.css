@@ -470,3 +470,119 @@ body.app-shell {
     border-top: 1px solid var(--line);
   }
 }
+
+/* ==========================================================================
+   Collapsible desktop sidebar
+   ========================================================================== */
+body.app-shell .sidebar-mark { display: none; }
+body.app-shell .sidebar-collapse { display: none; }
+body.app-shell .sidebar-mark-img { width: 30px; height: 30px; display: block; }
+
+@media (min-width: 961px) {
+  body.app-shell .app-layout.app .app-sidebar {
+    transition: width 0.18s ease, box-shadow 0.18s ease;
+  }
+  body.app-shell .sidebar-collapse {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    flex: none;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background: transparent;
+    color: #8e9bb0;
+  }
+  body.app-shell .sidebar-collapse:hover {
+    background: #0b1727;
+    border-color: #1f3049;
+    color: #fff;
+  }
+  body.app-shell .sidebar-collapse .icon {
+    width: 14px;
+    height: 14px;
+    transform: rotate(90deg);
+    transition: transform 0.18s ease;
+  }
+  body.app-shell .app-layout.app.sidebar-collapsed {
+    grid-template-columns: 84px minmax(0, 1fr);
+  }
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar {
+    width: 84px;
+  }
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:hover,
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:focus-within {
+    width: 244px;
+    box-shadow: 18px 0 40px -28px rgba(0, 0, 0, 0.72);
+  }
+  body.app-shell .app-layout.app.sidebar-collapsed .sidebar-collapse .icon {
+    transform: rotate(-90deg);
+  }
+
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .sidebar-brand {
+    justify-content: space-between;
+    padding: 0 10px;
+  }
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .brand-lockup {
+    display: none;
+  }
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .sidebar-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+  }
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .nav-group-label {
+    display: none;
+  }
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .nav-group {
+    margin-bottom: 10px;
+  }
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .nav-group + .nav-group {
+    padding-top: 10px;
+    border-top: 1px solid #152237;
+  }
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .nav-item {
+    width: 44px;
+    min-height: 38px;
+    margin: 0 auto;
+    padding: 0;
+    justify-content: center;
+    border-left-color: transparent;
+  }
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .nav-item.active {
+    box-shadow: inset 2px 0 0 var(--amber);
+  }
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .nav-item > span:not(.nav-badge) {
+    display: none;
+  }
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .nav-badge {
+    position: absolute;
+    top: 5px;
+    right: 4px;
+    width: 6px;
+    min-width: 6px;
+    height: 6px;
+    padding: 0;
+    border-radius: 50%;
+    background: var(--amber);
+    color: transparent;
+    font-size: 0;
+  }
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .nav-item {
+    position: relative;
+  }
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .sidebar-user {
+    justify-content: center;
+    padding: 12px 0;
+  }
+  body.app-shell .app-layout.app.sidebar-collapsed .app-sidebar:not(:hover):not(:focus-within) .user-meta {
+    display: none;
+  }
+}
+
+@media (max-width: 960px) {
+  body.app-shell .sidebar-collapse { display: none !important; }
+  body.app-shell .sidebar-mark { display: none !important; }
+}

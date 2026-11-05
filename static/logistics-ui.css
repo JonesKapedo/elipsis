@@ -546,3 +546,22 @@ html[data-theme="dark"] body.app-shell .tabs .tab.active {
   color: #f8fafc !important;
   border-bottom-color: var(--amber) !important;
 }
+
+/* Step markers keep the dark surface language instead of stark white chips. */
+body.app-shell .onboard-num {
+  border-radius: 6px;
+  background: var(--canvas-2);
+  border-color: var(--line-strong);
+  color: var(--amber);
+}
+body.app-shell .onboard-steps li.done .onboard-num {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: var(--amber-ink);
+  font-size: 0;
+}
+body.app-shell .onboard-steps li.done .onboard-num::before {
+  content: "✓";
+  font-size: 11px;
+  line-height: 1;
+}
