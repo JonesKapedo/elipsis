@@ -40,6 +40,12 @@ def test_health(client):
     assert body["index"] == C.INDEX_NAME
 
 
+def test_server_time_endpoint(client):
+    body = client.get("/api/v1/time").json()
+    assert body["utc"].endswith("Z")
+    assert body["epoch_ms"] > 0
+
+
 def test_health_detail_reports_marketplace_readiness(client):
     body = client.get("/api/v1/health/detail").json()
     readiness = body["marketplace"]
@@ -346,8 +352,8 @@ def test_workspace_search_and_brand_surface(signed_in):
 
     dashboard = client.get("/dashboard")
     assert 'class="org-switch"' in dashboard.text
-    assert 'id="cmdk"' not in dashboard.text
-    assert 'id="cmd-trigger"' not in dashboard.text
+    assert 'id="cmdk"' in dashboard.text
+    assert 'id="cmd-trigger"' in dashboard.text
 
 
 def test_growth_certification_imports_and_webhooks(signed_in):
@@ -1348,6 +1354,7 @@ def test_settings_timezone_and_activation_page(signed_in):
     saved = client.post("/settings", data={"timezone": "Africa/Nairobi"},
                         follow_redirects=False)
     assert saved.status_code == 303
+    assert "elipsis_timezone" in saved.headers.get("set-cookie", "")
     with SessionLocal() as db:
         user = db.query(models.User).filter_by(email="admin@elipsis.local").one()
         assert db.get(models.UserPref, user.id).timezone == "Africa/Nairobi"

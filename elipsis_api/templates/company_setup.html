@@ -82,7 +82,7 @@
         <input name="address" maxlength="240" value="{{ company.address if company and company.address else '' }}" autocomplete="street-address">
       </label>
       <label class="field">Timezone
-        <input name="timezone" list="setup-timezones" value="{{ company.timezone if company and company.timezone else '' }}" placeholder="e.g. Africa/Nairobi">
+        <input name="timezone" list="setup-timezones" value="{{ company.timezone if company and company.timezone else '' }}" placeholder="e.g. Europe/London">
       </label>
       <label class="field">Fiscal year starts
         <input name="fiscal_year_start" list="setup-months" value="{{ company.fiscal_year_start if company and company.fiscal_year_start else '' }}" placeholder="e.g. January">

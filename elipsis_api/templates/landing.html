@@ -68,7 +68,7 @@
   </div>
 </div>
 
-<section class="mk-wrap mk-visuals" aria-labelledby="mk-visuals-title">
+<section class="mk-wrap mk-visuals" aria-labelledby="mk-visuals-title" data-reveal>
   <div class="mk-visual-intro">
     <p class="mk-eyebrow">The operating picture</p>
     <h2 id="mk-visuals-title">Built from the work, not the whitepaper.</h2>
@@ -102,7 +102,7 @@
   </div>
 </section>
 
-<section class="mk-wrap mk-section">
+<section class="mk-wrap mk-section" data-reveal>
   <div class="mk-section-head">
     <p class="mk-eyebrow">Who it is for</p>
     <h2>Built for teams that run freight, fleet, and warehouse work.</h2>
@@ -127,7 +127,7 @@
   </div>
 </section>
 
-<section class="mk-wrap mk-section">
+<section class="mk-wrap mk-section" data-reveal>
   <div class="mk-section-head">
     <p class="mk-eyebrow">How it works</p>
     <h2>Three steps from answers to a plan you can run.</h2>
@@ -152,7 +152,7 @@
   </div>
 </section>
 
-<section class="mk-wrap">
+<section class="mk-wrap" data-reveal>
   <div class="mk-report">
     <div>
       <p class="mk-eyebrow" style="color:#f5c46a">Sample report</p>
@@ -176,13 +176,13 @@
   <p class="mk-price-note">Sample figures are examples only. Your score and exposure depend on your answers and must be checked against your own costs.</p>
 </section>
 
-<section class="mk-wrap mk-section">
+<section class="mk-wrap mk-section" data-reveal>
   <div class="mk-section-head">
     <p class="mk-eyebrow">What is measured</p>
     <h2>Seven pillars. One score your board can track.</h2>
     <p class="section-lede">Each answer feeds at least one pillar. Weights reflect how strongly each area tends to drive automation return — so the {{ INDEX_NAME }} is operational, not decorative.</p>
   </div>
-  <div class="mk-cards">
+  <div class="mk-cards mk-pillars">
     {% for code, label, weight, objective in PILLARS %}
     <article class="mk-card">
       <p class="card-num">{{ code }} · {{ (weight * 100)|round|int }}% of score</p>
@@ -193,24 +193,26 @@
   </div>
 </section>
 
-<section class="mk-wrap mk-section">
+<section class="mk-wrap mk-section" data-reveal>
   <div class="mk-section-head">
     <p class="mk-eyebrow">Market context</p>
     <h2>Designed against real logistics operations.</h2>
-    <p class="section-lede">First reference market: Kenya. The operating problems — dispatch, warehouse, cash, compliance — are corridor-agnostic and apply wherever freight and field work runs.</p>
+    <p class="section-lede">Our first reference market is Kenya, chosen because corridor, port, and cash constraints stress-test the model. The operating problems — dispatch, warehouse, cash, compliance — are corridor-agnostic and apply wherever freight and field work runs.</p>
   </div>
-  <table class="table">
-    <thead><tr><th>Reference</th><th>Value</th><th>Source</th></tr></thead>
-    <tbody>
-      {% for p in reference_points %}
-      <tr><td>{{ p.label }}<br><span class="muted small">{{ p.note }}</span></td><td><strong>{{ p.value }}</strong></td><td class="muted">{{ p.source }}</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="mk-table-wrap">
+    <table class="table">
+      <thead><tr><th>Reference</th><th>Value</th><th>Source</th></tr></thead>
+      <tbody>
+        {% for p in reference_points %}
+        <tr><td>{{ p.label }}<br><span class="muted small">{{ p.note }}</span></td><td><strong>{{ p.value }}</strong></td><td class="muted">{{ p.source }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
   <p class="mk-price-note">These describe the first market we designed against, not claims about {{ BRAND_NAME }} customers. Cost figures in your report are estimates — validate them against payroll and operating data.</p>
 </section>
 
-<section class="mk-wrap mk-section">
+<section class="mk-wrap mk-section" data-reveal>
   <div class="mk-section-head">
     <p class="mk-eyebrow">Pricing</p>
     <h2>Start free. Buy the report when the decision is real.</h2>
@@ -236,7 +238,7 @@
   <p class="mk-price-note">Prices in USD and exclusive of taxes. Partners have separate plans. {{ BRAND_NAME }} does not take a commission on partner work.</p>
 </section>
 
-<section class="mk-wrap mk-cta">
+<section class="mk-wrap mk-cta" data-reveal>
   <h2>See the report shape before you spend a dollar.</h2>
   <div class="actions">
     <a class="btn primary" href="/sample">View sample report <svg class="icon"><use href="#i-arrow"/></svg></a>

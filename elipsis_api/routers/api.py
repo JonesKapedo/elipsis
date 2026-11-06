@@ -1,6 +1,7 @@
 """JSON API router (/api/v1) — the primary programmatic interface."""
 
 import os
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
@@ -152,6 +153,13 @@ def assessment_result(assessment_id: int, request: Request,
     if assessment is None or result is None:
         raise HTTPException(status_code=404, detail="assessment not found")
     return result
+
+
+@router.get("/time")
+def server_time():
+    """Current server time for syncing client clocks."""
+    now = datetime.now(UTC)
+    return {"utc": now.isoformat().replace("+00:00", "Z"), "epoch_ms": int(now.timestamp() * 1000)}
 
 
 @router.get("/assessments/{assessment_id}/results")

@@ -30,7 +30,7 @@
       <label>Minimum responses <input type="number" name="min_respondents" min="1" max="500" value="3"></label>
     </div>
     <label>Phone number for the WhatsApp/SMS link (optional)
-      <input name="phone" value="{{ phone }}" placeholder="+254 7…" autocomplete="tel">
+      <input name="phone" value="{{ phone }}" placeholder="+1 555 0100" autocomplete="tel">
     </label>
     <label class="muted small"><input type="checkbox" name="allow_anonymous" value="1"> Allow anonymous responses</label>
     <button class="btn" type="submit">Create invite link</button>
@@ -50,7 +50,7 @@
     </div>
     <form method="post" action="/assessment/{{ assessment.id }}/invite" class="filter-bar" style="margin-top:1rem">
       <input type="hidden" name="days" value="14">
-      <input name="phone" value="{{ phone }}" placeholder="+254 7…" aria-label="Phone">
+      <input name="phone" value="{{ phone }}" placeholder="+1 555 0100" aria-label="Phone">
       <button class="btn ghost sm" type="submit">Refresh links</button>
     </form>
   </article>

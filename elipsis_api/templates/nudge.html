@@ -16,7 +16,7 @@
     <h3>{{ item.title }}</h3>
     <p class="muted small">{{ organization.name if organization else 'Organisation' }} · {{ item.owner or 'Unassigned' }} · due {{ item.due_date or '—' }} · {{ item.status|replace('_',' ')|title }}</p>
     <form method="post" action="/actions/{{ item.id }}/nudge" class="filter-bar">
-      <input name="phone" value="{{ phone }}" placeholder="+254 7…" aria-label="Owner phone" autocomplete="tel">
+      <input name="phone" value="{{ phone }}" placeholder="+1 555 0100" aria-label="Owner phone" autocomplete="tel">
       <button class="btn sm" type="submit">Save number</button>
     </form>
     <div class="hero-actions">
