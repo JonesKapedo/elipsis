@@ -15,7 +15,7 @@
 }
 
 :root,
-body.marketing,
+html[data-theme="light"] body.marketing,
 html[data-theme="light"] body.app-shell {
   --brand-primary: #ad6a34;
   --brand-primary-light: #cf9355;
@@ -68,6 +68,7 @@ html[data-theme="light"] body.app-shell {
 }
 
 html[data-theme="dark"],
+html[data-theme="dark"] body.marketing,
 html[data-theme="dark"] body.app-shell {
   --brand-primary: #dda15e;
   --brand-primary-light: #f0c68a;
@@ -80,16 +81,16 @@ html[data-theme="dark"] body.app-shell {
   --muted-2: #70877b;
   --line: #223b32;
   --line-strong: #325447;
-  --surface: #0f211b;
-  --canvas: #071712;
-  --canvas-2: #0a1b16;
-  --paper: #071712;
-  --panel: #0f211b;
-  --panel2: #0a1b16;
-  --asphalt: #06120e;
+  --surface: #0b1511;
+  --canvas: #000000;
+  --canvas-2: #060b09;
+  --paper: #000000;
+  --panel: #0b1511;
+  --panel2: #070e0b;
+  --asphalt: #000000;
   --asphalt-2: #0b1f18;
   --asphalt-3: #112d24;
-  --navy: #06120e;
+  --navy: #000000;
   --navy-2: #0b1f18;
   --navy-3: #112d24;
   --amber: #dda15e;
@@ -111,8 +112,8 @@ html[data-theme="dark"] body.app-shell {
   --shadow: 0 24px 60px -32px rgba(0, 0, 0, 0.8);
   --shadow-sm: 0 12px 32px -22px rgba(0, 0, 0, 0.7);
   --atlas-grid: rgba(241, 236, 223, 0.035);
-  --atlas-glow: rgba(221, 161, 94, 0.14);
-  --atlas-topbar: rgba(7, 23, 18, 0.84);
+  --atlas-glow: rgba(221, 161, 94, 0.1);
+  --atlas-topbar: rgba(0, 0, 0, 0.78);
   --atlas-panel-line: rgba(241, 236, 223, 0.1);
 }
 
@@ -176,10 +177,7 @@ body.app-shell .app-content .eyebrow {
 body.marketing {
   background-color: var(--canvas) !important;
   background-image:
-    radial-gradient(900px 540px at 85% -8%, rgba(173, 106, 52, 0.12), transparent 62%),
-    linear-gradient(to right, var(--atlas-grid) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--atlas-grid) 1px, transparent 1px);
-  background-size: auto, 76px 76px, 76px 76px;
+    radial-gradient(900px 540px at 85% -8%, rgba(173, 106, 52, 0.1), transparent 62%);
   color: var(--ink);
 }
 
@@ -195,10 +193,7 @@ html[data-theme="light"] body.app-shell .app-main,
 html[data-theme="dark"] body.app-shell .app-main {
   background-color: var(--canvas) !important;
   background-image:
-    radial-gradient(900px 520px at 76% -10%, var(--atlas-glow), transparent 64%),
-    linear-gradient(to right, var(--atlas-grid) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--atlas-grid) 1px, transparent 1px) !important;
-  background-size: auto, 72px 72px, 72px 72px !important;
+    radial-gradient(900px 520px at 76% -10%, var(--atlas-glow), transparent 64%) !important;
   color: var(--ink) !important;
 }
 
@@ -302,10 +297,7 @@ body.marketing .pub-footer {
   border-top: 1px solid rgba(241, 236, 223, 0.08) !important;
   color: #a8b9ae !important;
   background-image:
-    radial-gradient(700px 320px at 16% 0%, rgba(221, 161, 94, 0.12), transparent 70%),
-    linear-gradient(to right, rgba(241, 236, 223, 0.035) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(241, 236, 223, 0.035) 1px, transparent 1px);
-  background-size: auto, 72px 72px, 72px 72px;
+    radial-gradient(700px 320px at 16% 0%, rgba(221, 161, 94, 0.12), transparent 70%);
 }
 
 body.marketing .mk-footer-inner {
@@ -349,13 +341,12 @@ body.marketing .mk-hero {
 body.marketing .mk-hero::before {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: -30% -10% auto auto;
+  width: 70%;
+  height: 140%;
   pointer-events: none;
-  background-image:
-    linear-gradient(to right, rgba(241, 236, 223, 0.045) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(241, 236, 223, 0.045) 1px, transparent 1px);
-  background-size: 58px 58px;
-  mask-image: radial-gradient(600px 520px at 20% 30%, #000, transparent 78%);
+  background: radial-gradient(closest-side, rgba(221, 161, 94, 0.16), transparent 72%);
+  animation: atlas-drift 16s ease-in-out infinite alternate;
 }
 
 body.marketing .mk-hero > * {
@@ -2239,4 +2230,1014 @@ body.app-shell .ops-code {
 body.app-shell .ops-code code {
   background: transparent !important;
   color: var(--ink) !important;
+}
+
+/* ---- 2026-11 refinement: pitch black, no atlas grid, live chrome ---------- */
+@keyframes atlas-drift {
+  from { transform: translate3d(-2%, -2%, 0) scale(1); }
+  to { transform: translate3d(4%, 3%, 0) scale(1.08); }
+}
+
+@keyframes clock-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(221, 161, 94, 0.32); }
+  50% { box-shadow: 0 0 0 4px rgba(221, 161, 94, 0); }
+}
+
+@keyframes atlas-rise {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.reveal-ready [data-reveal] {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.75s cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 0.75s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.reveal-ready [data-reveal].is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-ready [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+body.marketing .mk-hero {
+  background-color: #000000;
+  background-image:
+    radial-gradient(760px 460px at 88% 12%, rgba(221, 161, 94, 0.2), transparent 64%),
+    radial-gradient(600px 420px at 2% 100%, rgba(136, 199, 157, 0.1), transparent 66%),
+    linear-gradient(132deg, #000000 0%, #050b08 54%, #0a1a14 100%);
+}
+
+body.marketing .mk-report,
+body.marketing .mk-cta {
+  background-color: #000000;
+}
+
+body.marketing .mk-report {
+  background-image:
+    linear-gradient(100deg, rgba(0, 0, 0, 0.98) 0%, rgba(0, 0, 0, 0.9) 52%, rgba(0, 0, 0, 0.58) 100%),
+    url("/static/images/ops-port.svg");
+}
+
+body.marketing .mk-cta {
+  background-image:
+    radial-gradient(620px 360px at 84% 0%, rgba(221, 161, 94, 0.22), transparent 68%),
+    linear-gradient(120deg, #000000, #071410 58%, #0c2a20);
+}
+
+body.marketing .mk-section {
+  margin-top: clamp(58px, 7vw, 92px);
+}
+
+body.marketing .mk-section-head {
+  max-width: 780px;
+  margin: 0 0 30px;
+  text-align: left;
+}
+
+body.marketing .mk-section-head h2 {
+  max-width: 18ch;
+}
+
+body.marketing .mk-section-head .section-lede {
+  max-width: 66ch;
+}
+
+body.marketing .mk-cards,
+body.marketing .mk-workflow,
+body.marketing .mk-pricing {
+  align-items: stretch;
+}
+
+body.marketing .mk-workflow {
+  gap: clamp(18px, 2.4vw, 32px);
+}
+
+body.marketing .mk-pillars {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  border: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+body.marketing .mk-pillars .mk-card {
+  flex: 1 1 210px;
+  max-width: 282px;
+}
+
+body.marketing .mk-price {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+body.marketing .mk-price ul {
+  flex: 1 1 auto;
+}
+
+body.marketing .mk-price .btn {
+  margin-top: 18px;
+}
+
+body.marketing .mk-stats {
+  border-bottom-color: rgba(241, 236, 223, 0.13);
+}
+
+body.marketing .mk-stat {
+  border-left-color: rgba(241, 236, 223, 0.11);
+}
+
+body.marketing .mk-stat b {
+  color: #f0c68a;
+}
+
+body.marketing .mk-stat span {
+  color: #9fb2a6;
+}
+
+body.marketing .mk-table-wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(241, 236, 223, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+body.marketing .mk-table-wrap .table {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+body.marketing .pub-theme {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--line, #334155);
+  border-radius: 999px;
+  background: var(--surface, #0b1511);
+  color: var(--ink, #f1ecdf);
+  cursor: pointer;
+}
+
+body.marketing .pub-theme:hover {
+  border-color: var(--amber, #dda15e);
+}
+
+body.marketing .pub-theme .icon {
+  width: 15px;
+  height: 15px;
+}
+
+/* Dark marketing surfaces: remove the remaining light patches. */
+html[data-theme="dark"] body.marketing .mk-card,
+html[data-theme="dark"] body.marketing .mk-step,
+html[data-theme="dark"] body.marketing .mk-price {
+  background: rgba(11, 21, 17, 0.82);
+  border-color: rgba(241, 236, 223, 0.13);
+  box-shadow: 0 18px 44px -38px rgba(0, 0, 0, 0.8);
+}
+
+html[data-theme="dark"] body.marketing .mk-card:hover,
+html[data-theme="dark"] body.marketing .mk-step:hover,
+html[data-theme="dark"] body.marketing .mk-price:hover {
+  border-color: rgba(221, 161, 94, 0.5);
+  box-shadow: 0 26px 54px -40px rgba(0, 0, 0, 0.9);
+}
+
+html[data-theme="dark"] body.marketing .mk-card h3,
+html[data-theme="dark"] body.marketing .mk-step h3,
+html[data-theme="dark"] body.marketing .mk-price h3 {
+  color: #f7f1e5;
+}
+
+html[data-theme="dark"] body.marketing .mk-card p,
+html[data-theme="dark"] body.marketing .mk-step p,
+html[data-theme="dark"] body.marketing .mk-price li {
+  color: #a8b9ae;
+}
+
+html[data-theme="dark"] body.marketing .mk-price.featured {
+  background: #071410;
+  border-color: rgba(221, 161, 94, 0.55);
+}
+
+html[data-theme="dark"] body.marketing .mk-price.featured h3,
+html[data-theme="dark"] body.marketing .mk-price.featured .price-label {
+  color: #f0c68a !important;
+}
+
+html[data-theme="dark"] body.marketing .mk-price.featured .price-note,
+html[data-theme="dark"] body.marketing .mk-price.featured li,
+html[data-theme="dark"] body.marketing .mk-price.featured .mk-price-proof {
+  color: #b9c8be !important;
+}
+
+html[data-theme="dark"] body.marketing .mk-price .btn.secondary {
+  border-color: rgba(241, 236, 223, 0.22);
+  color: #f7f1e5;
+}
+
+html[data-theme="dark"] body.marketing .mk-price-note {
+  color: #9fb2a6;
+}
+
+html[data-theme="dark"] body.marketing .mk-product {
+  background: #0b1511;
+  border-color: rgba(241, 236, 223, 0.14);
+}
+
+html[data-theme="dark"] body.marketing .mk-mini {
+  background: #050a08;
+}
+
+html[data-theme="dark"] body.marketing .mk-mini-strip > div,
+html[data-theme="dark"] body.marketing .mk-mini-panel {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(241, 236, 223, 0.12);
+}
+
+html[data-theme="dark"] body.marketing .mk-mini-head,
+html[data-theme="dark"] body.marketing .mk-mini-panel h5,
+html[data-theme="dark"] body.marketing .mk-mini-row {
+  color: #f1ecdf;
+}
+
+html[data-theme="dark"] body.marketing .mk-mini-strip span,
+html[data-theme="dark"] body.marketing .mk-mini-lane span {
+  color: #9fb2a6;
+}
+
+html[data-theme="dark"] body.marketing .mk-mini-strip b,
+html[data-theme="dark"] body.marketing .mk-mini-lane b {
+  color: #f7f1e5;
+}
+
+html[data-theme="dark"] body.marketing .mk-report-card {
+  background: rgba(11, 21, 17, 0.94);
+  border-color: rgba(241, 236, 223, 0.16);
+}
+
+html[data-theme="dark"] body.marketing .mk-report-card,
+html[data-theme="dark"] body.marketing .mk-report-card b,
+html[data-theme="dark"] body.marketing .rc-top b {
+  color: #f7f1e5;
+}
+
+html[data-theme="dark"] body.marketing .mk-report-card span,
+html[data-theme="dark"] body.marketing .rc-row span {
+  color: #9fb2a6;
+}
+
+html[data-theme="dark"] body.marketing .rc-row {
+  border-top-color: rgba(241, 236, 223, 0.12);
+}
+
+html[data-theme="dark"] body.marketing .table {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(241, 236, 223, 0.12);
+}
+
+html[data-theme="dark"] body.marketing .table td {
+  border-top-color: rgba(241, 236, 223, 0.1);
+  color: #c9d6cd;
+}
+
+/* App topbar: live clock, command trigger, icon actions. */
+body.app-shell .topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+body.app-shell .cmd-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 1 286px;
+  width: clamp(170px, 24vw, 286px);
+  height: 34px;
+  padding: 0 8px 0 10px;
+  border: 1px solid var(--line) !important;
+  border-radius: 8px !important;
+  background: var(--canvas-2) !important;
+  color: var(--muted) !important;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+
+body.app-shell .cmd-trigger:hover {
+  border-color: rgba(221, 161, 94, 0.45) !important;
+  color: var(--ink) !important;
+}
+
+body.app-shell .cmd-trigger .icon {
+  width: 14px;
+  height: 14px;
+  color: var(--amber);
+}
+
+body.app-shell .cmd-trigger-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.app-shell .cmd-trigger kbd {
+  margin-left: auto;
+  padding: 2px 5px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--muted);
+  font: 500 9px/1 var(--font-mono);
+}
+
+body.app-shell .topbar-bell,
+body.app-shell .topbar-theme,
+html[data-theme="dark"] body.app-shell .topbar-bell,
+html[data-theme="dark"] body.app-shell .topbar-theme {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid transparent !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: var(--muted) !important;
+  cursor: pointer;
+}
+
+body.app-shell .topbar-bell:hover,
+body.app-shell .topbar-theme:hover {
+  border-color: var(--line) !important;
+  background: var(--surface) !important;
+  color: var(--ink) !important;
+}
+
+body.app-shell .topbar-bell .icon,
+body.app-shell .topbar-theme .icon {
+  width: 16px;
+  height: 16px;
+}
+
+body.app-shell .topbar-clock {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--canvas-2);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+body.app-shell .topbar-clock::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  align-self: center;
+  border-radius: 50%;
+  background: var(--amber);
+  animation: clock-pulse 2.4s ease-out infinite;
+}
+
+body.app-shell .topbar-clock-time {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+body.app-shell .topbar-clock-zone {
+  color: var(--amber);
+  font-size: 9px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+body.app-shell .top-divider {
+  width: 1px;
+  height: 20px;
+  margin: 0 5px;
+  background: var(--line);
+}
+
+@media (max-width: 1120px) {
+  body.app-shell .cmd-trigger {
+    flex: 0 0 auto;
+    width: 34px;
+    padding: 0;
+    justify-content: center;
+  }
+  body.app-shell .cmd-trigger-label,
+  body.app-shell .cmd-trigger kbd,
+  body.app-shell .topbar-clock-zone {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  body.app-shell .topbar-help,
+  body.app-shell .top-divider,
+  body.app-shell .top-avatar {
+    display: none;
+  }
+  body.app-shell .topbar-clock {
+    padding: 0 8px;
+  }
+}
+
+@media (max-width: 520px) {
+  body.app-shell .cmd-trigger {
+    display: none;
+  }
+  body.app-shell .topbar-clock-time {
+    font-size: 11px;
+  }
+}
+
+/* Dark marketing contrast guards (later legacy rules use !important). */
+html[data-theme="dark"] body.marketing h2,
+html[data-theme="dark"] body.marketing .mk-section-head h2,
+html[data-theme="dark"] body.marketing .mk-visual-intro h2,
+html[data-theme="dark"] body.marketing .mk-card h3,
+html[data-theme="dark"] body.marketing .mk-step h3,
+html[data-theme="dark"] body.marketing .mk-price h3 {
+  color: #f7f1e5 !important;
+}
+
+html[data-theme="dark"] body.marketing .section-lede,
+html[data-theme="dark"] body.marketing .price-note,
+html[data-theme="dark"] body.marketing .mk-price-proof,
+html[data-theme="dark"] body.marketing .mk-price-note,
+html[data-theme="dark"] body.marketing .mk-card p,
+html[data-theme="dark"] body.marketing .mk-step p,
+html[data-theme="dark"] body.marketing .mk-price ul li,
+html[data-theme="dark"] body.marketing .mk-price li {
+  color: #a8b9ae !important;
+}
+
+html[data-theme="dark"] body.marketing .mk-card,
+html[data-theme="dark"] body.marketing .mk-step,
+html[data-theme="dark"] body.marketing .mk-price {
+  background: rgba(11, 21, 17, 0.82) !important;
+  border-color: rgba(241, 236, 223, 0.13) !important;
+  color: #f7f1e5 !important;
+}
+
+html[data-theme="dark"] body.marketing .mk-price.featured {
+  background: #071410 !important;
+  border-color: rgba(221, 161, 94, 0.55) !important;
+}
+
+html[data-theme="dark"] body.marketing .mk-price.featured h3,
+html[data-theme="dark"] body.marketing .mk-price.featured .price-label {
+  color: #f0c68a !important;
+}
+
+html[data-theme="dark"] body.marketing .mk-price .btn.secondary {
+  background: rgba(241, 236, 223, 0.06) !important;
+  border-color: rgba(241, 236, 223, 0.24) !important;
+  color: #f7f1e5 !important;
+}
+
+html[data-theme="dark"] body.marketing .mk-price .btn.secondary:hover {
+  background: rgba(241, 236, 223, 0.12) !important;
+  border-color: #dda15e !important;
+}
+
+html[data-theme="dark"] body.marketing table th {
+  background: #0b1f18 !important;
+  color: #f0c68a !important;
+  border-color: rgba(241, 236, 223, 0.12) !important;
+}
+
+html[data-theme="dark"] body.marketing table td {
+  background: transparent !important;
+  color: #c9d6cd !important;
+  border-top-color: rgba(241, 236, 223, 0.1) !important;
+}
+
+html[data-theme="dark"] body.marketing .mk-table-wrap .table {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border-color: rgba(241, 236, 223, 0.12) !important;
+}
+
+html[data-theme="dark"] body.marketing .mk-product,
+html[data-theme="dark"] body.marketing .mk-mini {
+  background: #050a08 !important;
+  color: #f1ecdf !important;
+}
+
+html[data-theme="dark"] body.marketing .mk-mini-strip > div,
+html[data-theme="dark"] body.marketing .mk-mini-panel {
+  background: rgba(255, 255, 255, 0.035) !important;
+  border-color: rgba(241, 236, 223, 0.12) !important;
+}
+
+html[data-theme="dark"] body.marketing .mk-mini-head,
+html[data-theme="dark"] body.marketing .mk-mini-panel h5,
+html[data-theme="dark"] body.marketing .mk-mini-row,
+html[data-theme="dark"] body.marketing .mk-mini-strip b,
+html[data-theme="dark"] body.marketing .mk-mini-lane b {
+  color: #f7f1e5 !important;
+}
+
+html[data-theme="dark"] body.marketing .mk-mini-strip span,
+html[data-theme="dark"] body.marketing .mk-mini-lane span {
+  color: #9fb2a6 !important;
+}
+
+/* Remove legacy atlas grid wrappers behind marketing cards. */
+body.marketing .mk-cards,
+body.marketing .mk-pricing,
+body.marketing .mk-workflow,
+body.marketing .mk-visual-grid {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0;
+  overflow: visible;
+}
+
+body.marketing .mk-stats {
+  border: 0 !important;
+  border-bottom: 1px solid rgba(241, 236, 223, 0.13) !important;
+}
+
+/* Settings: keep the save bar in flow so it never covers fields. */
+body.app-shell .settings-savebar,
+html[data-theme] body.app-shell .settings-savebar {
+  position: static;
+  margin-top: 18px;
+}
+
+/* Seven pillars: centre the last row instead of leaving a hole. */
+body.app-shell .pillar-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+body.app-shell .pillar-grid .pcard {
+  flex: 1 1 240px;
+}
+
+@media (min-width: 1200px) {
+  body.app-shell .pillar-grid .pcard {
+    max-width: calc((100% - 30px) / 4);
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1199px) {
+  body.app-shell .pillar-grid .pcard {
+    max-width: calc((100% - 20px) / 3);
+  }
+}
+
+@media (min-width: 641px) and (max-width: 900px) {
+  body.app-shell .pillar-grid .pcard {
+    max-width: calc((100% - 10px) / 2);
+  }
+}
+
+@media (max-width: 640px) {
+  body.app-shell .pillar-grid .pcard {
+    max-width: 100%;
+  }
+}
+
+/* Command palette: viewport dialog with a centred, dark panel. */
+body.app-shell .cmdk {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  max-width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent !important;
+  box-shadow: none;
+  overflow: visible;
+}
+
+body.app-shell .cmdk::backdrop {
+  background: rgba(0, 0, 0, 0.64);
+  backdrop-filter: blur(7px);
+}
+
+body.app-shell .cmdk-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(620px, calc(100vw - 32px));
+  max-height: min(72vh, 620px);
+  margin: 11vh auto 0;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 16px;
+  background: var(--surface) !important;
+  color: var(--ink);
+  box-shadow: 0 44px 100px -32px rgba(0, 0, 0, 0.82);
+}
+
+body.app-shell .cmdk-head {
+  border-bottom-color: var(--line);
+  background: var(--surface);
+}
+
+body.app-shell .cmdk-head .icon {
+  color: var(--amber);
+}
+
+body.app-shell .cmdk-head input {
+  background: transparent !important;
+  color: var(--ink) !important;
+  font-size: 14px;
+}
+
+body.app-shell .cmdk-head input::placeholder {
+  color: var(--muted) !important;
+}
+
+body.app-shell .cmdk-head kbd,
+body.app-shell .cmdk-foot kbd {
+  border-color: var(--line) !important;
+  background: var(--canvas-2) !important;
+  color: var(--muted) !important;
+}
+
+body.app-shell .cmdk-results {
+  flex: 1 1 auto;
+  max-height: none;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+body.app-shell .cmdk-item {
+  color: var(--ink-2);
+  border-radius: 9px;
+}
+
+body.app-shell .cmdk-item.active {
+  background: rgba(221, 161, 94, 0.14) !important;
+  box-shadow: inset 0 0 0 1px rgba(221, 161, 94, 0.34);
+  color: var(--ink) !important;
+}
+
+body.app-shell .cmdk-item-icon {
+  border: 1px solid var(--line);
+  background: var(--canvas-2);
+  color: var(--amber);
+}
+
+body.app-shell .cmdk-item-body strong {
+  color: var(--ink);
+}
+
+body.app-shell .cmdk-item-body span,
+body.app-shell .cmdk-enter {
+  color: var(--muted);
+}
+
+body.app-shell .cmdk-item.active .cmdk-enter {
+  color: var(--amber);
+}
+
+body.app-shell .cmdk-foot {
+  flex: none;
+  border-top-color: var(--line);
+  background: var(--canvas-2);
+  color: var(--muted);
+}
+
+body.app-shell .cmdk-empty {
+  color: var(--muted);
+}
+
+@media (max-width: 560px) {
+  body.app-shell .cmdk-panel {
+    margin-top: 6vh;
+    border-radius: 14px;
+  }
+}
+
+/* Stronger dark overrides for legacy modal skins. */
+html[data-theme="dark"] body.app-shell .cmdk {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body.app-shell .cmdk-panel {
+  background: var(--surface) !important;
+  color: var(--ink) !important;
+  border-color: var(--line-strong) !important;
+}
+
+html[data-theme="dark"] body.app-shell .cmdk-head,
+html[data-theme="dark"] body.app-shell .cmdk-foot {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-theme="dark"] body.app-shell .cmdk-head input {
+  background: transparent !important;
+  color: var(--ink) !important;
+}
+
+html[data-theme="dark"] body.app-shell .cmdk-head kbd,
+html[data-theme="dark"] body.app-shell .cmdk-foot kbd {
+  background: var(--canvas-2) !important;
+  border-color: var(--line) !important;
+  color: var(--muted) !important;
+}
+
+html[data-theme="dark"] body.app-shell .cmdk-item {
+  color: var(--ink-2) !important;
+}
+
+html[data-theme="dark"] body.app-shell .cmdk-item.active {
+  background: rgba(221, 161, 94, 0.14) !important;
+  color: var(--ink) !important;
+  box-shadow: inset 0 0 0 1px rgba(221, 161, 94, 0.34) !important;
+}
+
+/* Keyboard shortcut dialog. */
+body.app-shell .kbd-help {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  max-width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent !important;
+  overflow: visible;
+}
+
+body.app-shell .kbd-help::backdrop {
+  background: rgba(0, 0, 0, 0.64);
+  backdrop-filter: blur(7px);
+}
+
+body.app-shell .kbd-help-panel {
+  width: min(380px, calc(100vw - 32px));
+  margin: 24vh auto 0;
+  padding: 24px;
+  border: 1px solid var(--line-strong);
+  border-radius: 16px;
+  background: var(--surface) !important;
+  color: var(--ink) !important;
+  box-shadow: 0 44px 100px -32px rgba(0, 0, 0, 0.82);
+}
+
+body.app-shell .kbd-help-panel h2 {
+  color: var(--ink) !important;
+}
+
+body.app-shell .kbd-help-panel .kbd-row {
+  color: var(--ink-2);
+}
+
+body.app-shell .kbd-help-panel kbd {
+  border-color: var(--line);
+  background: var(--canvas-2);
+  color: var(--ink);
+}
+
+body.app-shell .kbd-help-panel .kbd-note {
+  color: var(--muted);
+}
+
+html[data-theme="dark"] body.app-shell .kbd-help-panel {
+  background: var(--surface) !important;
+  border-color: var(--line-strong) !important;
+  color: var(--ink) !important;
+}
+
+/* Authed marketing pages (pricing, sample) should not fall back to light cards. */
+html[data-theme="dark"] body:not(.marketing) .mk-card,
+html[data-theme="dark"] body:not(.marketing) .mk-step,
+html[data-theme="dark"] body:not(.marketing) .mk-price {
+  background: rgba(11, 21, 17, 0.82) !important;
+  border-color: rgba(241, 236, 223, 0.13) !important;
+  box-shadow: 0 18px 44px -38px rgba(0, 0, 0, 0.8);
+  color: var(--ink) !important;
+}
+
+html[data-theme="dark"] body:not(.marketing) .mk-card:hover,
+html[data-theme="dark"] body:not(.marketing) .mk-step:hover,
+html[data-theme="dark"] body:not(.marketing) .mk-price:hover {
+  border-color: rgba(221, 161, 94, 0.5) !important;
+}
+
+html[data-theme="dark"] body:not(.marketing) .mk-card h3,
+html[data-theme="dark"] body:not(.marketing) .mk-step h3,
+html[data-theme="dark"] body:not(.marketing) .mk-price h3 {
+  color: #f7f1e5 !important;
+}
+
+html[data-theme="dark"] body:not(.marketing) .mk-card p,
+html[data-theme="dark"] body:not(.marketing) .mk-step p,
+html[data-theme="dark"] body:not(.marketing) .mk-price li,
+html[data-theme="dark"] body:not(.marketing) .price-note,
+html[data-theme="dark"] body:not(.marketing) .mk-price-proof,
+html[data-theme="dark"] body:not(.marketing) .mk-price-note {
+  color: #a8b9ae !important;
+}
+
+html[data-theme="dark"] body:not(.marketing) .card-num,
+html[data-theme="dark"] body:not(.marketing) .step-n,
+html[data-theme="dark"] body:not(.marketing) .price-label,
+html[data-theme="dark"] body:not(.marketing) .mk-eyebrow {
+  color: #f0c68a !important;
+}
+
+html[data-theme="dark"] body:not(.marketing) .mk-price.featured {
+  background: #071410 !important;
+  border-color: rgba(221, 161, 94, 0.55) !important;
+}
+
+html[data-theme="dark"] body:not(.marketing) .mk-price li::before {
+  color: #b9d88e;
+}
+
+html[data-theme="dark"] body:not(.marketing) .mk-price .btn.secondary {
+  border-color: rgba(241, 236, 223, 0.22) !important;
+  color: #f7f1e5 !important;
+}
+
+html[data-theme="dark"] body:not(.marketing) .mk-card a {
+  color: #f0c68a;
+}
+
+/* Authed marketing pages: legacy grid wrappers must stay transparent too. */
+html[data-theme="dark"] body:not(.marketing) .mk-cards,
+html[data-theme="dark"] body:not(.marketing) .mk-pricing,
+html[data-theme="dark"] body:not(.marketing) .mk-workflow,
+html[data-theme="dark"] body:not(.marketing) .mk-visual-grid {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0;
+  overflow: visible;
+}
+
+/* Public header must follow the dark theme (logo swap included). */
+body.marketing .mk-brand .brand-logo-light {
+  display: none;
+}
+
+html[data-theme="dark"] body.marketing .mk-header,
+html[data-theme="dark"] body.marketing .pub-header {
+  background: rgba(0, 0, 0, 0.78) !important;
+  border-bottom-color: rgba(241, 236, 223, 0.1) !important;
+}
+
+html[data-theme="dark"] body.marketing .mk-brand .brand-logo-dark {
+  display: none;
+}
+
+html[data-theme="dark"] body.marketing .mk-brand .brand-logo-light {
+  display: block;
+}
+
+html[data-theme="dark"] body.marketing .mk-nav a {
+  color: #a8b9ae;
+}
+
+html[data-theme="dark"] body.marketing .mk-nav a:hover,
+html[data-theme="dark"] body.marketing .mk-nav a[aria-current="page"] {
+  color: #f7f1e5;
+}
+
+html[data-theme="dark"] body.marketing .pub-nav a[aria-current="page"] {
+  background: rgba(221, 161, 94, 0.12);
+}
+
+html[data-theme="dark"] body.marketing .mk-nav .signin {
+  border-left-color: rgba(241, 236, 223, 0.14);
+}
+
+html[data-theme="dark"] body.marketing .pub-menu {
+  background: var(--surface) !important;
+  border-color: var(--line-strong) !important;
+  color: var(--ink) !important;
+}
+
+@media (max-width: 720px) {
+  html[data-theme="dark"] body.marketing .pub-nav {
+    background: #050a08 !important;
+    border-bottom-color: rgba(241, 236, 223, 0.12) !important;
+  }
+}
+
+/* Public methodology / report-style pages reuse app primitives; keep them dark. */
+html[data-theme="dark"] body.marketing h1,
+html[data-theme="dark"] body.marketing h3,
+html[data-theme="dark"] body.marketing h4 {
+  color: #f7f1e5 !important;
+}
+
+html[data-theme="dark"] body.marketing .dash-hero .lede,
+html[data-theme="dark"] body.marketing .block > p,
+html[data-theme="dark"] body.marketing .block .muted,
+html[data-theme="dark"] body.marketing .block ul,
+html[data-theme="dark"] body.marketing .block li {
+  color: #a8b9ae !important;
+}
+
+html[data-theme="dark"] body.marketing .kpi {
+  background: rgba(11, 21, 17, 0.82) !important;
+  border-color: rgba(241, 236, 223, 0.13) !important;
+}
+
+html[data-theme="dark"] body.marketing .kpi span,
+html[data-theme="dark"] body.marketing .kpi-lb {
+  color: #91a89b !important;
+}
+
+html[data-theme="dark"] body.marketing .kpi b {
+  color: #f7f1e5 !important;
+}
+
+html[data-theme="dark"] body.marketing .kpi.accent {
+  background: linear-gradient(180deg, #1a1208, #0b1511) !important;
+  border-color: rgba(221, 161, 94, 0.35) !important;
+}
+
+html[data-theme="dark"] body.marketing .kpi.accent b {
+  color: #f0c68a !important;
+}
+
+html[data-theme="dark"] body.marketing .pillar-grid {
+  background: transparent !important;
+  border: 0 !important;
+}
+
+html[data-theme="dark"] body.marketing .pcard {
+  background: rgba(11, 21, 17, 0.82) !important;
+  border-color: rgba(241, 236, 223, 0.13) !important;
+}
+
+html[data-theme="dark"] body.marketing .pcard:hover {
+  border-color: rgba(221, 161, 94, 0.5) !important;
+}
+
+html[data-theme="dark"] body.marketing .pcard h4,
+html[data-theme="dark"] body.marketing .pcard strong {
+  color: #f7f1e5 !important;
+}
+
+html[data-theme="dark"] body.marketing .pcard p,
+html[data-theme="dark"] body.marketing .pcard-w {
+  color: #a8b9ae !important;
+}
+
+html[data-theme="dark"] body.marketing .model-panel {
+  background: linear-gradient(120deg, #071712, #0c2a20 62%, #124234) !important;
+  border-color: rgba(221, 161, 94, 0.32) !important;
+  box-shadow: 0 32px 70px -50px rgba(0, 0, 0, 0.9);
+}
+
+html[data-theme="dark"] body.marketing .model-panel h3 {
+  color: #f7f1e5 !important;
+}
+
+html[data-theme="dark"] body.marketing .model-panel > p {
+  color: #b9c8be !important;
+}
+
+html[data-theme="dark"] body.marketing .model-panel .btn:not(.ghost) {
+  background: #dda15e !important;
+  border-color: #dda15e !important;
+  color: #1c1206 !important;
+}
+
+html[data-theme="dark"] body.marketing .model-panel .btn.ghost {
+  background: rgba(241, 236, 223, 0.04) !important;
+  border-color: rgba(241, 236, 223, 0.28) !important;
+  color: #f7f1e5 !important;
 }

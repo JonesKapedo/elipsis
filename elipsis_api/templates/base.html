@@ -9,7 +9,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ BRAND_NAME }}{% endblock %}</title>
   <meta name="description" content="{% block description %}{{ BRAND_NAME }} helps logistics and field-operations teams measure automation readiness, price the main operating constraint, and leave with a 90-day action plan.{% endblock %}">
-  <meta name="theme-color" content="{% if authed %}#07120f{% else %}#f1ecdf{% endif %}">
+  <meta name="theme-color" content="#000000">
   <meta name="color-scheme" content="{% if authed %}dark light{% else %}light{% endif %}">
   <link rel="icon" type="image/svg+xml" href="/static/brand/elipsis-mark.svg">
   <link rel="apple-touch-icon" href="/static/brand/apple-touch-icon.png">
@@ -50,7 +50,7 @@
   <link rel="stylesheet" href="/static/ux-polish.css?v=20261102b">
   {% if path == '/login' or path == '/signup' or path == '/forgot-password' or path == '/reset-password' %}<link rel="stylesheet" href="/static/auth.css?v=20261104e">{% endif %}
   {% if authed and (path == '/start' or '/step/' in path or path.startswith('/q/')) %}<link rel="stylesheet" href="/static/assessment.css?v=20261104a">{% endif %}
-  <link rel="stylesheet" href="/static/atelier.css?v=20261105i">
+  <link rel="stylesheet" href="/static/atelier.css?v=20261106e">
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %} {% if authed %}app-shell{% else %}marketing{% endif %}">
@@ -144,13 +144,36 @@
         <span>{{ workspace.name if workspace else 'Workspace' }}</span>
         <svg class="icon chev"><use href="#i-chevron"/></svg>
       </a>
+      <div class="topbar-actions top-actions">
+        <button type="button" class="cmd-trigger" id="cmd-trigger" aria-haspopup="dialog" aria-controls="cmdk" aria-label="Search or jump to">
+          <svg class="icon"><use href="#i-search"/></svg>
+          <span class="cmd-trigger-label">Search or jump to</span>
+          <kbd>&#8984;K</kbd>
+        </button>
+        <a class="topbar-bell" href="/notifications" aria-label="Notifications">
+          <svg class="icon"><use href="#i-bell"/></svg>
+          {% if notifications is defined and notifications %}<span class="topbar-bell-dot">{{ notifications|length }}</span>{% endif %}
+        </a>
+        <div class="topbar-clock" id="topbar-clock" aria-label="Local operating time">
+          <span class="topbar-clock-time" data-clock-time>--:--:--</span>
+          <span class="topbar-clock-zone" data-clock-zone>UTC</span>
+        </div>
+        <button type="button" class="topbar-theme" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle light / dark theme">
+          <svg class="icon icon-sun" aria-hidden="true"><use href="#i-sun"/></svg>
+          <svg class="icon icon-moon" aria-hidden="true"><use href="#i-moon"/></svg>
+        </button>
+        <a class="topbar-bell topbar-help" href="/help" aria-label="Help centre"><svg class="icon"><use href="#i-help"/></svg></a>
+        <span class="top-divider"></span>
+        <a class="top-avatar" href="/settings" aria-label="Account settings">{{ (user.name or user.email or 'EL')[:2]|upper }}</a>
+      </div>
     </header>
     <main id="main" class="app-content content">
 {% else %}
 <header class="mk-header pub-header no-print">
   <div class="mk-header-inner">
     <a class="mk-brand" href="/" aria-label="{{ BRAND_NAME }} home">
-      <img src="/static/brand/elipsis-logo.svg" alt="{{ BRAND_NAME }}">
+      <img class="brand-logo-dark" src="/static/brand/elipsis-logo.svg" alt="{{ BRAND_NAME }}">
+      <img class="brand-logo-light" src="/static/brand/elipsis-logo-light.svg" alt="{{ BRAND_NAME }}">
     </a>
     <button type="button" class="pub-menu mk-menu" id="pub-menu-toggle" aria-expanded="false" aria-controls="pub-nav" aria-label="Open navigation"><svg class="icon"><use href="#i-menu"/></svg></button>
     <nav class="pub-nav mk-nav" id="pub-nav" aria-label="Primary">
@@ -159,6 +182,10 @@
       <a href="/partners"{% if path == '/partners' %} aria-current="page"{% endif %}>Partners</a>
       <a href="/sample"{% if path == '/sample' %} aria-current="page"{% endif %}>Sample report</a>
       <a href="/help"{% if path.startswith('/help') %} aria-current="page"{% endif %}>Help</a>
+      <button type="button" class="topbar-theme pub-theme" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle light / dark theme">
+        <svg class="icon icon-sun" aria-hidden="true"><use href="#i-sun"/></svg>
+        <svg class="icon icon-moon" aria-hidden="true"><use href="#i-moon"/></svg>
+      </button>
       <a class="signin" href="/login">Sign in</a>
       <a class="btn primary" href="/signup">Start free assessment <svg class="icon"><use href="#i-arrow"/></svg></a>
     </nav>
@@ -208,7 +235,41 @@
 </footer>
 {% endif %}
 
-<script src="/static/app.js?v=20261105a" defer></script>
+{% if authed %}
+<dialog class="cmdk" id="cmdk" aria-labelledby="cmdk-title" data-admin="{{ 'true' if ((user.user_type or '') == 'admin' or user.is_admin) else 'false' }}">
+  <div class="cmdk-panel">
+    <h2 id="cmdk-title" class="sr-only">Command palette</h2>
+    <div class="cmdk-head">
+      <svg class="icon"><use href="#i-search"/></svg>
+      <input id="cmdk-input" type="search" placeholder="Search commands or jump to…" aria-label="Search commands" autocomplete="off">
+      <kbd>esc</kbd>
+    </div>
+    <div class="cmdk-results" id="cmdk-results" role="listbox" aria-label="Commands"></div>
+    <div class="cmdk-foot">
+      <span><kbd>&#8593;</kbd><kbd>&#8595;</kbd> navigate</span>
+      <span><kbd>&#8629;</kbd> open</span>
+      <span><kbd>/</kbd> search</span>
+    </div>
+  </div>
+</dialog>
+
+<dialog class="kbd-help" id="kbd-help" aria-labelledby="kbd-help-title">
+  <div class="kbd-help-panel">
+    <h2 id="kbd-help-title">Keyboard shortcuts</h2>
+    <div class="kbd-grid">
+      <div class="kbd-row"><kbd>&#8984;K</kbd> / <kbd>Ctrl K</kbd><span>Command palette</span></div>
+      <div class="kbd-row"><kbd>/</kbd><span>Search or jump to</span></div>
+      <div class="kbd-row"><kbd>?</kbd><span>Open this shortcut list</span></div>
+      <div class="kbd-row"><kbd>T</kbd><span>Toggle light / dark theme</span></div>
+      <div class="kbd-row"><kbd>esc</kbd><span>Close menus and dialogs</span></div>
+    </div>
+    <p class="kbd-note">Shortcuts work anywhere outside a text field.</p>
+    <button type="button" class="btn ghost sm" id="kbd-help-close">Close</button>
+  </div>
+</dialog>
+{% endif %}
+
+<script src="/static/app.js?v=20261106a" defer></script>
 <script src="/static/table-tools.js?v=20261103a" defer></script>
 {% block scripts %}{% endblock %}
 </body>

@@ -811,6 +811,7 @@ def settings_save(request: Request, symbol: str = Form("E"), motion: str = Form(
     response.set_cookie("elipsis_density", prefs.density, max_age=60 * 60 * 24 * 365, samesite="lax")
     response.set_cookie("elipsis_symbol", prefs.symbol, max_age=60 * 60 * 24 * 365, samesite="lax")
     response.set_cookie("elipsis_theme", theme_val, max_age=60 * 60 * 24 * 365 * 2, samesite="lax", path="/")
+    response.set_cookie("elipsis_timezone", prefs.timezone, max_age=60 * 60 * 24 * 365, samesite="lax", path="/")
     return response
 
 

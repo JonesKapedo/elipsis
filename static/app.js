@@ -128,8 +128,8 @@
 
   function currentThemePref() {
     const match = document.cookie.match(new RegExp("(?:^|; )" + THEME_COOKIE + "=([^;]*)"));
-    const pref = match ? decodeURIComponent(match[1]) : "system";
-    return (pref === "light" || pref === "dark" || pref === "system") ? pref : "system";
+    const pref = match ? decodeURIComponent(match[1]) : "dark";
+    return (pref === "light" || pref === "dark" || pref === "system") ? pref : "dark";
   }
 
   function resolvedTheme() {
@@ -334,6 +334,109 @@
     });
   }
 
+  /* Topbar clock: timezone-aware and server-synced --------------------------- */
+  const CLOCK_TZ_COOKIE = "elipsis_timezone";
+  const clock = $("#topbar-clock");
+  const clockTime = clock ? $("[data-clock-time]", clock) : null;
+  const clockZone = clock ? $("[data-clock-zone]", clock) : null;
+  let clockOffset = 0;
+
+  function validTimezone(zone) {
+    if (!zone) return false;
+    try {
+      new Intl.DateTimeFormat("en-GB", { timeZone: zone }).format(new Date());
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function clockTimezone() {
+    const match = document.cookie.match(new RegExp("(?:^|; )" + CLOCK_TZ_COOKIE + "=([^;]*)"));
+    const value = (match ? decodeURIComponent(match[1]) : "").replace(/^"|"$/g, "");
+    return validTimezone(value) ? value : (Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
+  }
+
+  function clockNow() {
+    return new Date(Date.now() + clockOffset);
+  }
+
+  async function syncClock() {
+    try {
+      const response = await fetch("/api/v1/time", { cache: "no-store", credentials: "same-origin" });
+      if (!response.ok) return;
+      const payload = await response.json();
+      const server = Date.parse(payload.utc);
+      if (Number.isFinite(server)) clockOffset = server - Date.now();
+    } catch (error) {
+      /* Keep the local clock if the sync endpoint is unavailable. */
+    }
+  }
+
+  function clockParts(zone) {
+    try {
+      return new Intl.DateTimeFormat("en-GB", {
+        timeZone: zone, hour: "2-digit", minute: "2-digit", second: "2-digit",
+        hour12: false, timeZoneName: "short"
+      }).formatToParts(clockNow());
+    } catch (error) {
+      return new Intl.DateTimeFormat("en-GB", {
+        timeZone: "UTC", hour: "2-digit", minute: "2-digit", second: "2-digit",
+        hour12: false, timeZoneName: "short"
+      }).formatToParts(clockNow());
+    }
+  }
+
+  function renderClock() {
+    if (!clockTime) return;
+    const zone = clockTimezone();
+    const parts = clockParts(zone);
+    const part = (type) => (parts.find((item) => item.type === type) || {}).value || "";
+    clockTime.textContent = part("hour") + ":" + part("minute") + ":" + part("second");
+    if (clockZone) clockZone.textContent = part("timeZoneName") || zone;
+    if (clock) {
+      clock.title = zone + " · " + new Intl.DateTimeFormat("en-GB", {
+        dateStyle: "medium", timeStyle: "long", timeZone: zone
+      }).format(clockNow());
+    }
+  }
+
+  if (clockTime) {
+    syncClock();
+    renderClock();
+    window.setInterval(renderClock, 1000);
+    window.setInterval(syncClock, 5 * 60 * 1000);
+  }
+
+  const tzSelect = $('select[name="timezone"]');
+  const tzPreview = $("#tz-clock-preview");
+  if (tzSelect && tzPreview) {
+    const updatePreview = () => {
+      const zone = validTimezone(tzSelect.value) ? tzSelect.value : "UTC";
+      const parts = clockParts(zone);
+      const part = (type) => (parts.find((item) => item.type === type) || {}).value || "";
+      tzPreview.textContent = part("hour") + ":" + part("minute") + " " + (part("timeZoneName") || zone);
+    };
+    tzSelect.addEventListener("change", updatePreview);
+    updatePreview();
+  }
+
+  /* Gentle section reveals --------------------------------------------------- */
+  const revealItems = $$("[data-reveal]");
+  const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (revealItems.length && !reduceMotion && "IntersectionObserver" in window) {
+    document.documentElement.classList.add("reveal-ready");
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+    revealItems.forEach((item) => revealObserver.observe(item));
+  }
+
   /* Check-all for bulk action selection ------------------------------------- */
   $$("[data-check-all]").forEach((box) => {
     box.addEventListener("change", () => {
@@ -375,6 +478,9 @@
         event.preventDefault();
         search.focus();
         search.select();
+      } else if (cmdk) {
+        event.preventDefault();
+        cmdkOpen();
       }
     } else if (event.key === "?" || (event.shiftKey && event.key === "/")) {
       if (kbdHelp) {
